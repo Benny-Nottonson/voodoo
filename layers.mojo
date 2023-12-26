@@ -3,22 +3,28 @@ from activation import ActivationLayer, ReLU
 from initializer import Initializer, XavierUniform, Constant
 from random import random_float64
 
+
 @value
-struct HiddenLayers:
+struct HiddenLayers: # TODO: Take in arbitrary list of layers and allow for iterative forward and backward passing
     var layers: VariadicList[ParamLayer]
 
     fn __init__(inout self, layers: VariadicList[ParamLayer]):
         self.layers = layers
-        
-trait ParamLayer(Copyable):
+
+
+trait Layer:
+    fn forward(inout self, x: Matrix) -> Matrix:
+        ...
+
     fn backward(inout self, delta: Matrix) -> Matrix:
         ...
 
+
+trait ParamLayer(Copyable, Layer):
     fn __call__(inout self, x: Matrix) -> Matrix:
         ...
 
 
-@value
 struct Dense(ParamLayer):
     var W: Matrix
     var b: Matrix
@@ -93,8 +99,24 @@ struct Dense(ParamLayer):
     fn __call__(inout self, x: Matrix) -> Matrix:
         return self.forward(x)
 
+    fn __copyinit__(inout self, other: Dense):
+        self.W = other.W.deepcopy()
+        self.b = other.b.deepcopy()
+        self.dW = other.dW.deepcopy()
+        self.db = other.db.deepcopy()
+        self.z = other.z.deepcopy()
+        self.input = other.input.deepcopy()
+        self.regularizer_type = other.regularizer_type
+        self.lam = other.lam
+        self.in_features = other.in_features
+        self.out_features = other.out_features
+        self.act = other.act
+        self.weight_initializer = other.weight_initializer
+        self.bias_initializer = other.bias_initializer
+        self.regularizer_type = other.regularizer_type
+        self.lam = other.lam
 
-@value
+
 struct BatchNorm1d(ParamLayer):
     var W: Matrix
     var b: Matrix
@@ -134,7 +156,10 @@ struct BatchNorm1d(ParamLayer):
         self.std_hat.fill(1)
         self.gamma = Matrix(0, 0)
 
-    fn forward(inout self, x: Matrix, eval: Bool) -> Matrix:
+    fn forward(inout self, x: Matrix) -> Matrix:
+        return self.forwardBool(x, False)
+
+    fn forwardBool(inout self, x: Matrix, eval: Bool) -> Matrix:
         if not eval:
             self.mu.fill(x.mean())
             self.std.fill(x.variance() ** 0.5)
@@ -177,10 +202,29 @@ struct BatchNorm1d(ParamLayer):
         return num * (den**-1)
 
     fn __call__(inout self, x: Matrix) -> Matrix:
-        return self.forward(x, False)
+        return self.forward(x)
+
+    fn __copyinit__(inout self, other: BatchNorm1d):
+        self.W = other.W.deepcopy()
+        self.b = other.b.deepcopy()
+        self.dW = other.dW.deepcopy()
+        self.db = other.db.deepcopy()
+        self.z = other.z.deepcopy()
+        self.input = other.input.deepcopy()
+        self.regularizer_type = other.regularizer_type
+        self.lam = other.lam
+        self.in_features = other.in_features
+        self.x_hat = other.x_hat.deepcopy()
+        self.eps = other.eps
+        self.beta = other.beta
+        self.mu = other.mu.deepcopy()
+        self.std = other.std.deepcopy()
+        self.mu_hat = other.mu_hat.deepcopy()
+        self.std_hat = other.std_hat.deepcopy()
+        self.std_hat.fill(1)
+        self.gamma = other.gamma.deepcopy()
 
 
-@value
 struct Dropout(ParamLayer):
     var p: Float32
     var mask: Matrix
@@ -191,7 +235,10 @@ struct Dropout(ParamLayer):
         self.mask = Matrix(0, 0)
         self.input = Matrix(0, 0)
 
-    fn forward(inout self, x: Matrix, eval: Bool) -> Matrix:
+    fn forward(inout self, x: Matrix) -> Matrix:
+        return self.forwardBool(x, False)
+
+    fn forwardBool(inout self, x: Matrix, eval: Bool) -> Matrix:
         if not eval:
             self.mask = Matrix(x.shape.get[0, Int](), x.shape.get[1, Int]())
             for i in range(self.mask.rows):
@@ -209,4 +256,9 @@ struct Dropout(ParamLayer):
         return delta * self.mask
 
     fn __call__(inout self, x: Matrix) -> Matrix:
-        return self.forward(x, False)
+        return self.forward(x)
+
+    fn __copyinit__(inout self, other: Dropout):
+        self.p = other.p
+        self.mask = other.mask.deepcopy()
+        self.input = other.input.deepcopy()

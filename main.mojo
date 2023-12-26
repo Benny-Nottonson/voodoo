@@ -1,8 +1,8 @@
-from model import BasicCNN
+from models import BasicCNN
 from utilities import Matrix
 
 fn main():
-    var testModel = BasicCNN[
+    let testModel = BasicCNN[
         name="testModel",
         input_dim=784,
         output_dim=10

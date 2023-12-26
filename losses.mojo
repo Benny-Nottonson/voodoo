@@ -10,7 +10,7 @@ struct Loss:
     fn __str__(self) -> String:
         return "Loss: " + str(self.value)
 
-    fn backwardStep(inout self):
+    fn backward(inout self):
         self.delta = self.delta * self.value
 
 
