@@ -1,44 +1,29 @@
-from layers import *
-from losses import *
-from optimizers import *
+from layers import Layer
+from optimizers import Optimizer
+from losses import LossFunction
+from utilities import Matrix
+from collections.vector import InlinedFixedVector
 
-trait GenericModel:
-    fn forward(inout self, x: Matrix) -> Matrix:
+trait Model:
+    fn fit(inout self, x: Matrix, y: Matrix, epochs: Int, batch_size: Int):
         ...
 
-    fn backward(inout self, x: Matrix) -> Matrix:
+    fn predict(self, x: Matrix) -> Matrix:
+        ...
+    
+struct Sequential(Model):
+    var layers: InlinedFixedVector[Layer]
+    var loss: LossFunction
+    var optimizer: Optimizer
+
+    fn add(inout self, layer: Layer):
         ...
 
-    fn update(inout self, x: Matrix) -> Matrix:
+    fn pop(inout self):
         ...
 
-@value
-struct Model[name: String, input_dim: Int, output_dim: Int, hiddenLayers: Int, dropout: Dropout, loss: LossFunc, optimizer: Optimizer]:
-    ...
+    fn fit(inout self, x: Matrix, y: Matrix, epochs: Int, batch_size: Int):
+        ...
 
-@value
-struct BasicCNN[name: String, input_dim: Int, output_dim: Int]:
-    var hiddenLayers: HiddenLayers[1]
-    var dropout: Dropout
-    var loss: MSELoss
-    var optimizer: SGD
-
-    fn __init__(inout self):
-        self.hiddenLayers = HiddenLayers[1](DynamicVector[Int](1))
-        self.dropout = Dropout(0.5)
-        self.loss = MSELoss()
-        self.optimizer = SGD(0.01)
-
-    fn forward(inout self, owned x: Matrix) -> Matrix:
-        x = self.hiddenLayers.forward(x)
-        x = self.dropout.forward(x)
-        return x
-
-    fn backward(inout self, owned x: Matrix) -> Matrix:
-        x = self.dropout.backward(x)
-        x = self.hiddenLayers.backward(x)
-        return x
-
-    fn update(inout self, owned x: Matrix) -> Matrix:
-        x = self.hiddenLayers.update(x)
-        return x
+    fn predict(self, x: Matrix) -> Matrix:
+        return Matrix(0, 0)

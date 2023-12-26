@@ -1,5 +1,6 @@
 from memory import memset_zero
 from random import rand
+from math import log, abs
 
 
 fn broadcast(
@@ -94,11 +95,39 @@ struct Matrix(Stringable, Sized):
         self.cols = cols
         self.shape = (rows, cols)
 
+    fn __init__(inout self, shape: Tuple[Int, Int]):
+        let rows = shape.get[0, Int]()
+        let cols = shape.get[1, Int]()
+        self.data = DTypePointer[MatrixType].alloc(rows * cols)
+        memset_zero(self.data, rows * cols)
+        self.rows = rows
+        self.cols = cols
+        self.shape = shape
+
+    fn __init__(inout self, shape: Tuple[Int, Int], init: Float32):
+        let rows = shape.get[0, Int]()
+        let cols = shape.get[1, Int]()
+        self.data = DTypePointer[MatrixType].alloc(rows * cols)
+        for i in range(rows * cols):
+            self.data[i] = init
+        self.rows = rows
+        self.cols = cols
+        self.shape = shape
+
+
     fn __init__(inout self, rows: Int, cols: Int, data: DTypePointer[MatrixType]):
         self.data = data
         self.rows = rows
         self.cols = cols
         self.shape = (rows, cols)
+
+    @staticmethod
+    fn log(m: Matrix) -> Matrix:
+        var new = Matrix(m.rows, m.cols)
+        for y in range(m.rows):
+            for x in range(m.cols):
+                new[y, x] = log(m[y, x])
+        return new
 
     @staticmethod
     fn rand(rows: Int, cols: Int) -> Self:
@@ -213,6 +242,18 @@ struct Matrix(Stringable, Sized):
     fn __sub__(self, other: Self) -> Self:
         return self.__add__(other * -1)
 
+    fn __neg__(self) -> Self:
+        return self * -1
+
+    fn __truediv__(self, other: Self) -> Self:
+        var new = Self(self.rows, self.cols)
+
+        for y in range(self.rows):
+            for x in range(self.cols):
+                new[y, x] = self[y, x] / other[y, x]
+
+        return new
+
     fn __repr__(self) -> String:
         var s = String("[\n")
         for y in range(self.rows):
@@ -254,6 +295,20 @@ struct Matrix(Stringable, Sized):
 
     fn mean(self) -> SIMD[MatrixType, 1]:
         return self.sum() / (self.rows * self.cols)
+
+    fn square(self) -> Self:
+        var new = Self(self.rows, self.cols)
+        for y in range(self.rows):
+            for x in range(self.cols):
+                new[y, x] = self[y, x] ** 2
+        return new
+
+    fn abs(self) -> Self:
+        var new = Self(self.rows, self.cols)
+        for y in range(self.rows):
+            for x in range(self.cols):
+                new[y, x] = abs(self[y, x])
+        return new
 
     fn variance(self) -> SIMD[MatrixType, 1]:
         let mean = self.mean()
