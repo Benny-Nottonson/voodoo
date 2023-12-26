@@ -4,9 +4,6 @@ from layers import Layer
 
 
 trait ActivationLayer(Copyable, Layer):
-    fn __call__(inout self, x: Matrix) -> Matrix:
-        ...
-
     fn forward(inout self, x: Matrix) -> Matrix:
         ...
 

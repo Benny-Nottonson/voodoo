@@ -13,32 +13,32 @@ trait GenericModel:
         ...
 
 @value
-struct Model[name: String, input_dim: Int, output_dim: Int, hiddenLayers: HiddenLayers, dropout: Dropout, loss: LossFunc, optimizer: Optimizer]:
+struct Model[name: String, input_dim: Int, output_dim: Int, hiddenLayers: Int, dropout: Dropout, loss: LossFunc, optimizer: Optimizer]:
     ...
 
 @value
 struct BasicCNN[name: String, input_dim: Int, output_dim: Int]:
-    var layer: ReLU
+    var hiddenLayers: HiddenLayers[1]
     var dropout: Dropout
     var loss: MSELoss
     var optimizer: SGD
 
     fn __init__(inout self):
-        self.layer = ReLU()
+        self.hiddenLayers = HiddenLayers[1](DynamicVector[Int](1))
         self.dropout = Dropout(0.5)
         self.loss = MSELoss()
         self.optimizer = SGD(0.01)
 
     fn forward(inout self, owned x: Matrix) -> Matrix:
-        x = self.layer(x)
-        x = self.dropout(x)
+        x = self.hiddenLayers.forward(x)
+        x = self.dropout.forward(x)
         return x
 
     fn backward(inout self, owned x: Matrix) -> Matrix:
         x = self.dropout.backward(x)
-        x = self.layer.derivative(x)
+        x = self.hiddenLayers.backward(x)
         return x
 
     fn update(inout self, owned x: Matrix) -> Matrix:
-        self.optimizer.step()
+        x = self.hiddenLayers.update(x)
         return x

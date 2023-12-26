@@ -2,14 +2,37 @@ from utilities import Matrix
 from activation import ActivationLayer, ReLU
 from initializer import Initializer, XavierUniform, Constant
 from random import random_float64
-
+from collections.vector import InlinedFixedVector
 
 @value
-struct HiddenLayers: # TODO: Take in arbitrary list of layers and allow for iterative forward and backward passing
-    var layers: VariadicList[ParamLayer]
+struct HiddenLayers[n: Int]:
+    var layers: DynamicVector[Int]
 
-    fn __init__(inout self, layers: VariadicList[ParamLayer]):
-        self.layers = layers
+    fn forward(inout self, owned x: Matrix) -> Matrix:
+        for i in range(n):
+            var layer = instantiateLayer(self.layers[i])
+            x = layer(x)
+        return x
+        
+
+    fn backward(inout self, owned delta: Matrix) -> Matrix:
+        for i in range(n - 1, -1, -1):
+            var layer = instantiateLayer(self.layers[i])
+            delta = layer.backward(delta)
+        return delta
+
+    fn update(inout self, m: Matrix) -> Matrix:
+        for i in range(n):
+            var layer = instantiateLayer(self.layers[i])
+            layer.W = layer.W - layer.dW * m
+            layer.b = layer.b - layer.db * m
+        return m
+
+    fn __call__(inout self, x: Matrix) -> Matrix:
+        return self.forward(x)
+
+fn instantiateLayer(layer: Int) -> Dense:
+    return Dense(1, 1)
 
 
 trait Layer:
@@ -19,13 +42,11 @@ trait Layer:
     fn backward(inout self, delta: Matrix) -> Matrix:
         ...
 
-
-trait ParamLayer(Copyable, Layer):
     fn __call__(inout self, x: Matrix) -> Matrix:
         ...
 
 
-struct Dense(ParamLayer):
+struct Dense(Layer):
     var W: Matrix
     var b: Matrix
     var dW: Matrix
@@ -117,7 +138,7 @@ struct Dense(ParamLayer):
         self.lam = other.lam
 
 
-struct BatchNorm1d(ParamLayer):
+struct BatchNorm1d(Layer):
     var W: Matrix
     var b: Matrix
     var dW: Matrix
@@ -225,7 +246,7 @@ struct BatchNorm1d(ParamLayer):
         self.gamma = other.gamma.deepcopy()
 
 
-struct Dropout(ParamLayer):
+struct Dropout(Layer):
     var p: Float32
     var mask: Matrix
     var input: Matrix
