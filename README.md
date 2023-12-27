@@ -75,5 +75,3 @@ Distributed under the MIT License. See [LICENSE](https://github.com/Benny-Notton
 ## Acknowledgements
 
 * [Mojo](https://github.com/modularml/mojo)
-* [ImgShields](https://shields.io/)
-* []()
