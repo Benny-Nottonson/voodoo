@@ -1,41 +1,60 @@
 from memory import memset
-from random import rand
+from random import rand, randint, randn
 from math import sqrt
 
 
-trait Initializer:
-    @staticmethod
-    fn initialize[T: DType](x: Tensor[T]) -> Tensor[T]:
-        ...
+@value
+struct Initializer:
+    var name: String
 
-    @staticmethod
-    fn initialize[T: DType](x: Tensor[T], value: SIMD[T, 1]) -> Tensor[T]:
-        ...
+    fn __init__(inout self, name: String):
+        self.name = name
+
+    fn initialize[T: DType](self, x: Tensor[T]) -> Tensor[T]:
+        if self.name == "random_uniform":
+            return RandomUniform.initialize(x)
+        elif self.name == "xavier_normal":
+            return XavierNormal.initialize(x)
+        return Zero.initialize(x)
+
+    fn initialize[T: DType](self, x: Tensor[T], value: Int) -> Tensor[T]:
+        return Constant.initialize(x, value)
 
 
 @value
-struct RandomUniform(Initializer):
+struct Constant:
+    @staticmethod
+    fn initialize[T: DType](x: Tensor[T], val: Int) -> Tensor[T]:
+        let newData = Tensor[T](x.shape())
+        for i in range(x.num_elements()):
+            newData.data()[i] = val
+        return newData
+
+
+@value
+struct Zero:
+    @staticmethod
+    fn initialize[T: DType](x: Tensor[T]) -> Tensor[T]:
+        let newData = Tensor[T](x.shape())
+        for i in range(x.num_elements()):
+            newData.data()[i] = 0
+        return newData
+
+
+@value
+struct RandomUniform:
     @staticmethod
     fn initialize[T: DType](x: Tensor[T]) -> Tensor[T]:
         rand[T](x.data(), x.num_elements())
         return x
 
-    @staticmethod
-    fn initialize[T: DType](x: Tensor[T], value: SIMD[T, 1]) -> Tensor[T]:
-        return Tensor[T](x.shape(), value)
-
 
 @value
-struct XavierNormal(Initializer):
+struct XavierNormal:
     @staticmethod
     fn initialize[T: DType](x: Tensor[T]) -> Tensor[T]:
         let fan_in = x.shape()[0]
         let fan_out = x.shape()[1]
-        let scale = 2.0 / (fan_in + fan_out)
-        let std = sqrt(SIMD[T, 1](scale))
-        rand[T](x.data(), x.num_elements())
-        return x * std
-
-    @staticmethod
-    fn initialize[T: DType](x: Tensor[T], value: SIMD[T, 1]) -> Tensor[T]:
-        return Tensor[T](x.shape(), value)
+        let variance = 2.0 / (fan_in + fan_out)
+        randn[T](x.data(), 0, variance)
+        return x

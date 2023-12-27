@@ -1,21 +1,34 @@
-from layer import Layer
 from algorithm import vectorize
 from math import exp, max, tanh
 
 
 @value
-trait ActivationLayer(Layer):
-    @staticmethod
-    fn forward[T: DType](x: Tensor[T]) -> Tensor[T]:
-        ...
+struct Activation:
+    var name: String
 
-    @staticmethod
-    fn deriv[T: DType](x: Tensor[T]) -> Tensor[T]:
-        ...
+    fn __init__(inout self, name: String) -> None:
+        self.name = name
 
+    fn forward[T: DType](inout self, x: Tensor[T]) -> Tensor[T]:
+        if self.name == "relu":
+            return ReLU.forward(x)
+        elif self.name == "tanh":
+            return Tanh.forward(x)
+        elif self.name == "sigmoid":
+            return Sigmoid.forward(x)
+        return Linear.forward(x)
+
+    fn deriv[T: DType](inout self, x: Tensor[T]) -> Tensor[T]:
+        if self.name == "relu":
+            return ReLU.deriv(x)
+        elif self.name == "tanh":
+            return Tanh.deriv(x)
+        elif self.name == "sigmoid":
+            return Sigmoid.deriv(x)
+        return Linear.deriv(x)
 
 @value
-struct Linear(ActivationLayer):
+struct Linear:
     @staticmethod
     fn forward[T: DType](x: Tensor[T]) -> Tensor[T]:
         return x
@@ -26,7 +39,7 @@ struct Linear(ActivationLayer):
 
 
 @value
-struct ReLU(ActivationLayer):
+struct ReLU:
     @staticmethod
     fn forward[T: DType](x: Tensor[T]) -> Tensor[T]:
         var t_new = Tensor[T](x.shape())
@@ -53,7 +66,7 @@ struct ReLU(ActivationLayer):
 
 
 @value
-struct Tanh(ActivationLayer):
+struct Tanh:
     @staticmethod
     fn forward[T: DType](x: Tensor[T]) -> Tensor[T]:
         var t_new = Tensor[T](x.shape())
@@ -78,10 +91,10 @@ struct Tanh(ActivationLayer):
 
 
 @value
-struct Sigmoid[T: DType](ActivationLayer):
+struct Sigmoid:
     @staticmethod
     fn forward[T: DType](x: Tensor[T]) -> Tensor[T]:
-        var t_new = Tensor[T](x.shape())
+        var t_new = x.clip(-500, 500)
 
         @parameter
         fn vecmath[simd_width: Int](idx: Int) -> None:
@@ -96,7 +109,11 @@ struct Sigmoid[T: DType](ActivationLayer):
 
         @parameter
         fn vecmath[simd_width: Int](idx: Int) -> None:
-            t_new.simd_store(idx, t_new.simd_load[simdwidthof[T]()](idx) * (1 - t_new.simd_load[simdwidthof[T]()](idx)))
+            let f = 1 / (1 + exp(-x.simd_load[simdwidthof[T]()](idx)))
+            t_new.simd_store(
+                idx,
+                f * (1 - f),
+            )
 
         vectorize[simdwidthof[T](), vecmath](x.num_elements())
         return t_new

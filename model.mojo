@@ -4,46 +4,48 @@ from layer import *
 from loss import *
 from optimizer import *
 from regularizer import *
+from inputs import *
+from tensor import TensorShape
+from random import random_float64
 
-trait Model:
-    ...
 
-struct StaticTestModel[T: DType](Model):
-    var name: String
-    var inputSize: Int
-    var outputSize: Int
-    var hiddenLayers: StaticDense[T]
-    var outputLayer: StaticDense[T]
-    var loss: MeanSquaredError
+@value
+struct SingleSequential[
+    T: DType,
+    in_features: Int,
+    out_features: Int,
+]:
+    var loss_fn: MeanSquaredError[T]
+    var layer: DenseLayer[T, in_features, out_features]
 
-    fn __init__(inout self, name: String, inputSize: Int, outputSize: Int, hiddenLayers: StaticDense[T], outputLayer: StaticDense[T], loss: MeanSquaredError):
-        self.name = name
-        self.inputSize = inputSize
-        self.outputSize = outputSize
-        self.hiddenLayers = hiddenLayers
-        self.outputLayer = outputLayer
-        self.loss = loss
+    fn forward(inout self, x: Tensor[T]) raises -> Tensor[T]:
+        return self.layer.forward(x)
 
-    fn forward(self, owned x: Tensor[T]) raises -> Tensor[T]:
-        x = self.hiddenLayers.forward(x)
-        x = self.outputLayer.forward(x)
-        return x
+    fn backward(inout self, x: Tensor[T]) raises:
+        let loss = self.loss_fn.calculate(x, self.forward(x))
+        _ = self.layer.backward(loss)
 
-    fn backward(inout self, owned x: Tensor[T], owned y: Tensor[T]) raises -> Tensor[T]:
-        x = self.forward(x)
-        let loss = self.loss.calculate(x, y)
-        var grad = loss.delta
-        grad = self.outputLayer.backward(x, grad)
-        grad = self.hiddenLayers.backward(x, grad)
-        return grad
 
-    fn predict(self, owned x: Tensor[T]) raises -> Tensor[T]:
-        return self.forward(x)
+fn main() raises:
+    var m = SingleSequential[DType.float64, 2, 1,](
+        loss_fn=MeanSquaredError[DType.float64](),
+        layer=DenseLayer[DType.float64, 2, 1](
+            activation=Activation("relu"),
+        ),
+    )
 
-"""
-struct Regression(Model):
-    ...
+    var x = Tensor[DType.float64](
+        TensorShape(2, 1),
+    )
+    var y = Tensor[DType.float64](
+        TensorShape(1, 1),
+    )
 
-struct Classifcation(Model):
-    ...
-"""
+    for i in range(5):
+        x[0][0] = random_float64(-100, 100)
+        x[1][0] = random_float64(-100, 100)
+
+        y[0][0] = (x[0][0] + x[1][0]) / 2
+
+        m.backward(x)
+        print(m.layer.weights)
