@@ -10,7 +10,7 @@
     Machine Learning in pure Mojo
     <br/>
     <br/>
-    <a href="https://github.com/Benny-Nottonson/voodoo"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/Benny-Nottonson/voodoo/wiki"><strong>Explore the docs »</strong></a>
     <br/>
     <br/>
     <a href="https://github.com/Benny-Nottonson/voodoo/issues">Report Bug</a>
