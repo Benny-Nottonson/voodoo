@@ -4,57 +4,37 @@ from math import sqrt
 
 
 @value
-struct Initializer:
-    var name: String
+struct Initializer[T: DType, name: String]:
+    var initialize: fn(Tensor[T]) -> None
 
-    fn __init__(inout self, name: String):
-        self.name = name
-
-    fn initialize[T: DType](self, x: Tensor[T]) -> Tensor[T]:
-        if self.name == "random_uniform":
-            return RandomUniform.initialize(x)
-        elif self.name == "xavier_normal":
-            return XavierNormal.initialize(x)
-        return Zero.initialize(x)
-
-    fn initialize[T: DType](self, x: Tensor[T], value: Int) -> Tensor[T]:
-        return Constant.initialize(x, value)
-
+    fn __init__(inout self) raises:
+        if name == "random_uniform":
+            self.initialize = RandomUniform.initialize[T]
+        elif name == "xavier_normal":
+            self.initialize = XavierNormal.initialize[T]
+        elif name == "zeros":
+            self.initialize = Zeros.initialize[T]
+        else:
+            raise Error("Unknown initializer: " + name)
 
 @value
-struct Constant:
+struct Zeros:
     @staticmethod
-    fn initialize[T: DType](x: Tensor[T], val: Int) -> Tensor[T]:
-        let newData = Tensor[T](x.shape())
-        for i in range(x.num_elements()):
-            newData.data()[i] = val
-        return newData
-
-
-@value
-struct Zero:
-    @staticmethod
-    fn initialize[T: DType](x: Tensor[T]) -> Tensor[T]:
-        let newData = Tensor[T](x.shape())
-        for i in range(x.num_elements()):
-            newData.data()[i] = 0
-        return newData
-
+    fn initialize[T: DType](x: Tensor[T]):
+        memset(x.data(), 0, x.num_elements())
 
 @value
 struct RandomUniform:
     @staticmethod
-    fn initialize[T: DType](x: Tensor[T]) -> Tensor[T]:
+    fn initialize[T: DType](x: Tensor[T]):
         rand[T](x.data(), x.num_elements())
-        return x
 
 
 @value
 struct XavierNormal:
     @staticmethod
-    fn initialize[T: DType](x: Tensor[T]) -> Tensor[T]:
+    fn initialize[T: DType](x: Tensor[T]):
         let fan_in = x.shape()[0]
         let fan_out = x.shape()[1]
         let variance = 2.0 / (fan_in + fan_out)
         randn[T](x.data(), 0, variance)
-        return x

@@ -1,4 +1,5 @@
 from algorithm import vectorize
+from utilities import reduce
 
 
 @value
@@ -11,27 +12,35 @@ struct Loss[T: DType]:
         self.delta = delta
 
 @value
-struct MeanSquaredError[T: DType]:
+struct LossFunction[T: DType, name: String]:
     var pred: Tensor[T]
     var true: Tensor[T]
     var epsilon: Float64
+    var _calculate: fn(Tensor[T], Tensor[T]) raises -> Loss[T]
 
-    fn __init__(inout self, epsilon: Float64 = 1e-7):
+    fn __init__(inout self) raises:
         self.pred = Tensor[T]()
         self.true = Tensor[T]()
-        self.epsilon = epsilon
+        self.epsilon = 1e-7
+        if name == "mse":
+            self._calculate = MeanSquaredError.calculate[T]
+        else:
+            raise Error("Unknown loss function: " + name)
 
-    fn calculate(inout self, y_true: Tensor[T], y_pred: Tensor[T]) raises -> Loss[T]:
-        self.pred = y_pred
-        self.true = y_true
-        var sum = SIMD[DType.float64, 1](0.0)
+    fn calculate(inout self, pred: Tensor[T], true: Tensor[T]) raises -> Loss[T]:
+        self.pred = pred
+        self.true = true
+        return self._calculate(pred, true)
 
-        @parameter
-        fn vecmath[simd_width: Int](idx: Int) -> None:
-            sum += ((y_true[idx] - y_pred[idx]) ** 2).cast[DType.float64]()
+@value
+struct MeanSquaredError:
+    @staticmethod
+    fn calculate[T: DType](y_true: Tensor[T], y_pred: Tensor[T]) raises -> Loss[T]:
+        @noncapturing
+        fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
+            return (x - y) * (x - y)
 
-        vectorize[simdwidthof[T](), vecmath](y_true.num_elements())
-        return Loss[T]((sum / y_true.num_elements()).cast[T](), y_true - y_pred)
+        return Loss(reduce[T](y_true, y_pred, func), y_true - y_pred)
 
 
 """

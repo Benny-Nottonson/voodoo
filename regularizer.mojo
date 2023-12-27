@@ -1,22 +1,28 @@
-struct Regularizer:
-    var name: String
+from memory import memset
+from random import rand, randint, randn
+from math import sqrt
 
-    fn __init__(inout self, name: String):
-        self.name = name
-
-    fn apply[T: DType](self, x: Tensor[T]) -> Tensor[T]:
-        if self.name == "dropout":
-            return Dropout.apply(x)
-        """
-        elif self.name == "l1":
-            return L1.apply(x)
-        elif self.name == "l2":
-            return L2.apply(x)
-        """
-        return x
 
 @value
-struct Dropout:
-    @staticmethod 
-    fn apply[T: DType](x: Tensor[T]) -> Tensor[T]:
-        return x #TODO
+struct Regularizer[T: DType, name: String]:
+    var regularize: fn(Tensor[T]) -> None
+
+    fn __init__(inout self) raises:
+        if name == "l1":
+            self.regularize = L1.regularize[T]
+        elif name == "l2":
+            self.regularize = L2.regularize[T]
+        else:
+            raise Error("Unknown regularizer: " + name)
+
+@value
+struct L1:
+    @staticmethod
+    fn regularize[T: DType](x: Tensor[T]):
+        ...
+
+@value
+struct L2:
+    @staticmethod
+    fn regularize[T: DType](x: Tensor[T]):
+        ...

@@ -10,9 +10,14 @@ struct DenseLayer[
     T: DType,
     in_features: Int,
     out_features: Int,
+    activation_type: String = "relu",
+    kernel_initializer_type: String = "xavier_normal",
+    bias_initializer_type: String = "zeros",
+    kernel_regularizer_type: String = "l2",
+    bias_regularizer_type: String = "l2",
 ]:  
     var name: String
-    var activation: Activation
+    var activation: Activation[T, activation_type]
     var weights: Tensor[T]
     var bias: Tensor[T]
 
@@ -24,45 +29,35 @@ struct DenseLayer[
     fn __init__(
         inout self,
         name: String = "dense",
-        activation: Activation = Activation("relu"),
-        kernelInitializer: Initializer = Initializer("xavier"),
-        biasInitializer: Initializer = Initializer(""),
-        kernelRegularizer: Regularizer = Regularizer(""),
-        biasRegularizer: Regularizer = Regularizer(""),
-    ):
+    ) raises:
         self.name = name
-        self.activation = activation
-        self.weights = kernelInitializer.initialize(Tensor[T](TensorShape(in_features, out_features)))
-        self.bias = biasInitializer.initialize(Tensor[T](TensorShape(in_features, out_features)))
-        self.input = Tensor[T](TensorShape(self.weights.shape()[0]))
+        self.activation = Activation[T, activation_type]()
+        self.weights = Tensor[T](TensorShape(in_features, out_features))
+        Initializer[T, kernel_initializer_type]().initialize(self.weights)
+        self.bias = Tensor[T](TensorShape(1, out_features))
+        Initializer[T, bias_initializer_type]().initialize(self.bias)
+        self.input = Tensor[T](TensorShape(1, in_features))
         self.z = Tensor[T](TensorShape(out_features, 1))
-        self.dw = Initializer("").initialize[T](Tensor[T](TensorShape(in_features, out_features)), 1)
-        self.db = Initializer("").initialize[T](Tensor[T](TensorShape(in_features, out_features)), 1)
+        self.dw = Tensor[T](TensorShape(in_features, out_features))
+        self.db = Tensor[T](TensorShape(1, out_features))
 
     fn summary(self):
-        let n_params = self.weights.shape()[0] * self.weights.shape()[1] + self.bias.shape()[1] 
-        let output_shape = self.bias.shape()[1]
-        print("Dense Layer: " + self.name)
-        print("Activation: " + self.activation.name)
-        print("Output Shape: " + String(output_shape))
-        print("Number of Parameters: " + String(n_params))
+        print("Dense Layer: ", self.name)
+        print("Activation: ", self.activation.name)
+        print("Weights: ", self.weights.shape())
+        print("Bias: ", self.bias.shape())
 
     fn forward(inout self, input: Tensor[T]) raises -> Tensor[T]:
         self.input = input
-        let z = input * self.weights + self.bias
-        self.z = z
-        return self.activation.forward(z)
+        self.z = input * self.weights + self.bias
+        return self.activation.forward(self.z)
 
     fn backward(inout self, l: Loss[T]) raises -> Tensor[T]:
-        let scalar = SIMD[T, 1](self.weights.shape()[0])
-        let d = l.delta
-        let dz = self.activation.deriv(self.z) * d
-        self.dw = transposition(self.input) * dz / scalar
-        for i in range(self.db.shape()[0]):
-            self.db[i] = axis_sum(dz, 0)[i] / scalar
-        self.update_weights(l.value)
-        return dz * transposition(self.weights)
+        let dout = self.activation.deriv(l.delta)
+        self.dw = transposition(self.input) * dout
+        self.db = axis_sum(dout, 0)
+        return dout * transposition(self.weights)
 
-    fn update_weights(inout self, lr: SIMD[T, 1]) raises:
+    fn update(inout self, lr: SIMD[T, 1]) raises:
         self.weights = self.weights - lr * self.dw
         self.bias = self.bias - lr * self.db
