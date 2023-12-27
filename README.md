@@ -34,15 +34,16 @@
 
 ## About The Project
 
-I'll add this later :)
+### Completed Structs
+* [Activation](https://github.com/Benny-Nottonson/voodoo/wiki/Activation-Functions)
 
 ## Built With
 
-Mojo only :)
+[Mojo](https://github.com/modularml/mojo)
 
 ## Getting Started
 
-Just download it :)
+TODO
 
 ## Roadmap
 
@@ -70,7 +71,3 @@ Distributed under the MIT License. See [LICENSE](https://github.com/Benny-Notton
 ## Authors
 
 * **Benny Nottonson** - ** - [Benny Nottonson](https://github.com/Benny-Nottonson/Benny-Nottonson) - **
-
-## Acknowledgements
-
-* [Mojo](https://github.com/modularml/mojo)
