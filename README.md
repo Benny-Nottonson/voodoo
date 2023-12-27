@@ -70,4 +70,4 @@ Distributed under the MIT License. See [LICENSE](https://github.com/Benny-Notton
 
 ## Authors
 
-* **Benny Nottonson** - ** - [Benny Nottonson](https://github.com/Benny-Nottonson/Benny-Nottonson) - **
+* **Benny Nottonson**  - [Benny Nottonson](https://github.com/Benny-Nottonson/Benny-Nottonson)
