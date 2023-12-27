@@ -1,7 +1,8 @@
 <br/>
 <p align="center">
   <a href="https://github.com/Benny-Nottonson/voodoo">
-<img src=https://private-user-images.githubusercontent.com/112336374/293051023-d757e25a-3266-4a8d-9d61-c5c5098d4f6e.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTEiLCJleHAiOjE3MDM3MDAzMTIsIm5iZiI6MTcwMzcwMDAxMiwicGF0aCI6Ii8xMTIzMzYzNzQvMjkzMDUxMDIzLWQ3NTdlMjVhLTMyNjYtNGE4ZC05ZDYxLWM1YzUwOThkNGY2ZS5wbmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBSVdOSllBWDRDU1ZFSDUzQSUyRjIwMjMxMjI3JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDIzMTIyN1QxODAwMTJaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0zZDg4Y2Q4ZDY2ZWJlNTdlYTdmOTNjYjY0NjYwYzYzYmY0YmJkODY5N2JhYmRhZmIxM2VjY2RmOWU3OTFlOGIxJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCZhY3Rvcl9pZD0wJmtleV9pZD0wJnJlcG9faWQ9MCJ9.G335qWH_ZUvsCTw6mg1Gc5PVv9Hndp4ID3GDHDfj-1E alt="Logo" width="200" height="200">
+    <img src="https://github.com/Benny-Nottonson/voodoo/assets/112336374/e699f853-f045-481a-929f-dd7677c6aa9c" alt="Logo" width="200" height="200">
+  </a>
   <h3 align="center">Voodoo</h3>
 
   <p align="center">
