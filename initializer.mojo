@@ -122,16 +122,14 @@ struct Identity:
 struct LecunNormal:
     @staticmethod
     fn initialize[T: DType](x: TensorShape) -> Tensor[T]:
-        let fan_in = x[0]
-        return randn[T](x, 0, 1.0 / sqrt(fan_in))
+        return randn[T](x, 0, 1.0 / sqrt(x[0]))
 
 
 struct LecunUniform:
     @staticmethod
     fn initialize[T: DType](x: TensorShape) -> Tensor[T]:
-        let fan_in = x[0]
         let t = rand[T](x)
-        let s: SIMD[T, 1] = 3.0 / sqrt(fan_in)
+        let s: SIMD[T, 1] = 3.0 / sqrt(x[0])
         return t * sqrt(s)
 
 

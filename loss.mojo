@@ -57,7 +57,7 @@ struct MeanSquaredError:
         fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
             return (x - y) * (x - y)
 
-        return reduce[T](func, y_true, y_pred, -1)
+        return reduce[T](func, y_true, y_pred, 0)
 
 
 struct BinaryCrossentropy:
@@ -67,7 +67,7 @@ struct BinaryCrossentropy:
         fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
             return -x * log(y) - (1 - x) * log(1 - y)
 
-        return reduce[T](func, y_true, y_pred, -1)
+        return reduce[T](func, y_true, y_pred, 0)
 
 
 struct CategoricalCrossentropy:
@@ -77,7 +77,7 @@ struct CategoricalCrossentropy:
         fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
             return -x * log(y)
 
-        return reduce[T](func, y_true, y_pred, -1)
+        return reduce[T](func, y_true, y_pred, 0)
 
 
 struct CosineSimilarity:
@@ -87,7 +87,7 @@ struct CosineSimilarity:
         fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
             return x * y
 
-        return reduce[T](func, y_true, y_pred, -1)
+        return reduce[T](func, y_true, y_pred, 0)
 
 
 struct Hinge:
@@ -97,7 +97,7 @@ struct Hinge:
         fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
             return max(0, 1 - x * y)
 
-        return reduce[T](func, y_true, y_pred, -1)
+        return reduce[T](func, y_true, y_pred, 0)
 
 
 struct Huber:
@@ -110,7 +110,7 @@ struct Huber:
             else:
                 return abs(x - y) - 0.5
 
-        return reduce[T](func, y_true, y_pred, -1)
+        return reduce[T](func, y_true, y_pred, 0)
 
 
 struct KLDivergence:
@@ -120,7 +120,7 @@ struct KLDivergence:
         fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
             return x * log(x / y)
 
-        return reduce[T](func, y_true, y_pred, -1)
+        return reduce[T](func, y_true, y_pred, 0)
 
 
 struct LogCosh:
@@ -130,7 +130,7 @@ struct LogCosh:
         fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
             return log(cosh(x - y))
 
-        return reduce[T](func, y_true, y_pred, -1)
+        return reduce[T](func, y_true, y_pred, 0)
 
 
 struct MeanAbsoluteError:
@@ -140,7 +140,7 @@ struct MeanAbsoluteError:
         fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
             return abs(x - y)
 
-        return reduce[T](func, y_true, y_pred, -1)
+        return reduce[T](func, y_true, y_pred, 0)
 
 
 struct MeanAbsolutePercentageError:
@@ -150,7 +150,7 @@ struct MeanAbsolutePercentageError:
         fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
             return abs((x - 1e-7) - (y - 1e-7)) / x
 
-        return reduce[T](func, y_true, y_pred, -1)
+        return reduce[T](func, y_true, y_pred, 0)
 
 
 struct Poisson:
@@ -160,7 +160,7 @@ struct Poisson:
         fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
             return y - x * log(y + 1e-7)
 
-        return reduce[T](func, y_true, y_pred, -1)
+        return reduce[T](func, y_true, y_pred, 0)
 
 
 struct SquaredHinge:
@@ -170,4 +170,4 @@ struct SquaredHinge:
         fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
             return max(0, 1 - x * y) * max(0, 1 - x * y)
 
-        return reduce[T](func, y_true, y_pred, -1)
+        return reduce[T](func, y_true, y_pred, 0)

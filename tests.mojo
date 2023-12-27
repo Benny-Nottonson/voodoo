@@ -593,8 +593,8 @@ fn test_initializer() raises:
 fn test_loss() raises:
     from loss import Loss
 
-    let y_true = rand[T](TensorShape(32, 16, 4, 2))
-    let y_pred = rand[T](TensorShape(32, 16, 4, 2))
+    let y_true = rand[T](TensorShape(32, 16))
+    let y_pred = rand[T](TensorShape(32, 16))
 
     let mse = Loss[T, "mse"]()
     let binary_crossentropy = Loss[T, "binary_crossentropy"]()
@@ -622,18 +622,18 @@ fn test_loss() raises:
     let x10 = poisson.calculate(y_true, y_pred)
     let x11 = squared_hinge.calculate(y_true, y_pred)
 
-    debug_assert(x0.shape() == TensorShape(2), "mse.calculate shape failed")
-    debug_assert(x1.shape() == TensorShape(2), "binary_crossentropy.calculate shape failed")
-    debug_assert(x2.shape() == TensorShape(2), "categorical_crossentropy.calculate shape failed")
-    debug_assert(x3.shape() == TensorShape(2), "cosine_similarity.calculate shape failed")
-    debug_assert(x4.shape() == TensorShape(2), "hinge.calculate shape failed")
-    debug_assert(x5.shape() == TensorShape(2), "huber.calculate shape failed")
-    debug_assert(x6.shape() == TensorShape(2), "kl_divergence.calculate shape failed")
-    debug_assert(x7.shape() == TensorShape(2), "log_cosh.calculate shape failed")
-    debug_assert(x8.shape() == TensorShape(2), "mae.calculate shape failed")
-    debug_assert(x9.shape() == TensorShape(2), "mape.calculate shape failed")
-    debug_assert(x10.shape() == TensorShape(2), "poisson.calculate shape failed")
-    debug_assert(x11.shape() == TensorShape(2), "squared_hinge.calculate shape failed")
+    debug_assert(x0.shape() == TensorShape(1), "mse.calculate shape failed")
+    debug_assert(x1.shape() == TensorShape(1), "binary_crossentropy.calculate shape failed")
+    debug_assert(x2.shape() == TensorShape(1), "categorical_crossentropy.calculate shape failed")
+    debug_assert(x3.shape() == TensorShape(1), "cosine_similarity.calculate shape failed")
+    debug_assert(x4.shape() == TensorShape(1), "hinge.calculate shape failed")
+    debug_assert(x5.shape() == TensorShape(1), "huber.calculate shape failed")
+    debug_assert(x6.shape() == TensorShape(1), "kl_divergence.calculate shape failed")
+    debug_assert(x7.shape() == TensorShape(1), "log_cosh.calculate shape failed")
+    debug_assert(x8.shape() == TensorShape(1), "mae.calculate shape failed")
+    debug_assert(x9.shape() == TensorShape(1), "mape.calculate shape failed")
+    debug_assert(x10.shape() == TensorShape(1), "poisson.calculate shape failed")
+    debug_assert(x11.shape() == TensorShape(1), "squared_hinge.calculate shape failed")
     
     
 
