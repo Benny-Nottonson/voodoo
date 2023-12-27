@@ -1,113 +1,102 @@
-from math import tanh, exp
-from utilities import Matrix
-from layers import Layer
+from layer import Layer
+from algorithm import vectorize
+from math import exp, max, tanh
 
 
-trait ActivationLayer(Copyable, Layer):
-    fn forward(inout self, x: Matrix) -> Matrix:
+@value
+trait ActivationLayer(Layer):
+    @staticmethod
+    fn forward[T: DType](x: Tensor[T]) -> Tensor[T]:
         ...
 
-    fn derivative(inout self, x: Matrix) -> Matrix:
+    @staticmethod
+    fn deriv[T: DType](x: Tensor[T]) -> Tensor[T]:
         ...
 
 
 @value
 struct Linear(ActivationLayer):
-    fn __call__(inout self, x: Matrix) -> Matrix:
-        return self.forward(x)
-
-    fn forward(inout self, x: Matrix) -> Matrix:
+    @staticmethod
+    fn forward[T: DType](x: Tensor[T]) -> Tensor[T]:
         return x
 
-    fn derivative(inout self, x: Matrix) -> Matrix:
-        let w = x.rows
-        let h = x.cols
-        var temp = Matrix(w, h)
-        for i in range(w):
-            for j in range(h):
-                temp[i, j] = 1
-        return temp
-        
-    fn backward(inout self, x: Matrix) -> Matrix:
-        return self.derivative(x)
+    @staticmethod
+    fn deriv[T: DType](x: Tensor[T]) -> Tensor[T]:
+        return Tensor[T](x.shape(), 1)
+
 
 @value
 struct ReLU(ActivationLayer):
-    fn __call__(inout self, x: Matrix) -> Matrix:
-        return self.forward(x)
+    @staticmethod
+    fn forward[T: DType](x: Tensor[T]) -> Tensor[T]:
+        var t_new = Tensor[T](x.shape())
 
-    fn forward(inout self, x: Matrix) -> Matrix:
-        let w = x.rows
-        let h = x.cols
-        var temp = Matrix(w, h)
-        for i in range(w):
-            for j in range(h):
-                temp[i, j] = x[i, j] if x[i, j] > 0 else 0
-        return temp
+        @parameter
+        fn vecmath[simd_width: Int](idx: Int) -> None:
+            t_new.simd_store(idx, max(0, x.simd_load[simdwidthof[T]()](idx)))
 
-    fn derivative(inout self, x: Matrix) -> Matrix:
-        let w = x.rows
-        let h = x.cols
-        var temp = Matrix(w, h)
-        for i in range(w):
-            for j in range(h):
-                temp[i, j] = 1 if x[i, j] > 0 else 0
-        return temp
-    
-    fn backward(inout self, x: Matrix) -> Matrix:
-        return self.derivative(x)
+        vectorize[simdwidthof[T](), vecmath](x.num_elements())
+        return t_new
+
+    @staticmethod
+    fn deriv[T: DType](x: Tensor[T]) -> Tensor[T]:
+        var t_new = Tensor[T](x.shape())
+
+        @parameter
+        fn vecmath[simd_width: Int](idx: Int) -> None:
+            t_new.simd_store(
+                idx, SIMD[T, 1](1) if x.simd_load[simdwidthof[T]()](idx) > 0 else 0
+            )
+
+        vectorize[simdwidthof[T](), vecmath](x.num_elements())
+        return t_new
 
 
 @value
 struct Tanh(ActivationLayer):
-    fn __call__(inout self, x: Matrix) -> Matrix:
-        return self.forward(x)
+    @staticmethod
+    fn forward[T: DType](x: Tensor[T]) -> Tensor[T]:
+        var t_new = Tensor[T](x.shape())
 
-    fn forward(inout self, x: Matrix) -> Matrix:
-        let w = x.rows
-        let h = x.cols
-        var temp = Matrix(w, h)
-        for i in range(w):
-            for j in range(h):
-                temp[i, j] = tanh(x[i, j])
-        return temp
+        @parameter
+        fn vecmath[simd_width: Int](idx: Int) -> None:
+            t_new.simd_store(idx, tanh(x.simd_load[simdwidthof[T]()](idx)))
 
-    fn derivative(inout self, x: Matrix) -> Matrix:
-        let w = x.rows
-        let h = x.cols
-        let temp = self.forward(x)
-        var temp2 = Matrix(w, h)
-        for i in range(w):
-            for j in range(h):
-                temp2[i, j] = 1 - temp[i, j] ** 2
-        return temp2
+        vectorize[simdwidthof[T](), vecmath](x.num_elements())
+        return t_new
 
-    fn backward(inout self, x: Matrix) -> Matrix:
-        return self.derivative(x)
+    @staticmethod
+    fn deriv[T: DType](x: Tensor[T]) -> Tensor[T]:
+        var t_new = Tensor[T](x.shape())
+
+        @parameter
+        fn vecmath[simd_width: Int](idx: Int) -> None:
+            t_new.simd_store(idx, 1 - tanh(x.simd_load[simdwidthof[T]()](idx)) ** 2)
+
+        vectorize[simdwidthof[T](), vecmath](x.num_elements())
+        return t_new
+
 
 @value
-struct Sigmoid(ActivationLayer):
-    fn __call__(inout self, x: Matrix) -> Matrix:
-        return self.forward(x)
+struct Sigmoid[T: DType](ActivationLayer):
+    @staticmethod
+    fn forward[T: DType](x: Tensor[T]) -> Tensor[T]:
+        var t_new = Tensor[T](x.shape())
 
-    fn forward(inout self, x: Matrix) -> Matrix:
-        let w = x.rows
-        let h = x.cols
-        var temp = Matrix(w, h)
-        for i in range(w):
-            for j in range(h):
-                temp[i, j] = 1 / (1 + exp(-x[i, j]))
-        return temp
+        @parameter
+        fn vecmath[simd_width: Int](idx: Int) -> None:
+            t_new.simd_store(idx, 1 / (1 + exp(-x.simd_load[simdwidthof[T]()](idx))))
 
-    fn derivative(inout self, x: Matrix) -> Matrix:
-        let w = x.rows
-        let h = x.cols
-        let temp = self.forward(x)
-        var temp2 = Matrix(w, h)
-        for i in range(w):
-            for j in range(h):
-                temp2[i, j] = temp[i, j] * (1 - temp[i, j])
-        return temp2
+        vectorize[simdwidthof[T](), vecmath](x.num_elements())
+        return t_new
 
-    fn backward(inout self, x: Matrix) -> Matrix:
-        return self.derivative(x)
+    @staticmethod
+    fn deriv[T: DType](x: Tensor[T]) -> Tensor[T]:
+        var t_new = x.clip(-500, 500)
+
+        @parameter
+        fn vecmath[simd_width: Int](idx: Int) -> None:
+            t_new.simd_store(idx, t_new.simd_load[simdwidthof[T]()](idx) * (1 - t_new.simd_load[simdwidthof[T]()](idx)))
+
+        vectorize[simdwidthof[T](), vecmath](x.num_elements())
+        return t_new
