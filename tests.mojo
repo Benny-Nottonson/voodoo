@@ -1,7 +1,7 @@
 from tensor import TensorShape
 from builtin.debug_assert import debug_assert
 from math import abs
-from random import rand
+from random import rand, random_float64
 from memory import memset
 
 alias T = DType.float64
@@ -590,8 +590,57 @@ fn test_initializer() raises:
     debug_assert(x12[0] != x12[1], "truncated_normal.initialize value failed")
 
 
+fn test_loss() raises:
+    from loss import Loss
+
+    let y_true = rand[T](TensorShape(32, 16, 4, 2))
+    let y_pred = rand[T](TensorShape(32, 16, 4, 2))
+
+    let mse = Loss[T, "mse"]()
+    let binary_crossentropy = Loss[T, "binary_crossentropy"]()
+    let categorical_crossentropy = Loss[T, "categorical_crossentropy"]()
+    let cosine_similarity = Loss[T, "cosine_similarity"]()
+    let hinge = Loss[T, "hinge"]()
+    let huber = Loss[T, "huber"]()
+    let kl_divergence = Loss[T, "kl_divergence"]()
+    let log_cosh = Loss[T, "log_cosh"]()
+    let mae = Loss[T, "mae"]()
+    let mape = Loss[T, "mape"]()
+    let poisson = Loss[T, "poisson"]()
+    let squared_hinge = Loss[T, "squared_hinge"]()
+
+    let x0 = mse.calculate(y_true, y_pred)
+    let x1 = binary_crossentropy.calculate(y_true, y_pred)
+    let x2 = categorical_crossentropy.calculate(y_true, y_pred)
+    let x3 = cosine_similarity.calculate(y_true, y_pred)
+    let x4 = hinge.calculate(y_true, y_pred)
+    let x5 = huber.calculate(y_true, y_pred)
+    let x6 = kl_divergence.calculate(y_true, y_pred)
+    let x7 = log_cosh.calculate(y_true, y_pred)
+    let x8 = mae.calculate(y_true, y_pred)
+    let x9 = mape.calculate(y_true, y_pred)
+    let x10 = poisson.calculate(y_true, y_pred)
+    let x11 = squared_hinge.calculate(y_true, y_pred)
+
+    debug_assert(x0.shape() == TensorShape(2), "mse.calculate shape failed")
+    debug_assert(x1.shape() == TensorShape(2), "binary_crossentropy.calculate shape failed")
+    debug_assert(x2.shape() == TensorShape(2), "categorical_crossentropy.calculate shape failed")
+    debug_assert(x3.shape() == TensorShape(2), "cosine_similarity.calculate shape failed")
+    debug_assert(x4.shape() == TensorShape(2), "hinge.calculate shape failed")
+    debug_assert(x5.shape() == TensorShape(2), "huber.calculate shape failed")
+    debug_assert(x6.shape() == TensorShape(2), "kl_divergence.calculate shape failed")
+    debug_assert(x7.shape() == TensorShape(2), "log_cosh.calculate shape failed")
+    debug_assert(x8.shape() == TensorShape(2), "mae.calculate shape failed")
+    debug_assert(x9.shape() == TensorShape(2), "mape.calculate shape failed")
+    debug_assert(x10.shape() == TensorShape(2), "poisson.calculate shape failed")
+    debug_assert(x11.shape() == TensorShape(2), "squared_hinge.calculate shape failed")
+    
+    
+
 fn main() raises:
     test_activation()
     print("Activation all tests passed")
     test_initializer()
     print("Initializer all tests passed")
+    test_loss()
+    print("Loss all tests passed")

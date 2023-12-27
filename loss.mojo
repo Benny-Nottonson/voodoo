@@ -1,64 +1,173 @@
 from algorithm import vectorize
-from utilities import reduce
+from utilities import reduce, map, apply
+from math import log, max, abs, cosh
+
+alias lossFunctions = VariadicList[StringLiteral](
+    "mse",
+    "binary_crossentropy",
+    "categorical_crossentropy",
+    "cosine_similarity",
+    "hinge",
+    "huber",
+    "kl_divergence",
+    "log_cosh",
+    "mae",
+    "mape",
+    "poisson",
+    "squared_hinge",
+)
 
 
-@value
-struct Loss[T: DType]:
-    var value: SIMD[T, 1]
-    var delta: Tensor[T]
-
-    fn __init__(inout self, value: SIMD[T, 1], delta: Tensor[T]):
-        self.value = value
-        self.delta = delta
-
-@value
-struct LossFunction[T: DType, name: String]:
-    var pred: Tensor[T]
-    var true: Tensor[T]
-    var epsilon: Float64
-    var _calculate: fn(Tensor[T], Tensor[T]) raises -> Loss[T]
+struct Loss[T: DType, name: String]:
+    var calculate: fn (Tensor[T], Tensor[T]) raises -> Tensor[T]
 
     fn __init__(inout self) raises:
-        self.pred = Tensor[T]()
-        self.true = Tensor[T]()
-        self.epsilon = 1e-7
         if name == "mse":
-            self._calculate = MeanSquaredError.calculate[T]
+            self.calculate = MeanSquaredError.calculate[T]
+        elif name == "binary_crossentropy":
+            self.calculate = BinaryCrossentropy.calculate[T]
+        elif name == "categorical_crossentropy":
+            self.calculate = CategoricalCrossentropy.calculate[T]
+        elif name == "cosine_similarity":
+            self.calculate = CosineSimilarity.calculate[T]
+        elif name == "hinge":
+            self.calculate = Hinge.calculate[T]
+        elif name == "huber":
+            self.calculate = Huber.calculate[T]
+        elif name == "kl_divergence":
+            self.calculate = KLDivergence.calculate[T]
+        elif name == "log_cosh":
+            self.calculate = LogCosh.calculate[T]
+        elif name == "mae":
+            self.calculate = MeanAbsoluteError.calculate[T]
+        elif name == "mape":
+            self.calculate = MeanAbsolutePercentageError.calculate[T]
+        elif name == "poisson":
+            self.calculate = Poisson.calculate[T]
+        elif name == "squared_hinge":
+            self.calculate = SquaredHinge.calculate[T]
         else:
-            raise Error("Unknown loss function: " + name)
+            raise Error("Invalid loss function name: " + name)
 
-    fn calculate(inout self, pred: Tensor[T], true: Tensor[T]) raises -> Loss[T]:
-        self.pred = pred
-        self.true = true
-        return self._calculate(pred, true)
 
-@value
 struct MeanSquaredError:
     @staticmethod
-    fn calculate[T: DType](y_true: Tensor[T], y_pred: Tensor[T]) raises -> Loss[T]:
+    fn calculate[T: DType](y_true: Tensor[T], y_pred: Tensor[T]) raises -> Tensor[T]:
         @noncapturing
         fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
             return (x - y) * (x - y)
 
-        return Loss(reduce[T](y_true, y_pred, func), y_true - y_pred)
+        return reduce[T](func, y_true, y_pred, -1)
 
 
-"""
-struct CategoricalCrossentropy(LossFunction):
-    ...
+struct BinaryCrossentropy:
+    @staticmethod
+    fn calculate[T: DType](y_true: Tensor[T], y_pred: Tensor[T]) raises -> Tensor[T]:
+        @noncapturing
+        fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
+            return -x * log(y) - (1 - x) * log(1 - y)
 
-struct Possion(LossFunction):
-    ...
+        return reduce[T](func, y_true, y_pred, -1)
 
-struct KLDivergence(LossFunction):
-    ...
-    
-struct MeanAbsoluteError(LossFunction):
-    ...
 
-struct MeanAbsolutePercentageError(LossFunction):
-    ...
+struct CategoricalCrossentropy:
+    @staticmethod
+    fn calculate[T: DType](y_true: Tensor[T], y_pred: Tensor[T]) raises -> Tensor[T]:
+        @noncapturing
+        fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
+            return -x * log(y)
 
-struct MeanSquaredLogarithmicError(LossFunction):
-    ...
-"""
+        return reduce[T](func, y_true, y_pred, -1)
+
+
+struct CosineSimilarity:
+    @staticmethod
+    fn calculate[T: DType](y_true: Tensor[T], y_pred: Tensor[T]) raises -> Tensor[T]:
+        @noncapturing
+        fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
+            return x * y
+
+        return reduce[T](func, y_true, y_pred, -1)
+
+
+struct Hinge:
+    @staticmethod
+    fn calculate[T: DType](y_true: Tensor[T], y_pred: Tensor[T]) raises -> Tensor[T]:
+        @noncapturing
+        fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
+            return max(0, 1 - x * y)
+
+        return reduce[T](func, y_true, y_pred, -1)
+
+
+struct Huber:
+    @staticmethod
+    fn calculate[T: DType](y_true: Tensor[T], y_pred: Tensor[T]) raises -> Tensor[T]:
+        @noncapturing
+        fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
+            if abs(x - y) <= 1:
+                return 0.5 * (x - y) * (x - y)
+            else:
+                return abs(x - y) - 0.5
+
+        return reduce[T](func, y_true, y_pred, -1)
+
+
+struct KLDivergence:
+    @staticmethod
+    fn calculate[T: DType](y_true: Tensor[T], y_pred: Tensor[T]) raises -> Tensor[T]:
+        @noncapturing
+        fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
+            return x * log(x / y)
+
+        return reduce[T](func, y_true, y_pred, -1)
+
+
+struct LogCosh:
+    @staticmethod
+    fn calculate[T: DType](y_true: Tensor[T], y_pred: Tensor[T]) raises -> Tensor[T]:
+        @noncapturing
+        fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
+            return log(cosh(x - y))
+
+        return reduce[T](func, y_true, y_pred, -1)
+
+
+struct MeanAbsoluteError:
+    @staticmethod
+    fn calculate[T: DType](y_true: Tensor[T], y_pred: Tensor[T]) raises -> Tensor[T]:
+        @noncapturing
+        fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
+            return abs(x - y)
+
+        return reduce[T](func, y_true, y_pred, -1)
+
+
+struct MeanAbsolutePercentageError:
+    @staticmethod
+    fn calculate[T: DType](y_true: Tensor[T], y_pred: Tensor[T]) raises -> Tensor[T]:
+        @noncapturing
+        fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
+            return abs((x - 1e-7) - (y - 1e-7)) / x
+
+        return reduce[T](func, y_true, y_pred, -1)
+
+
+struct Poisson:
+    @staticmethod
+    fn calculate[T: DType](y_true: Tensor[T], y_pred: Tensor[T]) raises -> Tensor[T]:
+        @noncapturing
+        fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
+            return y - x * log(y + 1e-7)
+
+        return reduce[T](func, y_true, y_pred, -1)
+
+
+struct SquaredHinge:
+    @staticmethod
+    fn calculate[T: DType](y_true: Tensor[T], y_pred: Tensor[T]) raises -> Tensor[T]:
+        @noncapturing
+        fn func(x: SIMD[T, 1], y: SIMD[T, 1]) -> SIMD[T, 1]:
+            return max(0, 1 - x * y) * max(0, 1 - x * y)
+
+        return reduce[T](func, y_true, y_pred, -1)
