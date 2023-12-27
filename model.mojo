@@ -4,11 +4,10 @@ from layer import *
 from loss import *
 from optimizer import *
 from regularizer import *
-from inputs import *
 from tensor import TensorShape
 from random import random_float64
 
-
+"""
 @value
 struct SingleSequential[
     T: DType,
@@ -49,3 +48,4 @@ fn main() raises:
 
         m.backward(x)
         print(m.layer.weights)
+"""

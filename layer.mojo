@@ -2,22 +2,24 @@ from tensor import TensorShape
 from initializer import Initializer
 from regularizer import Regularizer
 from activation import Activation
-from loss import Loss
+from loss import Loss, LossFunction
 from utilities import transposition, axis_sum
 
 
 @value
-struct Layer[
+struct Conv1D[
     T: DType,
-    name: String,
-    inputShape: TensorShape,
-    outputShape: TensorShape,
-    initializer_type: String,
-    regularizer_type: String,
-    activation_type: String,
+    inputChannels: Int,
+    outputChannels: Int,
+    kernelLength: Int,
+    strides: Int = 1,
+    initializer_type: String = "random_uniform",
+    regularizer_type: String = "random_uniform", # TODO
+    activation_type: String = "relu",
+    loss_function_type: String = "mse",
 ]:
     var activation: Activation[T, activation_type]
-
+    var lossFunction: LossFunction[T, loss_function_type]
     var weights: Tensor[T]
     var bias: Tensor[T]
 
@@ -26,62 +28,51 @@ struct Layer[
     var dw: Tensor[T]
     var db: Tensor[T]
 
-    var forward: fn (x: Tensor[T]) -> Tensor[T]
-    var backward: fn (x: Tensor[T], y: Tensor[T]) -> Tensor[T]
-
     fn __init__(inout self) raises:
         self.activation = Activation[T, activation_type]()
+        self.lossFunction = LossFunction[T, loss_function_type]()
+        
+        self.weights = Tensor[T](inputChannels, outputChannels, kernelLength)
+        Initializer[T, initializer_type]().initialize(self.weights)
+        self.bias = Tensor[T](outputChannels)
+        Initializer[T, "zeros"]().initialize(self.bias)
 
-        var weightShape = DynamicVector[Int]()
-        for i in range(inputShape.rank()):
-            weightShape.append(inputShape[i])
-        for i in range(outputShape.rank()):
-            weightShape.append(outputShape[i])
+        self.input = Tensor[T]()
+        self.z = Tensor[T]()
+        self.dw = Tensor[T]()
+        self.db = Tensor[T]()
 
-        self.weights = Tensor[T](TensorShape(weightShape))
-        self.bias = Tensor[T](outputShape)
+    fn forward(inout self, input: Tensor[T]) raises -> Tensor[T]:
+        self.input = input
+        self.z = conv1d[T](input, self.weights, self.bias, self.strides)
+        return self.activation.forward(self.z)
 
-        self.input = Tensor[T](inputShape)
-        self.z = Tensor[T](outputShape)
-        self.dw = Tensor[T](TensorShape(weightShape))
-        self.db = Tensor[T](outputShape)
-
-        if self.name == "conv1d":
-            self.forward = Conv1D.forward[T]
-            self.backward = Conv1D.backward[T]
-        elif self.name == "dense":
-            self.forward = self.dense_forward
-            self.backward = self.dense_backward
-        else:
-            raise Error("Invalid layer name")
+    # TODO: backward
 
 
-@value
-struct Conv1D:
-    @staticmethod
-    fn forward[T: DType](x: Tensor[T], w: Tensor[T], b: Tensor[T]) raises -> Tensor[T]:
-        var (m, n_H_prev, n_W_prev, n_C_prev) = x.shape
-        var (f, n_C_prev, n_C) = w.shape
+fn conv1d[T: DType](
+    input: Tensor[T],
+    weights: Tensor[T],
+    bias: Tensor[T],
+    strides: Int = 1,
+) raises -> Tensor[T]:
+    let inputShape = input.shape()
+    let batchSize = inputShape[0]
+    let inputLength = inputShape[1]
+    let inputChannels = inputShape[2]
 
-        var n_H = n_H_prev
-        var n_W = n_W_prev
+    let weightsShape = weights.shape()
+    let outputChannels = weightsShape[1]
+    let kernelLength = weightsShape[2]
 
-        var z = Tensor[T](TensorShape(m, n_H, n_W, n_C))
+    let outputLength = ((inputLength - kernelLength) / strides + 1).to_int()
 
-        for i in range(m):
-            for h in range(n_H):
-                for w in range(n_W):
-                    for c in range(n_C):
-                        var vert_start = h
-                        var vert_end = h + f
-                        var horiz_start = w
-                        var horiz_end = w + f
+    var output = Tensor[T](batchSize, outputLength, outputChannels)
 
-                        var a_slice_prev = x[
-                            i, vert_start:vert_end, horiz_start:horiz_end, :
-                        ]
-                        z[i, h, w, c] = (
-                            axis_sum(a_slice_prev * w[:, :, :, c]) + b[:, :, :, c]
-                        )
-
-        return z
+    for b in range(batchSize):
+        for c in range(outputChannels):
+            for i in range(outputLength):
+                for j in range(kernelLength):
+                    output[b][i][c] += input[b][i * strides + j][c] * weights[0][c][j]
+                output[b][i][c] += bias[0][c]
+    return output
