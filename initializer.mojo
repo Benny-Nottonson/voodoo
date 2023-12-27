@@ -75,10 +75,6 @@ struct Ones:
         return t
 
 
-# rand[T](tensorShape) -> Random uniform tensor
-# randn[T](tensorShape, mean, variance) -> Random normal tensor
-
-
 struct GlorotNormal:
     @staticmethod
     fn initialize[T: DType](x: TensorShape) -> Tensor[T]:

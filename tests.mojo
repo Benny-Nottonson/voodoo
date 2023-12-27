@@ -6,6 +6,7 @@ from memory import memset
 
 alias T = DType.float64
 
+
 fn test_activation() raises:
     from activation import Activation
 
@@ -55,46 +56,100 @@ fn test_activation() raises:
     debug_assert(near_equal(relu.forward(x7)[0], 0.0), "relu(-0.5) failed")
     debug_assert(near_equal(relu.forward(x8)[0], 100.0), "relu(100.0) failed")
     debug_assert(near_equal(relu.forward(x9)[0], 0.0), "relu(-100.0) failed")
-    
-    debug_assert(near_equal(tanh.forward(x1)[0], 0.7615941559557649), "tanh(1.0) failed")
+
+    debug_assert(
+        near_equal(tanh.forward(x1)[0], 0.7615941559557649), "tanh(1.0) failed"
+    )
     debug_assert(near_equal(tanh.forward(x2)[0], 1.0), "tanh(10.0) failed")
-    debug_assert(near_equal(tanh.forward(x3)[0], -0.7615941559557649), "tanh(-1.0) failed")
+    debug_assert(
+        near_equal(tanh.forward(x3)[0], -0.7615941559557649), "tanh(-1.0) failed"
+    )
     debug_assert(near_equal(tanh.forward(x4)[0], -1.0), "tanh(-10.0) failed")
     debug_assert(near_equal(tanh.forward(x5)[0], 0.0), "tanh(0.0) failed")
-    debug_assert(near_equal(tanh.forward(x6)[0], 0.46211715726000974), "tanh(0.5) failed")
-    debug_assert(near_equal(tanh.forward(x7)[0], -0.46211715726000974), "tanh(-0.5) failed")
+    debug_assert(
+        near_equal(tanh.forward(x6)[0], 0.46211715726000974), "tanh(0.5) failed"
+    )
+    debug_assert(
+        near_equal(tanh.forward(x7)[0], -0.46211715726000974), "tanh(-0.5) failed"
+    )
     debug_assert(near_equal(tanh.forward(x8)[0], 1.0), "tanh(100.0) failed")
     debug_assert(near_equal(tanh.forward(x9)[0], -1.0), "tanh(-100.0) failed")
 
-    debug_assert(near_equal(sigmoid.forward(x1)[0], 0.7310585786300049), "sigmoid(1.0) failed")
-    debug_assert(near_equal(sigmoid.forward(x2)[0], 0.9999546021312976), "sigmoid(10.0) failed")
-    debug_assert(near_equal(sigmoid.forward(x3)[0], 0.2689414213699951), "sigmoid(-1.0) failed")
-    debug_assert(near_equal(sigmoid.forward(x4)[0], 4.5397868702434395e-05), "sigmoid(-10.0) failed")
+    debug_assert(
+        near_equal(sigmoid.forward(x1)[0], 0.7310585786300049), "sigmoid(1.0) failed"
+    )
+    debug_assert(
+        near_equal(sigmoid.forward(x2)[0], 0.9999546021312976), "sigmoid(10.0) failed"
+    )
+    debug_assert(
+        near_equal(sigmoid.forward(x3)[0], 0.2689414213699951), "sigmoid(-1.0) failed"
+    )
+    debug_assert(
+        near_equal(sigmoid.forward(x4)[0], 4.5397868702434395e-05),
+        "sigmoid(-10.0) failed",
+    )
     debug_assert(near_equal(sigmoid.forward(x5)[0], 0.5), "sigmoid(0.0) failed")
-    debug_assert(near_equal(sigmoid.forward(x6)[0], 0.6224593312018546), "sigmoid(0.5) failed")
-    debug_assert(near_equal(sigmoid.forward(x7)[0], 0.3775406687981454), "sigmoid(-0.5) failed")
+    debug_assert(
+        near_equal(sigmoid.forward(x6)[0], 0.6224593312018546), "sigmoid(0.5) failed"
+    )
+    debug_assert(
+        near_equal(sigmoid.forward(x7)[0], 0.3775406687981454), "sigmoid(-0.5) failed"
+    )
     debug_assert(near_equal(sigmoid.forward(x8)[0], 1.0), "sigmoid(100.0) failed")
-    debug_assert(near_equal(sigmoid.forward(x9)[0], 3.7200759760208356e-44), "sigmoid(-100.0) failed")
+    debug_assert(
+        near_equal(sigmoid.forward(x9)[0], 3.7200759760208356e-44),
+        "sigmoid(-100.0) failed",
+    )
 
     debug_assert(near_equal(elu.forward(x1)[0], 1.0), "elu(1.0) failed")
     debug_assert(near_equal(elu.forward(x2)[0], 10.0), "elu(10.0) failed")
-    debug_assert(near_equal(elu.forward(x3)[0], -0.6321205588285577), "elu(-1.0) failed")
-    debug_assert(near_equal(elu.forward(x4)[0], -0.9999546000702375), "elu(-10.0) failed")
+    debug_assert(
+        near_equal(elu.forward(x3)[0], -0.6321205588285577), "elu(-1.0) failed"
+    )
+    debug_assert(
+        near_equal(elu.forward(x4)[0], -0.9999546000702375), "elu(-10.0) failed"
+    )
     debug_assert(near_equal(elu.forward(x5)[0], 0.0), "elu(0.0) failed")
     debug_assert(near_equal(elu.forward(x6)[0], 0.5), "elu(0.5) failed")
-    debug_assert(near_equal(elu.forward(x7)[0], -0.3934693402873666), "elu(-0.5) failed")
+    debug_assert(
+        near_equal(elu.forward(x7)[0], -0.3934693402873666), "elu(-0.5) failed"
+    )
     debug_assert(near_equal(elu.forward(x8)[0], 100.0), "elu(100.0) failed")
     debug_assert(near_equal(elu.forward(x9)[0], -1.0), "elu(-100.0) failed")
 
-    debug_assert(near_equal(exponential.forward(x1)[0], 2.718281828459045), "exponential(1.0) failed")
-    debug_assert(near_equal(exponential.forward(x2)[0], 22026.465794806718), "exponential(10.0) failed")
-    debug_assert(near_equal(exponential.forward(x3)[0], 0.36787944117144233), "exponential(-1.0) failed")
-    debug_assert(near_equal(exponential.forward(x4)[0], 4.5399929762484854e-05), "exponential(-10.0) failed")
+    debug_assert(
+        near_equal(exponential.forward(x1)[0], 2.718281828459045),
+        "exponential(1.0) failed",
+    )
+    debug_assert(
+        near_equal(exponential.forward(x2)[0], 22026.465794806718),
+        "exponential(10.0) failed",
+    )
+    debug_assert(
+        near_equal(exponential.forward(x3)[0], 0.36787944117144233),
+        "exponential(-1.0) failed",
+    )
+    debug_assert(
+        near_equal(exponential.forward(x4)[0], 4.5399929762484854e-05),
+        "exponential(-10.0) failed",
+    )
     debug_assert(near_equal(exponential.forward(x5)[0], 1.0), "exponential(0.0) failed")
-    debug_assert(near_equal(exponential.forward(x6)[0], 1.6487212707001282), "exponential(0.5) failed")
-    debug_assert(near_equal(exponential.forward(x7)[0], 0.6065306597126334), "exponential(-0.5) failed")
-    debug_assert(near_equal(exponential.forward(x8)[0], 2.6881171418161356e+43), "exponential(100.0) failed")
-    debug_assert(near_equal(exponential.forward(x9)[0], 3.7200759760208356e-44), "exponential(-100.0) failed")
+    debug_assert(
+        near_equal(exponential.forward(x6)[0], 1.6487212707001282),
+        "exponential(0.5) failed",
+    )
+    debug_assert(
+        near_equal(exponential.forward(x7)[0], 0.6065306597126334),
+        "exponential(-0.5) failed",
+    )
+    debug_assert(
+        near_equal(exponential.forward(x8)[0], 2.6881171418161356e43),
+        "exponential(100.0) failed",
+    )
+    debug_assert(
+        near_equal(exponential.forward(x9)[0], 3.7200759760208356e-44),
+        "exponential(-100.0) failed",
+    )
 
     debug_assert(near_equal(gelu.forward(x1)[0], 0.841192), "gelu(1.0) failed")
     debug_assert(near_equal(gelu.forward(x2)[0], 10.0), "gelu(10.0) failed")
@@ -106,15 +161,33 @@ fn test_activation() raises:
     debug_assert(near_equal(gelu.forward(x8)[0], 100.0), "gelu(100.0) failed")
     debug_assert(near_equal(gelu.forward(x9)[0], -100.0), "gelu(-100.0) failed")
 
-    debug_assert(near_equal(hard_sigmoid.forward(x1)[0], 0.7), "hard_sigmoid(1.0) failed")
-    debug_assert(near_equal(hard_sigmoid.forward(x2)[0], 1.0), "hard_sigmoid(10.0) failed")
-    debug_assert(near_equal(hard_sigmoid.forward(x3)[0], 0.3), "hard_sigmoid(-1.0) failed")
-    debug_assert(near_equal(hard_sigmoid.forward(x4)[0], 0.0), "hard_sigmoid(-10.0) failed")
-    debug_assert(near_equal(hard_sigmoid.forward(x5)[0], 0.5), "hard_sigmoid(0.0) failed")
-    debug_assert(near_equal(hard_sigmoid.forward(x6)[0], 0.65), "hard_sigmoid(0.5) failed")
-    debug_assert(near_equal(hard_sigmoid.forward(x7)[0], 0.35), "hard_sigmoid(-0.5) failed")
-    debug_assert(near_equal(hard_sigmoid.forward(x8)[0], 1.0), "hard_sigmoid(100.0) failed")
-    debug_assert(near_equal(hard_sigmoid.forward(x9)[0], 0.0), "hard_sigmoid(-100.0) failed")
+    debug_assert(
+        near_equal(hard_sigmoid.forward(x1)[0], 0.7), "hard_sigmoid(1.0) failed"
+    )
+    debug_assert(
+        near_equal(hard_sigmoid.forward(x2)[0], 1.0), "hard_sigmoid(10.0) failed"
+    )
+    debug_assert(
+        near_equal(hard_sigmoid.forward(x3)[0], 0.3), "hard_sigmoid(-1.0) failed"
+    )
+    debug_assert(
+        near_equal(hard_sigmoid.forward(x4)[0], 0.0), "hard_sigmoid(-10.0) failed"
+    )
+    debug_assert(
+        near_equal(hard_sigmoid.forward(x5)[0], 0.5), "hard_sigmoid(0.0) failed"
+    )
+    debug_assert(
+        near_equal(hard_sigmoid.forward(x6)[0], 0.65), "hard_sigmoid(0.5) failed"
+    )
+    debug_assert(
+        near_equal(hard_sigmoid.forward(x7)[0], 0.35), "hard_sigmoid(-0.5) failed"
+    )
+    debug_assert(
+        near_equal(hard_sigmoid.forward(x8)[0], 1.0), "hard_sigmoid(100.0) failed"
+    )
+    debug_assert(
+        near_equal(hard_sigmoid.forward(x9)[0], 0.0), "hard_sigmoid(-100.0) failed"
+    )
 
     debug_assert(near_equal(mish.forward(x1)[0], 0.865098), "mish(1.0) failed")
     debug_assert(near_equal(mish.forward(x2)[0], 10.0), "mish(10.0) failed")
@@ -136,25 +209,58 @@ fn test_activation() raises:
     debug_assert(near_equal(selu.forward(x8)[0], 105.0701), "selu(100.0) failed")
     debug_assert(near_equal(selu.forward(x9)[0], -111.133), "selu(-100.0) failed")
 
-    debug_assert(near_equal(softplus.forward(x1)[0], 1.3132616875182228), "softplus(1.0) failed")
-    debug_assert(near_equal(softplus.forward(x2)[0], 10.000045398899218), "softplus(10.0) failed")
-    debug_assert(near_equal(softplus.forward(x3)[0], 0.31326168751822286), "softplus(-1.0) failed")
-    debug_assert(near_equal(softplus.forward(x4)[0], 4.5398899216870535e-05), "softplus(-10.0) failed")
-    debug_assert(near_equal(softplus.forward(x5)[0], 0.6931471805599453), "softplus(0.0) failed")
-    debug_assert(near_equal(softplus.forward(x6)[0], 0.9740769841804061), "softplus(0.5) failed")
-    debug_assert(near_equal(softplus.forward(x7)[0], 0.47407698418040613), "softplus(-0.5) failed")
+    debug_assert(
+        near_equal(softplus.forward(x1)[0], 1.3132616875182228), "softplus(1.0) failed"
+    )
+    debug_assert(
+        near_equal(softplus.forward(x2)[0], 10.000045398899218), "softplus(10.0) failed"
+    )
+    debug_assert(
+        near_equal(softplus.forward(x3)[0], 0.31326168751822286),
+        "softplus(-1.0) failed",
+    )
+    debug_assert(
+        near_equal(softplus.forward(x4)[0], 4.5398899216870535e-05),
+        "softplus(-10.0) failed",
+    )
+    debug_assert(
+        near_equal(softplus.forward(x5)[0], 0.6931471805599453), "softplus(0.0) failed"
+    )
+    debug_assert(
+        near_equal(softplus.forward(x6)[0], 0.9740769841804061), "softplus(0.5) failed"
+    )
+    debug_assert(
+        near_equal(softplus.forward(x7)[0], 0.47407698418040613),
+        "softplus(-0.5) failed",
+    )
     debug_assert(near_equal(softplus.forward(x8)[0], 100.0), "softplus(100.0) failed")
     debug_assert(near_equal(softplus.forward(x9)[0], 0.0), "softplus(-100.0) failed")
 
     debug_assert(near_equal(softsign.forward(x1)[0], 0.5), "softsign(1.0) failed")
-    debug_assert(near_equal(softsign.forward(x2)[0], 0.9090909090909091), "softsign(10.0) failed")
+    debug_assert(
+        near_equal(softsign.forward(x2)[0], 0.9090909090909091), "softsign(10.0) failed"
+    )
     debug_assert(near_equal(softsign.forward(x3)[0], -0.5), "softsign(-1.0) failed")
-    debug_assert(near_equal(softsign.forward(x4)[0], -0.9090909090909091), "softsign(-10.0) failed")
+    debug_assert(
+        near_equal(softsign.forward(x4)[0], -0.9090909090909091),
+        "softsign(-10.0) failed",
+    )
     debug_assert(near_equal(softsign.forward(x5)[0], 0.0), "softsign(0.0) failed")
-    debug_assert(near_equal(softsign.forward(x6)[0], 0.3333333333333333), "softsign(0.5) failed")
-    debug_assert(near_equal(softsign.forward(x7)[0], -0.3333333333333333), "softsign(-0.5) failed")
-    debug_assert(near_equal(softsign.forward(x8)[0], 0.9900990099009901), "softsign(100.0) failed")
-    debug_assert(near_equal(softsign.forward(x9)[0], -0.9900990099009901), "softsign(-100.0) failed")
+    debug_assert(
+        near_equal(softsign.forward(x6)[0], 0.3333333333333333), "softsign(0.5) failed"
+    )
+    debug_assert(
+        near_equal(softsign.forward(x7)[0], -0.3333333333333333),
+        "softsign(-0.5) failed",
+    )
+    debug_assert(
+        near_equal(softsign.forward(x8)[0], 0.9900990099009901),
+        "softsign(100.0) failed",
+    )
+    debug_assert(
+        near_equal(softsign.forward(x9)[0], -0.9900990099009901),
+        "softsign(-100.0) failed",
+    )
 
     debug_assert(near_equal(linear.deriv(x1)[0], 1.0), "linear.deriv(1.0) failed")
     debug_assert(near_equal(linear.deriv(x2)[0], 1.0), "linear.deriv(10.0) failed")
@@ -176,49 +282,119 @@ fn test_activation() raises:
     debug_assert(near_equal(relu.deriv(x8)[0], 1.0), "relu.deriv(100.0) failed")
     debug_assert(near_equal(relu.deriv(x9)[0], 0.0), "relu.deriv(-100.0) failed")
 
-    debug_assert(near_equal(tanh.deriv(x1)[0], 0.41997434161402614), "tanh.deriv(1.0) failed")
+    debug_assert(
+        near_equal(tanh.deriv(x1)[0], 0.41997434161402614), "tanh.deriv(1.0) failed"
+    )
     debug_assert(near_equal(tanh.deriv(x2)[0], 0.0), "tanh.deriv(10.0) failed")
-    debug_assert(near_equal(tanh.deriv(x3)[0], 0.41997434161402614), "tanh.deriv(-1.0) failed")
+    debug_assert(
+        near_equal(tanh.deriv(x3)[0], 0.41997434161402614), "tanh.deriv(-1.0) failed"
+    )
     debug_assert(near_equal(tanh.deriv(x4)[0], 0.0), "tanh.deriv(-10.0) failed")
     debug_assert(near_equal(tanh.deriv(x5)[0], 1.0), "tanh.deriv(0.0) failed")
-    debug_assert(near_equal(tanh.deriv(x6)[0], 0.7864477329659274), "tanh.deriv(0.5) failed")
-    debug_assert(near_equal(tanh.deriv(x7)[0], 0.7864477329659274), "tanh.deriv(-0.5) failed")
+    debug_assert(
+        near_equal(tanh.deriv(x6)[0], 0.7864477329659274), "tanh.deriv(0.5) failed"
+    )
+    debug_assert(
+        near_equal(tanh.deriv(x7)[0], 0.7864477329659274), "tanh.deriv(-0.5) failed"
+    )
     debug_assert(near_equal(tanh.deriv(x8)[0], 0.0), "tanh.deriv(100.0) failed")
     debug_assert(near_equal(tanh.deriv(x9)[0], 0.0), "tanh.deriv(-100.0) failed")
 
-    debug_assert(near_equal(sigmoid.deriv(x1)[0], 0.19661193324148185), "sigmoid.deriv(1.0) failed")
-    debug_assert(near_equal(sigmoid.deriv(x2)[0], 4.5395807735951673e-05), "sigmoid.deriv(10.0) failed")
-    debug_assert(near_equal(sigmoid.deriv(x3)[0], 0.19661193324148185), "sigmoid.deriv(-1.0) failed")
-    debug_assert(near_equal(sigmoid.deriv(x4)[0], 4.5395807735951673e-05), "sigmoid.deriv(-10.0) failed")
+    debug_assert(
+        near_equal(sigmoid.deriv(x1)[0], 0.19661193324148185),
+        "sigmoid.deriv(1.0) failed",
+    )
+    debug_assert(
+        near_equal(sigmoid.deriv(x2)[0], 4.5395807735951673e-05),
+        "sigmoid.deriv(10.0) failed",
+    )
+    debug_assert(
+        near_equal(sigmoid.deriv(x3)[0], 0.19661193324148185),
+        "sigmoid.deriv(-1.0) failed",
+    )
+    debug_assert(
+        near_equal(sigmoid.deriv(x4)[0], 4.5395807735951673e-05),
+        "sigmoid.deriv(-10.0) failed",
+    )
     debug_assert(near_equal(sigmoid.deriv(x5)[0], 0.25), "sigmoid.deriv(0.0) failed")
-    debug_assert(near_equal(sigmoid.deriv(x6)[0], 0.2350037122015945), "sigmoid.deriv(0.5) failed")
-    debug_assert(near_equal(sigmoid.deriv(x7)[0], 0.2350037122015945), "sigmoid.deriv(-0.5) failed")
-    debug_assert(near_equal(sigmoid.deriv(x8)[0], 3.7200759760208356e-44), "sigmoid.deriv(100.0) failed")
-    debug_assert(near_equal(sigmoid.deriv(x9)[0], 3.7200759760208356e-44), "sigmoid.deriv(-100.0) failed")
+    debug_assert(
+        near_equal(sigmoid.deriv(x6)[0], 0.2350037122015945),
+        "sigmoid.deriv(0.5) failed",
+    )
+    debug_assert(
+        near_equal(sigmoid.deriv(x7)[0], 0.2350037122015945),
+        "sigmoid.deriv(-0.5) failed",
+    )
+    debug_assert(
+        near_equal(sigmoid.deriv(x8)[0], 3.7200759760208356e-44),
+        "sigmoid.deriv(100.0) failed",
+    )
+    debug_assert(
+        near_equal(sigmoid.deriv(x9)[0], 3.7200759760208356e-44),
+        "sigmoid.deriv(-100.0) failed",
+    )
 
     debug_assert(near_equal(elu.deriv(x1)[0], 1.0), "elu.deriv(1.0) failed")
     debug_assert(near_equal(elu.deriv(x2)[0], 1.0), "elu.deriv(10.0) failed")
-    debug_assert(near_equal(elu.deriv(x3)[0], 0.36787944117144233), "elu.deriv(-1.0) failed")
-    debug_assert(near_equal(elu.deriv(x4)[0], 4.5399929762484854e-05), "elu.deriv(-10.0) failed")
+    debug_assert(
+        near_equal(elu.deriv(x3)[0], 0.36787944117144233), "elu.deriv(-1.0) failed"
+    )
+    debug_assert(
+        near_equal(elu.deriv(x4)[0], 4.5399929762484854e-05), "elu.deriv(-10.0) failed"
+    )
     debug_assert(near_equal(elu.deriv(x5)[0], 1.0), "elu.deriv(0.0) failed")
-    debug_assert(near_equal(elu.deriv(x6)[0], 1.1331484530668263), "elu.deriv(0.5) failed")
-    debug_assert(near_equal(elu.deriv(x7)[0], 0.6224593312018546), "elu.deriv(-0.5) failed")
+    debug_assert(
+        near_equal(elu.deriv(x6)[0], 1.1331484530668263), "elu.deriv(0.5) failed"
+    )
+    debug_assert(
+        near_equal(elu.deriv(x7)[0], 0.6224593312018546), "elu.deriv(-0.5) failed"
+    )
     debug_assert(near_equal(elu.deriv(x8)[0], 1.0), "elu.deriv(100.0) failed")
     debug_assert(near_equal(elu.deriv(x9)[0], 0.0), "elu.deriv(-100.0) failed")
 
-    debug_assert(near_equal(exponential.deriv(x1)[0], 2.718281828459045), "exponential.deriv(1.0) failed")
-    debug_assert(near_equal(exponential.deriv(x2)[0], 22026.465794806718), "exponential.deriv(10.0) failed")
-    debug_assert(near_equal(exponential.deriv(x3)[0], 0.36787944117144233), "exponential.deriv(-1.0) failed")
-    debug_assert(near_equal(exponential.deriv(x4)[0], 4.5399929762484854e-05), "exponential.deriv(-10.0) failed")
-    debug_assert(near_equal(exponential.deriv(x5)[0], 1.0), "exponential.deriv(0.0) failed")
-    debug_assert(near_equal(exponential.deriv(x6)[0], 1.6487212707001282), "exponential.deriv(0.5) failed")
-    debug_assert(near_equal(exponential.deriv(x7)[0], 0.6065306597126334), "exponential.deriv(-0.5) failed")
-    debug_assert(near_equal(exponential.deriv(x8)[0], 2.6881171418161356e+43), "exponential.deriv(100.0) failed")
-    debug_assert(near_equal(exponential.deriv(x9)[0], 3.7200759760208356e-44), "exponential.deriv(-100.0) failed")
+    debug_assert(
+        near_equal(exponential.deriv(x1)[0], 2.718281828459045),
+        "exponential.deriv(1.0) failed",
+    )
+    debug_assert(
+        near_equal(exponential.deriv(x2)[0], 22026.465794806718),
+        "exponential.deriv(10.0) failed",
+    )
+    debug_assert(
+        near_equal(exponential.deriv(x3)[0], 0.36787944117144233),
+        "exponential.deriv(-1.0) failed",
+    )
+    debug_assert(
+        near_equal(exponential.deriv(x4)[0], 4.5399929762484854e-05),
+        "exponential.deriv(-10.0) failed",
+    )
+    debug_assert(
+        near_equal(exponential.deriv(x5)[0], 1.0), "exponential.deriv(0.0) failed"
+    )
+    debug_assert(
+        near_equal(exponential.deriv(x6)[0], 1.6487212707001282),
+        "exponential.deriv(0.5) failed",
+    )
+    debug_assert(
+        near_equal(exponential.deriv(x7)[0], 0.6065306597126334),
+        "exponential.deriv(-0.5) failed",
+    )
+    debug_assert(
+        near_equal(exponential.deriv(x8)[0], 2.6881171418161356e43),
+        "exponential.deriv(100.0) failed",
+    )
+    debug_assert(
+        near_equal(exponential.deriv(x9)[0], 3.7200759760208356e-44),
+        "exponential.deriv(-100.0) failed",
+    )
 
-    debug_assert(near_equal(gelu.deriv(x1)[0], 0.41997434161402614), "gelu.deriv(1.0) failed")
+    debug_assert(
+        near_equal(gelu.deriv(x1)[0], 0.41997434161402614), "gelu.deriv(1.0) failed"
+    )
     debug_assert(near_equal(gelu.deriv(x2)[0], 1.0), "gelu.deriv(10.0) failed")
-    debug_assert(near_equal(gelu.deriv(x3)[0], 0.41997434161402614), "gelu.deriv(-1.0) failed")
+    debug_assert(
+        near_equal(gelu.deriv(x3)[0], 0.41997434161402614), "gelu.deriv(-1.0) failed"
+    )
     debug_assert(near_equal(gelu.deriv(x4)[0], 1.0), "gelu.deriv(-10.0) failed")
     debug_assert(near_equal(gelu.deriv(x5)[0], 0.5), "gelu.deriv(0.0) failed")
     debug_assert(near_equal(gelu.deriv(x6)[0], 0.345703), "gelu.deriv(0.5) failed")
@@ -226,19 +402,41 @@ fn test_activation() raises:
     debug_assert(near_equal(gelu.deriv(x8)[0], 1.0), "gelu.deriv(100.0) failed")
     debug_assert(near_equal(gelu.deriv(x9)[0], 1.0), "gelu.deriv(-100.0) failed")
 
-    debug_assert(near_equal(hard_sigmoid.deriv(x1)[0], 0.2), "hard_sigmoid.deriv(1.0) failed")
-    debug_assert(near_equal(hard_sigmoid.deriv(x2)[0], 0.0), "hard_sigmoid.deriv(10.0) failed")
-    debug_assert(near_equal(hard_sigmoid.deriv(x3)[0], 0.2), "hard_sigmoid.deriv(-1.0) failed")
-    debug_assert(near_equal(hard_sigmoid.deriv(x4)[0], 0.0), "hard_sigmoid.deriv(-10.0) failed")
-    debug_assert(near_equal(hard_sigmoid.deriv(x5)[0], 0.25), "hard_sigmoid.deriv(0.0) failed")
-    debug_assert(near_equal(hard_sigmoid.deriv(x6)[0], 0.3), "hard_sigmoid.deriv(0.5) failed")
-    debug_assert(near_equal(hard_sigmoid.deriv(x7)[0], 0.3), "hard_sigmoid.deriv(-0.5) failed")
-    debug_assert(near_equal(hard_sigmoid.deriv(x8)[0], 0.0), "hard_sigmoid.deriv(100.0) failed")
-    debug_assert(near_equal(hard_sigmoid.deriv(x9)[0], 0.0), "hard_sigmoid.deriv(-100.0) failed")
+    debug_assert(
+        near_equal(hard_sigmoid.deriv(x1)[0], 0.2), "hard_sigmoid.deriv(1.0) failed"
+    )
+    debug_assert(
+        near_equal(hard_sigmoid.deriv(x2)[0], 0.0), "hard_sigmoid.deriv(10.0) failed"
+    )
+    debug_assert(
+        near_equal(hard_sigmoid.deriv(x3)[0], 0.2), "hard_sigmoid.deriv(-1.0) failed"
+    )
+    debug_assert(
+        near_equal(hard_sigmoid.deriv(x4)[0], 0.0), "hard_sigmoid.deriv(-10.0) failed"
+    )
+    debug_assert(
+        near_equal(hard_sigmoid.deriv(x5)[0], 0.25), "hard_sigmoid.deriv(0.0) failed"
+    )
+    debug_assert(
+        near_equal(hard_sigmoid.deriv(x6)[0], 0.3), "hard_sigmoid.deriv(0.5) failed"
+    )
+    debug_assert(
+        near_equal(hard_sigmoid.deriv(x7)[0], 0.3), "hard_sigmoid.deriv(-0.5) failed"
+    )
+    debug_assert(
+        near_equal(hard_sigmoid.deriv(x8)[0], 0.0), "hard_sigmoid.deriv(100.0) failed"
+    )
+    debug_assert(
+        near_equal(hard_sigmoid.deriv(x9)[0], 0.0), "hard_sigmoid.deriv(-100.0) failed"
+    )
 
-    debug_assert(near_equal(mish.deriv(x1)[0], 0.41997434161402614), "mish.deriv(1.0) failed")
+    debug_assert(
+        near_equal(mish.deriv(x1)[0], 0.41997434161402614), "mish.deriv(1.0) failed"
+    )
     debug_assert(near_equal(mish.deriv(x2)[0], 1.0), "mish.deriv(10.0) failed")
-    debug_assert(near_equal(mish.deriv(x3)[0], 0.41997434161402614), "mish.deriv(-1.0) failed")
+    debug_assert(
+        near_equal(mish.deriv(x3)[0], 0.41997434161402614), "mish.deriv(-1.0) failed"
+    )
     debug_assert(near_equal(mish.deriv(x4)[0], 1.0), "mish.deriv(-10.0) failed")
     debug_assert(near_equal(mish.deriv(x5)[0], 0.5), "mish.deriv(0.0) failed")
     debug_assert(near_equal(mish.deriv(x6)[0], 0.462117), "mish.deriv(0.5) failed")
@@ -248,39 +446,80 @@ fn test_activation() raises:
 
     debug_assert(near_equal(selu.deriv(x1)[0], 1.050701), "selu.deriv(1.0) failed")
     debug_assert(near_equal(selu.deriv(x2)[0], 1.050701), "selu.deriv(10.0) failed")
-    debug_assert(near_equal(selu.deriv(x3)[0], 0.36787944117144233), "selu.deriv(-1.0) failed")
-    debug_assert(near_equal(selu.deriv(x4)[0], 0.36787944117144233), "selu.deriv(-10.0) failed")
+    debug_assert(
+        near_equal(selu.deriv(x3)[0], 0.36787944117144233), "selu.deriv(-1.0) failed"
+    )
+    debug_assert(
+        near_equal(selu.deriv(x4)[0], 0.36787944117144233), "selu.deriv(-10.0) failed"
+    )
     debug_assert(near_equal(selu.deriv(x5)[0], 1.0), "selu.deriv(0.0) failed")
     debug_assert(near_equal(selu.deriv(x6)[0], 1.050701), "selu.deriv(0.5) failed")
-    debug_assert(near_equal(selu.deriv(x7)[0], 0.36787944117144233), "selu.deriv(-0.5) failed")
+    debug_assert(
+        near_equal(selu.deriv(x7)[0], 0.36787944117144233), "selu.deriv(-0.5) failed"
+    )
     debug_assert(near_equal(selu.deriv(x8)[0], 1.050701), "selu.deriv(100.0) failed")
-    debug_assert(near_equal(selu.deriv(x9)[0], 0.36787944117144233), "selu.deriv(-100.0) failed")
+    debug_assert(
+        near_equal(selu.deriv(x9)[0], 0.36787944117144233), "selu.deriv(-100.0) failed"
+    )
 
-    debug_assert(near_equal(softplus.deriv(x1)[0], 0.7310585786300049), "softplus.deriv(1.0) failed")
+    debug_assert(
+        near_equal(softplus.deriv(x1)[0], 0.7310585786300049),
+        "softplus.deriv(1.0) failed",
+    )
     debug_assert(near_equal(softplus.deriv(x2)[0], 1.0), "softplus.deriv(10.0) failed")
-    debug_assert(near_equal(softplus.deriv(x3)[0], 0.7310585786300049), "softplus.deriv(-1.0) failed")
+    debug_assert(
+        near_equal(softplus.deriv(x3)[0], 0.7310585786300049),
+        "softplus.deriv(-1.0) failed",
+    )
     debug_assert(near_equal(softplus.deriv(x4)[0], 1.0), "softplus.deriv(-10.0) failed")
     debug_assert(near_equal(softplus.deriv(x5)[0], 0.5), "softplus.deriv(0.0) failed")
-    debug_assert(near_equal(softplus.deriv(x6)[0], 0.8807970779778823), "softplus.deriv(0.5) failed")
-    debug_assert(near_equal(softplus.deriv(x7)[0], 0.8807970779778823), "softplus.deriv(-0.5) failed")
+    debug_assert(
+        near_equal(softplus.deriv(x6)[0], 0.8807970779778823),
+        "softplus.deriv(0.5) failed",
+    )
+    debug_assert(
+        near_equal(softplus.deriv(x7)[0], 0.8807970779778823),
+        "softplus.deriv(-0.5) failed",
+    )
     debug_assert(near_equal(softplus.deriv(x8)[0], 1.0), "softplus.deriv(100.0) failed")
-    debug_assert(near_equal(softplus.deriv(x9)[0], 0.0), "softplus.deriv(-100.0) failed")
+    debug_assert(
+        near_equal(softplus.deriv(x9)[0], 0.0), "softplus.deriv(-100.0) failed"
+    )
 
     debug_assert(near_equal(softsign.deriv(x1)[0], 0.25), "softsign.deriv(1.0) failed")
-    debug_assert(near_equal(softsign.deriv(x2)[0], 0.00909090909090909), "softsign.deriv(10.0) failed")
+    debug_assert(
+        near_equal(softsign.deriv(x2)[0], 0.00909090909090909),
+        "softsign.deriv(10.0) failed",
+    )
     debug_assert(near_equal(softsign.deriv(x3)[0], 0.25), "softsign.deriv(-1.0) failed")
-    debug_assert(near_equal(softsign.deriv(x4)[0], 0.00909090909090909), "softsign.deriv(-10.0) failed")
+    debug_assert(
+        near_equal(softsign.deriv(x4)[0], 0.00909090909090909),
+        "softsign.deriv(-10.0) failed",
+    )
     debug_assert(near_equal(softsign.deriv(x5)[0], 0.25), "softsign.deriv(0.0) failed")
-    debug_assert(near_equal(softsign.deriv(x6)[0], 0.1111111111111111), "softsign.deriv(0.5) failed")
-    debug_assert(near_equal(softsign.deriv(x7)[0], 0.1111111111111111), "softsign.deriv(-0.5) failed")
-    debug_assert(near_equal(softsign.deriv(x8)[0], 0.009900990099009901), "softsign.deriv(100.0) failed")
-    debug_assert(near_equal(softsign.deriv(x9)[0], 0.009900990099009901), "softsign.deriv(-100.0) failed")
+    debug_assert(
+        near_equal(softsign.deriv(x6)[0], 0.1111111111111111),
+        "softsign.deriv(0.5) failed",
+    )
+    debug_assert(
+        near_equal(softsign.deriv(x7)[0], 0.1111111111111111),
+        "softsign.deriv(-0.5) failed",
+    )
+    debug_assert(
+        near_equal(softsign.deriv(x8)[0], 0.009900990099009901),
+        "softsign.deriv(100.0) failed",
+    )
+    debug_assert(
+        near_equal(softsign.deriv(x9)[0], 0.009900990099009901),
+        "softsign.deriv(-100.0) failed",
+    )
+
 
 fn test_initializer() raises:
     from initializer import Initializer
 
     let shape = TensorShape(2, 2)
-    
+
     let zeros = Initializer[T, "zeros"]()
     let ones = Initializer[T, "ones"]()
     let glorot_normal = Initializer[T, "glorot_normal"]()
@@ -349,6 +588,7 @@ fn test_initializer() raises:
 
     debug_assert(x12.shape() == shape, "truncated_normal.initialize shape failed")
     debug_assert(x12[0] != x12[1], "truncated_normal.initialize value failed")
+
 
 fn main() raises:
     test_activation()
