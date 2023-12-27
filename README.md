@@ -36,6 +36,7 @@
 
 ### Completed Structs
 * [Activation](https://github.com/Benny-Nottonson/voodoo/wiki/Activation-Functions)
+* [Initialization](https://github.com/Benny-Nottonson/voodoo/wiki/Initialization-Functions)
 
 ## Built With
 
