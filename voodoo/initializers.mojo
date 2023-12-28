@@ -4,12 +4,6 @@ from voodoo import (
 
 """
 Initializer Functions
-
-- Base definition in voodoo/node.mojo
-- Tensor Wrapper in voodoo/tensor.py
-- Function Wrapper in this file
-
-Supported Functions:
 - glorot_normal
 - glorot_uniform
 - he_normal

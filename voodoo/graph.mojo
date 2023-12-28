@@ -66,14 +66,10 @@ alias transpose_code = 42
 alias bwtranspose_code = 43
 alias sum_code = 44
 alias bwsum_code = 45
-alias mse_code = 46
-alias bwmse_code = 47
-alias ce_code = 48
-alias bwce_code = 49
-alias conv2d_code = 50
-alias bwconv2d_code = 51
-alias maxpool2dd_code = 52
-alias bwmaxpool2d_code = 53
+alias conv2d_code = 46
+alias bwconv2d_code = 47
+alias maxpool2dd_code = 48
+alias bwmaxpool2d_code = 49
 
 # Activation Functions
 alias elu_code = 60
@@ -104,6 +100,34 @@ alias swish_code = 84
 alias bwswish_code = 85
 alias tanh_code = 86
 alias bwtanh_code = 87
+
+# Loss functions
+alias kld_code = 90
+alias bwkld_code = 91
+alias mae_code = 92
+alias bwmae_code = 93
+alias mape_code = 94
+alias bwmape_code = 95
+alias mse_code = 96
+alias bwmse_code = 97
+alias msle_code = 98
+alias bwmsle_code = 99
+alias bce_code = 100
+alias bwbce_code = 101
+alias cce_code = 102
+alias bwcce_code = 103
+alias cfce_code = 104
+alias bwcfce_code = 105
+alias cs_code = 106
+alias bwcs_code = 107
+alias huber_code = 108
+alias bwhuber_code = 109
+alias logcosh_code = 110
+alias bwlogcosh_code = 111
+alias poisson_code = 112
+alias bwpoisson_code = 113
+alias scce_code = 114
+alias bwscce_code = 115
 
 
 fn unary(b: Node, a: Node):
@@ -196,20 +220,32 @@ struct Graph:
         kernels.store(bwpow_code, op_tuple("bwpow", unary, bw_pow, view, reduce))
         kernels.store(mmul_code, op_tuple("mmul", unary, fw_mmul, view, reduce))
         kernels.store(bwmmul_code, op_tuple("bwmmul", unary, bw_mmul, view, reduce))
-        kernels.store(reshape_code, op_tuple("reshape", fw_reshape, binary, view, reduce))
-        kernels.store(bwreshape_code, op_tuple("bwreshape", bw_reshape, binary, view, reduce))
-        kernels.store(transpose_code, op_tuple("transpose", fw_transpose, binary, view, reduce))
-        kernels.store(bwtranspose_code, op_tuple("bwtranspose", bw_transpose, binary, view, reduce))
+        kernels.store(
+            reshape_code, op_tuple("reshape", fw_reshape, binary, view, reduce)
+        )
+        kernels.store(
+            bwreshape_code, op_tuple("bwreshape", bw_reshape, binary, view, reduce)
+        )
+        kernels.store(
+            transpose_code, op_tuple("transpose", fw_transpose, binary, view, reduce)
+        )
+        kernels.store(
+            bwtranspose_code,
+            op_tuple("bwtranspose", bw_transpose, binary, view, reduce),
+        )
         kernels.store(sum_code, op_tuple("sum", fw_sum, binary, view, reduce))
         kernels.store(bwsum_code, op_tuple("bwsum", bw_sum, binary, view, reduce))
-        kernels.store(mse_code, op_tuple("mse", unary, fw_mse, view, reduce))
-        kernels.store(bwmse_code, op_tuple("bwmse", unary, bw_mse, view, reduce))
-        kernels.store(ce_code, op_tuple("ce", unary, fw_ce, view, reduce))
-        kernels.store(bwce_code, op_tuple("bwce", unary, bw_ce, view, reduce))
         kernels.store(conv2d_code, op_tuple("conv2d", unary, conv_2d, view, reduce))
-        kernels.store(bwconv2d_code, op_tuple("bwconv2d", unary, bw_conv_2d, view, reduce))
-        kernels.store(maxpool2dd_code, op_tuple("maxpool2dd", max_pool_2d, binary, view, reduce))
-        kernels.store(bwmaxpool2d_code, op_tuple("bwmaxpool2d", bw_max_pool_2d, binary, view, reduce))
+        kernels.store(
+            bwconv2d_code, op_tuple("bwconv2d", unary, bw_conv_2d, view, reduce)
+        )
+        kernels.store(
+            maxpool2dd_code, op_tuple("maxpool2dd", max_pool_2d, binary, view, reduce)
+        )
+        kernels.store(
+            bwmaxpool2d_code,
+            op_tuple("bwmaxpool2d", bw_max_pool_2d, binary, view, reduce),
+        )
         kernels.store(elu_code, op_tuple("elu", fw_elu, binary, view, reduce))
         kernels.store(bwelu_code, op_tuple("bwelu", bw_elu, binary, view, reduce))
         kernels.store(exp_code, op_tuple("exp", fw_exp, binary, view, reduce))
@@ -262,6 +298,41 @@ struct Graph:
         kernels.store(bwswish_code, op_tuple("bwswish", bw_swish, binary, view, reduce))
         kernels.store(tanh_code, op_tuple("tanh", fw_tanh, binary, view, reduce))
         kernels.store(bwtanh_code, op_tuple("bwtanh", bw_tanh, binary, view, reduce))
+
+        kernels.store(kld_code, op_tuple("kld", unary, fw_kld, view, reduce))
+        kernels.store(bwkld_code, op_tuple("bwkld", unary, bw_kld, view, reduce))
+        kernels.store(mae_code, op_tuple("mae", unary, fw_mae, view, reduce))
+        kernels.store(bwmae_code, op_tuple("bwmae", unary, bw_mae, view, reduce))
+        kernels.store(mape_code, op_tuple("mape", unary, fw_mape, view, reduce))
+        kernels.store(bwmape_code, op_tuple("bwmape", unary, bw_mape, view, reduce))
+        kernels.store(mse_code, op_tuple("mse", unary, fw_mse, view, reduce))
+        kernels.store(bwmse_code, op_tuple("bwmse", unary, bw_mse, view, reduce))
+        kernels.store(msle_code, op_tuple("msle", unary, fw_msle, view, reduce))
+        kernels.store(bwmsle_code, op_tuple("bwmsle", unary, bw_msle, view, reduce))
+        kernels.store(bce_code, op_tuple("bce", unary, fw_bce, view, reduce))
+        kernels.store(bwbce_code, op_tuple("bwbce", unary, bw_bce, view, reduce))
+        kernels.store(cce_code, op_tuple("cce", unary, fw_cce, view, reduce))
+        kernels.store(bwcce_code, op_tuple("bwcce", unary, bw_cce, view, reduce))
+        kernels.store(cfce_code, op_tuple("cfce", unary, fw_cfce, view, reduce))
+        kernels.store(bwcfce_code, op_tuple("bwcfce", unary, bw_cfce, view, reduce))
+        kernels.store(cs_code, op_tuple("cs", unary, fw_cs, view, reduce))
+        kernels.store(bwcs_code, op_tuple("bwcs", unary, bw_cs, view, reduce))
+        kernels.store(huber_code, op_tuple("huber", unary, fw_huber, view, reduce))
+        kernels.store(bwhuber_code, op_tuple("bwhuber", unary, bw_huber, view, reduce))
+        kernels.store(
+            logcosh_code, op_tuple("logcosh", unary, fw_logcosh, view, reduce)
+        )
+        kernels.store(
+            bwlogcosh_code, op_tuple("bwlogcosh", unary, bw_logcosh, view, reduce)
+        )
+        kernels.store(
+            poisson_code, op_tuple("poisson", unary, fw_poisson, view, reduce)
+        )
+        kernels.store(
+            bwpoisson_code, op_tuple("bwpoisson", unary, bw_poisson, view, reduce)
+        )
+        kernels.store(scce_code, op_tuple("scce", unary, fw_scce, view, reduce))
+        kernels.store(bwscce_code, op_tuple("bwscce", unary, bw_scce, view, reduce))
 
         let forward_order = Pointer[VectorInt].alloc(1)
         forward_order.store(VectorInt())
@@ -1179,42 +1250,7 @@ struct Graph:
             shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
         )
 
-    fn mse(
-        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
-    ) raises -> Pointer[Node]:
-        let operator_id = mse_code
-        let checkpoint = False
-        let shape = shape(1)
-        let other_params = Vector[Int]()
-        return self.node(
-            shape,
-            False,
-            False,
-            checkpoint,
-            operator_id,
-            other_params,
-            parent1_ptr,
-            parent2_ptr,
-        )
-
-    fn ce(
-        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
-    ) raises -> Pointer[Node]:
-        let operator_id = ce_code
-        let checkpoint = False
-        let shape = shape(1)
-        let other_params = Vector[Int]()
-        return self.node(
-            shape,
-            False,
-            False,
-            checkpoint,
-            operator_id,
-            other_params,
-            parent1_ptr,
-            parent2_ptr,
-        )
-
+    # Activation functions
     fn elu(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
         let operator_id = elu_code
         let checkpoint = False
@@ -1349,4 +1385,243 @@ struct Graph:
         let other_params = Vector[Int]()
         return self.node(
             shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
+        )
+
+    # Loss functions
+    fn kld(
+        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
+    ) raises -> Pointer[Node]:
+        let operator_id = kld_code
+        let checkpoint = False
+        let shape = shape(1)
+        let other_params = Vector[Int]()
+        return self.node(
+            shape,
+            False,
+            False,
+            checkpoint,
+            operator_id,
+            other_params,
+            parent1_ptr,
+            parent2_ptr,
+        )
+
+    fn mae(
+        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
+    ) raises -> Pointer[Node]:
+        let operator_id = mae_code
+        let checkpoint = False
+        let shape = shape(1)
+        let other_params = Vector[Int]()
+        return self.node(
+            shape,
+            False,
+            False,
+            checkpoint,
+            operator_id,
+            other_params,
+            parent1_ptr,
+            parent2_ptr,
+        )
+
+    fn mape(
+        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
+    ) raises -> Pointer[Node]:
+        let operator_id = mape_code
+        let checkpoint = False
+        let shape = shape(1)
+        let other_params = Vector[Int]()
+        return self.node(
+            shape,
+            False,
+            False,
+            checkpoint,
+            operator_id,
+            other_params,
+            parent1_ptr,
+            parent2_ptr,
+        )
+
+    fn mse(
+        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
+    ) raises -> Pointer[Node]:
+        let operator_id = mse_code
+        let checkpoint = False
+        let shape = shape(1)
+        let other_params = Vector[Int]()
+        return self.node(
+            shape,
+            False,
+            False,
+            checkpoint,
+            operator_id,
+            other_params,
+            parent1_ptr,
+            parent2_ptr,
+        )
+
+    fn msle(
+        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
+    ) raises -> Pointer[Node]:
+        let operator_id = msle_code
+        let checkpoint = False
+        let shape = shape(1)
+        let other_params = Vector[Int]()
+        return self.node(
+            shape,
+            False,
+            False,
+            checkpoint,
+            operator_id,
+            other_params,
+            parent1_ptr,
+            parent2_ptr,
+        )
+
+    fn bce(
+        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
+    ) raises -> Pointer[Node]:
+        let operator_id = bce_code
+        let checkpoint = False
+        let shape = shape(1)
+        let other_params = Vector[Int]()
+        return self.node(
+            shape,
+            False,
+            False,
+            checkpoint,
+            operator_id,
+            other_params,
+            parent1_ptr,
+            parent2_ptr,
+        )
+
+    fn cce(
+        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
+    ) raises -> Pointer[Node]:
+        let operator_id = cce_code
+        let checkpoint = False
+        let shape = shape(1)
+        let other_params = Vector[Int]()
+        return self.node(
+            shape,
+            False,
+            False,
+            checkpoint,
+            operator_id,
+            other_params,
+            parent1_ptr,
+            parent2_ptr,
+        )
+
+    fn cfce(
+        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
+    ) raises -> Pointer[Node]:
+        let operator_id = cfce_code
+        let checkpoint = False
+        let shape = shape(1)
+        let other_params = Vector[Int]()
+        return self.node(
+            shape,
+            False,
+            False,
+            checkpoint,
+            operator_id,
+            other_params,
+            parent1_ptr,
+            parent2_ptr,
+        )
+
+    fn cs(
+        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
+    ) raises -> Pointer[Node]:
+        let operator_id = cs_code
+        let checkpoint = False
+        let shape = shape(1)
+        let other_params = Vector[Int]()
+        return self.node(
+            shape,
+            True,
+            False,
+            checkpoint,
+            operator_id,
+            other_params,
+            parent1_ptr,
+            parent2_ptr,
+        )
+
+    fn huber(
+        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
+    ) raises -> Pointer[Node]:
+        let operator_id = huber_code
+        let checkpoint = False
+        let shape = shape(1)
+        let other_params = Vector[Int]()
+        other_params.push_back(1)
+        return self.node(
+            shape,
+            True,
+            False,
+            checkpoint,
+            operator_id,
+            other_params,
+            parent1_ptr,
+            parent2_ptr,
+        )
+
+    fn logcosh(
+        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
+    ) raises -> Pointer[Node]:
+        let operator_id = logcosh_code
+        let checkpoint = False
+        let shape = shape(1)
+        let other_params = Vector[Int]()
+        other_params.push_back(1)
+        return self.node(
+            shape,
+            True,
+            False,
+            checkpoint,
+            operator_id,
+            other_params,
+            parent1_ptr,
+            parent2_ptr,
+        )
+
+    fn poisson(
+        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
+    ) raises -> Pointer[Node]:
+        let operator_id = poisson_code
+        let checkpoint = False
+        let shape = shape(1)
+        let other_params = Vector[Int]()
+        other_params.push_back(1)
+        return self.node(
+            shape,
+            True,
+            False,
+            checkpoint,
+            operator_id,
+            other_params,
+            parent1_ptr,
+            parent2_ptr,
+        )
+
+    fn scce(
+        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
+    ) raises -> Pointer[Node]:
+        let operator_id = scce_code
+        let checkpoint = False
+        let shape = shape(1)
+        let other_params = Vector[Int]()
+        other_params.push_back(1)
+        return self.node(
+            shape,
+            True,
+            False,
+            checkpoint,
+            operator_id,
+            other_params,
+            parent1_ptr,
+            parent2_ptr,
         )

@@ -806,6 +806,34 @@ struct Tensor:
         )
         return new_tensor
 
+    # Loss functions
+    fn kld(self, other: Tensor) raises -> Tensor:
+        let new_tensor = self.load_tensor_for_binary_op(other)
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load()
+            .load()
+            .kld(self.node_ptr.load(), other.node_ptr.load())
+        )
+        return new_tensor
+
+    fn mae(self, other: Tensor) raises -> Tensor:
+        let new_tensor = self.load_tensor_for_binary_op(other)
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load()
+            .load()
+            .mae(self.node_ptr.load(), other.node_ptr.load())
+        )
+        return new_tensor
+
+    fn mape(self, other: Tensor) raises -> Tensor:
+        let new_tensor = self.load_tensor_for_binary_op(other)
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load()
+            .load()
+            .mape(self.node_ptr.load(), other.node_ptr.load())
+        )
+        return new_tensor
+
     fn mse(self, other: Tensor) raises -> Tensor:
         let new_tensor = self.load_tensor_for_binary_op(other)
         new_tensor.node_ptr.store(
@@ -815,12 +843,84 @@ struct Tensor:
         )
         return new_tensor
 
-    fn cross_entropy(self, other: Tensor) raises -> Tensor:
+    fn msle(self, other: Tensor) raises -> Tensor:
         let new_tensor = self.load_tensor_for_binary_op(other)
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()
             .load()
-            .ce(other.node_ptr.load(), self.node_ptr.load())
+            .msle(self.node_ptr.load(), other.node_ptr.load())
+        )
+        return new_tensor
+
+    fn bce(self, other: Tensor) raises -> Tensor:
+        let new_tensor = self.load_tensor_for_binary_op(other)
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load()
+            .load()
+            .bce(self.node_ptr.load(), other.node_ptr.load())
+        )
+        return new_tensor
+
+    fn cce(self, other: Tensor) raises -> Tensor:
+        let new_tensor = self.load_tensor_for_binary_op(other)
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load()
+            .load()
+            .cce(self.node_ptr.load(), other.node_ptr.load())
+        )
+        return new_tensor
+
+    fn cfce(self, other: Tensor) raises -> Tensor:
+        let new_tensor = self.load_tensor_for_binary_op(other)
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load()
+            .load()
+            .cfce(self.node_ptr.load(), other.node_ptr.load())
+        )
+        return new_tensor
+
+    fn cs(self, other: Tensor) raises -> Tensor:
+        let new_tensor = self.load_tensor_for_binary_op(other)
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load()
+            .load()
+            .cs(self.node_ptr.load(), other.node_ptr.load())
+        )
+        return new_tensor
+
+    fn huber(self, other: Tensor) raises -> Tensor:
+        let new_tensor = self.load_tensor_for_binary_op(other)
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load()
+            .load()
+            .huber(self.node_ptr.load(), other.node_ptr.load())
+        )
+        return new_tensor
+
+    fn logcosh(self, other: Tensor) raises -> Tensor:
+        let new_tensor = self.load_tensor_for_binary_op(other)
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load()
+            .load()
+            .logcosh(self.node_ptr.load(), other.node_ptr.load())
+        )
+        return new_tensor
+
+    fn poisson(self, other: Tensor) raises -> Tensor:
+        let new_tensor = self.load_tensor_for_binary_op(other)
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load()
+            .load()
+            .poisson(self.node_ptr.load(), other.node_ptr.load())
+        )
+        return new_tensor
+
+    fn scce(self, other: Tensor) raises -> Tensor:
+        let new_tensor = self.load_tensor_for_binary_op(other)
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load()
+            .load()
+            .scce(self.node_ptr.load(), other.node_ptr.load())
         )
         return new_tensor
 
@@ -949,6 +1049,7 @@ fn cosh(tensor: Tensor) raises -> Tensor:
 fn sinh(tensor: Tensor) raises -> Tensor:
     return tensor.sinh()
 
+
 fn log(tensor: Tensor) raises -> Tensor:
     return tensor.log()
 
@@ -986,14 +1087,6 @@ fn transpose(tensor: Tensor) raises -> Tensor:
 
 fn sum(tensor: Tensor, axis: Int = -1) raises -> Tensor:
     return tensor.sum(axis)
-
-
-fn mse(a: Tensor, b: Tensor) raises -> Tensor:
-    return a.mse(b)
-
-
-fn cross_entropy(a: Tensor, b: Tensor) raises -> Tensor:
-    return a.cross_entropy(b)
 
 
 fn max_pool_2d(

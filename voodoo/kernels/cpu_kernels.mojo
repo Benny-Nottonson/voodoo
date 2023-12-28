@@ -19,7 +19,7 @@ from math import (
     cosh,
     sinh,
     tanh,
-    erfc
+    erfc,
 )
 from sys.param_env import env_get_int
 from algorithm import vectorize, parallelize
@@ -933,6 +933,7 @@ fn bw_relu(node: Node, parent1: Node):
 
     vectorize[nelts, v_relu_bw](node.load_cap())
 
+
 fn fw_elu(node: Node, parent1: Node):
     @parameter
     fn v_elu[_nelts: Int](i: Int):
@@ -947,6 +948,7 @@ fn fw_elu(node: Node, parent1: Node):
         )
 
     vectorize[nelts, v_elu](node.load_cap())
+
 
 fn bw_elu(node: Node, parent1: Node):
     @parameter
@@ -975,9 +977,11 @@ fn fw_gelu(node: Node, parent1: Node):
             (parent1.load_data[_nelts](i) > zeros).cast[DType.float32]()
             * parent1.load_data[_nelts](i)
             + (parent1.load_data[_nelts](i) <= zeros).cast[DType.float32]()
-            * (parent1.load_data[_nelts](i)
+            * (
+                parent1.load_data[_nelts](i)
                 * (Float32(1.0) + erfc(parent1.load_data[_nelts](i) / sqrt2))
-                + ones),
+                + ones
+            ),
         )
 
     vectorize[nelts, v_gelu](node.load_cap())
@@ -994,9 +998,11 @@ fn bw_gelu(node: Node, parent1: Node):
             (parent1.load_data[_nelts](i) > zeros).cast[DType.float32]()
             * node.load_grad[_nelts](i)
             + (parent1.load_data[_nelts](i) <= zeros).cast[DType.float32]()
-            * (node.load_grad[_nelts](i)
+            * (
+                node.load_grad[_nelts](i)
                 * (Float32(1.0) + erfc(parent1.load_data[_nelts](i) / sqrt2))
-                + parent1.load_grad[_nelts](i)),
+                + parent1.load_grad[_nelts](i)
+            ),
         )
 
     vectorize[nelts, v_gelu_bw](node.load_cap())
@@ -1010,13 +1016,11 @@ fn fw_hard_sigmoid(node: Node, parent1: Node):
         let threes = SIMD[DType.float32, _nelts]()
         node.store_data[_nelts](
             i,
-            (parent1.load_data[_nelts](i) > threes).cast[DType.float32]()
-            * ones
+            (parent1.load_data[_nelts](i) > threes).cast[DType.float32]() * ones
             + (parent1.load_data[_nelts](i) <= threes).cast[DType.float32]()
             * (parent1.load_data[_nelts](i) >= zeros).cast[DType.float32]()
             * (parent1.load_data[_nelts](i) / threes)
-            + (parent1.load_data[_nelts](i) < zeros).cast[DType.float32]()
-            * zeros,
+            + (parent1.load_data[_nelts](i) < zeros).cast[DType.float32]() * zeros,
         )
 
     vectorize[nelts, v_hard_sigmoid](node.load_cap())
@@ -1030,13 +1034,11 @@ fn bw_hard_sigmoid(node: Node, parent1: Node):
         let threes = SIMD[DType.float32, _nelts]()
         parent1.store_grad[_nelts](
             i,
-            (parent1.load_data[_nelts](i) > threes).cast[DType.float32]()
-            * zeros
+            (parent1.load_data[_nelts](i) > threes).cast[DType.float32]() * zeros
             + (parent1.load_data[_nelts](i) <= threes).cast[DType.float32]()
             * (parent1.load_data[_nelts](i) >= zeros).cast[DType.float32]()
             * (node.load_grad[_nelts](i) / threes)
-            + (parent1.load_data[_nelts](i) < zeros).cast[DType.float32]()
-            * zeros,
+            + (parent1.load_data[_nelts](i) < zeros).cast[DType.float32]() * zeros,
         )
 
     vectorize[nelts, v_hard_sigmoid_bw](node.load_cap())
@@ -1053,7 +1055,9 @@ fn fw_linear(node: Node, parent1: Node):
 fn bw_linear(node: Node, parent1: Node):
     @parameter
     fn v_linear_bw[_nelts: Int](i: Int):
-        parent1.store_grad[_nelts](i, parent1.load_grad[_nelts](i) + node.load_grad[_nelts](i))
+        parent1.store_grad[_nelts](
+            i, parent1.load_grad[_nelts](i) + node.load_grad[_nelts](i)
+        )
 
     vectorize[nelts, v_linear_bw](node.load_cap())
 
@@ -1080,8 +1084,7 @@ fn fw_mish(node: Node, parent1: Node):
                 * (Float32(4.0) * parent1.load_data[_nelts](i) + Float32(6.0))
                 + Float32(4.0)
             )
-            + (parent1.load_data[_nelts](i) > threes).cast[DType.float32]()
-            * ones,
+            + (parent1.load_data[_nelts](i) > threes).cast[DType.float32]() * ones,
         )
 
     vectorize[nelts, v_mish](node.load_cap())
@@ -1108,8 +1111,7 @@ fn bw_mish(node: Node, parent1: Node):
                     * (Float32(2.0) * parent1.load_data[_nelts](i) + Float32(4.0))
                     + Float32(6.0)
                 )
-                + (parent1.load_data[_nelts](i) > threes).cast[DType.float32]()
-                * ones
+                + (parent1.load_data[_nelts](i) > threes).cast[DType.float32]() * ones
             )
             + parent1.load_grad[_nelts](i),
         )
@@ -1211,7 +1213,9 @@ fn fw_softsign(node: Node, parent1: Node):
     @parameter
     fn v_softsign[_nelts: Int](i: Int):
         node.store_data[_nelts](
-            i, parent1.load_data[_nelts](i) / (Float32(1.0) + abs(parent1.load_data[_nelts](i)))
+            i,
+            parent1.load_data[_nelts](i)
+            / (Float32(1.0) + abs(parent1.load_data[_nelts](i))),
         )
 
     vectorize[nelts, v_softsign](node.load_cap())
@@ -1248,15 +1252,14 @@ fn bw_swish(node: Node, parent1: Node):
         node.store_grad[_nelts](
             i,
             node.load_grad[_nelts](i)
-            * (Float32(1.0)
+            * (
+                Float32(1.0)
                 + (Float32(1.0) - node.load_data[_nelts](i))
-                * exp(-parent1.load_data[_nelts](i))),
+                * exp(-parent1.load_data[_nelts](i))
+            ),
         )
 
     vectorize[nelts, v_swish_bw](node.load_cap())
-
-
-
 
 
 fn fw_copy(node: Node, parent1: Node):
@@ -1359,66 +1362,6 @@ fn bw_softmax(node: Node, parent1: Node):
             )
 
         vectorize[nelts, v_softmax_bw_outer](N)
-
-
-fn fw_mse(node: Node, parent1: Node, parent2: Node):
-    var sum = Float32(0.0)
-
-    @parameter
-    fn v_mse[nelts: Int](i: Int):
-        let error = (parent1.load_data[nelts](i) - parent2.load_data[nelts](i)) * (
-            parent1.load_data[nelts](i) - parent2.load_data[nelts](i)
-        )
-        sum += error.reduce_add()
-
-    vectorize[nelts, v_mse](parent1.load_cap())
-    node.store_data(0, sum / Float32(parent1.load_cap()))
-
-
-fn bw_mse(node: Node, parent1: Node, parent2: Node):
-    @parameter
-    fn v_mse_bw[nelts: Int](i: Int):
-        let grad = -Float32(2.0) * (
-            parent2.load_data[nelts](i) - parent1.load_data[nelts](i)
-        ) / Float32(parent1.load_cap())
-        parent1.store_grad[nelts](i, parent1.load_grad[nelts](i) + grad)
-        parent2.store_grad[nelts](i, parent2.load_grad[nelts](i) - grad)
-
-    vectorize[nelts, v_mse_bw](parent1.load_cap())
-
-
-fn fw_ce(c: Node, a: Node, b: Node):
-    let num_dims = a.shape_ptr.load().len.load()
-    let N = a.shape_ptr.load().load(num_dims - 1)
-    let epsilon = Float32(1e-8)
-
-    @parameter
-    fn v_ce[nelts: Int](index: Int):
-        let error = -a.load_data[nelts](index) * log(
-            b.load_data[nelts](index) + epsilon
-        )
-        c.store_data(0, c.load_data(0) + error.reduce_add())
-
-    vectorize[nelts, v_ce](a.cap_ptr.load())
-    c.store_data(0, c.load_data(0) / (Float32(a.cap_ptr.load()) / Float32(N)))
-
-
-fn bw_ce(c: Node, a: Node, b: Node):
-    let num_dims = a.num_dims_ptr.load()
-    let N = a.shape_ptr.load().load(num_dims - 1)
-
-    for index in range(a.cap_ptr.load()):
-        let grad_a = -log(b.load_data(index))
-        a.store_grad(
-            index,
-            a.load_grad(index) + grad_a / (Float32(a.cap_ptr.load()) / Float32(N)),
-        )
-    for index in range(b.cap_ptr.load()):
-        let grad_b = -a.load_data(index) / (b.load_data(index))
-        b.store_grad(
-            index,
-            b.load_grad(index) + grad_b / (Float32(a.cap_ptr.load()) / Float32(N)),
-        )
 
 
 fn fw_reshape(node: Node, parent1: Node):
@@ -1774,3 +1717,377 @@ fn bw_max_pool_2d(b: Node, a: Node):
                     a.store_grad(
                         arg_max, a.load_grad(arg_max) + b.load_grad(b_grad_idx)
                     )
+
+
+fn fw_kld(node: Node, parent1: Node, parent2: Node):
+    var sum = Float32(0.0)
+
+    @parameter
+    fn v_kld[nelts: Int](i: Int):
+        let error = parent1.load_data[nelts](i) * log(
+            parent1.load_data[nelts](i) / parent2.load_data[nelts](i)
+        )
+        sum += error.reduce_add()
+
+    vectorize[nelts, v_kld](parent1.load_cap())
+    node.store_data(0, sum)
+
+
+fn bw_kld(node: Node, parent1: Node, parent2: Node):
+    @parameter
+    fn v_kld_bw[nelts: Int](i: Int):
+        let grad = parent1.load_data[nelts](i) * (
+            Float32(1.0)
+            + log(parent1.load_data[nelts](i) / parent2.load_data[nelts](i))
+        )
+        parent1.store_grad[nelts](i, parent1.load_grad[nelts](i) + grad)
+        parent2.store_grad[nelts](i, parent2.load_grad[nelts](i) - grad)
+
+    vectorize[nelts, v_kld_bw](parent1.load_cap())
+
+
+fn fw_mae(node: Node, parent1: Node, parent2: Node):
+    var sum = Float32(0.0)
+
+    @parameter
+    fn v_mae[nelts: Int](i: Int):
+        let error = abs(parent1.load_data[nelts](i) - parent2.load_data[nelts](i))
+        sum += error.reduce_add()
+
+    vectorize[nelts, v_mae](parent1.load_cap())
+    node.store_data(0, sum / Float32(parent1.load_cap()))
+
+
+fn bw_mae(node: Node, parent1: Node, parent2: Node):
+    @parameter
+    fn v_mae_bw[nelts: Int](i: Int):
+        let grad = (parent1.load_data[nelts](i) - parent2.load_data[nelts](i)) / (
+            parent1.load_data[nelts](i) - parent2.load_data[nelts](i)
+        )
+        parent1.store_grad[nelts](i, parent1.load_grad[nelts](i) + grad)
+        parent2.store_grad[nelts](i, parent2.load_grad[nelts](i) - grad)
+
+    vectorize[nelts, v_mae_bw](parent1.load_cap())
+
+
+fn fw_mape(node: Node, parent1: Node, parent2: Node):
+    var sum = Float32(0.0)
+
+    @parameter
+    fn v_mape[nelts: Int](i: Int):
+        let error = abs(
+            (parent1.load_data[nelts](i) - parent2.load_data[nelts](i))
+            / parent2.load_data[nelts](i)
+        )
+        sum += error.reduce_add()
+
+    vectorize[nelts, v_mape](parent1.load_cap())
+    node.store_data(0, sum / Float32(parent1.load_cap()))
+
+
+fn bw_mape(node: Node, parent1: Node, parent2: Node):
+    @parameter
+    fn v_mape_bw[nelts: Int](i: Int):
+        let grad = (parent1.load_data[nelts](i) - parent2.load_data[nelts](i)) / (
+            parent2.load_data[nelts](i) * parent2.load_data[nelts](i)
+        )
+        parent1.store_grad[nelts](i, parent1.load_grad[nelts](i) + grad)
+        parent2.store_grad[nelts](i, parent2.load_grad[nelts](i) - grad)
+
+    vectorize[nelts, v_mape_bw](parent1.load_cap())
+
+
+fn fw_mse(node: Node, parent1: Node, parent2: Node):
+    var sum = Float32(0.0)
+
+    @parameter
+    fn v_mse[nelts: Int](i: Int):
+        let error = (parent1.load_data[nelts](i) - parent2.load_data[nelts](i)) * (
+            parent1.load_data[nelts](i) - parent2.load_data[nelts](i)
+        )
+        sum += error.reduce_add()
+
+    vectorize[nelts, v_mse](parent1.load_cap())
+    node.store_data(0, sum / Float32(parent1.load_cap()))
+
+
+fn bw_mse(node: Node, parent1: Node, parent2: Node):
+    @parameter
+    fn v_mse_bw[nelts: Int](i: Int):
+        let grad = -Float32(2.0) * (
+            parent2.load_data[nelts](i) - parent1.load_data[nelts](i)
+        ) / Float32(parent1.load_cap())
+        parent1.store_grad[nelts](i, parent1.load_grad[nelts](i) + grad)
+        parent2.store_grad[nelts](i, parent2.load_grad[nelts](i) - grad)
+
+    vectorize[nelts, v_mse_bw](parent1.load_cap())
+
+
+fn fw_msle(node: Node, parent1: Node, parent2: Node):
+    var sum = Float32(0.0)
+
+    @parameter
+    fn v_msle[nelts: Int](i: Int):
+        let error = log(
+            Float32(1.0)
+            + (parent1.load_data[nelts](i) - parent2.load_data[nelts](i))
+            * (parent1.load_data[nelts](i) - parent2.load_data[nelts](i))
+        )
+        sum += error.reduce_add()
+
+    vectorize[nelts, v_msle](parent1.load_cap())
+    node.store_data(0, sum / Float32(parent1.load_cap()))
+
+
+fn bw_msle(node: Node, parent1: Node, parent2: Node):
+    @parameter
+    fn v_msle_bw[nelts: Int](i: Int):
+        let grad = (
+            Float32(1.0)
+            + (parent1.load_data[nelts](i) - parent2.load_data[nelts](i))
+            * (parent1.load_data[nelts](i) - parent2.load_data[nelts](i))
+        ) / (
+            Float32(1.0)
+            + (parent1.load_data[nelts](i) - parent2.load_data[nelts](i))
+            * (parent1.load_data[nelts](i) - parent2.load_data[nelts](i))
+        )
+        parent1.store_grad[nelts](i, parent1.load_grad[nelts](i) + grad)
+        parent2.store_grad[nelts](i, parent2.load_grad[nelts](i) - grad)
+
+    vectorize[nelts, v_msle_bw](parent1.load_cap())
+
+
+fn fw_bce(node: Node, parent1: Node, parent2: Node):
+    var sum = Float32(0.0)
+
+    @parameter
+    fn v_bce[nelts: Int](i: Int):
+        let error = -(
+            parent2.load_data[nelts](i) * log(parent1.load_data[nelts](i))
+            + (Float32(1.0) - parent2.load_data[nelts](i))
+            * log(Float32(1.0) - parent1.load_data[nelts](i))
+        )
+        sum += error.reduce_add()
+
+    vectorize[nelts, v_bce](parent1.load_cap())
+    node.store_data(0, sum / Float32(parent1.load_cap()))
+
+
+fn bw_bce(node: Node, parent1: Node, parent2: Node):
+    @parameter
+    fn v_bce_bw[nelts: Int](i: Int):
+        let grad = (
+            (Float32(1.0) - parent2.load_data[nelts](i))
+            / (Float32(1.0) - parent1.load_data[nelts](i))
+            - parent2.load_data[nelts](i) / parent1.load_data[nelts](i)
+        )
+        parent1.store_grad[nelts](i, parent1.load_grad[nelts](i) + grad)
+        parent2.store_grad[nelts](i, parent2.load_grad[nelts](i) - grad)
+
+    vectorize[nelts, v_bce_bw](parent1.load_cap())
+
+
+fn fw_cce(node: Node, parent1: Node, parent2: Node):
+    var sum = Float32(0.0)
+
+    @parameter
+    fn v_cce[nelts: Int](i: Int):
+        let error = -parent2.load_data[nelts](i) * log(parent1.load_data[nelts](i))
+        sum += error.reduce_add()
+
+    vectorize[nelts, v_cce](parent1.load_cap())
+    node.store_data(0, sum / Float32(parent1.load_cap()))
+
+
+fn bw_cce(node: Node, parent1: Node, parent2: Node):
+    @parameter
+    fn v_cce_bw[nelts: Int](i: Int):
+        let grad = -parent2.load_data[nelts](i) / parent1.load_data[nelts](i)
+        parent1.store_grad[nelts](i, parent1.load_grad[nelts](i) + grad)
+        parent2.store_grad[nelts](i, parent2.load_grad[nelts](i) - grad)
+
+    vectorize[nelts, v_cce_bw](parent1.load_cap())
+
+
+fn fw_cfce(node: Node, parent1: Node, parent2: Node):
+    var sum = Float32(0.0)
+
+    @parameter
+    fn v_cfce[nelts: Int](i: Int):
+        let error = -parent2.load_data[nelts](i) * (
+            Float32(1.0) - parent1.load_data[nelts](i)
+        ) ** Float32(2.0) * log(parent1.load_data[nelts](i))
+        sum += error.reduce_add()
+
+    vectorize[nelts, v_cfce](parent1.load_cap())
+    node.store_data(0, sum / Float32(parent1.load_cap()))
+
+
+fn bw_cfce(node: Node, parent1: Node, parent2: Node):
+    @parameter
+    fn v_cfce_bw[nelts: Int](i: Int):
+        let grad = (
+            -parent2.load_data[nelts](i)
+            * (Float32(1.0) - parent1.load_data[nelts](i))
+            * (Float32(1.0) - Float32(2.0) * parent1.load_data[nelts](i))
+        ) / parent1.load_data[nelts](i)
+        parent1.store_grad[nelts](i, parent1.load_grad[nelts](i) + grad)
+        parent2.store_grad[nelts](i, parent2.load_grad[nelts](i) - grad)
+
+    vectorize[nelts, v_cfce_bw](parent1.load_cap())
+
+
+fn fw_cs(node: Node, parent1: Node, parent2: Node):
+    var sum = Float32(0.0)
+
+    @parameter
+    fn v_cs[nelts: Int](i: Int):
+        let error = (
+            parent1.load_data[nelts](i) * parent2.load_data[nelts](i)
+        ).reduce_add()
+        sum += error.reduce_add()
+
+    vectorize[nelts, v_cs](parent1.load_cap())
+    node.store_data(0, sum / Float32(parent1.load_cap()))
+
+
+fn bw_cs(node: Node, parent1: Node, parent2: Node):
+    @parameter
+    fn v_cs_bw[nelts: Int](i: Int):
+        let grad = (
+            parent2.load_data[nelts](i) * parent1.load_data[nelts](i)
+        ).reduce_add()
+        parent1.store_grad[nelts](i, parent1.load_grad[nelts](i) + grad)
+        parent2.store_grad[nelts](i, parent2.load_grad[nelts](i) + grad)
+
+    vectorize[nelts, v_cs_bw](parent1.load_cap())
+
+
+fn fw_huber(node: Node, parent1: Node, parent2: Node):
+    var sum = Float32(0.0)
+
+    @parameter
+    fn v_huber[nelts: Int](i: Int):
+        let error = (
+            parent1.load_data[nelts](i) - parent2.load_data[nelts](i)
+        ).reduce_add()
+        if error < Float32(1.0):
+            sum += error * error
+        else:
+            sum += Float32(2.0) * error - Float32(1.0)
+
+    vectorize[nelts, v_huber](parent1.load_cap())
+    node.store_data(0, sum / Float32(parent1.load_cap()))
+
+
+fn bw_huber(node: Node, parent1: Node, parent2: Node):
+    @parameter
+    fn v_huber_bw[nelts: Int](i: Int):
+        let error = (
+            parent1.load_data[nelts](i) - parent2.load_data[nelts](i)
+        ).reduce_add()
+        var grad = Float32(0.0)
+        if error < Float32(1.0):
+            let grad = Float32(2.0) * error
+        parent1.store_grad[nelts](i, parent1.load_grad[nelts](i) + grad)
+        parent2.store_grad[nelts](i, parent2.load_grad[nelts](i) - grad)
+
+    vectorize[nelts, v_huber_bw](parent1.load_cap())
+
+
+fn fw_logcosh(node: Node, parent1: Node, parent2: Node):
+    var sum = Float32(0.0)
+
+    @parameter
+    fn v_logcosh[nelts: Int](i: Int):
+        let error = (
+            parent1.load_data[nelts](i) - parent2.load_data[nelts](i)
+        ).reduce_add()
+        sum += log(cosh(error))
+
+    vectorize[nelts, v_logcosh](parent1.load_cap())
+    node.store_data(0, sum / Float32(parent1.load_cap()))
+
+
+fn bw_logcosh(node: Node, parent1: Node, parent2: Node):
+    @parameter
+    fn v_logcosh_bw[nelts: Int](i: Int):
+        let error = (
+            parent1.load_data[nelts](i) - parent2.load_data[nelts](i)
+        ).reduce_add()
+        let grad = tanh(error)
+        parent1.store_grad[nelts](i, parent1.load_grad[nelts](i) + grad)
+        parent2.store_grad[nelts](i, parent2.load_grad[nelts](i) - grad)
+
+    vectorize[nelts, v_logcosh_bw](parent1.load_cap())
+
+
+fn fw_poisson(node: Node, parent1: Node, parent2: Node):
+    var sum = Float32(0.0)
+
+    @parameter
+    fn v_poisson[nelts: Int](i: Int):
+        let error = (
+            parent1.load_data[nelts](i) - parent2.load_data[nelts](i)
+        ).reduce_add()
+        sum += exp(error)
+
+    vectorize[nelts, v_poisson](parent1.load_cap())
+    node.store_data(0, sum / Float32(parent1.load_cap()))
+
+
+fn bw_poisson(node: Node, parent1: Node, parent2: Node):
+    @parameter
+    fn v_poisson_bw[nelts: Int](i: Int):
+        let error = (
+            parent1.load_data[nelts](i) - parent2.load_data[nelts](i)
+        ).reduce_add()
+        let grad = exp(error)
+        parent1.store_grad[nelts](i, parent1.load_grad[nelts](i) + grad)
+        parent2.store_grad[nelts](i, parent2.load_grad[nelts](i) - grad)
+
+    vectorize[nelts, v_poisson_bw](parent1.load_cap())
+
+
+fn fw_scce(node: Node, parent1: Node, parent2: Node):
+    var sum = Float32(0.0)
+
+    @parameter
+    fn v_scce[nelts: Int](i: Int):
+        let error = -parent2.load_data[nelts](i) * log(parent1.load_data[nelts](i))
+        sum += error.reduce_add()
+
+    vectorize[nelts, v_scce](parent1.load_cap())
+    node.store_data(0, sum / Float32(parent1.load_cap()))
+
+
+fn bw_scce(node: Node, parent1: Node, parent2: Node):
+    @parameter
+    fn v_scce_bw[nelts: Int](i: Int):
+        let grad = -parent2.load_data[nelts](i) / parent1.load_data[nelts](i)
+        parent1.store_grad[nelts](i, parent1.load_grad[nelts](i) + grad)
+        parent2.store_grad[nelts](i, parent2.load_grad[nelts](i) - grad)
+
+    vectorize[nelts, v_scce_bw](parent1.load_cap())
+
+
+fn fw_sce(node: Node, parent1: Node, parent2: Node):
+    var sum = Float32(0.0)
+
+    @parameter
+    fn v_sce[nelts: Int](i: Int):
+        let error = -parent2.load_data[nelts](i) * log(parent1.load_data[nelts](i))
+        sum += error.reduce_add()
+
+    vectorize[nelts, v_sce](parent1.load_cap())
+    node.store_data(0, sum / Float32(parent1.load_cap()))
+
+
+fn bw_sce(node: Node, parent1: Node, parent2: Node):
+    @parameter
+    fn v_sce_bw[nelts: Int](i: Int):
+        let grad = -parent2.load_data[nelts](i) / parent1.load_data[nelts](i)
+        parent1.store_grad[nelts](i, parent1.load_grad[nelts](i) + grad)
+        parent2.store_grad[nelts](i, parent2.load_grad[nelts](i) - grad)
+
+    vectorize[nelts, v_sce_bw](parent1.load_cap())

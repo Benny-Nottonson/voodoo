@@ -4,13 +4,6 @@ from voodoo import (
 
 """
 Activation Functions
-
-- Base definition in voodoo/kernels/cpu_kernels.mojo
-- CPU Wrapper in voodoo/kernels/cpu_kernels.py
-- Tensor Wrapper in voodoo/tensor.py
-- Function Wrapper in this file
-
-Supported Functions:
 - elu
 - exp
 - gelu

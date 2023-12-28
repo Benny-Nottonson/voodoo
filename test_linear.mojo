@@ -9,9 +9,9 @@ from voodoo.utils.shape import shape
 
 
 fn main() raises:
-    let l1 = Dense(1, 64)
-    let l2 = Dense["relu"](64, 64)
-    let l3 = Dense["none"](64, 1)
+    let l1 = Dense[activation = "relu"](1, 64)
+    let l2 = Dense[activation = "relu"](64, 64)
+    let l3 = Dense(64, 1)
 
     var avg_loss = Float32(0.0)
     let every = 1000

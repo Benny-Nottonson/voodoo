@@ -5,7 +5,7 @@ from .utils.shape import shape
 
 
 struct Dense[
-    activation: String = "relu",
+    activation: String = "none",
     use_bias: Bool = True,
     weight_initializer: String = "glorot_uniform",
     bias_initializer: String = "zeros",
