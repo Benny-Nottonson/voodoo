@@ -337,7 +337,7 @@ struct Node:
         self.fill(Float32(0.0))
 
     @always_inline
-    fn print(self):
+    fn print(self, accuracy: Int = 6):
         let num_dims = self.num_dims_ptr.load()
         let row: Int = self.shape_ptr.load().load(num_dims - 2)
         let cols: Int = self.shape_ptr.load().load(num_dims - 1)
@@ -378,9 +378,9 @@ struct Node:
                             let idx = cols * i + j
                             print_no_newline(
                                 String(self.data.load(t).load(idx))[
-                                    :8
+                                    :accuracy
                                 ] if self.data.load(t).load(idx)
-                                != Float32(0.0) else String(0.000)[:8]
+                                != Float32(0.0) else String(0.000)[:accuracy]
                             )
                             if j != cols - 1:
                                 print_no_newline(", ")

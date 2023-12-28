@@ -62,18 +62,16 @@ struct Tensor:
                 let node_p = graph.node(shape, True, is_single, False, -1, other_params)
                 node_ptr.store(node_p)
             elif init_graph and init_node:
-                let node_p = graph.node(shape, False, is_single, False, -1, other_params)
+                let node_p = graph.node(
+                    shape, False, is_single, False, -1, other_params
+                )
                 node_ptr.store(node_p)
-
 
     fn __copyinit__(inout self, other: Self):
         self.graph_ptr = other.graph_ptr
         self.node_ptr = other.node_ptr
 
     fn load_tensor_for_binary_op(self, other: Tensor) raises -> Tensor:
-        let new_tensor: Tensor
-        var path = 0
-
         if (
             (
                 self.node_ptr.load().load().is_static_ptr.load()
@@ -82,100 +80,91 @@ struct Tensor:
             and other.node_ptr.load().load().is_static_ptr.load()
             or other.node_ptr.load().load().is_single_ptr.load()
         ):
-            new_tensor = Tensor(
-                self.node_ptr.load().load().shape_ptr.load().copy(),
-                False,
-                False,
-                True,
-                False,
+            let new_tensor = Tensor(
+                shape=self.node_ptr.load().load().shape_ptr.load().copy(),
+                is_static=False,
+                is_single=False,
+                init_graph=True,
+                init_node=False,
             )
 
             fuse_graphs(new_tensor.graph_ptr, self.graph_ptr)
             fuse_graphs(new_tensor.graph_ptr, other.graph_ptr)
-        else:
-            new_tensor = Tensor(
-                self.node_ptr.load().load().shape_ptr.load().copy(),
-                False,
-                False,
-                False,
-                False,
-            )
 
-            if (
-                self.node_ptr.load().load().is_static_ptr.load()
-                or self.node_ptr.load().load().is_single_ptr.load()
-            ):
-                new_tensor.graph_ptr.store(other.graph_ptr.load())
-                fuse_graphs(new_tensor.graph_ptr, self.graph_ptr)
-                path = 1
+            return new_tensor
 
-            elif (
-                other.node_ptr.load().load().is_static_ptr.load()
-                or other.node_ptr.load().load().is_single_ptr.load()
-            ):
-                new_tensor.graph_ptr.store(self.graph_ptr.load())
-                fuse_graphs(new_tensor.graph_ptr, other.graph_ptr)
-                path = 2
-            else:
-                if (
-                    self.graph_ptr.load().load().nodes.load().len.load()
-                    >= other.graph_ptr.load().load().nodes.load().len.load()
-                ):
-                    new_tensor.graph_ptr.store(self.graph_ptr.load())
-                    fuse_graphs(new_tensor.graph_ptr, other.graph_ptr, True)
-                    path = 3
-                else:
-                    new_tensor.graph_ptr.store(other.graph_ptr.load())
-                    fuse_graphs(new_tensor.graph_ptr, self.graph_ptr, True)
-                    path = 4
-
-        if path == 3:
-            self.graph_ptr.free()
-            other.graph_ptr.load().free()
-            other.graph_ptr.free()
-        elif path == 4:
-            self.graph_ptr.load().free()
-            self.graph_ptr.free()
-            other.graph_ptr.free()
-
-        return new_tensor
-
-    fn load_tensor_for_unary_op(self) raises -> Tensor:
-        var path: Int = 0
-        let new_tensor: Tensor
+        let new_tensor = Tensor(
+            shape=self.node_ptr.load().load().shape_ptr.load().copy(),
+            is_static=False,
+            is_single=False,
+            init_graph=False,
+            init_node=False,
+        )
 
         if (
             self.node_ptr.load().load().is_static_ptr.load()
             or self.node_ptr.load().load().is_single_ptr.load()
         ):
-            new_tensor = Tensor(
-                self.node_ptr.load().load().shape_ptr.load().copy(),
-                False,
-                False,
-                True,
-                False,
-            )
+            new_tensor.graph_ptr.store(other.graph_ptr.load())
             fuse_graphs(new_tensor.graph_ptr, self.graph_ptr)
-        else:
-            new_tensor = Tensor(
-                self.node_ptr.load().load().shape_ptr.load().copy(),
-                False,
-                False,
-                False,
-                False,
-            )
-            new_tensor.graph_ptr.store(self.graph_ptr.load())
-            path = 1
 
-        if path == 1:
-            self.graph_ptr.free()
+        elif (
+            other.node_ptr.load().load().is_static_ptr.load()
+            or other.node_ptr.load().load().is_single_ptr.load()
+        ):
+            new_tensor.graph_ptr.store(self.graph_ptr.load())
+            fuse_graphs(new_tensor.graph_ptr, other.graph_ptr)
+        else:
+            if (
+                self.graph_ptr.load().load().nodes.load().len.load()
+                >= other.graph_ptr.load().load().nodes.load().len.load()
+            ):
+                new_tensor.graph_ptr.store(self.graph_ptr.load())
+                fuse_graphs(new_tensor.graph_ptr, other.graph_ptr, True)
+
+                self.graph_ptr.free()
+                other.graph_ptr.load().free()
+                other.graph_ptr.free()
+            else:
+                new_tensor.graph_ptr.store(other.graph_ptr.load())
+                fuse_graphs(new_tensor.graph_ptr, self.graph_ptr, True)
+                self.graph_ptr.load().free()
+                self.graph_ptr.free()
+                other.graph_ptr.free()
 
         return new_tensor
 
-    fn print(self) raises:
+    fn load_tensor_for_unary_op(self) raises -> Tensor:
+        if (
+            self.node_ptr.load().load().is_static_ptr.load()
+            or self.node_ptr.load().load().is_single_ptr.load()
+        ):
+            let new_tensor = Tensor(
+                shape=self.node_ptr.load().load().shape_ptr.load().copy(),
+                is_static=False,
+                is_single=False,
+                init_graph=True,
+                init_node=False,
+            )
+            fuse_graphs(new_tensor.graph_ptr, self.graph_ptr)
+            return new_tensor
+
+        let new_tensor = Tensor(
+            shape=self.node_ptr.load().load().shape_ptr.load().copy(),
+            is_static=False,
+            is_single=False,
+            init_graph=False,
+            init_node=False,
+        )
+        new_tensor.graph_ptr.store(self.graph_ptr.load())
+        self.graph_ptr.free()
+
+        return new_tensor
+
+    fn print(self, accuracy: Int = 6) raises:
         if not self.node_ptr.load().load().computed_ptr.load():
             _ = self.forward()
-        self.node_ptr.load().load().print()
+        self.node_ptr.load().load().print(accuracy)
 
     fn print_memory_pool_manager(self) raises:
         self.graph_ptr.load().load().print_memory_pool_manager()
@@ -661,35 +650,55 @@ struct Tensor:
 
     fn __add__(self, number: Float32) raises -> Tensor:
         let other = Tensor(
-            self.node_ptr.load().load().shape_ptr.load().copy(), False, True, True, True
+            shape=self.node_ptr.load().load().shape_ptr.load().copy(),
+            is_static=False,
+            is_single=True,
+            init_graph=True,
+            init_node=True,
         ).fill(number)
         other.node_ptr.load().load().computed_ptr.store(True)
         return self.__add__(other)
 
     fn __sub__(self, number: Float32) raises -> Tensor:
         let other = Tensor(
-            self.node_ptr.load().load().shape_ptr.load().copy(), False, True, True, True
+            shape=self.node_ptr.load().load().shape_ptr.load().copy(),
+            is_static=False,
+            is_single=True,
+            init_graph=True,
+            init_node=True,
         ).fill(number)
         other.node_ptr.load().load().computed_ptr.store(True)
         return self.__sub__(other)
 
     fn __mul__(self, number: Float32) raises -> Tensor:
         let other = Tensor(
-            self.node_ptr.load().load().shape_ptr.load().copy(), False, True, True, True
+            shape=self.node_ptr.load().load().shape_ptr.load().copy(),
+            is_static=False,
+            is_single=True,
+            init_graph=True,
+            init_node=True,
         ).fill(number)
         other.node_ptr.load().load().computed_ptr.store(True)
         return self.__mul__(other)
 
     fn __truediv__(self, number: Float32) raises -> Tensor:
         let other = Tensor(
-            self.node_ptr.load().load().shape_ptr.load().copy(), False, True, True, True
+            shape=self.node_ptr.load().load().shape_ptr.load().copy(),
+            is_static=False,
+            is_single=True,
+            init_graph=True,
+            init_node=True,
         ).fill(number)
         other.node_ptr.load().load().computed_ptr.store(True)
         return self.__truediv__(other)
 
     fn __pow__(self, number: Float32) raises -> Tensor:
         let other = Tensor(
-            self.node_ptr.load().load().shape_ptr.load().copy(), False, True, True, True
+            shape=self.node_ptr.load().load().shape_ptr.load().copy(),
+            is_static=False,
+            is_single=True,
+            init_graph=True,
+            init_node=True,
         ).fill(number)
         other.node_ptr.load().load().computed_ptr.store(True)
         return self.__pow__(other)

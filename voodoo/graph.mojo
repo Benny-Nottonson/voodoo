@@ -347,13 +347,13 @@ struct Graph:
                     print_no_newline(", ")
             print("]")
 
-    fn print(self) raises:
+    fn print(self, accuracy: Int = 6) raises:
         print("\nGraph (Nodes):")
         for i in range(self.nodes.load().len.load()):
             let node = self.nodes.load().load(i)
             if node == Pointer[Node].get_null():
                 continue
-            node.load().print()
+            node.load().print(accuracy)
 
     fn get_free_node_id(self) raises -> Int:
         var fid: Int = 0
