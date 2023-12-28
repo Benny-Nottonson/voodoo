@@ -29,48 +29,7 @@ struct Tensor:
         for i in range(len(shape)):
             _shape.push_back(shape[i])
 
-        let other_params = Vector[Int]()
-
-        if is_static:
-            let graph = Graph()
-            let graph_ptr = Pointer[Pointer[Graph]].alloc(1)
-            let graph_p = Pointer[Graph].alloc(1)
-            graph_p.store(graph)
-            graph_ptr.store(graph_p)
-            let node_p = graph.node(_shape, True, is_single, False, -1, other_params)
-            let node_ptr = Pointer[Pointer[Node]].alloc(1)
-            node_ptr.store(node_p)
-
-            self.graph_ptr = graph_ptr
-            self.node_ptr = node_ptr
-        elif init_graph and init_node:
-            let graph = Graph()
-            let graph_ptr = Pointer[Pointer[Graph]].alloc(1)
-            let graph_p = Pointer[Graph].alloc(1)
-            graph_p.store(graph)
-            graph_ptr.store(graph_p)
-            let node_p = graph.node(_shape, False, is_single, False, -1, other_params)
-            let node_ptr = Pointer[Pointer[Node]].alloc(1)
-            node_ptr.store(node_p)
-
-            self.graph_ptr = graph_ptr
-            self.node_ptr = node_ptr
-        elif init_graph:
-            let graph = Graph()
-            let graph_ptr = Pointer[Pointer[Graph]].alloc(1)
-            let graph_p = Pointer[Graph].alloc(1)
-            graph_p.store(graph)
-            graph_ptr.store(graph_p)
-            let node_ptr = Pointer[Pointer[Node]].alloc(1)
-
-            self.graph_ptr = graph_ptr
-            self.node_ptr = node_ptr
-        else:
-            let graph_ptr = Pointer[Pointer[Graph]].alloc(1)
-            let node_ptr = Pointer[Pointer[Node]].alloc(1)
-
-            self.graph_ptr = graph_ptr
-            self.node_ptr = node_ptr
+        self.__init__(_shape, is_static, is_single, init_graph, init_node)
 
     fn __init__(
         inout self,
@@ -81,31 +40,14 @@ struct Tensor:
         init_node: Bool = True,
     ) raises:
         let other_params = Vector[Int]()
-        if is_static:
-            let graph = Graph()
-            let graph_ptr = Pointer[Pointer[Graph]].alloc(1)
-            let graph_p = Pointer[Graph].alloc(1)
-            graph_p.store(graph)
-            graph_ptr.store(graph_p)
-            let node_p = graph.node(shape, True, is_single, False, -1, other_params)
-            let node_ptr = Pointer[Pointer[Node]].alloc(1)
-            node_ptr.store(node_p)
 
-            self.graph_ptr = graph_ptr
-            self.node_ptr = node_ptr
-        elif init_graph and init_node:
-            let graph = Graph()
-            let graph_ptr = Pointer[Pointer[Graph]].alloc(1)
-            let graph_p = Pointer[Graph].alloc(1)
-            graph_p.store(graph)
-            graph_ptr.store(graph_p)
-            let node_p = graph.node(shape, False, is_single, False, -1, other_params)
-            let node_ptr = Pointer[Pointer[Node]].alloc(1)
-            node_ptr.store(node_p)
+        let graph_ptr = Pointer[Pointer[Graph]].alloc(1)
+        let node_ptr = Pointer[Pointer[Node]].alloc(1)
 
-            self.graph_ptr = graph_ptr
-            self.node_ptr = node_ptr
-        elif init_graph:
+        self.graph_ptr = graph_ptr
+        self.node_ptr = node_ptr
+
+        if is_static or init_graph:
             let graph = Graph()
             let graph_ptr = Pointer[Pointer[Graph]].alloc(1)
             let graph_p = Pointer[Graph].alloc(1)
@@ -115,12 +57,14 @@ struct Tensor:
 
             self.graph_ptr = graph_ptr
             self.node_ptr = node_ptr
-        else:
-            let graph_ptr = Pointer[Pointer[Graph]].alloc(1)
-            let node_ptr = Pointer[Pointer[Node]].alloc(1)
 
-            self.graph_ptr = graph_ptr
-            self.node_ptr = node_ptr
+            if is_static:
+                let node_p = graph.node(shape, True, is_single, False, -1, other_params)
+                node_ptr.store(node_p)
+            elif init_graph and init_node:
+                let node_p = graph.node(shape, False, is_single, False, -1, other_params)
+                node_ptr.store(node_p)
+
 
     fn __copyinit__(inout self, other: Self):
         self.graph_ptr = other.graph_ptr

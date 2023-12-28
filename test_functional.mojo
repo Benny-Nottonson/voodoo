@@ -5,14 +5,11 @@ from voodoo import (
     mse,
 )
 from voodoo.utils.shape import shape
+from time.time import now
 
-@value
-struct Model:
-    var c: Tensor
-
-    fn iter(inout self, func: fn(Tensor) raises -> Tensor) raises -> Model:
-        self.c = func(self.c)
-        return self
+fn nanoseconds_to_seconds(t: Int) -> Float64:
+    return Float64(t) / 1_000_000_000.0
+    
 
 fn main() raises:
     let W1 = Tensor(shape(1, 64)).he_normal().requires_grad()
@@ -35,14 +32,18 @@ fn main() raises:
     x = x @ W3 + b3
     let loss = mse(x, true_vals)
 
+    let initial_start = now()
     for epoch in range(1, num_epochs + 1):
+        let epoch_start = now()
         for i in range(input.random_uniform(0, 1).capacity()):
             true_vals[i] = math.sin(15.0 * input[i])
 
         avg_loss += loss.forward_static()[0]
         if epoch % every == 0:
-            print("Epoch:", epoch, " Avg Loss: ", avg_loss / every)
+            print("Epoch:", epoch, " Avg Loss: ", avg_loss / every, " Time: " , nanoseconds_to_seconds(now() - epoch_start), "s")
             avg_loss = 0.0
 
         loss.backward()
         loss.optimize["sgd"](0.01)
+
+    print("Total Time: ", nanoseconds_to_seconds(now() - initial_start), "s")

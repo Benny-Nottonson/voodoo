@@ -18,7 +18,7 @@ fn main() raises:
 
     var avg_loss = Float32(0.0)
     let every = 1000
-    let num_epochs = 50000
+    let num_epochs = 20000
 
     let initial_start = now()
     for epoch in range(1, num_epochs + 1):
