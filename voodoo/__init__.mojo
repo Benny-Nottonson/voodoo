@@ -29,6 +29,7 @@ from .tensor import (
 )
 
 from .layers import Dense
+
 from .activations import (
     elu,
     exp,
