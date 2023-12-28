@@ -5,7 +5,10 @@ from algorithm import vectorize
 from .node import Node
 from .utils import Vector, get_broadcasted_shape_for_ew_op
 from .utils.shape import shape
-from .kernels import *
+
+from .kernels.cpu_kernels import *
+from .kernels.cpu_activations import *
+from .kernels.cpu_losses import *
 
 alias VectorF32 = DTypePointer[DType.float32]
 alias VectorInt = Vector[Int]
@@ -964,8 +967,8 @@ struct Graph:
                 type == "adafactor"
                 and node.requires_grad_ptr.load()
                 and node.grad_computed_ptr.load()
-                ):
-                
+            ):
+
                 @parameter
                 fn v_adafactor_update[_nelts: Int](i: Int):
                     let grad = node.load_grad[_nelts](i)
@@ -982,7 +985,9 @@ struct Graph:
                     let new_scale = old_scale * param_scale
                     let update_scale = old_scale * grad_scale
                     let new_data = data - lr * grad * update_scale
-                    let new_grad_sq_2 = new_grad_sq * decay_rate + new_data_sq * (1.0 - decay_rate)
+                    let new_grad_sq_2 = new_grad_sq * decay_rate + new_data_sq * (
+                        1.0 - decay_rate
+                    )
                     let new_grad = sqrt(new_grad_sq_2) / param_scale * grad
                     node.store_data[_nelts](i, new_data)
                     node.store_grad[_nelts](i, new_grad)
@@ -1010,13 +1015,14 @@ struct Graph:
                     let new_scale = old_scale * param_scale
                     let update_scale = old_scale * grad_scale
                     let new_data = data - lr * grad * update_scale
-                    let new_grad_sq_2 = new_grad_sq * decay_rate + new_data_sq * (1.0 - decay_rate)
+                    let new_grad_sq_2 = new_grad_sq * decay_rate + new_data_sq * (
+                        1.0 - decay_rate
+                    )
                     let new_grad = sqrt(new_grad_sq_2) / param_scale * grad
                     node.store_data[_nelts](i, new_data)
                     node.store_grad[_nelts](i, new_grad)
 
                 vectorize[nelts, v_adam_update](node.load_cap())
-
 
     fn cos(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
         let operator_id = cos_code

@@ -57,3 +57,6 @@ fn zeros(tensor: Tensor) raises -> Tensor:
     
 fn constant(tensor: Tensor, value: Float32) raises -> Tensor:
     return tensor.fill(value)
+
+fn _custom_fill(tensor: Tensor, values: DynamicVector[Float32]) raises -> Tensor:
+    return tensor._custom_fill(values)

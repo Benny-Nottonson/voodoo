@@ -293,6 +293,10 @@ struct Tensor:
         self.node_ptr.load().load().fill(val)
         return self
 
+    fn _custom_fill(self, vals: DynamicVector[Float32]) -> Self:
+        self.node_ptr.load().load()._custom_fill(vals)
+        return self
+
     fn fill_incr(self) raises -> Self:
         self.node_ptr.load().load().fill_incr()
         return self
@@ -784,6 +788,9 @@ struct Tensor:
 
     fn __ipow__(inout self, number: Float32) raises:
         self = self.__pow__(number)
+
+    fn __len__(self) raises -> Int:
+        return self.capacity()
 
     fn reshape(self, shape: Vector[Int]) raises -> Tensor:
         let new_tensor = self.load_tensor_for_unary_op()
