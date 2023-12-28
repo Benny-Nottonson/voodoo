@@ -6,9 +6,9 @@ from .node import Node
 from .utils import Vector, get_broadcasted_shape_for_ew_op
 from .utils.shape import shape
 
-from .kernels.cpu_kernels import *
-from .kernels.cpu_activations import *
-from .kernels.cpu_losses import *
+from .cpu_kernels.general import *
+from .cpu_kernels.activations import *
+from .cpu_kernels.losses import *
 
 alias VectorF32 = DTypePointer[DType.float32]
 alias VectorInt = Vector[Int]

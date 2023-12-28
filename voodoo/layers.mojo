@@ -27,7 +27,17 @@ struct Dense[
     ) raises:
         self.W = Tensor(shape(in_neurons, out_neurons))
         self.bias = Tensor(shape(out_neurons))
+        self._initialize_weight()
+        if self.use_bias:
+            self._initialize_bias()
 
+    fn forward(self, x: Tensor) raises -> Tensor:
+        var res = x @ self.W
+        if self.use_bias:
+            res = res + self.bias
+        return self._forward(res)
+
+    fn _initialize_weight(inout self) raises:
         if self.weight_initializer == "glorot_normal":
             self.W = glorot_normal(self.W)
         elif self.weight_initializer == "glorot_uniform":
@@ -59,6 +69,7 @@ struct Dense[
         else:
             raise Error("Invalid weight initializer: " + self.weight_initializer)
 
+    fn _initialize_bias(inout self) raises:
         if self.bias_initializer == "glorot_normal":
             self.bias = glorot_normal(self.bias)
         elif self.bias_initializer == "glorot_uniform":
@@ -90,40 +101,37 @@ struct Dense[
         else:
             raise Error("Invalid bias initializer: " + self.bias_initializer)
 
-    fn forward(self, x: Tensor) raises -> Tensor:
-        var res = x @ self.W
-        if self.use_bias:
-            res = res + self.bias
+    fn _forward(self, x: Tensor) raises -> Tensor:
         if self.activation == "elu":
-            return elu(res)
+            return elu(x)
         elif self.activation == "exp":
-            return exp(res)
+            return exp(x)
         elif self.activation == "gelu":
-            return gelu(res)
+            return gelu(x)
         elif self.activation == "hard_sigmoid":
-            return hard_sigmoid(res)
+            return hard_sigmoid(x)
         elif self.activation == "linear":
-            return linear(res)
+            return linear(x)
         elif self.activation == "mish":
-            return mish(res)
+            return mish(x)
         elif self.activation == "relu":
-            return relu(res)
+            return relu(x)
         elif self.activation == "selu":
-            return selu(res)
+            return selu(x)
         elif self.activation == "sigmoid":
-            return sigmoid(res)
+            return sigmoid(x)
         elif self.activation == "softmax":
-            return softmax(res)
+            return softmax(x)
         elif self.activation == "softplus":
-            return softplus(res)
+            return softplus(x)
         elif self.activation == "softsign":
-            return softsign(res)
+            return softsign(x)
         elif self.activation == "swish":
-            return swish(res)
+            return swish(x)
         elif self.activation == "tanh":
-            return tanh(res)
+            return tanh(x)
         elif self.activation == "none":
-            return res
+            return x
         else:
             raise Error("Invalid activation: " + self.activation)
 
