@@ -64,9 +64,7 @@ fn fw_mse(node: Node, y_pred: Node, y_true: Node):
 
     @parameter
     fn v_mse[nelts: Int](i: Int):
-        let error = (y_pred.load_data[nelts](i) - y_true.load_data[nelts](i)) * (
-            y_pred.load_data[nelts](i) - y_true.load_data[nelts](i)
-        )
+        let error = (y_pred.load_data[nelts](i) - y_true.load_data[nelts](i)) ** 2
         sum += error.reduce_add()
 
     vectorize[nelts, v_mse](y_pred.load_cap())
