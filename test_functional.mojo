@@ -45,4 +45,4 @@ fn main() raises:
             avg_loss = 0.0
 
         loss.backward()
-        loss.optimize(0.01, "sgd")
+        loss.optimize["sgd"](0.01)

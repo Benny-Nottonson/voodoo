@@ -17,6 +17,8 @@ from voodoo.activations import (
 
 from voodoo import Tensor
 
+# Data from Tensorflow
+
 
 fn is_close(a: Float32, b: Float32) -> Bool:
     let diff = a - b
@@ -26,12 +28,40 @@ fn is_close(a: Float32, b: Float32) -> Bool:
         return diff < 0.0001
 
 
-fn passed(expected_s: ListLiteral[FloatLiteral, FloatLiteral, FloatLiteral, FloatLiteral], 
-            expected_m: ListLiteral[FloatLiteral, FloatLiteral, FloatLiteral, FloatLiteral, FloatLiteral, FloatLiteral, FloatLiteral, FloatLiteral], 
-            expected_l: ListLiteral[FloatLiteral, FloatLiteral, FloatLiteral, FloatLiteral, FloatLiteral, FloatLiteral, FloatLiteral, FloatLiteral, FloatLiteral, FloatLiteral, FloatLiteral, FloatLiteral, FloatLiteral, FloatLiteral, FloatLiteral, FloatLiteral],
-            predicted_s: Tensor,
-            predicted_m: Tensor,
-            predicted_l: Tensor) raises -> Bool:
+fn passed(
+    expected_s: ListLiteral[FloatLiteral, FloatLiteral, FloatLiteral, FloatLiteral],
+    expected_m: ListLiteral[
+        FloatLiteral,
+        FloatLiteral,
+        FloatLiteral,
+        FloatLiteral,
+        FloatLiteral,
+        FloatLiteral,
+        FloatLiteral,
+        FloatLiteral,
+    ],
+    expected_l: ListLiteral[
+        FloatLiteral,
+        FloatLiteral,
+        FloatLiteral,
+        FloatLiteral,
+        FloatLiteral,
+        FloatLiteral,
+        FloatLiteral,
+        FloatLiteral,
+        FloatLiteral,
+        FloatLiteral,
+        FloatLiteral,
+        FloatLiteral,
+        FloatLiteral,
+        FloatLiteral,
+        FloatLiteral,
+        FloatLiteral,
+    ],
+    predicted_s: Tensor,
+    predicted_m: Tensor,
+    predicted_l: Tensor,
+) raises -> Bool:
     let result = (
         is_close(expected_s.get[0, FloatLiteral](), predicted_s[0])
         and is_close(expected_s.get[1, FloatLiteral](), predicted_s[1])
@@ -107,7 +137,9 @@ fn test_elu(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
     let predicted_s = elu(s)
     let predicted_m = elu(m)
     let predicted_l = elu(l)
-    return passed(expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l)
+    return passed(
+        expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l
+    )
 
 
 fn test_exp(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
@@ -143,7 +175,9 @@ fn test_exp(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
     let predicted_s = exp(s)
     let predicted_m = exp(m)
     let predicted_l = exp(l)
-    return passed(expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l)
+    return passed(
+        expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l
+    )
 
 
 fn test_gelu(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
@@ -184,7 +218,9 @@ fn test_gelu(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
     let predicted_s = gelu(s)
     let predicted_m = gelu(m)
     let predicted_l = gelu(l)
-    return passed(expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l)
+    return passed(
+        expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l
+    )
 
 
 fn test_hard_sigmoid(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
@@ -220,7 +256,9 @@ fn test_hard_sigmoid(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
     let predicted_s = hard_sigmoid(s)
     let predicted_m = hard_sigmoid(m)
     let predicted_l = hard_sigmoid(l)
-    return passed(expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l)
+    return passed(
+        expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l
+    )
 
 
 fn test_linear(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
@@ -247,7 +285,9 @@ fn test_linear(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
     let predicted_s = linear(s)
     let predicted_m = linear(m)
     let predicted_l = linear(l)
-    return passed(expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l)
+    return passed(
+        expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l
+    )
 
 
 fn test_mish(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
@@ -283,7 +323,9 @@ fn test_mish(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
     let predicted_s = mish(s)
     let predicted_m = mish(m)
     let predicted_l = mish(l)
-    return passed(expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l)
+    return passed(
+        expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l
+    )
 
 
 fn test_relu(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
@@ -310,7 +352,9 @@ fn test_relu(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
     let predicted_s = relu(s)
     let predicted_m = relu(m)
     let predicted_l = relu(l)
-    return passed(expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l)
+    return passed(
+        expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l
+    )
 
 
 fn test_selu(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
@@ -346,7 +390,9 @@ fn test_selu(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
     let predicted_s = selu(s)
     let predicted_m = selu(m)
     let predicted_l = selu(l)
-    return passed(expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l)
+    return passed(
+        expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l
+    )
 
 
 fn test_sigmoid(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
@@ -382,7 +428,9 @@ fn test_sigmoid(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
     let predicted_s = sigmoid(s)
     let predicted_m = sigmoid(m)
     let predicted_l = sigmoid(l)
-    return passed(expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l)
+    return passed(
+        expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l
+    )
 
 
 fn test_softmax(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
@@ -423,7 +471,9 @@ fn test_softmax(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
     let predicted_s = softmax(s)
     let predicted_m = softmax(m)
     let predicted_l = softmax(l)
-    return passed(expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l)
+    return passed(
+        expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l
+    )
 
 
 fn test_softplus(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
@@ -464,7 +514,9 @@ fn test_softplus(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
     let predicted_s = softplus(s)
     let predicted_m = softplus(m)
     let predicted_l = softplus(l)
-    return passed(expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l)
+    return passed(
+        expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l
+    )
 
 
 fn test_softsign(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
@@ -500,7 +552,9 @@ fn test_softsign(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
     let predicted_s = softsign(s)
     let predicted_m = softsign(m)
     let predicted_l = softsign(l)
-    return passed(expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l)
+    return passed(
+        expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l
+    )
 
 
 fn test_swish(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
@@ -541,7 +595,9 @@ fn test_swish(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
     let predicted_s = swish(s)
     let predicted_m = swish(m)
     let predicted_l = swish(l)
-    return passed(expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l)
+    return passed(
+        expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l
+    )
 
 
 fn test_tanh(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
@@ -577,7 +633,9 @@ fn test_tanh(s: Tensor, m: Tensor, l: Tensor) raises -> Bool:
     let predicted_s = tanh(s)
     let predicted_m = tanh(m)
     let predicted_l = tanh(l)
-    return passed(expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l)
+    return passed(
+        expected_s, expected_m, expected_l, predicted_s, predicted_m, predicted_l
+    )
 
 
 fn print_bars():

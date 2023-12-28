@@ -378,9 +378,9 @@ struct Node:
                             let idx = cols * i + j
                             print_no_newline(
                                 String(self.data.load(t).load(idx))[
-                                    :5
+                                    :8
                                 ] if self.data.load(t).load(idx)
-                                != Float32(0.0) else String(0.000)[:5]
+                                != Float32(0.0) else String(0.000)[:8]
                             )
                             if j != cols - 1:
                                 print_no_newline(", ")

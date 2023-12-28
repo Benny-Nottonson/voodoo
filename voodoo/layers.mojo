@@ -47,7 +47,9 @@ struct Dense[
         elif self.weight_initializer == "random_normal":
             self.W = random_normal(self.W)
         elif self.weight_initializer == "random_uniform":
-            self.W = random_uniform(self.W, self.uniform_weight_min, self.uniform_weight_max)
+            self.W = random_uniform(
+                self.W, self.uniform_weight_min, self.uniform_weight_max
+            )
         elif self.weight_initializer == "truncated_normal":
             self.W = truncated_normal(self.W)
         elif self.weight_initializer == "zeros":
@@ -76,7 +78,9 @@ struct Dense[
         elif self.bias_initializer == "random_normal":
             self.bias = random_normal(self.bias)
         elif self.bias_initializer == "random_uniform":
-            self.bias = random_uniform(self.bias, self.uniform_bias_min, self.uniform_bias_max)
+            self.bias = random_uniform(
+                self.bias, self.uniform_bias_min, self.uniform_bias_max
+            )
         elif self.bias_initializer == "truncated_normal":
             self.bias = truncated_normal(self.bias)
         elif self.bias_initializer == "zeros":
@@ -85,7 +89,6 @@ struct Dense[
             self.bias = constant(self.bias, self.bias_initial)
         else:
             raise Error("Invalid bias initializer: " + self.bias_initializer)
-            
 
     fn forward(self, x: Tensor) raises -> Tensor:
         var res = x @ self.W
@@ -123,6 +126,7 @@ struct Dense[
             return res
         else:
             raise Error("Invalid activation: " + self.activation)
+
 
 """
 struct Conv2d[

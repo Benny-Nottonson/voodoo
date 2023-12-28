@@ -814,14 +814,6 @@ struct Tensor:
         return new_tensor
 
     # Loss functions
-    fn kld(self, other: Tensor) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load()
-            .load()
-            .kld(self.node_ptr.load(), other.node_ptr.load())
-        )
-        return new_tensor
 
     fn mae(self, other: Tensor) raises -> Tensor:
         let new_tensor = self.load_tensor_for_binary_op(other)
@@ -883,51 +875,6 @@ struct Tensor:
             new_tensor.graph_ptr.load()
             .load()
             .cfce(self.node_ptr.load(), other.node_ptr.load())
-        )
-        return new_tensor
-
-    fn cs(self, other: Tensor) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load()
-            .load()
-            .cs(self.node_ptr.load(), other.node_ptr.load())
-        )
-        return new_tensor
-
-    fn huber(self, other: Tensor) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load()
-            .load()
-            .huber(self.node_ptr.load(), other.node_ptr.load())
-        )
-        return new_tensor
-
-    fn logcosh(self, other: Tensor) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load()
-            .load()
-            .logcosh(self.node_ptr.load(), other.node_ptr.load())
-        )
-        return new_tensor
-
-    fn poisson(self, other: Tensor) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load()
-            .load()
-            .poisson(self.node_ptr.load(), other.node_ptr.load())
-        )
-        return new_tensor
-
-    fn scce(self, other: Tensor) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load()
-            .load()
-            .scce(self.node_ptr.load(), other.node_ptr.load())
         )
         return new_tensor
 

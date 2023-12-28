@@ -105,8 +105,8 @@ alias tanh_code = 86
 alias bwtanh_code = 87
 
 # Loss functions
-alias kld_code = 90
-alias bwkld_code = 91
+
+
 alias mae_code = 92
 alias bwmae_code = 93
 alias mape_code = 94
@@ -123,14 +123,6 @@ alias cfce_code = 104
 alias bwcfce_code = 105
 alias cs_code = 106
 alias bwcs_code = 107
-alias huber_code = 108
-alias bwhuber_code = 109
-alias logcosh_code = 110
-alias bwlogcosh_code = 111
-alias poisson_code = 112
-alias bwpoisson_code = 113
-alias scce_code = 114
-alias bwscce_code = 115
 
 
 fn unary(b: Node, a: Node):
@@ -302,8 +294,6 @@ struct Graph:
         kernels.store(tanh_code, op_tuple("tanh", fw_tanh, binary, view, reduce))
         kernels.store(bwtanh_code, op_tuple("bwtanh", bw_tanh, binary, view, reduce))
 
-        kernels.store(kld_code, op_tuple("kld", unary, fw_kld, view, reduce))
-        kernels.store(bwkld_code, op_tuple("bwkld", unary, bw_kld, view, reduce))
         kernels.store(mae_code, op_tuple("mae", unary, fw_mae, view, reduce))
         kernels.store(bwmae_code, op_tuple("bwmae", unary, bw_mae, view, reduce))
         kernels.store(mape_code, op_tuple("mape", unary, fw_mape, view, reduce))
@@ -320,22 +310,6 @@ struct Graph:
         kernels.store(bwcfce_code, op_tuple("bwcfce", unary, bw_cfce, view, reduce))
         kernels.store(cs_code, op_tuple("cs", unary, fw_cs, view, reduce))
         kernels.store(bwcs_code, op_tuple("bwcs", unary, bw_cs, view, reduce))
-        kernels.store(huber_code, op_tuple("huber", unary, fw_huber, view, reduce))
-        kernels.store(bwhuber_code, op_tuple("bwhuber", unary, bw_huber, view, reduce))
-        kernels.store(
-            logcosh_code, op_tuple("logcosh", unary, fw_logcosh, view, reduce)
-        )
-        kernels.store(
-            bwlogcosh_code, op_tuple("bwlogcosh", unary, bw_logcosh, view, reduce)
-        )
-        kernels.store(
-            poisson_code, op_tuple("poisson", unary, fw_poisson, view, reduce)
-        )
-        kernels.store(
-            bwpoisson_code, op_tuple("bwpoisson", unary, bw_poisson, view, reduce)
-        )
-        kernels.store(scce_code, op_tuple("scce", unary, fw_scce, view, reduce))
-        kernels.store(bwscce_code, op_tuple("bwscce", unary, bw_scce, view, reduce))
 
         let forward_order = Pointer[VectorInt].alloc(1)
         forward_order.store(VectorInt())
@@ -1452,24 +1426,6 @@ struct Graph:
         )
 
     # Loss functions
-    fn kld(
-        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
-    ) raises -> Pointer[Node]:
-        let operator_id = kld_code
-        let checkpoint = False
-        let shape = shape(1)
-        let other_params = Vector[Int]()
-        return self.node(
-            shape,
-            False,
-            False,
-            checkpoint,
-            operator_id,
-            other_params,
-            parent1_ptr,
-            parent2_ptr,
-        )
-
     fn mae(
         self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
     ) raises -> Pointer[Node]:
@@ -1588,100 +1544,6 @@ struct Graph:
         return self.node(
             shape,
             False,
-            False,
-            checkpoint,
-            operator_id,
-            other_params,
-            parent1_ptr,
-            parent2_ptr,
-        )
-
-    fn cs(
-        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
-    ) raises -> Pointer[Node]:
-        let operator_id = cs_code
-        let checkpoint = False
-        let shape = shape(1)
-        let other_params = Vector[Int]()
-        return self.node(
-            shape,
-            True,
-            False,
-            checkpoint,
-            operator_id,
-            other_params,
-            parent1_ptr,
-            parent2_ptr,
-        )
-
-    fn huber(
-        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
-    ) raises -> Pointer[Node]:
-        let operator_id = huber_code
-        let checkpoint = False
-        let shape = shape(1)
-        let other_params = Vector[Int]()
-        other_params.push_back(1)
-        return self.node(
-            shape,
-            True,
-            False,
-            checkpoint,
-            operator_id,
-            other_params,
-            parent1_ptr,
-            parent2_ptr,
-        )
-
-    fn logcosh(
-        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
-    ) raises -> Pointer[Node]:
-        let operator_id = logcosh_code
-        let checkpoint = False
-        let shape = shape(1)
-        let other_params = Vector[Int]()
-        other_params.push_back(1)
-        return self.node(
-            shape,
-            True,
-            False,
-            checkpoint,
-            operator_id,
-            other_params,
-            parent1_ptr,
-            parent2_ptr,
-        )
-
-    fn poisson(
-        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
-    ) raises -> Pointer[Node]:
-        let operator_id = poisson_code
-        let checkpoint = False
-        let shape = shape(1)
-        let other_params = Vector[Int]()
-        other_params.push_back(1)
-        return self.node(
-            shape,
-            True,
-            False,
-            checkpoint,
-            operator_id,
-            other_params,
-            parent1_ptr,
-            parent2_ptr,
-        )
-
-    fn scce(
-        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
-    ) raises -> Pointer[Node]:
-        let operator_id = scce_code
-        let checkpoint = False
-        let shape = shape(1)
-        let other_params = Vector[Int]()
-        other_params.push_back(1)
-        return self.node(
-            shape,
-            True,
             False,
             checkpoint,
             operator_id,

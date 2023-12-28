@@ -63,17 +63,11 @@ from .initializers import (
 )
 
 from .losses import (
-    kld,
+    mse,
     mae,
     mape,
-    mse,
     msle,
     bce,
     cce,
     cfce,
-    cs,
-    huber,
-    logcosh,
-    poisson,
-    scce,
 )

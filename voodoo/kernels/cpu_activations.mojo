@@ -12,6 +12,8 @@ from algorithm import vectorize
 from voodoo import Node
 
 alias nelts = simdwidthof[DType.float32]()
+alias epsilon = Float32(1e-8)
+
 
 fn fw_elu(node: Node, parent1: Node):
     @parameter
@@ -68,13 +70,16 @@ fn fw_gelu(node: Node, parent1: Node):
             i,
             Float32(0.5)
             * parent1.load_data[_nelts](i)
-            * (Float32(1.0)
+            * (
+                Float32(1.0)
                 + tanh(
                     Float32(0.7978845608028654)
-                    * (parent1.load_data[_nelts](i)
-                        + Float32(0.044715)
-                        * pow(parent1.load_data[_nelts](i), 3))
-                )),
+                    * (
+                        parent1.load_data[_nelts](i)
+                        + Float32(0.044715) * pow(parent1.load_data[_nelts](i), 3)
+                    )
+                )
+            ),
         )
 
     vectorize[nelts, v_gelu](node.load_cap())
@@ -88,44 +93,55 @@ fn bw_gelu(node: Node, parent1: Node):
             node.load_grad[_nelts](i)
             * (
                 Float32(0.5)
-                * (Float32(1.0)
+                * (
+                    Float32(1.0)
                     + tanh(
                         Float32(0.7978845608028654)
-                        * (parent1.load_data[_nelts](i)
-                            + Float32(0.044715)
-                            * pow(parent1.load_data[_nelts](i), 3))
-                    ))
+                        * (
+                            parent1.load_data[_nelts](i)
+                            + Float32(0.044715) * pow(parent1.load_data[_nelts](i), 3)
+                        )
+                    )
+                )
                 + Float32(0.3989422804014327)
                 * exp(
                     Float32(-0.7978845608028654)
-                    * (parent1.load_data[_nelts](i)
-                        + Float32(0.044715)
-                        * pow(parent1.load_data[_nelts](i), 3))
+                    * (
+                        parent1.load_data[_nelts](i)
+                        + Float32(0.044715) * pow(parent1.load_data[_nelts](i), 3)
+                    )
                 )
                 * (
                     Float32(0.5)
-                    * (Float32(1.0)
+                    * (
+                        Float32(1.0)
                         + tanh(
                             Float32(0.7978845608028654)
-                            * (parent1.load_data[_nelts](i)
+                            * (
+                                parent1.load_data[_nelts](i)
                                 + Float32(0.044715)
-                                * pow(parent1.load_data[_nelts](i), 3))
-                        ))
+                                * pow(parent1.load_data[_nelts](i), 3)
+                            )
+                        )
+                    )
                     + Float32(0.7978845608028654)
                     * Float32(0.1341640786499874)
                     * pow(
                         Float32(1.0)
                         + tanh(
                             Float32(0.7978845608028654)
-                            * (parent1.load_data[_nelts](i)
+                            * (
+                                parent1.load_data[_nelts](i)
                                 + Float32(0.044715)
-                                * pow(parent1.load_data[_nelts](i), 3))
+                                * pow(parent1.load_data[_nelts](i), 3)
+                            )
                         ),
                         2,
                     )
-                    * (parent1.load_data[_nelts](i)
-                        + Float32(0.044715)
-                        * pow(parent1.load_data[_nelts](i), 3))
+                    * (
+                        parent1.load_data[_nelts](i)
+                        + Float32(0.044715) * pow(parent1.load_data[_nelts](i), 3)
+                    )
                 )
             ),
         )
@@ -204,7 +220,12 @@ fn bw_mish(node: Node, parent1: Node):
             * (
                 tanh(log(Float32(1.0) + exp(parent1.load_data[_nelts](i))))
                 + parent1.load_data[_nelts](i)
-                * (Float32(1.0) - pow(tanh(log(Float32(1.0) + exp(parent1.load_data[_nelts](i)))), 2))
+                * (
+                    Float32(1.0)
+                    - pow(
+                        tanh(log(Float32(1.0) + exp(parent1.load_data[_nelts](i)))), 2
+                    )
+                )
             ),
         )
 
@@ -296,7 +317,6 @@ fn bw_sigmoid(node: Node, parent1: Node):
 fn fw_softmax(node: Node, parent1: Node):
     let num_dims = parent1.num_dims_ptr.load()
     let N = parent1.shape_ptr.load().load(num_dims - 1)
-    let epsilon = Float32(1e-8)
     for s in range(node.cap_ptr.load() // N):
         let offset = s * N
         var max_el = Float32(0.0)
@@ -326,7 +346,6 @@ fn fw_softmax(node: Node, parent1: Node):
 fn bw_softmax(node: Node, parent1: Node):
     let num_dims = parent1.num_dims_ptr.load()
     let N = parent1.shape_ptr.load().load(num_dims - 1)
-    let epsilon = Float32(1e-8)
     for s in range(node.cap_ptr.load() // N):
         let offset = s * N
 
