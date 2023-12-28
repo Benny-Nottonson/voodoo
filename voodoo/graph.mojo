@@ -941,7 +941,8 @@ struct Graph:
             )
             _ = self.backward_recursive(curr_node_ptr)
 
-    fn optimizer_step(self, learning_rate: Float32, type: String) raises:
+    fn optimizer_step[type: String](self, learning_rate: Float32) raises:
+        # TODO: Split into seperate functions to avoid if statements
         for i in range(self.nodes.load().len.load()):
             let node = self.nodes.load().load(i).load()
             if (
