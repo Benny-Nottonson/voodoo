@@ -32,6 +32,8 @@
 * [Acknowledgements](#acknowledgements)
 
 ## About The Project
+* Heavily built on top of Mojo
+* Uses Kernel and base structures from [Infermo](https://github.com/TilliFe/Infermo)
 
 ### Completed Structs
 * [Activation](https://github.com/Benny-Nottonson/voodoo/wiki/Activation-Functions)
@@ -40,10 +42,7 @@
 ## Built With
 
 [Mojo](https://github.com/modularml/mojo)
-
-## Getting Started
-
-TODO
+[Infermo](https://github.com/TilliFe/Infermo)
 
 ## Roadmap
 
