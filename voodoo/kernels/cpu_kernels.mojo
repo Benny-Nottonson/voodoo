@@ -1986,7 +1986,7 @@ fn bw_huber(node: Node, parent1: Node, parent2: Node):
         let error = (
             parent1.load_data[nelts](i) - parent2.load_data[nelts](i)
         ).reduce_add()
-        var grad = Float32(0.0)
+        let grad = Float32(0.0)
         if error < Float32(1.0):
             let grad = Float32(2.0) * error
         parent1.store_grad[nelts](i, parent1.load_grad[nelts](i) + grad)

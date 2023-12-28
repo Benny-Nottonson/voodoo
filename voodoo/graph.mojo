@@ -179,7 +179,7 @@ struct Graph:
         let last_node_id = Pointer[Int].alloc(1)
         last_node_id.store(-1)
 
-        let kernels = Pointer[op_tuple].alloc(90)
+        let kernels = Pointer[op_tuple].alloc(120)
         kernels.store(cos_code, op_tuple("cos", fw_cos, binary, view, reduce))
         kernels.store(bwcos_code, op_tuple("bwcos", bw_cos, binary, view, reduce))
         kernels.store(sin_code, op_tuple("sin", fw_sin, binary, view, reduce))

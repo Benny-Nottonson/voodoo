@@ -24,8 +24,6 @@ from .tensor import (
     transpose,
     reshape,
     sum,
-    cross_entropy,
-    mse,
     conv_2d,
     max_pool_2d,
 )
@@ -61,4 +59,20 @@ from .initializers import (
     random_uniform,
     truncated_normal,
     zeros,
+)
+
+from .losses import (
+    kld,
+    mae,
+    mape,
+    mse,
+    msle,
+    bce,
+    cce,
+    cfce,
+    cs,
+    huber,
+    logcosh,
+    poisson,
+    scce,
 )
