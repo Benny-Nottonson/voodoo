@@ -1,22 +1,18 @@
-from voodoo import (
-    Tensor,
-    Dense,
-    sin,
-    mse,
-    Graph
-)
+from voodoo import Tensor, Dense, sin, mse, Graph
 from voodoo.utils.shape import shape
 from time.time import now
+
 
 fn nanoseconds_to_seconds(t: Int) -> Float64:
     return Float64(t) / 1_000_000_000.0
 
+
 fn main() raises:
-    let l1 = Dense[activation = "relu"](1, 64)
-    let l2 = Dense[activation = "relu"](64, 64)
+    let l1 = Dense[activation="relu"](1, 64)
+    let l2 = Dense[activation="relu"](64, 64)
     let l3 = Dense(64, 1)
 
-    var avg_loss = Float32(0.0)
+    var avg_loss: Float32 = 0.0
     let every = 1000
     let num_epochs = 20000
 
@@ -33,7 +29,15 @@ fn main() raises:
 
         avg_loss += loss[0]
         if epoch % every == 0:
-            print("Epoch:", epoch, " Avg Loss: ", avg_loss / every, " Time: " , nanoseconds_to_seconds(now() - epoch_start), "s")
+            print(
+                "Epoch:",
+                epoch,
+                " Avg Loss: ",
+                avg_loss / every,
+                " Time: ",
+                nanoseconds_to_seconds(now() - epoch_start),
+                "s",
+            )
             avg_loss = 0.0
 
         loss.backward()

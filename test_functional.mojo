@@ -7,20 +7,21 @@ from voodoo import (
 from voodoo.utils.shape import shape
 from time.time import now
 
+
 fn nanoseconds_to_seconds(t: Int) -> Float64:
     return Float64(t) / 1_000_000_000.0
-    
+
 
 fn main() raises:
     let W1 = Tensor(shape(1, 64)).he_normal().requires_grad()
     let W2 = Tensor(shape(64, 64)).he_normal().requires_grad()
     let W3 = Tensor(shape(64, 1)).he_normal().requires_grad()
-    
+
     let b1 = Tensor(shape(64)).he_normal().requires_grad()
     let b2 = Tensor(shape(64)).he_normal().requires_grad()
     let b3 = Tensor(shape(1)).he_normal().requires_grad()
 
-    var avg_loss = Float32(0.0)
+    var avg_loss: Float32 = 0.0
     let every = 1000
     let num_epochs = 20000
 
@@ -40,7 +41,15 @@ fn main() raises:
 
         avg_loss += loss.forward_static()[0]
         if epoch % every == 0:
-            print("Epoch:", epoch, " Avg Loss: ", avg_loss / every, " Time: " , nanoseconds_to_seconds(now() - epoch_start), "s")
+            print(
+                "Epoch:",
+                epoch,
+                " Avg Loss: ",
+                avg_loss / every,
+                " Time: ",
+                nanoseconds_to_seconds(now() - epoch_start),
+                "s",
+            )
             avg_loss = 0.0
 
         loss.backward()

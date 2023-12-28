@@ -1,13 +1,7 @@
-from memory import memset_zero, memcpy
-from random import rand, random_si64, seed, randint
 from math import (
     max,
-    min,
     sqrt,
-    abs,
-    pow,
     exp2,
-    exp,
     log2,
     log,
     cos,
@@ -18,8 +12,6 @@ from math import (
     atan,
     cosh,
     sinh,
-    tanh,
-    erfc,
 )
 from sys.param_env import env_get_int
 from algorithm import vectorize, parallelize
@@ -34,7 +26,8 @@ from voodoo.utils import (
 
 from voodoo import Node
 
-alias nelts = simdwidthof[DType.float32]()
+alias DType_F32 = DType.float32
+alias nelts = simdwidthof[DType_F32]()
 alias workers = env_get_int["WORKERS", 0]()
 
 
@@ -359,7 +352,7 @@ fn kernel_div_bw_b(
             b.load_grad[nelts](offset_b + i)
             - a.load_data[nelts](offset_a + i)
             * c.load_grad[nelts](offset_c + i)
-            / pow(b.load_data[nelts](offset_b + i), 2),
+            / (b.load_data[nelts](offset_b + i)) ** 2,
         )
 
     vectorize[nelts, v_div_grad_b](c_rest)
@@ -511,8 +504,7 @@ fn bw_sqrt(node: Node, parent1: Node):
         parent1.store_grad[_nelts](
             i,
             parent1.load_grad[_nelts](i)
-            + node.load_grad[_nelts](i)
-            / (Float32(2.0) * sqrt(parent1.load_data[_nelts](i))),
+            + node.load_grad[_nelts](i) / (2.0 * sqrt(parent1.load_data[_nelts](i))),
         )
 
     vectorize[nelts, v_sqrt_bw](node.load_cap())
@@ -521,13 +513,11 @@ fn bw_sqrt(node: Node, parent1: Node):
 fn fw_abs(node: Node, parent1: Node):
     @parameter
     fn v_abs[_nelts: Int](i: Int):
-        let zeros = SIMD[DType.float32, _nelts]()
+        let data = parent1.load_data[_nelts](i)
         node.store_data[_nelts](
             i,
-            (parent1.load_data[_nelts](i) >= zeros).cast[DType.float32]()
-            * parent1.load_data[_nelts](i)
-            + (parent1.load_data[_nelts](i) < zeros).cast[DType.float32]()
-            * (-parent1.load_data[_nelts](i)),
+            (data >= 0.0).cast[DType_F32]() * data
+            + (data < 0.0).cast[DType_F32]() * (-data),
         )
 
     vectorize[nelts, v_abs](node.load_cap())
@@ -536,15 +526,10 @@ fn fw_abs(node: Node, parent1: Node):
 fn bw_abs(node: Node, parent1: Node):
     @parameter
     fn v_abs_bw[_nelts: Int](i: Int):
-        let zeros = SIMD[DType.float32, _nelts]()
         parent1.store_grad[_nelts](
             i,
             parent1.load_grad[_nelts](i)
-            + (
-                Float32(2.0)
-                * (parent1.load_data[_nelts](i) >= zeros).cast[DType.float32]()
-                - Float32(1.0)
-            )
+            + (2.0 * (parent1.load_data[_nelts](i) >= 0.0).cast[DType_F32]() - 1.0)
             * node.load_grad[_nelts](i),
         )
 
@@ -565,7 +550,7 @@ fn bw_exp2(node: Node, parent1: Node):
         parent1.store_grad[_nelts](
             i,
             parent1.load_grad[_nelts](i)
-            + node.load_grad[_nelts](i) * node.load_data[_nelts](i) * log(Float32(2.0)),
+            + node.load_grad[_nelts](i) * node.load_data[_nelts](i) * 0.69314718056,
         )
 
     vectorize[nelts, v_exp2_bw](node.load_cap())
@@ -586,7 +571,7 @@ fn bw_log2(node: Node, parent1: Node):
             i,
             parent1.load_grad[_nelts](i)
             + node.load_grad[_nelts](i)
-            / (parent1.load_data[_nelts](i) * log(Float32(2.0))),
+            / (parent1.load_data[_nelts](i) * 0.69314718056),
         )
 
     vectorize[nelts, v_log2_bw](node.load_cap())
@@ -632,7 +617,7 @@ fn kernel_pow_fw(
     fn v_pow[nelts: Int](i: Int):
         c.store_data[nelts](
             offset_c + i,
-            pow(a.load_data[nelts](offset_a + i), b.load_data[nelts](offset_b + i)),
+            a.load_data[nelts](offset_a + i) ** b.load_data[nelts](offset_b + i),
         )
 
     vectorize[nelts, v_pow](c_rest)
@@ -664,9 +649,9 @@ fn kernel_pow_bw_a(
             offset_a + i,
             a.load_grad[nelts](offset_a + i)
             + b.load_data[nelts](offset_b + i)
-            * pow(
-                a.load_data[nelts](offset_a + i),
-                b.load_data[nelts](offset_b + i) - Float32(1.0),
+            * (
+                a.load_data[nelts](offset_a + i)
+                ** (b.load_data[nelts](offset_b + i) - 1.0)
             )
             * c.load_grad[nelts](offset_c + i),
         )
@@ -755,7 +740,7 @@ fn bw_tan(node: Node, parent1: Node):
         parent1.store_grad[_nelts](
             i,
             parent1.load_grad[_nelts](i)
-            + node.load_grad[_nelts](i) / pow(cos(parent1.load_data[_nelts](i)), 2),
+            + node.load_grad[_nelts](i) / (cos(parent1.load_data[_nelts](i))) ** 2,
         )
 
     vectorize[nelts, v_tan_bw](node.load_cap())
@@ -776,7 +761,7 @@ fn bw_asin(node: Node, parent1: Node):
             i,
             parent1.load_grad[_nelts](i)
             + node.load_grad[_nelts](i)
-            / sqrt(Float32(1.0) - pow(parent1.load_data[_nelts](i), 2)),
+            / sqrt(1.0 - (parent1.load_data[_nelts](i)) ** 2),
         )
 
     vectorize[nelts, v_asin_bw](node.load_cap())
@@ -797,7 +782,7 @@ fn bw_acos(node: Node, parent1: Node):
             i,
             parent1.load_grad[_nelts](i)
             - node.load_grad[_nelts](i)
-            / sqrt(Float32(1.0) - pow(parent1.load_data[_nelts](i), 2)),
+            / sqrt(1.0 - (parent1.load_data[_nelts](i)) ** 2),
         )
 
     vectorize[nelts, v_acos_bw](node.load_cap())
@@ -817,8 +802,7 @@ fn bw_atan(node: Node, parent1: Node):
         parent1.store_grad[_nelts](
             i,
             parent1.load_grad[_nelts](i)
-            + node.load_grad[_nelts](i)
-            / (Float32(1.0) + pow(parent1.load_data[_nelts](i), 2)),
+            + node.load_grad[_nelts](i) / (1.0 + (parent1.load_data[_nelts](i)) ** 2),
         )
 
     vectorize[nelts, v_atan_bw](node.load_cap())
@@ -881,7 +865,7 @@ fn bw_copy(node: Node, parent1: Node):
 
 
 fn fw_sum(node: Node, parent1: Node):
-    var sum = Float32(0.0)
+    var sum: Float32 = 0.0
 
     @parameter
     fn v_sum[nelts: Int](i: Int):
@@ -1204,16 +1188,16 @@ fn bw_max_pool_2d(b: Node, a: Node):
     let kernel_width = b.other_params_ptr.load().load(2)
     let kernel_height = b.other_params_ptr.load().load(3)
 
-    for p in range(a.shape_ptr.load().load(0)):  # batch_size
-        for i in range(a.shape_ptr.load().load(1)):  # in_channels
+    for p in range(a.shape_ptr.load().load(0)):
+        for i in range(a.shape_ptr.load().load(1)):
             for x in range(
                 0, a.shape_ptr.load().load(2) - kernel_width + 1 + 2 * padding, stride
-            ):  # width
+            ):
                 for y in range(
                     0,
                     a.shape_ptr.load().load(3) - kernel_height + 1 + 2 * padding,
                     stride,
-                ):  # height
+                ):
                     var arg_max: Int = 0
                     var max_val: Float32 = -1000000.0
                     for dx in range(kernel_width):

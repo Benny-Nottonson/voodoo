@@ -235,23 +235,23 @@ struct Node:
     fn glorot_normal(self):
         let fan_in = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 2)
         let fan_out = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 1)
-        let scale = sqrt(Float32(2.0) / Float32(fan_in + fan_out))
-        self.random_normal(scale, Float32(0.0))
+        let scale = sqrt(2.0 / Float32(fan_in + fan_out))
+        self.random_normal(scale, 0.0)
 
     fn glorot_uniform(self):
         let fan_in = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 2)
         let fan_out = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 1)
-        let scale = sqrt(Float32(6.0) / Float32(fan_in + fan_out))
+        let scale = sqrt(6.0 / Float32(fan_in + fan_out))
         self.random_uniform(-scale, scale)
 
     fn he_normal(self):
         let fan_in = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 2)
-        let scale = sqrt(Float32(2.0) / Float32(fan_in))
-        self.random_normal(scale, Float32(0.0))
+        let scale = sqrt(2.0 / Float32(fan_in))
+        self.random_normal(scale, 0.0)
 
     fn he_uniform(self):
         let fan_in = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 2)
-        let scale = sqrt(Float32(6.0) / Float32(fan_in))
+        let scale = sqrt(6.0 / Float32(fan_in))
         self.random_uniform(-scale, scale)
 
     fn he_random(self):
@@ -262,12 +262,12 @@ struct Node:
         rand(u1, self.cap_ptr.load())
         rand(u2, self.cap_ptr.load())
         for i in range(self.cap_ptr.load()):
-            let z = sqrt(-Float32(2.0) * log(u1.load(i))) * cos(
-                Float32(2.0) * pi * u2.load(i)
-            )
+            let z = sqrt(-2.0 * log(u1.load(i))) * cos(2.0 * pi * u2.load(i))
             let sigma = sqrt(
-                Float32(2.0)
-                / self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 1)
+                2.0
+                / Float32(
+                    self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 1)
+                )
             )
             self.store_data(i, z * sigma)
 
@@ -281,24 +281,24 @@ struct Node:
         for i in range(col_strides):
             for j in range(cols):
                 if i == j:
-                    self.store_data(i * cols + j, Float32(1.0))
+                    self.store_data(i * cols + j, 1.0)
                 else:
-                    self.store_data(i * cols + j, Float32(0.0))
+                    self.store_data(i * cols + j, 0.0)
 
     fn lecun_normal(self):
         let fan_in = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 2)
-        let scale = sqrt(Float32(1.0) / Float32(fan_in))
-        self.random_normal(scale, Float32(0.0))
+        let scale = sqrt(1.0 / Float32(fan_in))
+        self.random_normal(scale, 0.0)
 
     fn lecun_uniform(self):
         let fan_in = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 2)
-        let scale = sqrt(Float32(3.0) / Float32(fan_in))
+        let scale = sqrt(3.0 / Float32(fan_in))
         self.random_uniform(-scale, scale)
 
     fn ones(self):
-        self.fill(Float32(1.0))
+        self.fill(1.0)
 
-    fn random_normal(self, std: Float32 = Float32(1.0), mu: Float32 = Float32(0.0)):
+    fn random_normal(self, std: Float32 = 1.0, mu: Float32 = 0.0):
         seed()
         let pi = 3.14159265358979
         let u1 = DTypePointer[DType.float32].alloc(self.cap_ptr.load())
@@ -306,9 +306,7 @@ struct Node:
         rand(u1, self.cap_ptr.load())
         rand(u2, self.cap_ptr.load())
         for i in range(self.cap_ptr.load()):
-            let z = sqrt(-Float32(2.0) * log(u1.load(i))) * cos(
-                Float32(2.0) * pi * u2.load(i)
-            )
+            let z = sqrt(-2.0 * log(u1.load(i))) * cos(2.0 * pi * u2.load(i))
             self.store_data(i, z * std + mu)
 
     fn random_uniform(self, min: Float32, max: Float32):
@@ -317,7 +315,7 @@ struct Node:
         for i in range(self.cap_ptr.load()):
             self.store_data(i, self.load_data(i) * (max - min) + min)
 
-    fn truncated_normal(self, std: Float32 = Float32(1.0), mu: Float32 = Float32(0.0)):
+    fn truncated_normal(self, std: Float32 = 1.0, mu: Float32 = 0.0):
         seed()
         let pi = 3.14159265358979
         let u1 = DTypePointer[DType.float32].alloc(self.cap_ptr.load())
@@ -325,16 +323,14 @@ struct Node:
         rand(u1, self.cap_ptr.load())
         rand(u2, self.cap_ptr.load())
         for i in range(self.cap_ptr.load()):
-            let z = sqrt(-Float32(2.0) * log(u1.load(i))) * cos(
-                Float32(2.0) * pi * u2.load(i)
-            )
-            if z > -Float32(2.0) and z < Float32(2.0):
+            let z = sqrt(-2.0 * log(u1.load(i))) * cos(2.0 * pi * u2.load(i))
+            if z > -2.0 and z < 2.0:
                 self.store_data(i, z * std + mu)
             else:
-                self.store_data(i, Float32(0.0))
+                self.store_data(i, 0.0)
 
     fn zeros(self):
-        self.fill(Float32(0.0))
+        self.fill(0.0)
 
     @always_inline
     fn print(self, accuracy: Int = 6):
@@ -380,7 +376,7 @@ struct Node:
                                 String(self.data.load(t).load(idx))[
                                     :accuracy
                                 ] if self.data.load(t).load(idx)
-                                != Float32(0.0) else String(0.000)[:accuracy]
+                                != 0.0 else String(0.000)[:accuracy]
                             )
                             if j != cols - 1:
                                 print_no_newline(", ")

@@ -256,14 +256,14 @@ fn fw_softmax(node: Node, parent1: Node):
     let N = parent1.shape_ptr.load().load(num_dims - 1)
     for s in range(node.cap_ptr.load() // N):
         let offset = s * N
-        var max_el = Float32(0.0)
+        var max_el: Float32 = 0.0
 
         @parameter
         fn v_max[nelts: Int](i: Int):
             max_el = max(max_el, parent1.load_data[nelts](offset + i).reduce_max())
 
         vectorize[nelts, v_max](N)
-        var sum = Float32(0.0)
+        var sum: Float32 = 0.0
 
         @parameter
         fn v_exp[nelts: Int](i: Int):
@@ -288,7 +288,7 @@ fn bw_softmax(node: Node, parent1: Node):
 
         @parameter
         fn v_softmax_bw_outer[nelts: Int](j: Int):
-            var grad = Float32(0.0)
+            var grad: Float32 = 0.0
 
             @parameter
             fn v_softmax_bw[nelts: Int](i: Int):
