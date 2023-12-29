@@ -1,28 +1,13 @@
 from python import Python
 
-from voodoo import Tensor
-from voodoo.activations import (
-    elu,
-    exp,
-    gelu,
-    h_sig,
-    linear,
-    mish,
-    relu,
-    selu,
-    sig,
-    softmax,
-    softplus,
-    softsign,
-    swish,
-    tanh,
-)
+from voodoo import Tensor, get_activation_code
 
 alias TestSize = 10
 
 
-fn test_fn(
-    f: fn (Tensor) raises -> Tensor,
+fn test_fn[
+    f: String
+](
     tfFunction: PythonObject,
     tfConstant: PythonObject,
     tfType: PythonObject,
@@ -46,9 +31,15 @@ fn test_fn(
     let mediumTensorInitial = Tensor(mediumShape).random_normal()
     let largeTensorInitial = Tensor(largeShape).random_normal()
 
-    let smallTensorActivated = f(smallTensorInitial)
-    let mediumTensorActivated = f(mediumTensorInitial)
-    let largeTensorActivated = f(largeTensorInitial)
+    let smallTensorActivated = smallTensorInitial.compute_activation[
+        get_activation_code[f]()
+    ]()
+    let mediumTensorActivated = mediumTensorInitial.compute_activation[
+        get_activation_code[f]()
+    ]()
+    let largeTensorActivated = largeTensorInitial.compute_activation[
+        get_activation_code[f]()
+    ]()
 
     let smallTest: PythonObject = []
     let mediumTest: PythonObject = []
@@ -133,71 +124,65 @@ fn test_fn(
 fn main() raises:
     let tf = Python.import_module("tensorflow")
     var total = 0
-    total += test_fn(
-        elu, tf.keras.activations.elu, tf.constant, tf.float32, tf.math.reduce_sum
+    total += test_fn["elu"](
+        tf.keras.activations.elu, tf.constant, tf.float32, tf.math.reduce_sum
     )
-    total += test_fn(
-        exp,
+    total += test_fn["exp"](
         tf.keras.activations.exponential,
         tf.constant,
         tf.float32,
         tf.math.reduce_sum,
     )
-    total += test_fn(
-        gelu, tf.keras.activations.gelu, tf.constant, tf.float32, tf.math.reduce_sum
+    total += test_fn["gelu"](
+        tf.keras.activations.gelu, tf.constant, tf.float32, tf.math.reduce_sum
     )
-    total += test_fn(
-        h_sig,
+    total += test_fn["h_sig"](
         tf.keras.activations.hard_sigmoid,
         tf.constant,
         tf.float32,
         tf.math.reduce_sum,
     )
-    total += test_fn(
-        linear, tf.keras.activations.linear, tf.constant, tf.float32, tf.math.reduce_sum
+    total += test_fn["linear"](
+        tf.keras.activations.linear, tf.constant, tf.float32, tf.math.reduce_sum
     )
-    total += test_fn(
-        mish, tf.keras.activations.mish, tf.constant, tf.float32, tf.math.reduce_sum
+    total += test_fn["mish"](
+        tf.keras.activations.mish, tf.constant, tf.float32, tf.math.reduce_sum
     )
-    total += test_fn(
-        relu, tf.keras.activations.relu, tf.constant, tf.float32, tf.math.reduce_sum
+    total += test_fn["relu"](
+        tf.keras.activations.relu, tf.constant, tf.float32, tf.math.reduce_sum
     )
-    total += test_fn(
-        selu, tf.keras.activations.selu, tf.constant, tf.float32, tf.math.reduce_sum
+    total += test_fn["selu"](
+        tf.keras.activations.selu, tf.constant, tf.float32, tf.math.reduce_sum
     )
-    total += test_fn(
-        sig,
+    total += test_fn["sig"](
         tf.keras.activations.sigmoid,
         tf.constant,
         tf.float32,
         tf.math.reduce_sum,
     )
-    total += test_fn(
-        softmax,
+    total += test_fn["softmax"](
         tf.keras.activations.softmax,
         tf.constant,
         tf.float32,
         tf.math.reduce_sum,
     )
-    total += test_fn(
-        softplus,
+    total += test_fn["softplus"](
         tf.keras.activations.softplus,
         tf.constant,
         tf.float32,
         tf.math.reduce_sum,
     )
-    total += test_fn(
-        softsign,
+    total += test_fn["softsign"](
         tf.keras.activations.softsign,
         tf.constant,
         tf.float32,
         tf.math.reduce_sum,
     )
-    total += test_fn(
-        swish, tf.keras.activations.swish, tf.constant, tf.float32, tf.math.reduce_sum
+    total += test_fn["swish"](
+        tf.keras.activations.swish, tf.constant, tf.float32, tf.math.reduce_sum
     )
-    total += test_fn(
-        tanh, tf.keras.activations.tanh, tf.constant, tf.float32, tf.math.reduce_sum
+    total += test_fn["tanh"](
+        tf.keras.activations.tanh, tf.constant, tf.float32, tf.math.reduce_sum
     )
 
     if total == 0:

@@ -1,4 +1,4 @@
-from voodoo import Tensor, Dense, sin, mse, Graph
+from voodoo import Tensor, Dense, sin, get_loss_code, Graph
 from voodoo.utils.shape import shape
 from time.time import now
 
@@ -19,10 +19,11 @@ fn main() raises:
     let input = Tensor(shape(32, 1)).random_uniform(0, 1)
     let true_vals = Tensor(shape(32, 1))
 
+    # TODO, make a model struct to encapsulate this, variable middle layers
     var x = input_layer.forward(input)
     x = dense_layer.forward(x)
     x = output_layer.forward(x)
-    let loss = mse(x, true_vals)
+    let loss = x.compute_loss[get_loss_code["mse"]()](true_vals)
 
     let initial_start = now()
     for epoch in range(1, num_epochs + 1):

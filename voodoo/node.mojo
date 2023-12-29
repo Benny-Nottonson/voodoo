@@ -202,10 +202,6 @@ struct Node:
         for i in range(self.load_cap()):
             self.data.load().store(i, val)
 
-    fn _custom_fill(self, vals: DynamicVector[Float32]):
-        for i in range(self.load_cap()):
-            self.data.load().store(i, vals[i])
-
     fn fill_incr(self):
         for i in range(self.load_cap()):
             self.data.load(0).store(i, Float32(i))

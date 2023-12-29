@@ -31,45 +31,11 @@ from .tensor import (
 from .layers import Dense
 
 from .activations import (
-    elu,
-    exp,
-    gelu,
-    h_sig,
-    linear,
-    mish,
-    relu,
-    selu,
-    sig,
-    softmax,
-    softplus,
-    softsign,
-    swish,
-    tanh,
-)
-
-from .initializers import (
-    constant,
-    glorot_normal,
-    glorot_uniform,
-    he_normal,
-    he_uniform,
-    lecun_normal,
-    lecun_uniform,
-    ones,
-    random_normal,
-    random_uniform,
-    truncated_normal,
-    zeros,
+    get_activation_code
 )
 
 from .losses import (
-    mse,
-    mae,
-    mape,
-    msle,
-    bce,
-    cce,
-    cfce,
+    get_loss_code
 )
 
 from .operator_ids import *

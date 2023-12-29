@@ -1,29 +1,20 @@
 from voodoo import Tensor
 
-
-fn mae(predicted: Tensor, expected: Tensor) raises -> Tensor:
-    return predicted.compute_loss[operator_id=mae_code](expected)
-
-
-fn mape(predicted: Tensor, expected: Tensor) raises -> Tensor:
-    return predicted.compute_loss[operator_id=mape_code](expected)
-
-
-fn mse(predicted: Tensor, expected: Tensor) raises -> Tensor:
-    return predicted.compute_loss[operator_id=mse_code](expected)
-
-
-fn msle(predicted: Tensor, expected: Tensor) raises -> Tensor:
-    return predicted.compute_loss[operator_id=msle_code](expected)
-
-
-fn bce(predicted: Tensor, expected: Tensor) raises -> Tensor:
-    return predicted.compute_loss[operator_id=bce_code](expected)
-
-
-fn cce(predicted: Tensor, expected: Tensor) raises -> Tensor:
-    return predicted.compute_loss[operator_id=cce_code](expected)
-
-
-fn cfce(predicted: Tensor, expected: Tensor) raises -> Tensor:
-    return predicted.compute_loss[operator_id=cfce_code](expected)
+# TODO: Eventually can be a dict, not in mojo yet
+fn get_loss_code[name: String]() -> Int:
+    @parameter
+    if name == "mae":
+        return mae_code
+    elif name == "mape":
+        return mape_code
+    elif name == "mse":
+        return mse_code
+    elif name == "msle":
+        return msle_code
+    elif name == "bce":
+        return bce_code
+    elif name == "cce":
+        return cce_code
+    elif name == "cfce":
+        return cfce_code
+    return mse_code

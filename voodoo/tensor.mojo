@@ -174,6 +174,49 @@ struct Tensor:
             _ = self.forward()
         self.graph_ptr.load().load().print()
 
+    fn initialize[
+        initialization_function: String, val: Float32 = 0, val2: Float32 = 0
+    ](self) raises -> Self:
+        @parameter
+        if initialization_function == "glorot_normal":
+            return self.glorot_normal()
+        elif initialization_function == "glorot_uniform":
+            return self.glorot_uniform()
+        elif initialization_function == "he_normal":
+            return self.he_normal()
+        elif initialization_function == "he_uniform":
+            return self.he_uniform()
+        elif initialization_function == "identity":
+            return self.identity()
+        elif initialization_function == "lecun_normal":
+            return self.lecun_normal()
+        elif initialization_function == "lecun_uniform":
+            return self.lecun_uniform()
+        elif initialization_function == "ones":
+            return self.ones()
+        elif initialization_function == "random_normal":
+            return self.random_normal()
+        elif initialization_function == "random_uniform":
+            return self.random_uniform(val, val2)
+        elif initialization_function == "truncated_normal":
+            return self.truncated_normal()
+        elif initialization_function == "zeros":
+            return self.zeros()
+        elif initialization_function == "fill":
+            return self.fill(val)
+        elif initialization_function == "fill_incr":
+            return self.fill_incr()
+        elif initialization_function == "grad_fill_incr":
+            return self.grad_fill_incr()
+        elif initialization_function == "requires_grad":
+            return self.requires_grad()
+        elif initialization_function == "static":
+            return self.static()
+        elif initialization_function == "dynamic":
+            return self.dynamic()
+        else:
+            raise Error("Invalid initialization function")
+
     fn glorot_normal(self) raises -> Self:
         self.node_ptr.load().load().glorot_normal()
         return self
@@ -224,10 +267,6 @@ struct Tensor:
 
     fn fill(self, val: Float32) -> Self:
         self.node_ptr.load().load().fill(val)
-        return self
-
-    fn _custom_fill(self, vals: DynamicVector[Float32]) -> Self:
-        self.node_ptr.load().load()._custom_fill(vals)
         return self
 
     fn fill_incr(self) raises -> Self:
@@ -592,9 +631,7 @@ struct Tensor:
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()
             .load()
-            .loss_general[operator_id](
-                self.node_ptr.load(), other.node_ptr.load()
-            )
+            .loss_general[operator_id](self.node_ptr.load(), other.node_ptr.load())
         )
         return new_tensor
 

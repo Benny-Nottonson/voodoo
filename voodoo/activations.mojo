@@ -1,57 +1,34 @@
 from voodoo import Tensor
 
-
-fn elu(tensor: Tensor) raises -> Tensor:
-    return tensor.compute_activation[elu_code]()
-
-
-fn exp(tensor: Tensor) raises -> Tensor:
-    return tensor.compute_activation[exp_code]()
-
-
-fn gelu(tensor: Tensor) raises -> Tensor:
-    return tensor.compute_activation[gelu_code]()
-
-
-fn h_sig(tensor: Tensor) raises -> Tensor:
-    return tensor.compute_activation[h_sig_code]()
-
-
-fn linear(tensor: Tensor) raises -> Tensor:
-    return tensor.compute_activation[linear_code]()
-
-
-fn mish(tensor: Tensor) raises -> Tensor:
-    return tensor.compute_activation[mish_code]()
-
-
-fn relu(tensor: Tensor) raises -> Tensor:
-    return tensor.compute_activation[relu_code]()
-
-
-fn selu(tensor: Tensor) raises -> Tensor:
-    return tensor.compute_activation[selu_code]()
-
-
-fn sig(tensor: Tensor) raises -> Tensor:
-    return tensor.compute_activation[sig_code]()
-
-
-fn softmax(tensor: Tensor) raises -> Tensor:
-    return tensor.compute_activation[softmax_code]()
-
-
-fn softplus(tensor: Tensor) raises -> Tensor:
-    return tensor.compute_activation[softplus_code]()
-
-
-fn softsign(tensor: Tensor) raises -> Tensor:
-    return tensor.compute_activation[softsign_code]()
-
-
-fn swish(tensor: Tensor) raises -> Tensor:
-    return tensor.compute_activation[swish_code]()
-
-
-fn tanh(tensor: Tensor) raises -> Tensor:
-    return tensor.compute_activation[tanh_code]()
+# TODO: Eventually can be a dict, not in mojo yet
+fn get_activation_code[name: String]() -> Int:
+    @parameter
+    if name == "elu":
+        return elu_code
+    elif name == "exp":
+        return exp_code
+    elif name == "gelu":
+        return gelu_code
+    elif name == "h_sig":
+        return h_sig_code
+    elif name == "linear":
+        return linear_code
+    elif name == "mish":
+        return mish_code
+    elif name == "relu":
+        return relu_code
+    elif name == "selu":
+        return selu_code
+    elif name == "sig":
+        return sig_code
+    elif name == "softmax":
+        return softmax_code
+    elif name == "softplus":
+        return softplus_code
+    elif name == "softsign":
+        return softsign_code
+    elif name == "swish":
+        return swish_code
+    elif name == "tanh":
+        return tanh_code
+    return linear_code

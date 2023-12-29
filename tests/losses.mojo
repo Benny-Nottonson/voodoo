@@ -1,21 +1,13 @@
 from python import Python
 
-from voodoo import Tensor
-from voodoo.losses import (
-    mae,
-    mape,
-    mse,
-    msle,
-    bce,
-    cce,
-    cfce,
-)
+from voodoo import Tensor, get_loss_code
 
 alias TestSize = 5
 
 
-fn test_fn(
-    f: fn (Tensor, Tensor) raises -> Tensor,
+fn test_fn[
+    f: String
+](
     tfFunction: PythonObject,
     tfConstant: PythonObject,
     tfType: PythonObject,
@@ -43,9 +35,15 @@ fn test_fn(
     let mediumTensorGuess = Tensor(mediumShape).random_normal()
     let largeTensorGuess = Tensor(largeShape).random_normal()
 
-    let smallTensorLoss = f(smallTensorInitial, smallTensorGuess)
-    let mediumTensorLoss = f(mediumTensorInitial, mediumTensorGuess)
-    let largeTensorLoss = f(largeTensorInitial, largeTensorGuess)
+    let smallTensorLoss = smallTensorInitial.compute_loss[get_loss_code[f]()](
+        smallTensorGuess
+    )
+    let mediumTensorLoss = mediumTensorInitial.compute_loss[get_loss_code[f]()](
+        mediumTensorGuess
+    )
+    let largeTensorLoss = largeTensorInitial.compute_loss[get_loss_code[f]()](
+        largeTensorGuess
+    )
 
     let smallTest: PythonObject = []
     let mediumTest: PythonObject = []
@@ -143,34 +141,31 @@ fn main() raises:
     let tf = Python.import_module("tensorflow")
     var total = 0
 
-    total += test_fn(
-        mae, tf.keras.losses.mae, tf.constant, tf.float32, tf.math.reduce_sum
+    total += test_fn["mae"](
+        tf.keras.losses.mae, tf.constant, tf.float32, tf.math.reduce_sum
     )
-    total += test_fn(
-        mape, tf.keras.losses.mape, tf.constant, tf.float32, tf.math.reduce_sum
+    total += test_fn["mape"](
+        tf.keras.losses.mape, tf.constant, tf.float32, tf.math.reduce_sum
     )
-    total += test_fn(
-        mse, tf.keras.losses.mse, tf.constant, tf.float32, tf.math.reduce_sum
+    total += test_fn["mse"](
+        tf.keras.losses.mse, tf.constant, tf.float32, tf.math.reduce_sum
     )
-    total += test_fn(
-        msle, tf.keras.losses.msle, tf.constant, tf.float32, tf.math.reduce_sum
+    total += test_fn["msle"](
+        tf.keras.losses.msle, tf.constant, tf.float32, tf.math.reduce_sum
     )
-    total += test_fn(
-        bce,
+    total += test_fn["bce"](
         tf.keras.losses.binary_crossentropy,
         tf.constant,
         tf.float32,
         tf.math.reduce_sum,
     )
-    total += test_fn(
-        cce,
+    total += test_fn["cce"](
         tf.keras.losses.categorical_crossentropy,
         tf.constant,
         tf.float32,
         tf.math.reduce_sum,
     )
-    total += test_fn(
-        cfce,
+    total += test_fn["cfce"](
         tf.keras.losses.categorical_hinge,
         tf.constant,
         tf.float32,
