@@ -1,7 +1,5 @@
 from voodoo import Tensor
 
-# https://github.com/Benny-Nottonson/voodoo/wiki/Activation-Functions
-
 
 fn elu(tensor: Tensor) raises -> Tensor:
     return tensor.elu()

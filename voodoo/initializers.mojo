@@ -1,7 +1,5 @@
 from voodoo import Tensor
 
-# https://github.com/Benny-Nottonson/voodoo/wiki/Initialization-Functions
-
 
 fn glorot_normal(tensor: Tensor) raises -> Tensor:
     return tensor.glorot_normal()

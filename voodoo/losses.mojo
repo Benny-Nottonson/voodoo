@@ -1,16 +1,5 @@
 from voodoo import Tensor
 
-"""
-Loss Functions
-- mse
-- mae
-- mape
-- msle
-- bce
-- cce
-- cfce
-"""
-
 
 fn mse(predicted: Tensor, expected: Tensor) raises -> Tensor:
     return predicted.mse(expected)
