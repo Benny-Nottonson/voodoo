@@ -4,7 +4,7 @@ from time.time import now
 
 
 fn nanoseconds_to_seconds(t: Int) -> Float64:
-    return Float64(t) / 1_000_000_000.0
+    return t / 1_000_000_000.0
 
 
 fn main() raises:

@@ -1,21 +1,6 @@
 from voodoo import Tensor
 
-"""
-Initializer Functions
-- glorot_normal
-- glorot_uniform
-- he_normal
-- he_uniform
-- identity
-- lecun_normal
-- lecun_uniform
-- ones
-- random_normal
-- random_uniform
-- truncated_normal
-- zeros
-- constant
-"""
+# https://github.com/Benny-Nottonson/voodoo/wiki/Initialization-Functions
 
 
 fn glorot_normal(tensor: Tensor) raises -> Tensor:

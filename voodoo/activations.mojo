@@ -1,22 +1,6 @@
 from voodoo import Tensor
 
-"""
-Activation Functions
-- elu
-- exp
-- gelu
-- hard_sigmoid
-- linear
-- mish
-- relu
-- selu
-- sigmoid
-- softmax
-- softplus
-- softsign
-- swish
-- tanh
-"""
+# https://github.com/Benny-Nottonson/voodoo/wiki/Activation-Functions
 
 
 fn elu(tensor: Tensor) raises -> Tensor:
@@ -55,8 +39,12 @@ fn sigmoid(tensor: Tensor) raises -> Tensor:
     return tensor.sigmoid()
 
 
-fn softmax(tensor: Tensor, axis: Int = -1) raises -> Tensor:
+fn softmax(tensor: Tensor, axis: Int) raises -> Tensor:
     return tensor.softmax(axis)
+
+
+fn softmax(tensor: Tensor) raises -> Tensor:
+    return tensor.softmax(-1)
 
 
 fn softplus(tensor: Tensor) raises -> Tensor:
