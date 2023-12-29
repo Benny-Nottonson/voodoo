@@ -1071,7 +1071,7 @@ struct Graph:
             shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
         )
 
-    fn sum(self, parent1_ptr: Pointer[Node], axis: Int) raises -> Pointer[Node]:
+    fn sum(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
         let operator_id = sum_code
         let checkpoint = False
         let shape = shape(1)

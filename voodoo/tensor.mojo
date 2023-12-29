@@ -571,10 +571,10 @@ struct Tensor:
         )
         return new_tensor
 
-    fn sum(self, axis: Int = -1) raises -> Tensor:
+    fn sum(self) raises -> Tensor:
         let new_tensor = self.load_tensor_for_unary_op()
         new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().sum(self.node_ptr.load(), axis)
+            new_tensor.graph_ptr.load().load().sum(self.node_ptr.load())
         )
         return new_tensor
 
@@ -768,8 +768,8 @@ fn transpose(tensor: Tensor) raises -> Tensor:
     return tensor.transpose()
 
 
-fn sum(tensor: Tensor, axis: Int = -1) raises -> Tensor:
-    return tensor.sum(axis)
+fn sum(tensor: Tensor) raises -> Tensor:
+    return tensor.sum()
 
 
 fn max_pool_2d(
