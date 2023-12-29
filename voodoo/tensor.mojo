@@ -317,97 +317,6 @@ struct Tensor:
     fn capacity(self) raises -> Int:
         return self.node_ptr.load().load().cap_ptr.load()
 
-    fn sin(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().sin(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn cos(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().cos(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn tan(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().tan(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn acos(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().acos(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn asin(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().asin(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn atan(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().atan(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn cosh(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().cosh(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn sinh(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().sinh(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn log(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().log(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn log2(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().log2(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn exp2(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().exp2(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn sqrt(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().sqrt(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn abs(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().abs(self.node_ptr.load())
-        )
-        return new_tensor
-
     fn copy(self) raises -> Tensor:
         let new_tensor = self.load_tensor_for_unary_op()
         new_tensor.node_ptr.store(
@@ -669,6 +578,15 @@ struct Tensor:
         )
         return new_tensor
 
+    fn compute_function[operator_id: Int](self) raises -> Tensor:
+        let new_tensor = self.load_tensor_for_unary_op()
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load()
+            .load()
+            .function_general[operator_id](self.node_ptr.load())
+        )
+        return new_tensor
+
     fn compute_loss[operator_id: Int](self, other: Tensor) raises -> Tensor:
         let new_tensor = self.load_tensor_for_binary_op(other)
         new_tensor.node_ptr.store(
@@ -784,55 +702,55 @@ fn conv_2d(a: Tensor, b: Tensor, stride: Int = 1, padding: Int = 0) raises -> Te
 
 
 fn sin(tensor: Tensor) raises -> Tensor:
-    return tensor.sin()
+    return tensor.compute_function[sin_code]()
 
 
 fn cos(tensor: Tensor) raises -> Tensor:
-    return tensor.cos()
+    return tensor.compute_function[cos_code]()
 
 
 fn tan(tensor: Tensor) raises -> Tensor:
-    return tensor.tan()
+    return tensor.compute_function[tan_code]()
 
 
 fn acos(tensor: Tensor) raises -> Tensor:
-    return tensor.acos()
+    return tensor.compute_function[acos_code]()
 
 
 fn asin(tensor: Tensor) raises -> Tensor:
-    return tensor.asin()
+    return tensor.compute_function[asin_code]()
 
 
 fn atan(tensor: Tensor) raises -> Tensor:
-    return tensor.atan()
+    return tensor.compute_function[atan_code]()
 
 
 fn cosh(tensor: Tensor) raises -> Tensor:
-    return tensor.cosh()
+    return tensor.compute_function[cosh_code]()
 
 
 fn sinh(tensor: Tensor) raises -> Tensor:
-    return tensor.sinh()
+    return tensor.compute_function[sinh_code]()
 
 
 fn log(tensor: Tensor) raises -> Tensor:
-    return tensor.log()
+    return tensor.compute_function[log_code]()
 
 
 fn log2(tensor: Tensor) raises -> Tensor:
-    return tensor.log2()
+    return tensor.compute_function[log2_code]()
 
 
 fn exp2(tensor: Tensor) raises -> Tensor:
-    return tensor.exp2()
+    return tensor.compute_function[exp2_code]()
 
 
 fn sqrt(tensor: Tensor) raises -> Tensor:
-    return tensor.sqrt()
+    return tensor.compute_function[sqrt_code]()
 
 
 fn abs(tensor: Tensor) raises -> Tensor:
-    return tensor.abs()
+    return tensor.compute_function[abs_code]()
 
 
 fn deep_copy(tensor: Tensor) raises -> Tensor:
