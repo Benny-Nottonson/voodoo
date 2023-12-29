@@ -2,8 +2,11 @@ from .tensor import Tensor, conv_2d
 from .activations import get_activation_code
 from .utils.shape import shape
 
+# TODO: There has to be a better way for this
+# TODO: UseBias default changes depending on layer, see above
 struct Layer[
     type: String,
+    # Dense Parameters
     activation: String = "none",
     use_bias: Bool = True,
     weight_initializer: String = "he_normal",
@@ -13,6 +16,11 @@ struct Layer[
     bias_mean: Float32 = 0.0,
     bias_std: Float32 = 0.05,
     # TODO: Add regularizers, constraints
+    # Conv2d Parameters
+    padding: Int = 0,
+    stride: Int = 1,
+    kernel_width: Int = 3,
+    kernel_height: Int = 3,
 ]:
     var W: Tensor
     var bias: Tensor
@@ -25,7 +33,9 @@ struct Layer[
         self.W = self.bias = Tensor(shape(0))
         @parameter
         if type == "dense":
-            self.__init_dense__(in_neurons, out_neurons)
+            self.init_dense(in_neurons, out_neurons)
+        elif type == "conv2d":
+            self.init_conv2d(in_neurons, out_neurons)
         else:
             raise Error("Invalid layer type: " + type)
 
@@ -33,11 +43,13 @@ struct Layer[
         @parameter
         if type == "dense":
             return self.forward_dense(x)
+        elif type == "conv2d":
+            return self.forward_conv2d(x)
         else:
             raise Error("Invalid layer type: " + type)
             
-
-    fn __init_dense__(
+    # Dense
+    fn init_dense(
         inout self,
         in_neurons: Int,
         out_neurons: Int,
@@ -55,32 +67,23 @@ struct Layer[
             return x @ self.W + (self.bias * Float32(self.use_bias))
         return (x @ self.W + (self.bias * Float32(self.use_bias))).compute_activation[get_activation_code[activation]()]()
 
-"""
-struct Conv2d[
-    padding: Int,
-    stride: Int,
-    use_bias: Bool = False,
-]:
-    var kernels: Tensor
-    var bias: Tensor
-
-    fn __init__(
+    # TODO: Test
+    # Conv2d
+    fn init_conv2d(
         inout self,
         in_channels: Int,
         out_channels: Int,
-        kernel_width: Int,
-        kernel_height: Int,
     ) raises:
-        self.kernels = (
-            Tensor(shape(out_channels, in_channels, kernel_width, kernel_height))
-            .randhe()
-            .requires_grad()
-        )
-        self.bias = Tensor(shape(out_channels, 1, 1)).randhe().requires_grad()
+        self.W = Tensor(shape(out_channels, in_channels, kernel_width, kernel_height)).initialize[weight_initializer, weight_mean, weight_std]().requires_grad()
+        @parameter
+        if self.use_bias:
+            self.bias = Tensor(shape(out_channels, 1, 1)).initialize[bias_initializer, bias_mean, bias_std]()
+        else:
+            self.bias = Tensor(shape(out_channels, 1, 1)).initialize["zeros", 0.0]()
 
-    fn forward(self, x: Tensor) raises -> Tensor:
-        let res = conv_2d(x, self.kernels, self.padding, self.stride)
+    fn forward_conv2d(self, x: Tensor) raises -> Tensor:
+        let res = conv_2d(x, self.W, self.padding, self.stride)
+        @parameter
         if self.use_bias:
             return res + self.bias
         return res
-"""
