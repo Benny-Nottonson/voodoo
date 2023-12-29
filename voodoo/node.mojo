@@ -228,6 +228,43 @@ struct Node:
         for i in range(self.load_cap()):
             self.data.load(1).store(i, val)
 
+    fn initialize[
+        initialization_function: String, val: Float32 = 0, val2: Float32 = 0
+    ](self) raises:
+        @parameter
+        if initialization_function == "glorot_normal":
+            self.glorot_normal()
+        elif initialization_function == "glorot_uniform":
+            self.glorot_uniform()
+        elif initialization_function == "he_normal":
+            self.he_normal()
+        elif initialization_function == "he_uniform":
+            self.he_uniform()
+        elif initialization_function == "identity":
+            self.identity()
+        elif initialization_function == "lecun_normal":
+            self.lecun_normal()
+        elif initialization_function == "lecun_uniform":
+            self.lecun_uniform()
+        elif initialization_function == "ones":
+            self.ones()
+        elif initialization_function == "random_normal":
+            self.random_normal()
+        elif initialization_function == "random_uniform":
+            self.random_uniform(val, val2)
+        elif initialization_function == "truncated_normal":
+            self.truncated_normal()
+        elif initialization_function == "zeros":
+            self.zeros()
+        elif initialization_function == "fill":
+            self.fill(val)
+        elif initialization_function == "fill_incr":
+            self.fill_incr()
+        elif initialization_function == "grad_fill_incr":
+            self.grad_fill_incr()
+        else:
+            raise Error("Invalid initialization function")
+
     fn glorot_normal(self):
         let fan_in = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 2)
         let fan_out = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 1)

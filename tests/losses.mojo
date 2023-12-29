@@ -27,13 +27,13 @@ fn test_fn[
     largeShape.append(TestSize)
     largeShape.append(TestSize)
 
-    let smallTensorInitial = Tensor(smallShape).random_normal()
-    let mediumTensorInitial = Tensor(mediumShape).random_normal()
-    let largeTensorInitial = Tensor(largeShape).random_normal()
+    let smallTensorInitial = Tensor(smallShape).initialize["random_normal"]()
+    let mediumTensorInitial = Tensor(mediumShape).initialize["random_normal"]()
+    let largeTensorInitial = Tensor(largeShape).initialize["random_normal"]()
 
-    let smallTensorGuess = Tensor(smallShape).random_normal()
-    let mediumTensorGuess = Tensor(mediumShape).random_normal()
-    let largeTensorGuess = Tensor(largeShape).random_normal()
+    let smallTensorGuess = Tensor(smallShape).initialize["random_normal"]()
+    let mediumTensorGuess = Tensor(mediumShape).initialize["random_normal"]()
+    let largeTensorGuess = Tensor(largeShape).initialize["random_normal"]()
 
     let smallTensorLoss = smallTensorInitial.compute_loss[get_loss_code[f]()](
         smallTensorGuess

@@ -27,10 +27,10 @@ fn test_fn[
     largeShape.append(TestSize)
     largeShape.append(TestSize)
 
-    let smallTensorInitial = Tensor(smallShape).random_normal()
-    let mediumTensorInitial = Tensor(mediumShape).random_normal()
-    let largeTensorInitial = Tensor(largeShape).random_normal()
-
+    let smallTensorInitial = Tensor(smallShape).initialize["random_normal"]()
+    let mediumTensorInitial = Tensor(mediumShape).initialize["random_normal"]()
+    let largeTensorInitial = Tensor(largeShape).initialize["random_normal"]()
+    
     let smallTensorActivated = smallTensorInitial.compute_activation[
         get_activation_code[f]()
     ]()

@@ -16,7 +16,7 @@ fn main() raises:
     let every = 1000
     let num_epochs = 20000
 
-    let input = Tensor(shape(32, 1)).random_uniform(0, 1)
+    let input = Tensor(shape(32, 1)).initialize["he_normal", 0, 1]()
     let true_vals = Tensor(shape(32, 1))
 
     # TODO, make a model struct to encapsulate this, variable n middle layers / total loss
@@ -28,7 +28,7 @@ fn main() raises:
     let initial_start = now()
     for epoch in range(1, num_epochs + 1):
         let epoch_start = now()
-        for i in range(input.random_uniform(0, 1).capacity()):
+        for i in range(input.initialize["random_uniform", 0, 1]().capacity()):
             true_vals[i] = math.sin(15.0 * input[i])
 
         avg_loss += loss.forward_static()[0]
