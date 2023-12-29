@@ -263,6 +263,7 @@ struct Tensor:
         self.graph_ptr.load().load().nodes.free()
         self.graph_ptr.load().load().memory_pool.load().free()
         self.graph_ptr.load().load().memory_pool.free()
+
         @unroll
         for i in range(30):
             self.graph_ptr.load().load().memory_pool_manager.load(i).free()
@@ -424,105 +425,6 @@ struct Tensor:
             .max_pool_2d(
                 self.node_ptr.load(), kernel_width, kernel_height, stride, padding
             )
-        )
-        return new_tensor
-
-    # Activation functions
-    fn elu(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().elu(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn exp(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().exp(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn gelu(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().gelu(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn hard_sigmoid(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().hard_sigmoid(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn linear(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().linear(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn mish(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().mish(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn relu(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().relu(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn selu(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().selu(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn sigmoid(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().sigmoid(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn softmax(self, axis: Int = -1) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().softmax(self.node_ptr.load(), axis)
-        )
-        return new_tensor
-
-    fn softplus(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().softplus(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn softsign(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().softsign(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn swish(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().swish(self.node_ptr.load())
-        )
-        return new_tensor
-
-    fn tanh(self) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().tanh(self.node_ptr.load())
         )
         return new_tensor
 
@@ -767,68 +669,23 @@ struct Tensor:
         )
         return new_tensor
 
-    # Loss functions
-
-    fn mae(self, other: Tensor) raises -> Tensor:
+    fn compute_loss[operator_id: Int](self, other: Tensor) raises -> Tensor:
         let new_tensor = self.load_tensor_for_binary_op(other)
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()
             .load()
-            .mae(self.node_ptr.load(), other.node_ptr.load())
+            .loss_general[operator_id=operator_id](
+                self.node_ptr.load(), other.node_ptr.load()
+            )
         )
         return new_tensor
 
-    fn mape(self, other: Tensor) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_binary_op(other)
+    fn compute_activation[operator_id: Int](self) raises -> Tensor:
+        let new_tensor = self.load_tensor_for_unary_op()
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()
             .load()
-            .mape(self.node_ptr.load(), other.node_ptr.load())
-        )
-        return new_tensor
-
-    fn mse(self, other: Tensor) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load()
-            .load()
-            .mse(self.node_ptr.load(), other.node_ptr.load())
-        )
-        return new_tensor
-
-    fn msle(self, other: Tensor) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load()
-            .load()
-            .msle(self.node_ptr.load(), other.node_ptr.load())
-        )
-        return new_tensor
-
-    fn bce(self, other: Tensor) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load()
-            .load()
-            .bce(self.node_ptr.load(), other.node_ptr.load())
-        )
-        return new_tensor
-
-    fn cce(self, other: Tensor) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load()
-            .load()
-            .cce(self.node_ptr.load(), other.node_ptr.load())
-        )
-        return new_tensor
-
-    fn cfce(self, other: Tensor) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load()
-            .load()
-            .cfce(self.node_ptr.load(), other.node_ptr.load())
+            .activation_general[operator_id=operator_id](self.node_ptr.load())
         )
         return new_tensor
 

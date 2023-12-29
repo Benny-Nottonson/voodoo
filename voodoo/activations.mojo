@@ -2,60 +2,56 @@ from voodoo import Tensor
 
 
 fn elu(tensor: Tensor) raises -> Tensor:
-    return tensor.elu()
+    return tensor.compute_activation[elu_code]()
 
 
 fn exp(tensor: Tensor) raises -> Tensor:
-    return tensor.exp()
+    return tensor.compute_activation[exp_code]()
 
 
 fn gelu(tensor: Tensor) raises -> Tensor:
-    return tensor.gelu()
+    return tensor.compute_activation[gelu_code]()
 
 
 fn hard_sigmoid(tensor: Tensor) raises -> Tensor:
-    return tensor.hard_sigmoid()
+    return tensor.compute_activation[hard_sigmoid_code]()
 
 
 fn linear(tensor: Tensor) raises -> Tensor:
-    return tensor.linear()
+    return tensor.compute_activation[linear_code]()
 
 
 fn mish(tensor: Tensor) raises -> Tensor:
-    return tensor.mish()
+    return tensor.compute_activation[mish_code]()
 
 
 fn relu(tensor: Tensor) raises -> Tensor:
-    return tensor.relu()
+    return tensor.compute_activation[relu_code]()
 
 
 fn selu(tensor: Tensor) raises -> Tensor:
-    return tensor.selu()
+    return tensor.compute_activation[selu_code]()
 
 
 fn sigmoid(tensor: Tensor) raises -> Tensor:
-    return tensor.sigmoid()
-
-
-fn softmax(tensor: Tensor, axis: Int) raises -> Tensor:
-    return tensor.softmax(axis)
+    return tensor.compute_activation[sigmoid_code]()
 
 
 fn softmax(tensor: Tensor) raises -> Tensor:
-    return tensor.softmax(-1)
+    return tensor.compute_activation[softmax_code]()
 
 
 fn softplus(tensor: Tensor) raises -> Tensor:
-    return tensor.softplus()
+    return tensor.compute_activation[softplus_code]()
 
 
 fn softsign(tensor: Tensor) raises -> Tensor:
-    return tensor.softsign()
+    return tensor.compute_activation[softsign_code]()
 
 
 fn swish(tensor: Tensor) raises -> Tensor:
-    return tensor.swish()
+    return tensor.compute_activation[swish_code]()
 
 
 fn tanh(tensor: Tensor) raises -> Tensor:
-    return tensor.tanh()
+    return tensor.compute_activation[tanh_code]()

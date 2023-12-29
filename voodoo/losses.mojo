@@ -1,29 +1,29 @@
 from voodoo import Tensor
 
 
-fn mse(predicted: Tensor, expected: Tensor) raises -> Tensor:
-    return predicted.mse(expected)
-
-
 fn mae(predicted: Tensor, expected: Tensor) raises -> Tensor:
-    return predicted.mae(expected)
+    return predicted.compute_loss[operator_id=mae_code](expected)
 
 
 fn mape(predicted: Tensor, expected: Tensor) raises -> Tensor:
-    return predicted.mape(expected)
+    return predicted.compute_loss[operator_id=mape_code](expected)
+
+
+fn mse(predicted: Tensor, expected: Tensor) raises -> Tensor:
+    return predicted.compute_loss[operator_id=mse_code](expected)
 
 
 fn msle(predicted: Tensor, expected: Tensor) raises -> Tensor:
-    return predicted.msle(expected)
+    return predicted.compute_loss[operator_id=msle_code](expected)
 
 
 fn bce(predicted: Tensor, expected: Tensor) raises -> Tensor:
-    return predicted.bce(expected)
+    return predicted.compute_loss[operator_id=bce_code](expected)
 
 
 fn cce(predicted: Tensor, expected: Tensor) raises -> Tensor:
-    return predicted.cce(expected)
+    return predicted.compute_loss[operator_id=cce_code](expected)
 
 
 fn cfce(predicted: Tensor, expected: Tensor) raises -> Tensor:
-    return predicted.cfce(expected)
+    return predicted.compute_loss[operator_id=cfce_code](expected)

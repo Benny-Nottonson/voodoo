@@ -23,108 +23,6 @@ alias reduce_op = fn (c: Node, a: Node, b: Node) -> None
 alias op_tuple = Tuple[StringRef, unary_op, binary_op, view_op, reduce_op]
 
 
-alias cos_code = 0
-alias bwcos_code = 1
-alias sin_code = 2
-alias bwsin_code = 3
-alias tan_code = 4
-alias bwtan_code = 5
-alias acos_code = 6
-alias bwacos_code = 7
-alias asin_code = 8
-alias bwasin_code = 9
-alias atan_code = 10
-alias bwatan_code = 11
-alias cosh_code = 12
-alias bwcosh_code = 13
-alias sinh_code = 14
-alias bwsinh_code = 15
-alias log_code = 16
-alias bwlog_code = 17
-alias log2_code = 18
-alias bwlog2_code = 19
-alias exp2_code = 20
-alias bwexp2_code = 21
-alias sqrt_code = 22
-alias bwsqrt_code = 23
-alias abs_code = 24
-alias bwabs_code = 25
-alias copy_code = 26
-alias bwcopy_code = 27
-alias add_code = 28
-alias bwadd_code = 29
-alias sub_code = 30
-alias bwsub_code = 31
-alias mul_code = 32
-alias bwmul_code = 33
-alias div_code = 34
-alias bwdiv_code = 35
-alias pow_code = 36
-alias bwpow_code = 37
-alias mmul_code = 38
-alias bwmmul_code = 39
-alias reshape_code = 40
-alias bwreshape_code = 41
-alias transpose_code = 42
-alias bwtranspose_code = 43
-alias sum_code = 44
-alias bwsum_code = 45
-alias conv2d_code = 46
-alias bwconv2d_code = 47
-alias maxpool2dd_code = 48
-alias bwmaxpool2d_code = 49
-
-# Activation Functions
-alias elu_code = 60
-alias bwelu_code = 61
-alias exp_code = 62
-alias bwexp_code = 63
-alias gelu_code = 64
-alias bwgelu_code = 65
-alias hard_sigmoid_code = 66
-alias bwhard_sigmoid_code = 67
-alias linear_code = 68
-alias bwlinear_code = 69
-alias mish_code = 70
-alias bwmish_code = 71
-alias relu_code = 72
-alias bwrelu_code = 73
-alias selu_code = 74
-alias bwselu_code = 75
-alias sigmoid_code = 76
-alias bwsigmoid_code = 77
-alias softmax_code = 78
-alias bwsoftmax_code = 79
-alias softplus_code = 80
-alias bwsoftplus_code = 81
-alias softsign_code = 82
-alias bwsoftsign_code = 83
-alias swish_code = 84
-alias bwswish_code = 85
-alias tanh_code = 86
-alias bwtanh_code = 87
-
-# Loss functions
-
-
-alias mae_code = 92
-alias bwmae_code = 93
-alias mape_code = 94
-alias bwmape_code = 95
-alias mse_code = 96
-alias bwmse_code = 97
-alias msle_code = 98
-alias bwmsle_code = 99
-alias bce_code = 100
-alias bwbce_code = 101
-alias cce_code = 102
-alias bwcce_code = 103
-alias cfce_code = 104
-alias bwcfce_code = 105
-alias cs_code = 106
-alias bwcs_code = 107
-
-
 fn unary(b: Node, a: Node):
     ...
 
@@ -162,6 +60,7 @@ struct Graph:
         memory_pool.store(DTVector())
 
         let memory_pool_manager = Pointer[VectorInt].alloc(30)
+
         @unroll
         for i in range(30):
             memory_pool_manager.store(i, VectorInt())
@@ -309,8 +208,6 @@ struct Graph:
         kernels.store(bwcce_code, op_tuple("bwcce", unary, bw_cce, view, reduce))
         kernels.store(cfce_code, op_tuple("cfce", unary, fw_cfce, view, reduce))
         kernels.store(bwcfce_code, op_tuple("bwcfce", unary, bw_cfce, view, reduce))
-        kernels.store(cs_code, op_tuple("cs", unary, fw_cs, view, reduce))
-        kernels.store(bwcs_code, op_tuple("bwcs", unary, bw_cs, view, reduce))
 
         let forward_order = Pointer[VectorInt].alloc(1)
         forward_order.store(VectorInt())
@@ -690,6 +587,7 @@ struct Graph:
         self.nodes.free()
         self.memory_pool.load().free()
         self.memory_pool.free()
+
         @unroll
         for i in range(30):
             self.memory_pool_manager.load(i).free()
@@ -1291,9 +1189,9 @@ struct Graph:
             shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
         )
 
-    # Activation functions
-    fn elu(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = elu_code
+    fn activation_general[
+        operator_id: Int
+    ](self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
         let checkpoint = False
         let shape = parent1_ptr.load().shape_ptr.load().copy()
         let other_params = Vector[Int]()
@@ -1302,245 +1200,11 @@ struct Graph:
             shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
         )
 
-    fn exp(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = exp_code
-        let checkpoint = False
-        let shape = parent1_ptr.load().shape_ptr.load().copy()
-        let other_params = Vector[Int]()
-        return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
-        )
-
-    fn gelu(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = gelu_code
-        let checkpoint = False
-        let shape = parent1_ptr.load().shape_ptr.load().copy()
-        let other_params = Vector[Int]()
-        other_params.push_back(1)
-        return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
-        )
-
-    fn hard_sigmoid(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = hard_sigmoid_code
-        let checkpoint = False
-        let shape = parent1_ptr.load().shape_ptr.load().copy()
-        let other_params = Vector[Int]()
-        other_params.push_back(1)
-        return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
-        )
-
-    fn linear(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = linear_code
-        let checkpoint = False
-        let shape = parent1_ptr.load().shape_ptr.load().copy()
-        let other_params = Vector[Int]()
-        other_params.push_back(1)
-        return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
-        )
-
-    fn mish(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = mish_code
-        let checkpoint = False
-        let shape = parent1_ptr.load().shape_ptr.load().copy()
-        let other_params = Vector[Int]()
-        other_params.push_back(1)
-        return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
-        )
-
-    fn relu(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = relu_code
-        let checkpoint = False
-        let shape = parent1_ptr.load().shape_ptr.load().copy()
-        let other_params = Vector[Int]()
-        return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
-        )
-
-    fn selu(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = selu_code
-        let checkpoint = False
-        let shape = parent1_ptr.load().shape_ptr.load().copy()
-        let other_params = Vector[Int]()
-        other_params.push_back(1)
-        return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
-        )
-
-    fn sigmoid(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = sigmoid_code
-        let checkpoint = False
-        let shape = parent1_ptr.load().shape_ptr.load().copy()
-        let other_params = Vector[Int]()
-        other_params.push_back(1)
-        return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
-        )
-
-    fn softmax(self, parent1_ptr: Pointer[Node], axis: Int) raises -> Pointer[Node]:
-        let operator_id = softmax_code
-        let checkpoint = False
-        let shape = parent1_ptr.load().shape_ptr.load().copy()
-        let other_params = Vector[Int]()
-        return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
-        )
-
-    fn softplus(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = softplus_code
-        let checkpoint = False
-        let shape = parent1_ptr.load().shape_ptr.load().copy()
-        let other_params = Vector[Int]()
-        other_params.push_back(1)
-        return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
-        )
-
-    fn softsign(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = softsign_code
-        let checkpoint = False
-        let shape = parent1_ptr.load().shape_ptr.load().copy()
-        let other_params = Vector[Int]()
-        other_params.push_back(1)
-        return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
-        )
-
-    fn swish(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = swish_code
-        let checkpoint = False
-        let shape = parent1_ptr.load().shape_ptr.load().copy()
-        let other_params = Vector[Int]()
-        other_params.push_back(1)
-        return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
-        )
-
-    fn tanh(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = tanh_code
-        let checkpoint = False
-        let shape = parent1_ptr.load().shape_ptr.load().copy()
-        let other_params = Vector[Int]()
-        return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
-        )
-
-    # Loss functions
-    fn mae(
-        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
-    ) raises -> Pointer[Node]:
-        let operator_id = mae_code
-        let checkpoint = False
-        let shape = shape(1)
-        let other_params = Vector[Int]()
-        return self.node(
-            shape,
-            False,
-            False,
-            checkpoint,
-            operator_id,
-            other_params,
-            parent1_ptr,
-            parent2_ptr,
-        )
-
-    fn mape(
-        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
-    ) raises -> Pointer[Node]:
-        let operator_id = mape_code
-        let checkpoint = False
-        let shape = shape(1)
-        let other_params = Vector[Int]()
-        return self.node(
-            shape,
-            False,
-            False,
-            checkpoint,
-            operator_id,
-            other_params,
-            parent1_ptr,
-            parent2_ptr,
-        )
-
-    fn mse(
-        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
-    ) raises -> Pointer[Node]:
-        let operator_id = mse_code
-        let checkpoint = False
-        let shape = shape(1)
-        let other_params = Vector[Int]()
-        return self.node(
-            shape,
-            False,
-            False,
-            checkpoint,
-            operator_id,
-            other_params,
-            parent1_ptr,
-            parent2_ptr,
-        )
-
-    fn msle(
-        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
-    ) raises -> Pointer[Node]:
-        let operator_id = msle_code
-        let checkpoint = False
-        let shape = shape(1)
-        let other_params = Vector[Int]()
-        return self.node(
-            shape,
-            False,
-            False,
-            checkpoint,
-            operator_id,
-            other_params,
-            parent1_ptr,
-            parent2_ptr,
-        )
-
-    fn bce(
-        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
-    ) raises -> Pointer[Node]:
-        let operator_id = bce_code
-        let checkpoint = False
-        let shape = shape(1)
-        let other_params = Vector[Int]()
-        return self.node(
-            shape,
-            False,
-            False,
-            checkpoint,
-            operator_id,
-            other_params,
-            parent1_ptr,
-            parent2_ptr,
-        )
-
-    fn cce(
-        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
-    ) raises -> Pointer[Node]:
-        let operator_id = cce_code
-        let checkpoint = False
-        let shape = shape(1)
-        let other_params = Vector[Int]()
-        return self.node(
-            shape,
-            False,
-            False,
-            checkpoint,
-            operator_id,
-            other_params,
-            parent1_ptr,
-            parent2_ptr,
-        )
-
-    fn cfce(
-        self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]
-    ) raises -> Pointer[Node]:
-        let operator_id = cfce_code
+    fn loss_general[
+        operator_id: Int
+    ](self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]) raises -> Pointer[
+        Node
+    ]:
         let checkpoint = False
         let shape = shape(1)
         let other_params = Vector[Int]()
