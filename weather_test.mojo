@@ -1,4 +1,4 @@
-from voodoo import Tensor, Dense, mse
+from voodoo import Tensor, Layer, get_loss_code
 from voodoo.utils.shape import shape
 from time.time import now
 from math import max, min
@@ -6,9 +6,6 @@ from math import max, min
 
 fn nanoseconds_to_seconds(t: Int) -> Float64:
     return Float64(t) / 1_000_000_000.0
-
-
-alias loss_fn = mse
 
 
 fn main() raises:
@@ -47,9 +44,9 @@ fn main() raises:
         max_temps[i] = (max_temps[i] - min_temp) / (max_temp - min_temp)
         min_temps[i] = (min_temps[i] - min_temp) / (max_temp - min_temp)
 
-    let input_layer = Dense[activation="relu"](1, 64)
-    let dense_layer = Dense[activation="relu"](64, 64)
-    let output_layer = Dense(64, 1)
+    let input_layer = Layer[type="dense", activation="relu"](1, 64)
+    let dense_layer = Layer[type="dense", activation="relu"](64, 64)
+    let output_layer = Layer[type="dense"](64, 1)
 
     var avg_loss: Float32 = 0.0
 
@@ -70,7 +67,7 @@ fn main() raises:
         var x = input_layer.forward(input)
         x = dense_layer.forward(x)
         x = output_layer.forward(x)
-        let loss = loss_fn(x, true_vals)
+        let loss = x.compute_loss[get_loss_code["mse"]()](true_vals)
 
         avg_loss += loss[0]
         if epoch % every == 0:
@@ -111,7 +108,7 @@ fn main() raises:
         var x = input_layer.forward(input)
         x = dense_layer.forward(x)
         x = output_layer.forward(x)
-        let loss = loss_fn(x, true_vals)
+        let loss = x.compute_loss[get_loss_code["mse"]()](true_vals)
 
         avg_loss += loss[0]
         if epoch % every == 0:

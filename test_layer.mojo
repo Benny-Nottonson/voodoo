@@ -1,4 +1,4 @@
-from voodoo import Tensor, Dense, sin, get_loss_code, Graph
+from voodoo import Tensor, Layer, sin, get_loss_code, Graph
 from voodoo.utils.shape import shape
 from time.time import now
 
@@ -8,9 +8,9 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
 
 
 fn main() raises:
-    let input_layer = Dense[activation="relu"](1, 64)
-    let dense_layer = Dense[activation="relu"](64, 64)
-    let output_layer = Dense(64, 1)
+    let input_layer = Layer[type="dense", activation="relu"](1, 64)
+    let dense_layer = Layer[type="dense", activation="relu"](64, 64)
+    let output_layer = Layer[type="dense"](64, 1)
 
     var avg_loss: Float32 = 0.0
     let every = 1000
@@ -19,7 +19,7 @@ fn main() raises:
     let input = Tensor(shape(32, 1)).random_uniform(0, 1)
     let true_vals = Tensor(shape(32, 1))
 
-    # TODO, make a model struct to encapsulate this, variable middle layers
+    # TODO, make a model struct to encapsulate this, variable n middle layers / total loss
     var x = input_layer.forward(input)
     x = dense_layer.forward(x)
     x = output_layer.forward(x)

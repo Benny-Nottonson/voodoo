@@ -28,7 +28,7 @@ from .tensor import (
     max_pool_2d,
 )
 
-from .layers import Dense
+from .layers import Layer
 
 from .activations import (
     get_activation_code

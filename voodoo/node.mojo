@@ -9,7 +9,7 @@ alias DTVector = Vector[VectorF32]
 
 from .utils import Vector
 
-
+# TODO: Clean up
 @register_passable("trivial")
 struct Node:
     var id_ptr: Pointer[Int]

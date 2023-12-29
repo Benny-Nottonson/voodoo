@@ -1,3 +1,4 @@
+# TODO: Cleanup, eventually can be a dict, not yet in mojo
 alias cos_code = 0
 alias bwcos_code = 1
 alias sin_code = 2

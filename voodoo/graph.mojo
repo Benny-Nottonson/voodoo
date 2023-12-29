@@ -38,7 +38,7 @@ fn _v(b: Node, a: Node):
 fn _r(c: Node, a: Node, b: Node):
     ...
 
-
+# TODO: Could combine more unary / binary functions into one main caller (See activations / losses)
 @register_passable("trivial")
 struct Graph:
     var nodes: Pointer[NodeVector]

@@ -2,19 +2,16 @@ from .tensor import Tensor, conv_2d
 from .activations import get_activation_code
 from .utils.shape import shape
 
-struct Dense[
+struct Layer[
+    type: String,
     activation: String = "none",
     use_bias: Bool = True,
     weight_initializer: String = "he_normal",
     bias_initializer: String = "he_normal",
-    weight_initial: Float32 = 0.0,
-    weight_initial_std: Float32 = 0.05,
-    bias_initial: Float32 = 0.0,
-    bias_initial_std: Float32 = 0.05,
-    uniform_weight_min: Float32 = -0.05,
-    uniform_weight_max: Float32 = 0.05,
-    uniform_bias_min: Float32 = -0.05,
-    uniform_bias_max: Float32 = 0.05,
+    weight_mean: Float32 = 0.0,
+    weight_std: Float32 = 0.05,
+    bias_mean: Float32 = 0.0,
+    bias_std: Float32 = 0.05,
     # TODO: Add regularizers, constraints
 ]:
     var W: Tensor
@@ -25,14 +22,34 @@ struct Dense[
         in_neurons: Int,
         out_neurons: Int,
     ) raises:
-        self.W = Tensor(shape(in_neurons, out_neurons)).initialize[weight_initializer, weight_initial, weight_initial_std]()
+        self.W = self.bias = Tensor(shape(0))
         @parameter
-        if self.use_bias:
-            self.bias = Tensor(shape(out_neurons)).initialize[bias_initializer, bias_initial, bias_initial_std]()
+        if type == "dense":
+            self.__init_dense__(in_neurons, out_neurons)
         else:
-            self.bias = Tensor(shape(out_neurons)).initialize["zeros", 0.0]()
+            raise Error("Invalid layer type: " + type)
 
     fn forward(self, x: Tensor) raises -> Tensor:
+        @parameter
+        if type == "dense":
+            return self.forward_dense(x)
+        else:
+            raise Error("Invalid layer type: " + type)
+            
+
+    fn __init_dense__(
+        inout self,
+        in_neurons: Int,
+        out_neurons: Int,
+    ) raises:
+        self.W = Tensor(shape(in_neurons, out_neurons)).initialize[weight_initializer, weight_mean, weight_std]()
+        @parameter
+        if self.use_bias:
+            self.bias = Tensor(shape(out_neurons)).initialize[bias_initializer, bias_mean, bias_std]()
+        else:
+            self.bias = Tensor(shape(out_neurons)).initialize["zeros", 0.0]()
+    
+    fn forward_dense(self, x: Tensor) raises -> Tensor:
         @parameter
         if self.activation == "none":
             return x @ self.W + (self.bias * Float32(self.use_bias))
