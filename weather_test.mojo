@@ -3,10 +3,13 @@ from voodoo.utils.shape import shape
 from time.time import now
 from math import max, min
 
+
 fn nanoseconds_to_seconds(t: Int) -> Float64:
     return Float64(t) / 1_000_000_000.0
 
+
 alias loss_fn = mse
+
 
 fn main() raises:
     var min_temps = DynamicVector[Float32]()
@@ -20,12 +23,16 @@ fn main() raises:
             if len(max_temp) == 1:
                 max_temps.append(atol(max_temp[0]))
             else:
-                max_temps.append(atol(max_temp[0]) + atol(max_temp[1]) / 10.0 ** len(max_temp[1]))
+                max_temps.append(
+                    atol(max_temp[0]) + atol(max_temp[1]) / 10.0 ** len(max_temp[1])
+                )
 
             if len(min_temp) == 1:
                 min_temps.append(atol(min_temp[0]))
             else:
-                min_temps.append(atol(min_temp[0]) + atol(min_temp[1]) / 10.0 ** len(min_temp[1]))
+                min_temps.append(
+                    atol(min_temp[0]) + atol(min_temp[1]) / 10.0 ** len(min_temp[1])
+                )
 
     let train_size = 95232
     let test_size = 23808
@@ -45,7 +52,7 @@ fn main() raises:
     let output_layer = Dense(64, 1)
 
     var avg_loss: Float32 = 0.0
-    
+
     let every = 64
     let num_epochs = train_size / every
 
@@ -59,7 +66,6 @@ fn main() raises:
             let idx = (epoch - 1) * every + i
             input[i] = min_temps[idx]
             true_vals[i] = max_temps[idx]
-        
 
         var x = input_layer.forward(input)
         x = dense_layer.forward(x)
@@ -123,7 +129,6 @@ fn main() raises:
 
         loss.clear()
         input.free()
-        
 
     print("Total Time: ", nanoseconds_to_seconds(now() - initial_start), "s")
     print("Average Loss: ", test_loss / num_epochs_test.cast[DType.float32]())
