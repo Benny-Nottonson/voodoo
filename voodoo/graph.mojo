@@ -1,5 +1,5 @@
 from memory import memset_zero
-from math import log, log2, exp, exp2, ceil, max, abs
+from math import log, log2, exp, exp2, ceil
 from algorithm import vectorize
 
 from .node import Node

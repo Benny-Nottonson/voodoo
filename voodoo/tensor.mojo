@@ -592,7 +592,7 @@ struct Tensor:
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()
             .load()
-            .loss_general[operator_id=operator_id](
+            .loss_general[operator_id](
                 self.node_ptr.load(), other.node_ptr.load()
             )
         )
@@ -603,7 +603,7 @@ struct Tensor:
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()
             .load()
-            .activation_general[operator_id=operator_id](self.node_ptr.load())
+            .activation_general[operator_id](self.node_ptr.load())
         )
         return new_tensor
 

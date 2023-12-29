@@ -16,18 +16,21 @@ fn main() raises:
     let every = 1000
     let num_epochs = 20000
 
+    let input = Tensor(shape(32, 1)).random_uniform(0, 1)
+    let true_vals = Tensor(shape(32, 1))
+
+    var x = input_layer.forward(input)
+    x = dense_layer.forward(x)
+    x = output_layer.forward(x)
+    let loss = mse(x, true_vals)
+
     let initial_start = now()
     for epoch in range(1, num_epochs + 1):
         let epoch_start = now()
-        let input = Tensor(shape(32, 1)).random_uniform(0, 1).dynamic()
-        let true_vals = sin(15.0 * input)
+        for i in range(input.random_uniform(0, 1).capacity()):
+            true_vals[i] = math.sin(15.0 * input[i])
 
-        var x = input_layer.forward(input)
-        x = dense_layer.forward(x)
-        x = output_layer.forward(x)
-        let loss = mse(x, true_vals)
-
-        avg_loss += loss[0]
+        avg_loss += loss.forward_static()[0]
         if epoch % every == 0:
             print(
                 "Epoch:",
@@ -42,8 +45,5 @@ fn main() raises:
 
         loss.backward()
         loss.optimize["sgd"](0.01)
-
-        loss.clear()
-        input.free()
 
     print("Total Time: ", nanoseconds_to_seconds(now() - initial_start), "s")
