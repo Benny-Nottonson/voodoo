@@ -8,8 +8,8 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
 
 
 fn main() raises:
-    let input_layer = Dense[activation="tanh"](1, 64)
-    let dense_layer = Dense[activation="tanh"](64, 64)
+    let input_layer = Dense[activation="relu"](1, 64)
+    let dense_layer = Dense[activation="relu"](64, 64)
     let output_layer = Dense(64, 1)
 
     var avg_loss: Float32 = 0.0

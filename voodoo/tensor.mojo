@@ -263,6 +263,7 @@ struct Tensor:
         self.graph_ptr.load().load().nodes.free()
         self.graph_ptr.load().load().memory_pool.load().free()
         self.graph_ptr.load().load().memory_pool.free()
+        @unroll
         for i in range(30):
             self.graph_ptr.load().load().memory_pool_manager.load(i).free()
         self.graph_ptr.load().load().memory_pool_manager.free()

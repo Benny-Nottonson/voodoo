@@ -7,8 +7,8 @@ from .utils.shape import shape
 struct Dense[
     activation: String = "none",
     use_bias: Bool = True,
-    weight_initializer: String = "glorot_uniform",
-    bias_initializer: String = "zeros",
+    weight_initializer: String = "he_normal",
+    bias_initializer: String = "he_normal",
     weight_initial: Float32 = 0.0,
     bias_initial: Float32 = 0.0,
     uniform_weight_min: Float32 = -0.05,
@@ -32,12 +32,10 @@ struct Dense[
             self._initialize_bias()
 
     fn forward(self, x: Tensor) raises -> Tensor:
-        var res = x @ self.W
-        if self.use_bias:
-            res = res + self.bias
-        return self._forward(res)
+        return self._forward(x @ self.W + (self.bias * Float32(self.use_bias)))
 
     fn _initialize_weight(inout self) raises:
+        @parameter
         if self.weight_initializer == "glorot_normal":
             self.W = glorot_normal(self.W)
         elif self.weight_initializer == "glorot_uniform":
@@ -70,6 +68,7 @@ struct Dense[
             raise Error("Invalid weight initializer: " + self.weight_initializer)
 
     fn _initialize_bias(inout self) raises:
+        @parameter
         if self.bias_initializer == "glorot_normal":
             self.bias = glorot_normal(self.bias)
         elif self.bias_initializer == "glorot_uniform":
@@ -102,6 +101,7 @@ struct Dense[
             raise Error("Invalid bias initializer: " + self.bias_initializer)
 
     fn _forward(self, x: Tensor) raises -> Tensor:
+        @parameter
         if self.activation == "elu":
             return elu(x)
         elif self.activation == "exp":

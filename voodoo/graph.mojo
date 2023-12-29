@@ -162,6 +162,7 @@ struct Graph:
         memory_pool.store(DTVector())
 
         let memory_pool_manager = Pointer[VectorInt].alloc(30)
+        @unroll
         for i in range(30):
             memory_pool_manager.store(i, VectorInt())
 
@@ -337,6 +338,7 @@ struct Graph:
         }
 
     fn print_memory_pool_manager(self) raises:
+        @unroll
         for i in range(30):
             let ceiled_cap = exp2(Float32(i)).to_int()
             print_no_newline("    cap:", ceiled_cap)
@@ -688,6 +690,7 @@ struct Graph:
         self.nodes.free()
         self.memory_pool.load().free()
         self.memory_pool.free()
+        @unroll
         for i in range(30):
             self.memory_pool_manager.load(i).free()
         self.memory_pool_manager.free()
