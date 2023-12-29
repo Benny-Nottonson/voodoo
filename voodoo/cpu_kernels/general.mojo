@@ -907,7 +907,7 @@ fn bw_reshape(node: Node, parent1: Node):
         vectorize[nelts, v_reshape](parent1.cap_ptr.load())
 
 
-fn fw_transpose(node: Node, parent1: Node):
+fn fw_transp(node: Node, parent1: Node):
     let num_dims = parent1.num_dims_ptr.load()
     let M = parent1.shape_ptr.load().load(num_dims - 2)
     let N = parent1.shape_ptr.load().load(num_dims - 1)
@@ -916,15 +916,15 @@ fn fw_transpose(node: Node, parent1: Node):
         for i in range(M):
 
             @parameter
-            fn v_transpose[nelts: Int](j: Int):
+            fn v_transp[nelts: Int](j: Int):
                 node.store_data[nelts](
                     offset + j * M + i, parent1.load_data[nelts](offset + i * N + j)
                 )
 
-            vectorize[nelts, v_transpose](N)
+            vectorize[nelts, v_transp](N)
 
 
-fn bw_transpose(node: Node, parent1: Node):
+fn bw_transp(node: Node, parent1: Node):
     let num_dims = parent1.num_dims_ptr.load()
     let M = parent1.shape_ptr.load().load(num_dims - 2)
     let N = parent1.shape_ptr.load().load(num_dims - 1)
@@ -933,14 +933,14 @@ fn bw_transpose(node: Node, parent1: Node):
         for i in range(M):
 
             @parameter
-            fn v_transpose_bw[nelts: Int](j: Int):
+            fn v_transp_bw[nelts: Int](j: Int):
                 parent1.store_grad[nelts](
                     offset + j * M + i,
                     parent1.load_grad[nelts](offset + j * M + i)
                     + node.load_grad[nelts](offset + i * N + j),
                 )
 
-            vectorize[nelts, v_transpose_bw](N)
+            vectorize[nelts, v_transp_bw](N)
 
 
 fn index(

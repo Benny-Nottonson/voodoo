@@ -13,8 +13,8 @@ fn gelu(tensor: Tensor) raises -> Tensor:
     return tensor.compute_activation[gelu_code]()
 
 
-fn hard_sigmoid(tensor: Tensor) raises -> Tensor:
-    return tensor.compute_activation[hard_sigmoid_code]()
+fn h_sig(tensor: Tensor) raises -> Tensor:
+    return tensor.compute_activation[h_sig_code]()
 
 
 fn linear(tensor: Tensor) raises -> Tensor:
@@ -33,8 +33,8 @@ fn selu(tensor: Tensor) raises -> Tensor:
     return tensor.compute_activation[selu_code]()
 
 
-fn sigmoid(tensor: Tensor) raises -> Tensor:
-    return tensor.compute_activation[sigmoid_code]()
+fn sig(tensor: Tensor) raises -> Tensor:
+    return tensor.compute_activation[sig_code]()
 
 
 fn softmax(tensor: Tensor) raises -> Tensor:

@@ -564,10 +564,10 @@ struct Tensor:
         )
         return new_tensor
 
-    fn transpose(self) raises -> Tensor:
+    fn transp(self) raises -> Tensor:
         let new_tensor = self.load_tensor_for_unary_op()
         new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load().load().transpose(self.node_ptr.load())
+            new_tensor.graph_ptr.load().load().transp(self.node_ptr.load())
         )
         return new_tensor
 
@@ -764,8 +764,8 @@ fn reshape(tensor: Tensor, shape: DynamicVector[Int]) raises -> Tensor:
     return tensor.reshape(_shape)
 
 
-fn transpose(tensor: Tensor) raises -> Tensor:
-    return tensor.transpose()
+fn transp(tensor: Tensor) raises -> Tensor:
+    return tensor.transp()
 
 
 fn sum(tensor: Tensor) raises -> Tensor:

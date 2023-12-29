@@ -23,19 +23,19 @@ alias reduce_op = fn (c: Node, a: Node, b: Node) -> None
 alias op_tuple = Tuple[StringRef, unary_op, binary_op, view_op, reduce_op]
 
 
-fn unary(b: Node, a: Node):
+fn _u(b: Node, a: Node):
     ...
 
 
-fn binary(c: Node, a: Node, b: Node):
+fn _b(c: Node, a: Node, b: Node):
     ...
 
 
-fn view(b: Node, a: Node):
+fn _v(b: Node, a: Node):
     ...
 
 
-fn reduce(c: Node, a: Node, b: Node):
+fn _r(c: Node, a: Node, b: Node):
     ...
 
 
@@ -75,139 +75,98 @@ struct Graph:
         last_node_id.store(-1)
 
         let kernels = Pointer[op_tuple].alloc(120)
-        kernels.store(cos_code, op_tuple("cos", fw_cos, binary, view, reduce))
-        kernels.store(bwcos_code, op_tuple("bwcos", bw_cos, binary, view, reduce))
-        kernels.store(sin_code, op_tuple("sin", fw_sin, binary, view, reduce))
-        kernels.store(bwsin_code, op_tuple("bwsin", bw_sin, binary, view, reduce))
-        kernels.store(tan_code, op_tuple("tan", fw_tan, binary, view, reduce))
-        kernels.store(bwtan_code, op_tuple("bwtan", bw_tan, binary, view, reduce))
-        kernels.store(acos_code, op_tuple("acos", fw_acos, binary, view, reduce))
-        kernels.store(bwacos_code, op_tuple("bwacos", bw_acos, binary, view, reduce))
-        kernels.store(asin_code, op_tuple("asin", fw_asin, binary, view, reduce))
-        kernels.store(bwasin_code, op_tuple("bwasin", bw_asin, binary, view, reduce))
-        kernels.store(atan_code, op_tuple("atan", fw_atan, binary, view, reduce))
-        kernels.store(bwatan_code, op_tuple("bwatan", bw_atan, binary, view, reduce))
-        kernels.store(cosh_code, op_tuple("cosh", fw_cosh, binary, view, reduce))
-        kernels.store(bwcos_code, op_tuple("bwcosh", bw_cosh, binary, view, reduce))
-        kernels.store(sinh_code, op_tuple("sinh", fw_sinh, binary, view, reduce))
-        kernels.store(bwsin_code, op_tuple("bwsinh", bw_sinh, binary, view, reduce))
-        kernels.store(log_code, op_tuple("log", fw_log, binary, view, reduce))
-        kernels.store(bwlog_code, op_tuple("bwlog", bw_log, binary, view, reduce))
-        kernels.store(log2_code, op_tuple("log2", fw_log2, binary, view, reduce))
-        kernels.store(bwlog2_code, op_tuple("bwlog", bw_log2, binary, view, reduce))
-        kernels.store(exp2_code, op_tuple("exp2", fw_exp2, binary, view, reduce))
-        kernels.store(bwexp2_code, op_tuple("bwexp2", bw_exp2, binary, view, reduce))
-        kernels.store(sqrt_code, op_tuple("sqrt", fw_sqrt, binary, view, reduce))
-        kernels.store(bwsqrt_code, op_tuple("bwsqrt", bw_sqrt, binary, view, reduce))
-        kernels.store(abs_code, op_tuple("abs", fw_abs, binary, view, reduce))
-        kernels.store(bwabs_code, op_tuple("bwabs", bw_abs, binary, view, reduce))
-        kernels.store(copy_code, op_tuple("copy", fw_copy, binary, view, reduce))
-        kernels.store(bwcopy_code, op_tuple("bwcopy", bw_copy, binary, view, reduce))
-        kernels.store(add_code, op_tuple("add", unary, fw_add, view, reduce))
-        kernels.store(bwadd_code, op_tuple("bwadd", unary, bw_add, view, reduce))
-        kernels.store(sub_code, op_tuple("sub", unary, fw_sub, view, reduce))
-        kernels.store(bwsub_code, op_tuple("bwsub", unary, bw_sub, view, reduce))
-        kernels.store(mul_code, op_tuple("mul", unary, fw_mul, view, reduce))
-        kernels.store(bwmul_code, op_tuple("bwmul", unary, bw_mul, view, reduce))
-        kernels.store(div_code, op_tuple("div", unary, fw_div, view, reduce))
-        kernels.store(bwdiv_code, op_tuple("bwdiv", unary, bw_div, view, reduce))
-        kernels.store(pow_code, op_tuple("pow", unary, fw_pow, view, reduce))
-        kernels.store(bwpow_code, op_tuple("bwpow", unary, bw_pow, view, reduce))
-        kernels.store(mmul_code, op_tuple("mmul", unary, fw_mmul, view, reduce))
-        kernels.store(bwmmul_code, op_tuple("bwmmul", unary, bw_mmul, view, reduce))
-        kernels.store(
-            reshape_code, op_tuple("reshape", fw_reshape, binary, view, reduce)
-        )
-        kernels.store(
-            bwreshape_code, op_tuple("bwreshape", bw_reshape, binary, view, reduce)
-        )
-        kernels.store(
-            transpose_code, op_tuple("transpose", fw_transpose, binary, view, reduce)
-        )
-        kernels.store(
-            bwtranspose_code,
-            op_tuple("bwtranspose", bw_transpose, binary, view, reduce),
-        )
-        kernels.store(sum_code, op_tuple("sum", fw_sum, binary, view, reduce))
-        kernels.store(bwsum_code, op_tuple("bwsum", bw_sum, binary, view, reduce))
-        kernels.store(conv2d_code, op_tuple("conv2d", unary, conv_2d, view, reduce))
-        kernels.store(
-            bwconv2d_code, op_tuple("bwconv2d", unary, bw_conv_2d, view, reduce)
-        )
-        kernels.store(
-            maxpool2dd_code, op_tuple("maxpool2dd", max_pool_2d, binary, view, reduce)
-        )
-        kernels.store(
-            bwmaxpool2d_code,
-            op_tuple("bwmaxpool2d", bw_max_pool_2d, binary, view, reduce),
-        )
-        kernels.store(elu_code, op_tuple("elu", fw_elu, binary, view, reduce))
-        kernels.store(bwelu_code, op_tuple("bwelu", bw_elu, binary, view, reduce))
-        kernels.store(exp_code, op_tuple("exp", fw_exp, binary, view, reduce))
-        kernels.store(bwexp_code, op_tuple("bwexp", bw_exp, binary, view, reduce))
-        kernels.store(gelu_code, op_tuple("gelu", fw_gelu, binary, view, reduce))
-        kernels.store(bwgelu_code, op_tuple("bwgelu", bw_gelu, binary, view, reduce))
-        kernels.store(
-            hard_sigmoid_code,
-            op_tuple("hard_sigmoid", fw_hard_sigmoid, binary, view, reduce),
-        )
-        kernels.store(
-            bwhard_sigmoid_code,
-            op_tuple("bwhard_sigmoid", bw_hard_sigmoid, binary, view, reduce),
-        )
-        kernels.store(linear_code, op_tuple("linear", fw_linear, binary, view, reduce))
-        kernels.store(
-            bwlinear_code, op_tuple("bwlinear", bw_linear, binary, view, reduce)
-        )
-        kernels.store(mish_code, op_tuple("mish", fw_mish, binary, view, reduce))
-        kernels.store(bwmish_code, op_tuple("bwmish", bw_mish, binary, view, reduce))
-        kernels.store(relu_code, op_tuple("relu", fw_relu, binary, view, reduce))
-        kernels.store(bwrelu_code, op_tuple("bwrelu", bw_relu, binary, view, reduce))
-        kernels.store(selu_code, op_tuple("selu", fw_selu, binary, view, reduce))
-        kernels.store(bwselu_code, op_tuple("bwselu", bw_selu, binary, view, reduce))
-        kernels.store(
-            sigmoid_code, op_tuple("sigmoid", fw_sigmoid, binary, view, reduce)
-        )
-        kernels.store(
-            bwsigmoid_code, op_tuple("bwsigmoid", bw_sigmoid, binary, view, reduce)
-        )
-        kernels.store(
-            softmax_code, op_tuple("softmax", fw_softmax, binary, view, reduce)
-        )
-        kernels.store(
-            bwsoftmax_code, op_tuple("bwsoftmax", bw_softmax, binary, view, reduce)
-        )
-        kernels.store(
-            softplus_code, op_tuple("softplus", fw_softplus, binary, view, reduce)
-        )
-        kernels.store(
-            bwsoftplus_code, op_tuple("bwsoftplus", bw_softplus, binary, view, reduce)
-        )
-        kernels.store(
-            softsign_code, op_tuple("softsign", fw_softsign, binary, view, reduce)
-        )
-        kernels.store(
-            bwsoftsign_code, op_tuple("bwsoftsign", bw_softsign, binary, view, reduce)
-        )
-        kernels.store(swish_code, op_tuple("swish", fw_swish, binary, view, reduce))
-        kernels.store(bwswish_code, op_tuple("bwswish", bw_swish, binary, view, reduce))
-        kernels.store(tanh_code, op_tuple("tanh", fw_tanh, binary, view, reduce))
-        kernels.store(bwtanh_code, op_tuple("bwtanh", bw_tanh, binary, view, reduce))
-
-        kernels.store(mae_code, op_tuple("mae", unary, fw_mae, view, reduce))
-        kernels.store(bwmae_code, op_tuple("bwmae", unary, bw_mae, view, reduce))
-        kernels.store(mape_code, op_tuple("mape", unary, fw_mape, view, reduce))
-        kernels.store(bwmape_code, op_tuple("bwmape", unary, bw_mape, view, reduce))
-        kernels.store(mse_code, op_tuple("mse", unary, fw_mse, view, reduce))
-        kernels.store(bwmse_code, op_tuple("bwmse", unary, bw_mse, view, reduce))
-        kernels.store(msle_code, op_tuple("msle", unary, fw_msle, view, reduce))
-        kernels.store(bwmsle_code, op_tuple("bwmsle", unary, bw_msle, view, reduce))
-        kernels.store(bce_code, op_tuple("bce", unary, fw_bce, view, reduce))
-        kernels.store(bwbce_code, op_tuple("bwbce", unary, bw_bce, view, reduce))
-        kernels.store(cce_code, op_tuple("cce", unary, fw_cce, view, reduce))
-        kernels.store(bwcce_code, op_tuple("bwcce", unary, bw_cce, view, reduce))
-        kernels.store(cfce_code, op_tuple("cfce", unary, fw_cfce, view, reduce))
-        kernels.store(bwcfce_code, op_tuple("bwcfce", unary, bw_cfce, view, reduce))
+        kernels.store(cos_code, op_tuple("cos", fw_cos, _b, _v, _r))
+        kernels.store(bwcos_code, op_tuple("bwcos", bw_cos, _b, _v, _r))
+        kernels.store(sin_code, op_tuple("sin", fw_sin, _b, _v, _r))
+        kernels.store(bwsin_code, op_tuple("bwsin", bw_sin, _b, _v, _r))
+        kernels.store(tan_code, op_tuple("tan", fw_tan, _b, _v, _r))
+        kernels.store(bwtan_code, op_tuple("bwtan", bw_tan, _b, _v, _r))
+        kernels.store(acos_code, op_tuple("acos", fw_acos, _b, _v, _r))
+        kernels.store(bwacos_code, op_tuple("bwacos", bw_acos, _b, _v, _r))
+        kernels.store(asin_code, op_tuple("asin", fw_asin, _b, _v, _r))
+        kernels.store(bwasin_code, op_tuple("bwasin", bw_asin, _b, _v, _r))
+        kernels.store(atan_code, op_tuple("atan", fw_atan, _b, _v, _r))
+        kernels.store(bwatan_code, op_tuple("bwatan", bw_atan, _b, _v, _r))
+        kernels.store(cosh_code, op_tuple("cosh", fw_cosh, _b, _v, _r))
+        kernels.store(bwcos_code, op_tuple("bwcosh", bw_cosh, _b, _v, _r))
+        kernels.store(sinh_code, op_tuple("sinh", fw_sinh, _b, _v, _r))
+        kernels.store(bwsin_code, op_tuple("bwsinh", bw_sinh, _b, _v, _r))
+        kernels.store(log_code, op_tuple("log", fw_log, _b, _v, _r))
+        kernels.store(bwlog_code, op_tuple("bwlog", bw_log, _b, _v, _r))
+        kernels.store(log2_code, op_tuple("log2", fw_log2, _b, _v, _r))
+        kernels.store(bwlog2_code, op_tuple("bwlog", bw_log2, _b, _v, _r))
+        kernels.store(exp2_code, op_tuple("exp2", fw_exp2, _b, _v, _r))
+        kernels.store(bwexp2_code, op_tuple("bwexp2", bw_exp2, _b, _v, _r))
+        kernels.store(sqrt_code, op_tuple("sqrt", fw_sqrt, _b, _v, _r))
+        kernels.store(bwsqrt_code, op_tuple("bwsqrt", bw_sqrt, _b, _v, _r))
+        kernels.store(abs_code, op_tuple("abs", fw_abs, _b, _v, _r))
+        kernels.store(bwabs_code, op_tuple("bwabs", bw_abs, _b, _v, _r))
+        kernels.store(copy_code, op_tuple("copy", fw_copy, _b, _v, _r))
+        kernels.store(bwcopy_code, op_tuple("bwcopy", bw_copy, _b, _v, _r))
+        kernels.store(add_code, op_tuple("add", _v, fw_add, _v, _r))
+        kernels.store(bwadd_code, op_tuple("bwadd", _v, bw_add, _v, _r))
+        kernels.store(sub_code, op_tuple("sub", _v, fw_sub, _v, _r))
+        kernels.store(bwsub_code, op_tuple("bwsub", _v, bw_sub, _v, _r))
+        kernels.store(mul_code, op_tuple("mul", _v, fw_mul, _v, _r))
+        kernels.store(bwmul_code, op_tuple("bwmul", _v, bw_mul, _v, _r))
+        kernels.store(div_code, op_tuple("div", _v, fw_div, _v, _r))
+        kernels.store(bwdiv_code, op_tuple("bwdiv", _v, bw_div, _v, _r))
+        kernels.store(pow_code, op_tuple("pow", _v, fw_pow, _v, _r))
+        kernels.store(bwpow_code, op_tuple("bwpow", _v, bw_pow, _v, _r))
+        kernels.store(mmul_code, op_tuple("mmul", _v, fw_mmul, _v, _r))
+        kernels.store(bwmmul_code, op_tuple("bwmmul", _v, bw_mmul, _v, _r))
+        kernels.store(reshape_code, op_tuple("reshape", fw_reshape, _b, _v, _r))
+        kernels.store(bwreshape_code, op_tuple("bwreshape", bw_reshape, _b, _v, _r))
+        kernels.store(transp_code, op_tuple("transp", fw_transp, _b, _v, _r))
+        kernels.store(bwtransp_code, op_tuple("bwtransp", bw_transp, _b, _v, _r))
+        kernels.store(sum_code, op_tuple("sum", fw_sum, _b, _v, _r))
+        kernels.store(bwsum_code, op_tuple("bwsum", bw_sum, _b, _v, _r))
+        kernels.store(conv2d_code, op_tuple("conv2d", _v, conv_2d, _v, _r))
+        kernels.store(bwconv2d_code, op_tuple("bwconv2d", _v, bw_conv_2d, _v, _r))
+        kernels.store(mpool2dd_code, op_tuple("mpool2dd", max_pool_2d, _b, _v, _r))
+        kernels.store(bwmpool2d_code, op_tuple("bwmpool2d", bw_max_pool_2d, _b, _v, _r))
+        kernels.store(elu_code, op_tuple("elu", fw_elu, _b, _v, _r))
+        kernels.store(bwelu_code, op_tuple("bwelu", bw_elu, _b, _v, _r))
+        kernels.store(exp_code, op_tuple("exp", fw_exp, _b, _v, _r))
+        kernels.store(bwexp_code, op_tuple("bwexp", bw_exp, _b, _v, _r))
+        kernels.store(gelu_code, op_tuple("gelu", fw_gelu, _b, _v, _r))
+        kernels.store(bwgelu_code, op_tuple("bwgelu", bw_gelu, _b, _v, _r))
+        kernels.store(h_sig_code, op_tuple("h_sig", fw_h_sig, _b, _v, _r))
+        kernels.store(bwh_sig_code, op_tuple("bwh_sig", bw_h_sig, _b, _v, _r))
+        kernels.store(linear_code, op_tuple("linear", fw_linear, _b, _v, _r))
+        kernels.store(bwlinear_code, op_tuple("bwlinear", bw_linear, _b, _v, _r))
+        kernels.store(mish_code, op_tuple("mish", fw_mish, _b, _v, _r))
+        kernels.store(bwmish_code, op_tuple("bwmish", bw_mish, _b, _v, _r))
+        kernels.store(relu_code, op_tuple("relu", fw_relu, _b, _v, _r))
+        kernels.store(bwrelu_code, op_tuple("bwrelu", bw_relu, _b, _v, _r))
+        kernels.store(selu_code, op_tuple("selu", fw_selu, _b, _v, _r))
+        kernels.store(bwselu_code, op_tuple("bwselu", bw_selu, _b, _v, _r))
+        kernels.store(sig_code, op_tuple("sig", fw_sig, _b, _v, _r))
+        kernels.store(bwsig_code, op_tuple("bwsig", bw_sig, _b, _v, _r))
+        kernels.store(softmax_code, op_tuple("softmax", fw_softmax, _b, _v, _r))
+        kernels.store(bwsoftmax_code, op_tuple("bwsoftmax", bw_softmax, _b, _v, _r))
+        kernels.store(softplus_code, op_tuple("softplus", fw_softplus, _b, _v, _r))
+        kernels.store(bwsoftplus_code, op_tuple("bwsoftplus", bw_softplus, _b, _v, _r))
+        kernels.store(softsign_code, op_tuple("softsign", fw_softsign, _b, _v, _r))
+        kernels.store(bwsoftsign_code, op_tuple("bwsoftsign", bw_softsign, _b, _v, _r))
+        kernels.store(swish_code, op_tuple("swish", fw_swish, _b, _v, _r))
+        kernels.store(bwswish_code, op_tuple("bwswish", bw_swish, _b, _v, _r))
+        kernels.store(tanh_code, op_tuple("tanh", fw_tanh, _b, _v, _r))
+        kernels.store(bwtanh_code, op_tuple("bwtanh", bw_tanh, _b, _v, _r))
+        kernels.store(mae_code, op_tuple("mae", _v, fw_mae, _v, _r))
+        kernels.store(bwmae_code, op_tuple("bwmae", _v, bw_mae, _v, _r))
+        kernels.store(mape_code, op_tuple("mape", _v, fw_mape, _v, _r))
+        kernels.store(bwmape_code, op_tuple("bwmape", _v, bw_mape, _v, _r))
+        kernels.store(mse_code, op_tuple("mse", _v, fw_mse, _v, _r))
+        kernels.store(bwmse_code, op_tuple("bwmse", _v, bw_mse, _v, _r))
+        kernels.store(msle_code, op_tuple("msle", _v, fw_msle, _v, _r))
+        kernels.store(bwmsle_code, op_tuple("bwmsle", _v, bw_msle, _v, _r))
+        kernels.store(bce_code, op_tuple("bce", _v, fw_bce, _v, _r))
+        kernels.store(bwbce_code, op_tuple("bwbce", _v, bw_bce, _v, _r))
+        kernels.store(cce_code, op_tuple("cce", _v, fw_cce, _v, _r))
+        kernels.store(bwcce_code, op_tuple("bwcce", _v, bw_cce, _v, _r))
+        kernels.store(cfce_code, op_tuple("cfce", _v, fw_cfce, _v, _r))
+        kernels.store(bwcfce_code, op_tuple("bwcfce", _v, bw_cfce, _v, _r))
 
         let forward_order = Pointer[VectorInt].alloc(1)
         forward_order.store(VectorInt())
@@ -899,7 +858,9 @@ struct Graph:
 
                 vectorize[nelts, v_adam_update](node.load_cap())
 
-    fn function_general[operator_id: Int](self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
+    fn function_general[
+        operator_id: Int
+    ](self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
         let checkpoint = False
         let shape = parent1_ptr.load().shape_ptr.load().copy()
         let other_params = Vector[Int]()
@@ -1030,7 +991,7 @@ struct Graph:
             (a.load().shape_ptr.load().load(3) - kernel_height + 2 * padding) // stride
             + 1,
         )
-        let operator_id = maxpool2dd_code
+        let operator_id = mpool2dd_code
         let checkpoint = False
         let other_params = Vector[Int]()
         other_params.push_back(padding)
@@ -1054,8 +1015,8 @@ struct Graph:
             shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
         )
 
-    fn transpose(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = transpose_code
+    fn transp(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
+        let operator_id = transp_code
         let checkpoint = False
         let shape = parent1_ptr.load().shape_ptr.load().copy()
         shape.store(

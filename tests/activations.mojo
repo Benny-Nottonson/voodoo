@@ -5,12 +5,12 @@ from voodoo.activations import (
     elu,
     exp,
     gelu,
-    hard_sigmoid,
+    h_sig,
     linear,
     mish,
     relu,
     selu,
-    sigmoid,
+    sig,
     softmax,
     softplus,
     softsign,
@@ -147,7 +147,7 @@ fn main() raises:
         gelu, tf.keras.activations.gelu, tf.constant, tf.float32, tf.math.reduce_sum
     )
     total += test_fn(
-        hard_sigmoid,
+        h_sig,
         tf.keras.activations.hard_sigmoid,
         tf.constant,
         tf.float32,
@@ -166,7 +166,7 @@ fn main() raises:
         selu, tf.keras.activations.selu, tf.constant, tf.float32, tf.math.reduce_sum
     )
     total += test_fn(
-        sigmoid,
+        sig,
         tf.keras.activations.sigmoid,
         tf.constant,
         tf.float32,

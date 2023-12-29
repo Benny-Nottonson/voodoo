@@ -93,9 +93,9 @@ fn bw_gelu(node: Node, parent1: Node):
 
 
 # f(x) = x < -2.5 ? 0 : x > 2.5 ? 1 : .2x + .5
-fn fw_hard_sigmoid(node: Node, parent1: Node):
+fn fw_h_sig(node: Node, parent1: Node):
     @parameter
-    fn v_hard_sigmoid[_nelts: Int](i: Int):
+    fn v_h_sig[_nelts: Int](i: Int):
         let x = parent1.load_data[_nelts](i)
         node.store_data[_nelts](
             i,
@@ -105,13 +105,13 @@ fn fw_hard_sigmoid(node: Node, parent1: Node):
             * (0.2 * x + 0.5),
         )
 
-    vectorize[nelts, v_hard_sigmoid](node.load_cap())
+    vectorize[nelts, v_h_sig](node.load_cap())
 
 
 # f'(x) = x < -2.5 ? 0 : x > 2.5 ? 0 : .2
-fn bw_hard_sigmoid(node: Node, parent1: Node):
+fn bw_h_sig(node: Node, parent1: Node):
     @parameter
-    fn v_hard_sigmoid_bw[_nelts: Int](i: Int):
+    fn v_h_sig_bw[_nelts: Int](i: Int):
         let x = parent1.load_data[_nelts](i)
         parent1.store_grad[_nelts](
             i,
@@ -122,7 +122,7 @@ fn bw_hard_sigmoid(node: Node, parent1: Node):
             * 0.2,
         )
 
-    vectorize[nelts, v_hard_sigmoid_bw](node.load_cap())
+    vectorize[nelts, v_h_sig_bw](node.load_cap())
 
 
 # f(x) = x
@@ -238,19 +238,19 @@ fn bw_selu(node: Node, parent1: Node):
 
 
 # f(x) = 1 / (1 + e^-x)
-fn fw_sigmoid(node: Node, parent1: Node):
+fn fw_sig(node: Node, parent1: Node):
     @parameter
-    fn v_sigmoid[_nelts: Int](i: Int):
+    fn v_sig[_nelts: Int](i: Int):
         let x = parent1.load_data[_nelts](i)
         node.store_data[_nelts](i, 1.0 / (1.0 + exp(-x)))
 
-    vectorize[nelts, v_sigmoid](node.load_cap())
+    vectorize[nelts, v_sig](node.load_cap())
 
 
 # f'(x) = e^x / (e^x + 1) ** 2
-fn bw_sigmoid(node: Node, parent1: Node):
+fn bw_sig(node: Node, parent1: Node):
     @parameter
-    fn v_sigmoid_bw[_nelts: Int](i: Int):
+    fn v_sig_bw[_nelts: Int](i: Int):
         let x = parent1.load_data[_nelts](i)
         node.store_grad[_nelts](
             i,
@@ -258,7 +258,7 @@ fn bw_sigmoid(node: Node, parent1: Node):
             + node.load_grad[_nelts](i) * (exp(x) / (exp(x) + 1.0) ** 2),
         )
 
-    vectorize[nelts, v_sigmoid_bw](node.load_cap())
+    vectorize[nelts, v_sig_bw](node.load_cap())
 
 
 # f(x) = e^wx_i / sum(e^wx_i)

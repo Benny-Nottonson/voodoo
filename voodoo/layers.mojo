@@ -108,8 +108,8 @@ struct Dense[
             return exp(x)
         elif self.activation == "gelu":
             return gelu(x)
-        elif self.activation == "hard_sigmoid":
-            return hard_sigmoid(x)
+        elif self.activation == "h_sig":
+            return h_sig(x)
         elif self.activation == "linear":
             return linear(x)
         elif self.activation == "mish":
@@ -118,8 +118,8 @@ struct Dense[
             return relu(x)
         elif self.activation == "selu":
             return selu(x)
-        elif self.activation == "sigmoid":
-            return sigmoid(x)
+        elif self.activation == "sig":
+            return sig(x)
         elif self.activation == "softmax":
             return softmax(x)
         elif self.activation == "softplus":
