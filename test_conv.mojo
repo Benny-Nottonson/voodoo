@@ -8,6 +8,7 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
 
 
 fn main() raises:
+    # TODO: Fix this (Specifically channels and the different types of layers that can be implemented)
     let input_layer = Layer[type="conv2d", activation="relu", kernel_width=3, kernel_height=3](1, 64)
     let hidden_layer = Layer[type="conv2d", activation="relu", kernel_width=3, kernel_height=3](64, 64)
     let pool = Layer[type="maxpool2d", pool_size=2](64, 64)
