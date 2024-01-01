@@ -9,7 +9,8 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
 
 fn main() raises:
     let input_layer = Layer[type="dense", activation="relu"](1, 64)
-    let dense_layer = Layer[type="leaky_relu"](64, 64)
+    let dropout_layer = Layer[type="dropout", dropout_rate=0.1](0, 0)
+    let dense_layer = Layer[type="dense", activation="relu"](64, 64)
     let output_layer = Layer[type="dense"](64, 1)
 
     var avg_loss: Float32 = 0.0
@@ -21,6 +22,7 @@ fn main() raises:
 
     # TODO, make a model struct to encapsulate this, variable n middle layers / total loss
     var x = input_layer.forward(input)
+    x = dropout_layer.forward(x)
     x = dense_layer.forward(x)
     x = output_layer.forward(x)
     let loss = x.compute_loss[get_loss_code["mse"]()](true_vals)

@@ -13,6 +13,7 @@ from math import (
     cosh,
     sinh,
 )
+from random import random_float64, rand
 from sys.param_env import env_get_int
 from algorithm import vectorize, parallelize
 from voodoo.utils import (
@@ -1236,3 +1237,37 @@ fn bw_max_pool_2d(b: Node, a: Node):
                     a.store_grad(
                         arg_max, a.load_grad(arg_max) + b.load_grad(b_grad_idx)
                     )
+
+
+fn fw_dropout(node: Node, parent1: Node):
+    let params = node.other_params_ptr.load()
+    let keep_prob = params.load(0) / 1000000.0
+    let scale = 1.0 / keep_prob
+    # TODO: Implement mask shape
+    
+    @parameter
+    fn v_dropout[_nelts: Int](i: Int):
+        let data = parent1.load_data[_nelts](i)
+        for i in range(_nelts):
+            let rand = random_float64()
+            node.store_data[_nelts](i, (rand < keep_prob).cast[DType_F32]() * data * scale)
+        
+
+    vectorize[nelts, v_dropout](node.load_cap())
+
+
+fn bw_dropout(node: Node, parent1: Node):
+    let params = node.other_params_ptr.load()
+    let keep_prob = params.load(0) / 1000000.0
+    let scale = 1.0 / keep_prob
+
+    @parameter
+    fn v_dropout_bw[_nelts: Int](i: Int):
+        let data = parent1.load_data[_nelts](i)
+        for i in range(_nelts):
+            let rand = random_float64()
+            parent1.store_grad[_nelts](
+                i, parent1.load_grad[_nelts](i) + (rand < keep_prob).cast[DType_F32]() * node.load_grad[_nelts](i) * scale
+            )
+
+    vectorize[nelts, v_dropout_bw](node.load_cap())

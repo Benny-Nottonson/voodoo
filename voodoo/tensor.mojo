@@ -24,7 +24,7 @@ struct Tensor:
         is_single: Bool = False,
         init_graph: Bool = True,
         init_node: Bool = True,
-    ) raises:
+    ):
         let _shape = Vector[Int]()
         for i in range(len(shape)):
             _shape.push_back(shape[i])
@@ -38,7 +38,7 @@ struct Tensor:
         is_single: Bool = False,
         init_graph: Bool = True,
         init_node: Bool = True,
-    ) raises:
+    ):
         let other_params = Vector[Int]()
 
         let graph_ptr = Pointer[Pointer[Graph]].alloc(1)
@@ -57,15 +57,20 @@ struct Tensor:
 
             self.graph_ptr = graph_ptr
             self.node_ptr = node_ptr
-
-            if is_static:
-                let node_p = graph.node(shape, True, is_single, False, -1, other_params)
-                node_ptr.store(node_p)
-            elif init_graph and init_node:
-                let node_p = graph.node(
-                    shape, False, is_single, False, -1, other_params
-                )
-                node_ptr.store(node_p)
+            try:
+                if is_static:
+                    let node_p = graph.node(shape, True, is_single, False, -1, other_params)
+                    node_ptr.store(node_p)
+                elif init_graph and init_node:
+                    let node_p = graph.node(
+                        shape, False, is_single, False, -1, other_params
+                    )
+                    node_ptr.store(node_p)
+            except:
+                graph_ptr.free()
+                graph_p.free()
+                node_ptr.free()
+                print("Error: Tensor initialization failed")
 
     fn __copyinit__(inout self, other: Self):
         self.graph_ptr = other.graph_ptr
@@ -288,6 +293,17 @@ struct Tensor:
             .max_pool_2d(
                 self.node_ptr.load(), kernel_width, kernel_height, stride, padding
             )
+        )
+        return new_tensor
+
+    fn dropout[dropout_rate: Float32, noise_shape: DynamicVector[Int]](
+        self
+    ) raises -> Tensor:
+        let new_tensor = self.load_tensor_for_unary_op()
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load()
+            .load()
+            .dropout(self.node_ptr.load(), dropout_rate, noise_shape)
         )
         return new_tensor
 

@@ -23,6 +23,9 @@ struct Layer[
     kernel_height: Int = 3,
     # LeakyRelu Parameters
     alpha: Float32 = 0.3,
+    # Dropout Parameters
+    dropout_rate: Float32 = 0.5,
+    noise_shape: DynamicVector[Int] = DynamicVector[Int](), 
 ]:
     var W: Tensor
     var bias: Tensor
@@ -41,6 +44,8 @@ struct Layer[
             self.init_conv2d(in_neurons, out_neurons)
         elif type == "leaky_relu":
             self.init_leaky_relu(in_neurons, out_neurons)
+        elif type == "dropout":
+            self.init_dropout(in_neurons, out_neurons)
         else:
             raise Error("Invalid layer type: " + type)
 
@@ -52,6 +57,8 @@ struct Layer[
             return self.forward_conv2d(x)
         elif type == "leaky_relu":
             return self.forward_leaky_relu(x)
+        elif type == "dropout":
+            return self.forward_dropout(x)
         else:
             raise Error("Invalid layer type: " + type)
             
@@ -95,7 +102,7 @@ struct Layer[
             return res + self.bias
         return res
 
-    # Dense
+    # Leaky Relu
     fn init_leaky_relu(
         inout self,
         in_neurons: Int,
@@ -110,3 +117,14 @@ struct Layer[
     
     fn forward_leaky_relu(self, x: Tensor) raises -> Tensor:
         return (x @ self.W + (self.bias * Float32(self.use_bias))).compute_activation[lrelu_code, self.alpha]()
+
+    # Dropout
+    fn init_dropout(
+        inout self,
+        in_neurons: Int,
+        out_neurons: Int,
+    ) raises:
+        self.W = self.bias = Tensor(shape(0))
+    
+    fn forward_dropout(self, x: Tensor) raises -> Tensor:
+        return x.dropout[dropout_rate, noise_shape]()

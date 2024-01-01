@@ -97,3 +97,7 @@ alias cce_code = 102
 alias bwcce_code = 103
 alias cfce_code = 104
 alias bwcfce_code = 105
+
+# Other functions
+alias dropout_code = 110
+alias bwdropout_code = 111

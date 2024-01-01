@@ -170,6 +170,8 @@ struct Graph:
         kernels.store(bwcce_code, op_tuple("bwcce", _v, bw_cce, _v, _r))
         kernels.store(cfce_code, op_tuple("cfce", _v, fw_cfce, _v, _r))
         kernels.store(bwcfce_code, op_tuple("bwcfce", _v, bw_cfce, _v, _r))
+        kernels.store(dropout_code, op_tuple("dropout", fw_dropout, _b, _v, _r))
+        kernels.store(bwdropout_code, op_tuple("bwdropout", bw_dropout, _b, _v, _r))
 
         let forward_order = Pointer[VectorInt].alloc(1)
         forward_order.store(VectorInt())
@@ -321,7 +323,7 @@ struct Graph:
             self.nodes.load().store(node_id, node_ptr)
         else:
             self.nodes.load().push_back(node_ptr)
-
+        
         return node_ptr
 
     fn get_free_data_ptr(self, node: Pointer[Node], unique: Bool = False) raises:
@@ -1007,6 +1009,20 @@ struct Graph:
         )
 
         return b
+
+    fn dropout(
+        self, a: Pointer[Node], dropout_rate: Float32, noise_shape: DynamicVector[Int]
+    ) raises -> Pointer[Node]:
+        let operator_id = dropout_code
+        let checkpoint = False
+        let shape = a.load().shape_ptr.load().copy()
+        let other_params = Vector[Int]()
+        other_params.push_back(round(dropout_rate * 1000000.0).to_int())
+        for i in range(len(noise_shape)):
+            other_params.push_back(noise_shape[i])
+        return self.node(
+            shape, False, False, checkpoint, operator_id, other_params, a
+        )
 
     fn reshape(
         self, parent1_ptr: Pointer[Node], shape: Vector[Int]
