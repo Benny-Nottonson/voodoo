@@ -8,9 +8,9 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
 
 
 fn main() raises:
-    let input_layer = Layer[type="dense", activation="relu"](1, 64)
-    let dense_layer = Layer[type="dense", activation="relu"](64, 64)
-    let output_layer = Layer[type="dense"](64, 1)
+    let input_layer = Layer[type="dense", in_neurons=1, out_neurons=64, activation="relu"]()
+    let dense_layer = Layer[type="dense", in_neurons=64, out_neurons=64, activation="relu"]()
+    let output_layer = Layer[type="dense", in_neurons=64, out_neurons=1]()
 
     var avg_loss: Float32 = 0.0
     let every = 1000
@@ -45,6 +45,6 @@ fn main() raises:
             avg_loss = 0.0
 
         loss.backward()
-        loss.optimize["adam"](0.01)
+        loss.optimize["adam", 0.001]()
 
     print("Total Time: ", nanoseconds_to_seconds(now() - initial_start), "s")

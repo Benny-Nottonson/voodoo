@@ -783,17 +783,17 @@ struct Graph:
             )
             _ = self.backward_recursive(curr_node_ptr)
 
-    fn optimizer_step[type: String](self, learning_rate: Float32) raises:
+    fn optimizer_step[type: String, learning_rate: Float32](self) raises:
         # TODO: Split into seperate functions to avoid if statements
         @parameter
         if type == "sgd":
-            self.optimizer_step_sgd(learning_rate)
+            self.optimizer_step_sgd[learning_rate]()
         elif type == "adafactor":
-            self.optimizer_step_adafactor(learning_rate)
+            self.optimizer_step_adafactor[learning_rate]()
         elif type == "adam":
-            self.optimizer_step_adam(learning_rate)
+            self.optimizer_step_adam[learning_rate]()
 
-    fn optimizer_step_sgd(self, learning_rate: Float32) raises:
+    fn optimizer_step_sgd[learning_rate: Float32](self) raises:
         for i in range(self.nodes.load().len.load()):
             let node = self.nodes.load().load(i).load()
             if node.requires_grad_ptr.load() and node.grad_computed_ptr.load():
@@ -808,7 +808,7 @@ struct Graph:
 
                 vectorize[nelts, v_sgd_update](node.load_cap())
 
-    fn optimizer_step_adafactor(self, learning_rate: Float32) raises:
+    fn optimizer_step_adafactor[learning_rate: Float32](self) raises:
         for i in range(self.nodes.load().len.load()):
             let node = self.nodes.load().load(i).load()
             if node.requires_grad_ptr.load() and node.grad_computed_ptr.load():
@@ -838,7 +838,7 @@ struct Graph:
 
                 vectorize[nelts, v_adafactor_update](node.load_cap())
 
-    fn optimizer_step_adam(self, learning_rate: Float32) raises:
+    fn optimizer_step_adam[learning_rate: Float32](self) raises:
         for i in range(self.nodes.load().len.load()):
             let node = self.nodes.load().load(i).load()
 

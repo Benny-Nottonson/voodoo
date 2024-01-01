@@ -7,6 +7,8 @@ from .utils.shape import shape
 # TODO: UseBias default changes depending on layer, see above
 struct Layer[
     type: String,
+    in_neurons: Int,
+    out_neurons: Int,
     # Dense Parameters
     activation: String = "none",
     use_bias: Bool = True,
@@ -35,8 +37,6 @@ struct Layer[
 
     fn __init__(
         inout self,
-        in_neurons: Int,
-        out_neurons: Int,
     ) raises:
         self.W = self.bias = Tensor(shape(0))
 

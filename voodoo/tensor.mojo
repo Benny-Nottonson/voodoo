@@ -262,8 +262,8 @@ struct Tensor:
             _ = self.forward()
         self.graph_ptr.load().load().backward(self.node_ptr.load())
 
-    fn optimize[type: String = "sgd"](self, lr: Float32 = 0.001) raises:
-        self.graph_ptr.load().load().optimizer_step[type](lr)
+    fn optimize[type: String = "sgd", lr: Float32 = 0.001](self) raises:
+        self.graph_ptr.load().load().optimizer_step[type, lr]()
 
     fn __getitem__(self, idx: Int) raises -> Float32:
         if not self.node_ptr.load().load().computed_ptr.load():
