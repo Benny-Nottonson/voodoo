@@ -130,7 +130,7 @@ struct Layer[
             self.W,
             self.stride,
             self.padding,
-        ) @ self.W + (self.bias * Float32(self.use_bias))
+        ) + (self.bias * Float32(self.use_bias))
 
     # Maxpool2d
     fn init_maxpool2d(
