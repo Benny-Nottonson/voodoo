@@ -533,6 +533,15 @@ struct Tensor:
             new_tensor.graph_ptr.load().load().reshape(self.node_ptr.load(), shape)
         )
         return new_tensor
+    
+    fn flatten(self) raises -> Tensor:
+        let new_tensor = self.load_tensor_for_unary_op()
+        let shape = Vector[Int]()
+        shape.push_back(self.capacity())
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load().load().reshape(self.node_ptr.load(), shape)
+        )
+        return new_tensor
 
     fn transp(self) raises -> Tensor:
         let new_tensor = self.load_tensor_for_unary_op()
