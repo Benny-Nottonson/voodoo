@@ -1,5 +1,5 @@
 from memory import memset_zero
-from math import log, log2, exp, exp2, ceil
+from math import log, log2, exp, exp2, ceil, round
 from algorithm import vectorize
 
 from .node import Node
@@ -37,6 +37,7 @@ fn _v(b: Node, a: Node):
 
 fn _r(c: Node, a: Node, b: Node):
     ...
+
 
 # TODO: Could combine more unary / binary functions into one main caller (See activations / losses)
 @register_passable("trivial")
@@ -153,6 +154,8 @@ struct Graph:
         kernels.store(bwswish_code, op_tuple("bwswish", bw_swish, _b, _v, _r))
         kernels.store(tanh_code, op_tuple("tanh", fw_tanh, _b, _v, _r))
         kernels.store(bwtanh_code, op_tuple("bwtanh", bw_tanh, _b, _v, _r))
+        kernels.store(lrelu_code, op_tuple("fwlrelu", fw_leaky_relu, _b, _v, _r))
+        kernels.store(bwlrelu_code, op_tuple("bwlrelu", bw_leaky_relu, _b, _v, _r))
         kernels.store(mae_code, op_tuple("mae", _v, fw_mae, _v, _r))
         kernels.store(bwmae_code, op_tuple("bwmae", _v, bw_mae, _v, _r))
         kernels.store(mape_code, op_tuple("mape", _v, fw_mape, _v, _r))
@@ -1042,12 +1045,13 @@ struct Graph:
         )
 
     fn activation_general[
-        operator_id: Int
+        operator_id: Int,
+        arg1: Float32 = 0.0,
     ](self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
         let checkpoint = False
         let shape = parent1_ptr.load().shape_ptr.load().copy()
         let other_params = Vector[Int]()
-        other_params.push_back(1)
+        other_params.push_back(round(arg1 * 1000000.0).to_int())
         return self.node(
             shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
         )

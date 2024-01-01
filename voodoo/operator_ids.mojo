@@ -79,6 +79,8 @@ alias swish_code = 84
 alias bwswish_code = 85
 alias tanh_code = 86
 alias bwtanh_code = 87
+alias lrelu_code = 88
+alias bwlrelu_code = 89
 
 # Loss functions
 alias mae_code = 92

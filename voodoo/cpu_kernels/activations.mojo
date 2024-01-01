@@ -187,7 +187,6 @@ fn fw_relu(node: Node, parent1: Node):
             i,
             (x > 0.0).cast[DType_F32]() * x,
         )
-
     vectorize[nelts, v_relu](node.load_cap())
 
 
@@ -426,3 +425,34 @@ fn bw_tanh(node: Node, parent1: Node):
         )
 
     vectorize[nelts, v_tanh_bw](node.load_cap())
+
+
+# f(x) = x > 0 ? x * alpha: alpha * e^x - alpha
+fn fw_leaky_relu(node: Node, parent1: Node):
+    @parameter
+    fn v_leaky_relu[_nelts: Int](i: Int):
+        let x = parent1.load_data[_nelts](i)
+        let alpha = node.other_params_ptr.load().data.load().load() / 1000000.0
+        node.store_data[_nelts](
+            i,
+            (x > 0.0).cast[DType_F32]() * x * alpha
+            + (x <= 0.0).cast[DType_F32]() * alpha * (exp(x) - 1.0),
+        )
+
+    vectorize[nelts, v_leaky_relu](node.load_cap())
+
+
+# f'(x) = x > 0 ? 1 : alpha * e^x
+fn bw_leaky_relu(node: Node, parent1: Node):
+    @parameter
+    fn v_leaky_relu_bw[_nelts: Int](i: Int):
+        let x = parent1.load_data[_nelts](i)
+        let alpha = node.other_params_ptr.load().data.load().load() / 1000000.0
+        parent1.store_grad[_nelts](
+            i,
+            parent1.load_grad[_nelts](i)
+            + node.load_grad[_nelts](i)
+            * ((x > 0.0).cast[DType_F32]() + (x <= 0.0).cast[DType_F32]() * alpha * exp(x)),
+        )
+
+    vectorize[nelts, v_leaky_relu_bw](node.load_cap())

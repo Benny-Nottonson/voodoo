@@ -21,6 +21,8 @@ struct Layer[
     stride: Int = 1,
     kernel_width: Int = 3,
     kernel_height: Int = 3,
+    # LeakyRelu Parameters
+    alpha: Float32 = 0.3,
 ]:
     var W: Tensor
     var bias: Tensor
@@ -31,11 +33,14 @@ struct Layer[
         out_neurons: Int,
     ) raises:
         self.W = self.bias = Tensor(shape(0))
+        # TODO: Extract into a dict once supported, since some have the same logic (Dense, LeakyRelu, etc.)
         @parameter
         if type == "dense":
             self.init_dense(in_neurons, out_neurons)
         elif type == "conv2d":
             self.init_conv2d(in_neurons, out_neurons)
+        elif type == "leaky_relu":
+            self.init_leaky_relu(in_neurons, out_neurons)
         else:
             raise Error("Invalid layer type: " + type)
 
@@ -45,6 +50,8 @@ struct Layer[
             return self.forward_dense(x)
         elif type == "conv2d":
             return self.forward_conv2d(x)
+        elif type == "leaky_relu":
+            return self.forward_leaky_relu(x)
         else:
             raise Error("Invalid layer type: " + type)
             
@@ -87,3 +94,19 @@ struct Layer[
         if self.use_bias:
             return res + self.bias
         return res
+
+    # Dense
+    fn init_leaky_relu(
+        inout self,
+        in_neurons: Int,
+        out_neurons: Int,
+    ) raises:
+        self.W = Tensor(shape(in_neurons, out_neurons)).initialize[weight_initializer, weight_mean, weight_std]()
+        @parameter
+        if self.use_bias:
+            self.bias = Tensor(shape(out_neurons)).initialize[bias_initializer, bias_mean, bias_std]()
+        else:
+            self.bias = Tensor(shape(out_neurons)).initialize["zeros", 0.0]()
+    
+    fn forward_leaky_relu(self, x: Tensor) raises -> Tensor:
+        return (x @ self.W + (self.bias * Float32(self.use_bias))).compute_activation[lrelu_code, self.alpha]()

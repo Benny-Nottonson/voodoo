@@ -31,4 +31,6 @@ fn get_activation_code[name: String]() -> Int:
         return swish_code
     elif name == "tanh":
         return tanh_code
+    elif name == "leaky_relu":
+        return lrelu_code
     return linear_code

@@ -550,12 +550,12 @@ struct Tensor:
         )
         return new_tensor
 
-    fn compute_activation[operator_id: Int](self) raises -> Tensor:
+    fn compute_activation[operator_id: Int, arg1: Float32 = 0.0](self) raises -> Tensor:
         let new_tensor = self.load_tensor_for_unary_op()
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()
             .load()
-            .activation_general[operator_id](self.node_ptr.load())
+            .activation_general[operator_id, arg1](self.node_ptr.load())
         )
         return new_tensor
 
