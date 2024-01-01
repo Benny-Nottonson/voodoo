@@ -1,5 +1,5 @@
 from .tensor import Tensor, conv_2d
-from .activations import get_activation_code
+from .code_lookup import get_activation_code
 from .utils.shape import shape
 
 
@@ -132,6 +132,7 @@ struct Layer[
             self.padding,
         ) + (self.bias * Float32(self.use_bias))
 
+    # TODO: Test
     # Maxpool2d
     fn init_maxpool2d(
         inout self,
@@ -143,6 +144,7 @@ struct Layer[
     fn forward_maxpool2d(self, x: Tensor) raises -> Tensor:
         return x.max_pool_2d(self.pool_size, self.pool_size)
 
+    # TODO: Test
     # Flatten
     fn init_flatten(
         inout self,
@@ -154,6 +156,7 @@ struct Layer[
     fn forward_flatten(self, x: Tensor) raises -> Tensor:
         return x.flatten()
 
+    # TODO: Test
     # Leaky Relu
     fn init_leaky_relu(
         inout self,
@@ -177,6 +180,7 @@ struct Layer[
             lrelu_code, self.alpha
         ]()
 
+    # TODO: Test
     # Dropout
     fn init_dropout(
         inout self,

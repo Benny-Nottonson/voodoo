@@ -1,6 +1,6 @@
 from memory import memset_zero
 from math import log, log2, exp, exp2, ceil, round
-from algorithm import vectorize
+from algorithm import vectorize, unswitch
 
 from .node import Node
 from .utils import Vector, get_broadcasted_shape_for_ew_op
@@ -323,7 +323,7 @@ struct Graph:
             self.nodes.load().store(node_id, node_ptr)
         else:
             self.nodes.load().push_back(node_ptr)
-        
+
         return node_ptr
 
     fn get_free_data_ptr(self, node: Pointer[Node], unique: Bool = False) raises:
@@ -785,13 +785,18 @@ struct Graph:
 
     fn optimizer_step[type: String](self, learning_rate: Float32) raises:
         # TODO: Split into seperate functions to avoid if statements
+        @parameter
+        if type == "sgd":
+            self.optimizer_step_sgd(learning_rate)
+        elif type == "adafactor":
+            self.optimizer_step_adafactor(learning_rate)
+        elif type == "adam":
+            self.optimizer_step_adam(learning_rate)
+
+    fn optimizer_step_sgd(self, learning_rate: Float32) raises:
         for i in range(self.nodes.load().len.load()):
             let node = self.nodes.load().load(i).load()
-            if (
-                type == "sgd"
-                and node.requires_grad_ptr.load()
-                and node.grad_computed_ptr.load()
-            ):
+            if node.requires_grad_ptr.load() and node.grad_computed_ptr.load():
 
                 @parameter
                 fn v_sgd_update[_nelts: Int](i: Int):
@@ -802,11 +807,11 @@ struct Graph:
                     )
 
                 vectorize[nelts, v_sgd_update](node.load_cap())
-            elif (
-                type == "adafactor"
-                and node.requires_grad_ptr.load()
-                and node.grad_computed_ptr.load()
-            ):
+
+    fn optimizer_step_adafactor(self, learning_rate: Float32) raises:
+        for i in range(self.nodes.load().len.load()):
+            let node = self.nodes.load().load(i).load()
+            if node.requires_grad_ptr.load() and node.grad_computed_ptr.load():
 
                 @parameter
                 fn v_adafactor_update[_nelts: Int](i: Int):
@@ -832,11 +837,12 @@ struct Graph:
                     node.store_grad[_nelts](i, new_grad)
 
                 vectorize[nelts, v_adafactor_update](node.load_cap())
-            elif (
-                type == "adam"
-                and node.requires_grad_ptr.load()
-                and node.grad_computed_ptr.load()
-            ):
+
+    fn optimizer_step_adam(self, learning_rate: Float32) raises:
+        for i in range(self.nodes.load().len.load()):
+            let node = self.nodes.load().load(i).load()
+
+            if node.requires_grad_ptr.load() and node.grad_computed_ptr.load():
 
                 @parameter
                 fn v_adam_update[_nelts: Int](i: Int):
@@ -1020,9 +1026,7 @@ struct Graph:
         other_params.push_back(round(dropout_rate * 1000000.0).to_int())
         for i in range(len(noise_shape)):
             other_params.push_back(noise_shape[i])
-        return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, a
-        )
+        return self.node(shape, False, False, checkpoint, operator_id, other_params, a)
 
     fn reshape(
         self, parent1_ptr: Pointer[Node], shape: Vector[Int]

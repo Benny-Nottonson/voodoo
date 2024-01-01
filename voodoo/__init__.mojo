@@ -30,11 +30,8 @@ from .tensor import (
 
 from .layers import Layer
 
-from .activations import (
-    get_activation_code
-)
-
-from .losses import (
+from .code_lookup import (
+    get_activation_code,
     get_loss_code
 )
 

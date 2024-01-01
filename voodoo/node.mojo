@@ -231,6 +231,7 @@ struct Node:
     fn initialize[
         initialization_function: String, val: Float32 = 0, val2: Float32 = 0
     ](self) raises:
+        # TODO: Clean up with dictionary
         @parameter
         if initialization_function == "glorot_normal":
             self.glorot_normal()
@@ -265,6 +266,7 @@ struct Node:
         else:
             raise Error("Invalid initialization function")
 
+    # TODO: Extract to a different module, potentially as cpu instructions
     fn glorot_normal(self):
         let fan_in = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 2)
         let fan_out = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 1)
