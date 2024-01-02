@@ -19,14 +19,14 @@ struct SGD(Optimizer):
             if node.requires_grad_ptr.load() and node.grad_computed_ptr.load():
 
                 @parameter
-                fn v_sgd_update[_nelts: Int](i: Int):
+                fn vectorized_sgd_update[_nelts: Int](i: Int):
                     node.store_data[_nelts](
                         i,
                         node.load_data[_nelts](i)
                         - node.load_grad[_nelts](i) * learning_rate,
                     )
 
-                vectorize[nelts, v_sgd_update](node.load_cap())
+                vectorize[nelts, vectorized_sgd_update](node.load_cap())
 
 
 struct Adafactor(Optimizer):
@@ -38,7 +38,7 @@ struct Adafactor(Optimizer):
             if node.requires_grad_ptr.load() and node.grad_computed_ptr.load():
 
                 @parameter
-                fn v_adafactor_update[_nelts: Int](i: Int):
+                fn vectorized_adafactor_update[_nelts: Int](i: Int):
                     let grad = node.load_grad[_nelts](i)
                     let data = node.load_data[_nelts](i)
                     let grad_sq = grad * grad
@@ -60,7 +60,7 @@ struct Adafactor(Optimizer):
                     node.store_data[_nelts](i, new_data)
                     node.store_grad[_nelts](i, new_grad)
 
-                vectorize[nelts, v_adafactor_update](node.load_cap())
+                vectorize[nelts, vectorized_adafactor_update](node.load_cap())
 
 
 struct Adam(Optimizer):
@@ -73,7 +73,7 @@ struct Adam(Optimizer):
             if node.requires_grad_ptr.load() and node.grad_computed_ptr.load():
 
                 @parameter
-                fn v_adam_update[_nelts: Int](i: Int):
+                fn vectorized_adam_update[_nelts: Int](i: Int):
                     let grad = node.load_grad[_nelts](i)
                     let data = node.load_data[_nelts](i)
                     let grad_sq = grad * grad
@@ -95,4 +95,4 @@ struct Adam(Optimizer):
                     node.store_data[_nelts](i, new_data)
                     node.store_grad[_nelts](i, new_grad)
 
-                vectorize[nelts, v_adam_update](node.load_cap())
+                vectorize[nelts, vectorized_adam_update](node.load_cap())

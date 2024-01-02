@@ -2,6 +2,7 @@ from random import random_float64
 from algorithm import vectorize
 from voodoo import Node
 from .shared import DType_F32, nelts
+from algorithm import *
 
 
 trait Operation:
@@ -18,18 +19,18 @@ struct Copy(Operation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter
-        fn v_copy[_nelts: Int](i: Int):
+        fn vectorized_copy[_nelts: Int](i: Int):
             node.store_data[_nelts](i, parent1.load_data[_nelts](i))
 
-        vectorize[nelts, v_copy](node.load_cap())
+        vectorize[nelts, vectorized_copy](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
-        fn v_copy_bw[_nelts: Int](i: Int):
+        fn vectorized_copy_bw[_nelts: Int](i: Int):
             parent1.store_grad[_nelts](i, parent1.load_grad[_nelts](i))
 
-        vectorize[nelts, v_copy_bw](node.load_cap())
+        vectorize[nelts, vectorized_copy_bw](node.load_cap())
 
 
 struct Sum(Operation):
@@ -38,21 +39,21 @@ struct Sum(Operation):
         var sum: Float32 = 0.0
 
         @parameter
-        fn v_sum[nelts: Int](i: Int):
+        fn vectorized_sum[nelts: Int](i: Int):
             sum += parent1.load_data[nelts](i).reduce_add()
 
-        vectorize[nelts, v_sum](parent1.load_cap())
+        vectorize[nelts, vectorized_sum](parent1.load_cap())
         node.store_data(0, sum)
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
-        fn v_sum_bw[nelts: Int](i: Int):
+        fn vectorized_sum_bw[nelts: Int](i: Int):
             parent1.store_grad[nelts](
                 i, parent1.load_grad[nelts](i) + node.load_grad(0)
             )
 
-        vectorize[nelts, v_sum_bw](parent1.load_cap())
+        vectorize[nelts, vectorized_sum_bw](parent1.load_cap())
 
 
 struct Reshape(Operation):
@@ -62,10 +63,10 @@ struct Reshape(Operation):
             let offset = s * parent1.cap_ptr.load()
 
             @parameter
-            fn v_reshape[nelts: Int](i: Int):
+            fn vectorized_reshape[nelts: Int](i: Int):
                 node.store_data[nelts](i, parent1.load_data[nelts](i))
 
-            vectorize[nelts, v_reshape](parent1.cap_ptr.load())
+            vectorize[nelts, vectorized_reshape](parent1.cap_ptr.load())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
@@ -73,12 +74,12 @@ struct Reshape(Operation):
             let offset = s * parent1.cap_ptr.load()
 
             @parameter
-            fn v_reshape[nelts: Int](i: Int):
+            fn vectorized_reshape[nelts: Int](i: Int):
                 parent1.store_grad[nelts](
                     i, parent1.load_grad[nelts](i) + node.load_grad[nelts](i)
                 )
 
-            vectorize[nelts, v_reshape](parent1.cap_ptr.load())
+            vectorize[nelts, vectorized_reshape](parent1.cap_ptr.load())
 
 
 struct Transpose(Operation):
@@ -92,12 +93,12 @@ struct Transpose(Operation):
             for i in range(M):
 
                 @parameter
-                fn v_transp[nelts: Int](j: Int):
+                fn vectorized_transp[nelts: Int](j: Int):
                     node.store_data[nelts](
                         offset + j * M + i, parent1.load_data[nelts](offset + i * N + j)
                     )
 
-                vectorize[nelts, v_transp](N)
+                vectorize[nelts, vectorized_transp](N)
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
@@ -109,14 +110,14 @@ struct Transpose(Operation):
             for i in range(M):
 
                 @parameter
-                fn v_transp_bw[nelts: Int](j: Int):
+                fn vectorized_transp_bw[nelts: Int](j: Int):
                     parent1.store_grad[nelts](
                         offset + j * M + i,
                         parent1.load_grad[nelts](offset + j * M + i)
                         + node.load_grad[nelts](offset + i * N + j),
                     )
 
-                vectorize[nelts, v_transp_bw](N)
+                vectorize[nelts, vectorized_transp_bw](N)
 
 
 struct MaxPool2D(Operation):
@@ -126,7 +127,7 @@ struct MaxPool2D(Operation):
         let stride = b.other_params_ptr.load().load(1)
         let kernel_width = b.other_params_ptr.load().load(2)
         let kernel_height = b.other_params_ptr.load().load(3)
-
+        
         for p in range(a.shape_ptr.load().load(0)):
             for i in range(a.shape_ptr.load().load(1)):
                 for x in range(
@@ -252,7 +253,7 @@ struct Dropout(Operation):
         let scale = 1.0 / keep_prob
 
         @parameter
-        fn v_dropout[_nelts: Int](i: Int):
+        fn vectorized_dropout[_nelts: Int](i: Int):
             let data = parent1.load_data[_nelts](i)
             for i in range(_nelts):
                 let rand = random_float64()
@@ -260,7 +261,7 @@ struct Dropout(Operation):
                     i, (rand < keep_prob).cast[DType_F32]() * data * scale
                 )
 
-        vectorize[nelts, v_dropout](node.load_cap())
+        vectorize[nelts, vectorized_dropout](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
@@ -269,7 +270,7 @@ struct Dropout(Operation):
         let scale = 1.0 / keep_prob
 
         @parameter
-        fn v_dropout_bw[_nelts: Int](i: Int):
+        fn vectorized_dropout_bw[_nelts: Int](i: Int):
             let data = parent1.load_data[_nelts](i)
             for i in range(_nelts):
                 let rand = random_float64()
@@ -281,4 +282,4 @@ struct Dropout(Operation):
                     * scale,
                 )
 
-        vectorize[nelts, v_dropout_bw](node.load_cap())
+        vectorize[nelts, vectorized_dropout_bw](node.load_cap())

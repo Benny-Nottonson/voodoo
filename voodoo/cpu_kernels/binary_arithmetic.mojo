@@ -52,13 +52,13 @@ struct Add(BinaryArithmetic):
         let offset_c = c_index * c_rest
 
         @parameter
-        fn v_add[nelts: Int](i: Int):
+        fn vectorized_add[nelts: Int](i: Int):
             c.store_data[nelts](
                 offset_c + i,
                 a.load_data[nelts](offset_a + i) + b.load_data[nelts](offset_b + i),
             )
 
-        vectorize[nelts, v_add](c_rest)
+        vectorize[nelts, vectorized_add](c_rest)
 
     @parameter
     @staticmethod
@@ -78,13 +78,13 @@ struct Add(BinaryArithmetic):
         let offset_c = c_index * c_rest
 
         @parameter
-        fn v_add_grad_a[nelts: Int](i: Int):
+        fn vectorized_add_grad_a[nelts: Int](i: Int):
             a.store_grad[nelts](
                 offset_a + i,
                 a.load_grad[nelts](offset_a + i) + c.load_grad[nelts](offset_c + i),
             )
 
-        vectorize[nelts, v_add_grad_a](c_rest)
+        vectorize[nelts, vectorized_add_grad_a](c_rest)
 
     @parameter
     @staticmethod
@@ -97,13 +97,13 @@ struct Add(BinaryArithmetic):
         let offset_c = c_index * c_rest
 
         @parameter
-        fn v_add_grad_b[nelts: Int](i: Int):
+        fn vectorized_add_grad_b[nelts: Int](i: Int):
             b.store_grad[nelts](
                 offset_b + i,
                 b.load_grad[nelts](offset_b + i) + c.load_grad[nelts](offset_c + i),
             )
 
-        vectorize[nelts, v_add_grad_b](c_rest)
+        vectorize[nelts, vectorized_add_grad_b](c_rest)
 
 
 struct Mul(BinaryArithmetic):
@@ -136,13 +136,13 @@ struct Mul(BinaryArithmetic):
         let offset_c = c_index * c_rest
 
         @parameter
-        fn v_mul[nelts: Int](i: Int):
+        fn vectorized_mul[nelts: Int](i: Int):
             c.store_data[nelts](
                 offset_c + i,
                 a.load_data[nelts](offset_a + i) * b.load_data[nelts](offset_b + i),
             )
 
-        vectorize[nelts, v_mul](c_rest)
+        vectorize[nelts, vectorized_mul](c_rest)
 
     @parameter
     @staticmethod
@@ -162,14 +162,14 @@ struct Mul(BinaryArithmetic):
         let offset_c = c_index * c_rest
 
         @parameter
-        fn v_mul_grad_a[nelts: Int](i: Int):
+        fn vectorized_mul_grad_a[nelts: Int](i: Int):
             a.store_grad[nelts](
                 offset_a + i,
                 a.load_grad[nelts](offset_a + i)
                 + b.load_data[nelts](offset_b + i) * c.load_grad[nelts](offset_c + i),
             )
 
-        vectorize[nelts, v_mul_grad_a](c_rest)
+        vectorize[nelts, vectorized_mul_grad_a](c_rest)
 
     @parameter
     @staticmethod
@@ -182,14 +182,14 @@ struct Mul(BinaryArithmetic):
         let offset_c = c_index * c_rest
 
         @parameter
-        fn v_mul_grad_b[nelts: Int](i: Int):
+        fn vectorized_mul_grad_b[nelts: Int](i: Int):
             b.store_grad[nelts](
                 offset_b + i,
                 b.load_grad[nelts](offset_b + i)
                 + a.load_data[nelts](offset_a + i) * c.load_grad[nelts](offset_c + i),
             )
 
-        vectorize[nelts, v_mul_grad_b](c_rest)
+        vectorize[nelts, vectorized_mul_grad_b](c_rest)
 
 
 struct Sub(BinaryArithmetic):
@@ -222,13 +222,13 @@ struct Sub(BinaryArithmetic):
         let offset_c = c_index * c_rest
 
         @parameter
-        fn v_sub[nelts: Int](i: Int):
+        fn vectorized_sub[nelts: Int](i: Int):
             c.store_data[nelts](
                 offset_c + i,
                 a.load_data[nelts](offset_a + i) - b.load_data[nelts](offset_b + i),
             )
 
-        vectorize[nelts, v_sub](c_rest)
+        vectorize[nelts, vectorized_sub](c_rest)
 
     @parameter
     @staticmethod
@@ -248,13 +248,13 @@ struct Sub(BinaryArithmetic):
         let offset_c = c_index * c_rest
 
         @parameter
-        fn v_sub_grad_a[nelts: Int](i: Int):
+        fn vectorized_sub_grad_a[nelts: Int](i: Int):
             a.store_grad[nelts](
                 offset_a + i,
                 a.load_grad[nelts](offset_a + i) + c.load_grad[nelts](offset_c + i),
             )
 
-        vectorize[nelts, v_sub_grad_a](c_rest)
+        vectorize[nelts, vectorized_sub_grad_a](c_rest)
 
     @parameter
     @staticmethod
@@ -267,37 +267,37 @@ struct Sub(BinaryArithmetic):
         let offset_c = c_index * c_rest
 
         @parameter
-        fn v_sub_grad_b[nelts: Int](i: Int):
+        fn vectorized_sub_grad_b[nelts: Int](i: Int):
             b.store_grad[nelts](
                 offset_b + i,
                 b.load_grad[nelts](offset_b + i) - c.load_grad[nelts](offset_c + i),
             )
 
-        vectorize[nelts, v_sub_grad_b](c_rest)
+        vectorize[nelts, vectorized_sub_grad_b](c_rest)
 
 
 struct Div(BinaryArithmetic):
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
-        recursive_broadcast[Self.kernel_div_fw, Self.base_case_div_fw](c, a, b)
+        recursive_broadcast[Self.kernel_divectorized_fw, Self.base_case_divectorized_fw](c, a, b)
 
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
         if not a.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_div_bw_a, Self.base_case_div_bw](c, a, b)
+            recursive_broadcast_bw[Self.kernel_divectorized_bw_a, Self.base_case_divectorized_bw](c, a, b)
         if not b.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_div_bw_b, Self.base_case_div_bw](c, a, b)
+            recursive_broadcast_bw[Self.kernel_divectorized_bw_b, Self.base_case_divectorized_bw](c, a, b)
 
     @parameter
     @staticmethod
-    fn base_case_div_fw(depth: Int, a: Node, b: Node) -> Bool:
+    fn base_case_divectorized_fw(depth: Int, a: Node, b: Node) -> Bool:
         return strides_a(depth, a, b) * shape_a(depth, a, b) == strides_b(
             depth, a, b
         ) * shape_b(depth, a, b)
 
     @parameter
     @staticmethod
-    fn kernel_div_fw(
+    fn kernel_divectorized_fw(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
         let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
@@ -306,24 +306,24 @@ struct Div(BinaryArithmetic):
         let offset_c = c_index * c_rest
 
         @parameter
-        fn v_div[nelts: Int](i: Int):
+        fn vectorized_div[nelts: Int](i: Int):
             c.store_data[nelts](
                 offset_c + i,
                 a.load_data[nelts](offset_a + i) / b.load_data[nelts](offset_b + i),
             )
 
-        vectorize[nelts, v_div](c_rest)
+        vectorize[nelts, vectorized_div](c_rest)
 
     @parameter
     @staticmethod
-    fn base_case_div_bw(depth: Int, a: Node, b: Node) -> Bool:
+    fn base_case_divectorized_bw(depth: Int, a: Node, b: Node) -> Bool:
         return strides_a(depth, a, b) * shape_a(depth, a, b) == strides_b(
             depth, a, b
         ) * shape_b(depth, a, b)
 
     @parameter
     @staticmethod
-    fn kernel_div_bw_a(
+    fn kernel_divectorized_bw_a(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
         let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
@@ -332,18 +332,18 @@ struct Div(BinaryArithmetic):
         let offset_c = c_index * c_rest
 
         @parameter
-        fn v_div_grad_a[nelts: Int](i: Int):
+        fn vectorized_divectorized_grad_a[nelts: Int](i: Int):
             a.store_grad[nelts](
                 offset_a + i,
                 a.load_grad[nelts](offset_a + i)
                 + c.load_grad[nelts](offset_c + i) / b.load_data[nelts](offset_b + i),
             )
 
-        vectorize[nelts, v_div_grad_a](c_rest)
+        vectorize[nelts, vectorized_divectorized_grad_a](c_rest)
 
     @parameter
     @staticmethod
-    fn kernel_div_bw_b(
+    fn kernel_divectorized_bw_b(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
         let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
@@ -352,7 +352,7 @@ struct Div(BinaryArithmetic):
         let offset_c = c_index * c_rest
 
         @parameter
-        fn v_div_grad_b[nelts: Int](i: Int):
+        fn vectorized_divectorized_grad_b[nelts: Int](i: Int):
             b.store_grad[nelts](
                 offset_b + i,
                 b.load_grad[nelts](offset_b + i)
@@ -361,7 +361,7 @@ struct Div(BinaryArithmetic):
                 / (b.load_data[nelts](offset_b + i)) ** 2,
             )
 
-        vectorize[nelts, v_div_grad_b](c_rest)
+        vectorize[nelts, vectorized_divectorized_grad_b](c_rest)
 
 
 struct MMul(BinaryArithmetic):
@@ -525,13 +525,13 @@ struct Pow(BinaryArithmetic):
         let offset_c = c_index * c_rest
 
         @parameter
-        fn v_pow[nelts: Int](i: Int):
+        fn vectorized_pow[nelts: Int](i: Int):
             c.store_data[nelts](
                 offset_c + i,
                 a.load_data[nelts](offset_a + i) ** b.load_data[nelts](offset_b + i),
             )
 
-        vectorize[nelts, v_pow](c_rest)
+        vectorize[nelts, vectorized_pow](c_rest)
 
     @parameter
     @staticmethod
@@ -551,7 +551,7 @@ struct Pow(BinaryArithmetic):
         let offset_c = c_index * c_rest
 
         @parameter
-        fn v_pow_bw_a[nelts: Int](i: Int):
+        fn vectorized_pow_bw_a[nelts: Int](i: Int):
             a.store_grad[nelts](
                 offset_a + i,
                 a.load_grad[nelts](offset_a + i)
@@ -563,7 +563,7 @@ struct Pow(BinaryArithmetic):
                 * c.load_grad[nelts](offset_c + i),
             )
 
-        vectorize[nelts, v_pow_bw_a](c_rest)
+        vectorize[nelts, vectorized_pow_bw_a](c_rest)
 
     @parameter
     @staticmethod
@@ -576,7 +576,7 @@ struct Pow(BinaryArithmetic):
         let offset_c = c_index * c_rest
 
         @parameter
-        fn v_pow_bw_b[nelts: Int](i: Int):
+        fn vectorized_pow_bw_b[nelts: Int](i: Int):
             b.store_grad[nelts](
                 offset_b + i,
                 b.load_grad[nelts](offset_b + i)
@@ -585,4 +585,4 @@ struct Pow(BinaryArithmetic):
                 * c.load_grad[nelts](offset_c + i),
             )
 
-        vectorize[nelts, v_pow_bw_b](c_rest)
+        vectorize[nelts, vectorized_pow_bw_b](c_rest)
