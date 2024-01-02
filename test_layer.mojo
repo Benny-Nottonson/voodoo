@@ -8,8 +8,8 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
 
 
 fn main() raises:
-    let input_layer = Layer[type="dense", in_neurons=1, out_neurons=64, activation="relu"]()
-    let dense_layer = Layer[type="dense", in_neurons=64, out_neurons=64, activation="relu"]()
+    let input_layer = Layer[type="dense", in_neurons=1, out_neurons=64, activation="elu"]()
+    let dense_layer = Layer[type="leaky_relu", in_neurons=64, out_neurons=64]()
     let output_layer = Layer[type="dense", in_neurons=64, out_neurons=1]()
 
     var avg_loss: Float32 = 0.0
