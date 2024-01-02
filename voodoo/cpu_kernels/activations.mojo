@@ -24,7 +24,7 @@ struct Elu(Activation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter
-        fn v_fw[_nelts: Int](i: Int):
+        fn vectorized_fw[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             node.store_data[_nelts](
                 i,
@@ -32,12 +32,12 @@ struct Elu(Activation):
                 + (x <= 0.0).cast[DType_F32]() * (exp(x) - 1.0),
             )
 
-        vectorize[nelts, v_fw](node.load_cap())
+        vectorize[nelts, vectorized_fw](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
-        fn v_bw[_nelts: Int](i: Int):
+        fn vectorized_bw[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             parent1.store_grad[_nelts](
                 i,
@@ -46,7 +46,7 @@ struct Elu(Activation):
                 * ((x > 0.0).cast[DType_F32]() + (x <= 0.0).cast[DType_F32]() * exp(x)),
             )
 
-        vectorize[nelts, v_bw](node.load_cap())
+        vectorize[nelts, vectorized_bw](node.load_cap())
 
 
 struct Exp(Activation):
@@ -55,23 +55,23 @@ struct Exp(Activation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter
-        fn v_exp[_nelts: Int](i: Int):
+        fn vectorized_exp[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             node.store_data[_nelts](i, exp(x))
 
-        vectorize[nelts, v_exp](node.load_cap())
+        vectorize[nelts, vectorized_exp](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
-        fn v_exp_bw[_nelts: Int](i: Int):
+        fn vectorized_exp_bw[_nelts: Int](i: Int):
             let f_x = node.load_data[_nelts](i)
             parent1.store_grad[_nelts](
                 i,
                 parent1.load_grad[_nelts](i) + node.load_grad[_nelts](i) * f_x,
             )
 
-        vectorize[nelts, v_exp_bw](node.load_cap())
+        vectorize[nelts, vectorized_exp_bw](node.load_cap())
 
 
 struct Gelu(Activation):
@@ -80,19 +80,19 @@ struct Gelu(Activation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter
-        fn v_gelu[_nelts: Int](i: Int):
+        fn vectorized_gelu[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             node.store_data[_nelts](
                 i,
                 0.5 * x * (1.0 + erf(x / 1.4142135623730951)),
             )
 
-        vectorize[nelts, v_gelu](node.load_cap())
+        vectorize[nelts, vectorized_gelu](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
-        fn v_gelu_bw[_nelts: Int](i: Int):
+        fn vectorized_gelu_bw[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             let f_x = node.load_data[_nelts](i)
             node.store_grad[_nelts](
@@ -105,7 +105,7 @@ struct Gelu(Activation):
                 ),
             )
 
-        vectorize[nelts, v_gelu_bw](node.load_cap())
+        vectorize[nelts, vectorized_gelu_bw](node.load_cap())
 
 
 struct HardSigmoid(Activation):
@@ -114,7 +114,7 @@ struct HardSigmoid(Activation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter
-        fn v_h_sig[_nelts: Int](i: Int):
+        fn vectorized_h_sig[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             node.store_data[_nelts](
                 i,
@@ -124,12 +124,12 @@ struct HardSigmoid(Activation):
                 * (0.2 * x + 0.5),
             )
 
-        vectorize[nelts, v_h_sig](node.load_cap())
+        vectorize[nelts, vectorized_h_sig](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
-        fn v_h_sig_bw[_nelts: Int](i: Int):
+        fn vectorized_h_sig_bw[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             parent1.store_grad[_nelts](
                 i,
@@ -140,7 +140,7 @@ struct HardSigmoid(Activation):
                 * 0.2,
             )
 
-        vectorize[nelts, v_h_sig_bw](node.load_cap())
+        vectorize[nelts, vectorized_h_sig_bw](node.load_cap())
 
 
 struct Linear(Activation):
@@ -149,22 +149,22 @@ struct Linear(Activation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter
-        fn v_linear[_nelts: Int](i: Int):
+        fn vectorized_linear[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             node.store_data[_nelts](i, x)
 
-        vectorize[nelts, v_linear](node.load_cap())
+        vectorize[nelts, vectorized_linear](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
-        fn v_linear_bw[_nelts: Int](i: Int):
+        fn vectorized_linear_bw[_nelts: Int](i: Int):
             parent1.store_grad[_nelts](
                 i,
                 parent1.load_grad[_nelts](i) + node.load_grad[_nelts](i),
             )
 
-        vectorize[nelts, v_linear_bw](node.load_cap())
+        vectorize[nelts, vectorized_linear_bw](node.load_cap())
 
 
 struct Mish(Activation):
@@ -173,19 +173,19 @@ struct Mish(Activation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter
-        fn v_mish[_nelts: Int](i: Int):
+        fn vectorized_mish[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             node.store_data[_nelts](
                 i,
                 x * tanh(log(1.0 + exp(x))),
             )
 
-        vectorize[nelts, v_mish](node.load_cap())
+        vectorize[nelts, vectorized_mish](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
-        fn v_mish_bw[_nelts: Int](i: Int):
+        fn vectorized_mish_bw[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             let f_x = node.load_data[_nelts](i)
             node.store_grad[_nelts](
@@ -198,7 +198,7 @@ struct Mish(Activation):
                 ),
             )
 
-        vectorize[nelts, v_mish_bw](node.load_cap())
+        vectorize[nelts, vectorized_mish_bw](node.load_cap())
 
 
 struct ReLu(Activation):
@@ -207,19 +207,19 @@ struct ReLu(Activation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter
-        fn v_relu[_nelts: Int](i: Int):
+        fn vectorized_relu[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             node.store_data[_nelts](
                 i,
                 (x > 0.0).cast[DType_F32]() * x,
             )
 
-        vectorize[nelts, v_relu](node.load_cap())
+        vectorize[nelts, vectorized_relu](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
-        fn v_relu_bw[_nelts: Int](i: Int):
+        fn vectorized_relu_bw[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             parent1.store_grad[_nelts](
                 i,
@@ -227,7 +227,7 @@ struct ReLu(Activation):
                 + node.load_grad[_nelts](i) * (x > 0.0).cast[DType_F32](),
             )
 
-        vectorize[nelts, v_relu_bw](node.load_cap())
+        vectorize[nelts, vectorized_relu_bw](node.load_cap())
 
 
 struct Selu(Activation):
@@ -236,7 +236,7 @@ struct Selu(Activation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter
-        fn v_selu[_nelts: Int](i: Int):
+        fn vectorized_selu[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             node.store_data[_nelts](
                 i,
@@ -247,12 +247,12 @@ struct Selu(Activation):
                 * (exp(x) - 1.0),
             )
 
-        vectorize[nelts, v_selu](node.load_cap())
+        vectorize[nelts, vectorized_selu](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
-        fn v_selu_bw[_nelts: Int](i: Int):
+        fn vectorized_selu_bw[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             node.store_grad[_nelts](
                 i,
@@ -264,7 +264,7 @@ struct Selu(Activation):
                 ),
             )
 
-        vectorize[nelts, v_selu_bw](node.load_cap())
+        vectorize[nelts, vectorized_selu_bw](node.load_cap())
 
 
 struct Sigmoid(Activation):
@@ -273,16 +273,16 @@ struct Sigmoid(Activation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter
-        fn v_sig[_nelts: Int](i: Int):
+        fn vectorized_sig[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             node.store_data[_nelts](i, 1.0 / (1.0 + exp(-x)))
 
-        vectorize[nelts, v_sig](node.load_cap())
+        vectorize[nelts, vectorized_sig](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
-        fn v_sig_bw[_nelts: Int](i: Int):
+        fn vectorized_sig_bw[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             node.store_grad[_nelts](
                 i,
@@ -290,7 +290,7 @@ struct Sigmoid(Activation):
                 + node.load_grad[_nelts](i) * (exp(x) / (exp(x) + 1.0) ** 2),
             )
 
-        vectorize[nelts, v_sig_bw](node.load_cap())
+        vectorize[nelts, vectorized_sig_bw](node.load_cap())
 
 
 struct Softmax(Activation):
@@ -305,27 +305,27 @@ struct Softmax(Activation):
             var max_el: Float32 = 0.0
 
             @parameter
-            fn v_max[nelts: Int](i: Int):
+            fn vectorized_max[nelts: Int](i: Int):
                 max_el = max(max_el, parent1.load_data[nelts](offset + i).reduce_max())
 
-            vectorize[nelts, v_max](N)
+            vectorize[nelts, vectorized_max](N)
             var sum: Float32 = 0.0
 
             @parameter
-            fn v_exp[nelts: Int](i: Int):
+            fn vectorized_exp[nelts: Int](i: Int):
                 let temp = exp(parent1.load_data[nelts](offset + i) - max_el)
                 node.store_data[nelts](offset + i, temp)
                 sum += temp.reduce_add()
 
-            vectorize[nelts, v_exp](N)
+            vectorize[nelts, vectorized_exp](N)
 
             @parameter
-            fn v_div[nelts: Int](i: Int):
+            fn vectorized_div[nelts: Int](i: Int):
                 node.store_data[nelts](
                     offset + i, node.load_data[nelts](offset + i) / sum
                 )
 
-            vectorize[nelts, v_div](N)
+            vectorize[nelts, vectorized_div](N)
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
@@ -335,11 +335,11 @@ struct Softmax(Activation):
             let offset = s * N
 
             @parameter
-            fn v_softmax_bw_outer[nelts: Int](j: Int):
+            fn vectorized_softmax_bw_outer[nelts: Int](j: Int):
                 var grad: Float32 = 0.0
 
                 @parameter
-                fn v_softmax_bw[nelts: Int](i: Int):
+                fn vectorized_softmax_bw[nelts: Int](i: Int):
                     if i == j:
                         grad += (
                             node.load_grad[nelts](offset + i)
@@ -354,12 +354,12 @@ struct Softmax(Activation):
                             * -1
                         ).reduce_add()
 
-                vectorize[nelts, v_softmax_bw](N)
+                vectorize[nelts, vectorized_softmax_bw](N)
                 parent1.store_grad[nelts](
                     offset + j, parent1.load_grad[nelts](offset + j) + grad
                 )
 
-            vectorize[nelts, v_softmax_bw_outer](N)
+            vectorize[nelts, vectorized_softmax_bw_outer](N)
 
 
 struct Softplus(Activation):
@@ -368,16 +368,16 @@ struct Softplus(Activation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter
-        fn v_softplus[_nelts: Int](i: Int):
+        fn vectorized_softplus[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             node.store_data[_nelts](i, log(1.0 + exp(x)))
 
-        vectorize[nelts, v_softplus](node.load_cap())
+        vectorize[nelts, vectorized_softplus](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
-        fn v_softplus_bw[_nelts: Int](i: Int):
+        fn vectorized_softplus_bw[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             node.store_grad[_nelts](
                 i,
@@ -385,7 +385,7 @@ struct Softplus(Activation):
                 + node.load_grad[_nelts](i) * (exp(x) / (1.0 + exp(x))),
             )
 
-        vectorize[nelts, v_softplus_bw](node.load_cap())
+        vectorize[nelts, vectorized_softplus_bw](node.load_cap())
 
 
 struct Softsign(Activation):
@@ -394,19 +394,19 @@ struct Softsign(Activation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter
-        fn v_softsign[_nelts: Int](i: Int):
+        fn vectorized_softsign[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             node.store_data[_nelts](
                 i,
                 x / (1.0 + abs(x)),
             )
 
-        vectorize[nelts, v_softsign](node.load_cap())
+        vectorize[nelts, vectorized_softsign](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
-        fn v_softsign_bw[_nelts: Int](i: Int):
+        fn vectorized_softsign_bw[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             let f_x = node.load_data[_nelts](i)
             node.store_grad[_nelts](
@@ -414,7 +414,7 @@ struct Softsign(Activation):
                 parent1.load_grad[_nelts](i) + node.load_grad[_nelts](i) * f_x**2 / x,
             )
 
-        vectorize[nelts, v_softsign_bw](node.load_cap())
+        vectorize[nelts, vectorized_softsign_bw](node.load_cap())
 
 
 struct Swish(Activation):
@@ -423,19 +423,19 @@ struct Swish(Activation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter
-        fn v_swish[_nelts: Int](i: Int):
+        fn vectorized_swish[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             node.store_data[_nelts](
                 i,
                 x / (1.0 + exp(-x)),
             )
 
-        vectorize[nelts, v_swish](node.load_cap())
+        vectorize[nelts, vectorized_swish](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
-        fn v_swish_bw[_nelts: Int](i: Int):
+        fn vectorized_swish_bw[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             let f_x = node.load_data[_nelts](i)
             node.store_grad[_nelts](
@@ -447,7 +447,7 @@ struct Swish(Activation):
                 * (1 + exp(-x) + exp(-x) * x),
             )
 
-        vectorize[nelts, v_swish_bw](node.load_cap())
+        vectorize[nelts, vectorized_swish_bw](node.load_cap())
 
 
 struct Tanh(Activation):
@@ -456,16 +456,16 @@ struct Tanh(Activation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter
-        fn v_tanh[_nelts: Int](i: Int):
+        fn vectorized_tanh[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             node.store_data[_nelts](i, tanh(x))
 
-        vectorize[nelts, v_tanh](node.load_cap())
+        vectorize[nelts, vectorized_tanh](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
-        fn v_tanh_bw[_nelts: Int](i: Int):
+        fn vectorized_tanh_bw[_nelts: Int](i: Int):
             let f_x = node.load_data[_nelts](i)
             parent1.store_grad[_nelts](
                 i,
@@ -473,7 +473,7 @@ struct Tanh(Activation):
                 + node.load_grad[_nelts](i) * (1.0 - f_x**2),
             )
 
-        vectorize[nelts, v_tanh_bw](node.load_cap())
+        vectorize[nelts, vectorized_tanh_bw](node.load_cap())
 
 
 struct LeakyReLu(Activation):
@@ -482,7 +482,7 @@ struct LeakyReLu(Activation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter
-        fn v_leaky_relu[_nelts: Int](i: Int):
+        fn vectorized_leaky_relu[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             let alpha = node.other_params_ptr.load().data.load().load() / 1000000.0
             node.store_data[_nelts](
@@ -491,12 +491,12 @@ struct LeakyReLu(Activation):
                 + (x <= 0.0).cast[DType_F32]() * alpha * x,
             )
 
-        vectorize[nelts, v_leaky_relu](node.load_cap())
+        vectorize[nelts, vectorized_leaky_relu](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
-        fn v_leaky_relu_bw[_nelts: Int](i: Int):
+        fn vectorized_leaky_relu_bw[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
             let alpha = node.other_params_ptr.load().data.load().load() / 1000000.0
             parent1.store_grad[_nelts](
@@ -506,4 +506,4 @@ struct LeakyReLu(Activation):
                 * ((x > 0.0).cast[DType_F32]() + (x <= 0.0).cast[DType_F32]() * alpha),
             )
 
-        vectorize[nelts, v_leaky_relu_bw](node.load_cap())
+        vectorize[nelts, vectorized_leaky_relu_bw](node.load_cap())
