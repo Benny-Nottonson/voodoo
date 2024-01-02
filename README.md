@@ -22,28 +22,19 @@
 
 ## Table Of Contents
 
-* [About the Project](#about-the-project)
+* [Example Usage](#example-usage)
 * [Built With](#built-with)
-* [Getting Started](#getting-started)
 * [Roadmap](#roadmap)
 * [Contributing](#contributing)
 * [License](#license)
 * [Authors](#authors)
-* [Acknowledgements](#acknowledgements)
 
-## About The Project
-* Heavily built on top of Mojo
-* Uses Kernel and base structures from [Infermo](https://github.com/TilliFe/Infermo)
-
-### Completed Structs
-* [Activation](https://github.com/Benny-Nottonson/voodoo/wiki/Activation-Functions)
-* [Initialization](https://github.com/Benny-Nottonson/voodoo/wiki/Initialization-Functions)
-* [Loss](https://github.com/Benny-Nottonson/voodoo/wiki/Loss-Functions)
+## Example Usage
+![voodoo_example](https://github.com/Benny-Nottonson/voodoo/assets/112336374/e0a6cf12-5690-43f2-ad67-d7a191f02c3e)
 
 ## Built With
 
-[Mojo](https://github.com/modularml/mojo)
-[Infermo](https://github.com/TilliFe/Infermo)
+* [Mojo](https://github.com/modularml/mojo)
 
 ## Roadmap
 
