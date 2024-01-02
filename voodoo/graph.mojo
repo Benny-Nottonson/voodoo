@@ -946,7 +946,11 @@ struct Graph:
         if a.load().shape_ptr.load().load(
             a.load().num_dims_ptr.load() - 1
         ) != b.load().shape_ptr.load().load(b.load().num_dims_ptr.load() - 2):
-            raise "Shapes don't fit for matrix multiplication"
+            raise "Shapes don't fit for matrix multiplication. Got shapes: " + str(
+                a.load().shape_ptr.load().load(a.load().num_dims_ptr.load() - 1)
+            ) + " " + str(
+                b.load().shape_ptr.load().load(b.load().num_dims_ptr.load() - 2)
+            )
         let other_params = Vector[Int]()
         return self.node(
             shape, False, False, checkpoint, operator_id, other_params, a, b
@@ -965,7 +969,7 @@ struct Graph:
 
         let out_channels = b.load().shape_ptr.load().load(0)
         if in_channels != b.load().shape_ptr.load().load(1):
-            raise "Error (at conv_2d): number of channels must be equal in the input and the kernels. Got sizes: " + str(
+            raise "Channels don't fit for 2D Convolution. Got channels: " + str(
                 in_channels
             ) + " " + str(b.load().shape_ptr.load().load(1))
         let kernel_width = b.load().shape_ptr.load().load(2)
