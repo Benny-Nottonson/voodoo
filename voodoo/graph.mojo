@@ -869,16 +869,6 @@ struct Graph:
 
                 vectorize[nelts, v_adam_update](node.load_cap())
 
-    fn function_general[
-        operator_id: Int
-    ](self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        let checkpoint = False
-        let shape = parent1_ptr.load().shape_ptr.load().copy()
-        let other_params = Vector[Int]()
-        return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
-        )
-
     fn copy(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
         let operator_id = copy_code
         let checkpoint = False
@@ -886,51 +876,6 @@ struct Graph:
         let other_params = Vector[Int]()
         return self.node(
             shape, True, False, checkpoint, operator_id, other_params, parent1_ptr
-        )
-
-    fn add(self, a: Pointer[Node], b: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = add_code
-        let checkpoint = False
-        let shape = get_broadcasted_shape_for_ew_op(a, b)
-        let other_params = Vector[Int]()
-        return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, a, b
-        )
-
-    fn sub(self, a: Pointer[Node], b: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = sub_code
-        let checkpoint = False
-        let shape = get_broadcasted_shape_for_ew_op(a, b)
-        let other_params = Vector[Int]()
-        return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, a, b
-        )
-
-    fn mul(self, a: Pointer[Node], b: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = mul_code
-        let checkpoint = False
-        let shape = get_broadcasted_shape_for_ew_op(a, b)
-        let other_params = Vector[Int]()
-        return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, a, b
-        )
-
-    fn div(self, a: Pointer[Node], b: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = div_code
-        let checkpoint = False
-        let shape = get_broadcasted_shape_for_ew_op(a, b)
-        let other_params = Vector[Int]()
-        return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, a, b
-        )
-
-    fn pow(self, a: Pointer[Node], b: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = pow_code
-        let checkpoint = False
-        let shape = get_broadcasted_shape_for_ew_op(a, b)
-        let other_params = Vector[Int]()
-        return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, a, b
         )
 
     fn mmul(self, a: Pointer[Node], b: Pointer[Node]) raises -> Pointer[Node]:
@@ -1068,6 +1013,26 @@ struct Graph:
         let other_params = Vector[Int]()
         return self.node(
             shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
+        )
+
+    fn function_general[
+        operator_id: Int
+    ](self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
+        let checkpoint = False
+        let shape = parent1_ptr.load().shape_ptr.load().copy()
+        let other_params = Vector[Int]()
+        return self.node(
+            shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
+        )
+
+    fn arithmetic_general[
+        operator_id: Int
+    ](self, a: Pointer[Node], b: Pointer[Node]) raises -> Pointer[Node]:
+        let checkpoint = False
+        let shape = get_broadcasted_shape_for_ew_op(a, b)
+        let other_params = Vector[Int]()
+        return self.node(
+            shape, False, False, checkpoint, operator_id, other_params, a, b
         )
 
     fn activation_general[

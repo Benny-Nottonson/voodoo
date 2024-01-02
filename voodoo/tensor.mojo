@@ -59,7 +59,9 @@ struct Tensor:
             self.node_ptr = node_ptr
             try:
                 if is_static:
-                    let node_p = graph.node(shape, True, is_single, False, -1, other_params)
+                    let node_p = graph.node(
+                        shape, True, is_single, False, -1, other_params
+                    )
                     node_ptr.store(node_p)
                 elif init_graph and init_node:
                     let node_p = graph.node(
@@ -296,9 +298,9 @@ struct Tensor:
         )
         return new_tensor
 
-    fn dropout[dropout_rate: Float32, noise_shape: DynamicVector[Int]](
-        self
-    ) raises -> Tensor:
+    fn dropout[
+        dropout_rate: Float32, noise_shape: DynamicVector[Int]
+    ](self) raises -> Tensor:
         let new_tensor = self.load_tensor_for_unary_op()
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()
@@ -312,7 +314,7 @@ struct Tensor:
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()
             .load()
-            .add(self.node_ptr.load(), other.node_ptr.load())
+            .arithmetic_general[add_code](self.node_ptr.load(), other.node_ptr.load())
         )
         return new_tensor
 
@@ -321,7 +323,7 @@ struct Tensor:
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()
             .load()
-            .sub(self.node_ptr.load(), other.node_ptr.load())
+            .arithmetic_general[sub_code](self.node_ptr.load(), other.node_ptr.load())
         )
         return new_tensor
 
@@ -330,7 +332,7 @@ struct Tensor:
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()
             .load()
-            .mul(self.node_ptr.load(), other.node_ptr.load())
+            .arithmetic_general[mul_code](self.node_ptr.load(), other.node_ptr.load())
         )
         return new_tensor
 
@@ -339,7 +341,7 @@ struct Tensor:
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()
             .load()
-            .div(self.node_ptr.load(), other.node_ptr.load())
+            .arithmetic_general[div_code](self.node_ptr.load(), other.node_ptr.load())
         )
         return new_tensor
 
@@ -348,7 +350,7 @@ struct Tensor:
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()
             .load()
-            .pow(self.node_ptr.load(), other.node_ptr.load())
+            .arithmetic_general[pow_code](self.node_ptr.load(), other.node_ptr.load())
         )
         return new_tensor
 
@@ -392,35 +394,35 @@ struct Tensor:
         self.node_ptr.store(
             self.graph_ptr.load()
             .load()
-            .add(self.node_ptr.load(), other.node_ptr.load())
+            .arithmetic_general[add_code](self.node_ptr.load(), other.node_ptr.load())
         )
 
     fn __isub__(self, other: Tensor) raises:
         self.node_ptr.store(
             self.graph_ptr.load()
             .load()
-            .sub(self.node_ptr.load(), other.node_ptr.load())
+            .arithmetic_general[sub_code](self.node_ptr.load(), other.node_ptr.load())
         )
 
     fn __imul__(self, other: Tensor) raises:
         self.node_ptr.store(
             self.graph_ptr.load()
             .load()
-            .mul(self.node_ptr.load(), other.node_ptr.load())
+            .arithmetic_general[mul_code](self.node_ptr.load(), other.node_ptr.load())
         )
 
     fn __itruediv__(self, other: Tensor) raises:
         self.node_ptr.store(
             self.graph_ptr.load()
             .load()
-            .div(self.node_ptr.load(), other.node_ptr.load())
+            .arithmetic_general[div_code](self.node_ptr.load(), other.node_ptr.load())
         )
 
     fn __ipow__(self, other: Tensor) raises:
         self.node_ptr.store(
             self.graph_ptr.load()
             .load()
-            .pow(self.node_ptr.load(), other.node_ptr.load())
+            .arithmetic_general[pow_code](self.node_ptr.load(), other.node_ptr.load())
         )
 
     fn __imatmul__(self, other: Tensor) raises:
@@ -533,7 +535,7 @@ struct Tensor:
             new_tensor.graph_ptr.load().load().reshape(self.node_ptr.load(), shape)
         )
         return new_tensor
-    
+
     fn flatten(self) raises -> Tensor:
         let new_tensor = self.load_tensor_for_unary_op()
         let shape = Vector[Int]()

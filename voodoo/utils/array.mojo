@@ -39,6 +39,10 @@ struct Vector[type: AnyRegType]:
         self.data.load().store(self.len.load(), elem)
         self.len.store(self.len.load() + 1)
 
+    fn push_back_return(self, elem: type) -> type:
+        self.push_back(elem)
+        return self
+
     fn pop_back(self) -> type:
         self.len.store(self.len.load() - 1)
         let tmp = self.data.load().load(self.len.load())
