@@ -13,13 +13,13 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
 
 
 fn main() raises:
-    let W1 = Tensor(shape(1, 64)).initialize["he_normal"]().requires_grad()
-    let W2 = Tensor(shape(64, 64)).initialize["he_normal"]().requires_grad()
-    let W3 = Tensor(shape(64, 1)).initialize["he_normal"]().requires_grad()
+    let W1 = Tensor(shape(1, 64)).initialize["he_normal"]()
+    let W2 = Tensor(shape(64, 64)).initialize["he_normal"]()
+    let W3 = Tensor(shape(64, 1)).initialize["he_normal"]()
 
-    let b1 = Tensor(shape(64)).initialize["he_normal"]().requires_grad()
-    let b2 = Tensor(shape(64)).initialize["he_normal"]().requires_grad()
-    let b3 = Tensor(shape(1)).initialize["he_normal"]().requires_grad()
+    let b1 = Tensor(shape(64)).initialize["he_normal"]()
+    let b2 = Tensor(shape(64)).initialize["he_normal"]()
+    let b3 = Tensor(shape(1)).initialize["he_normal"]()
 
     var avg_loss: Float32 = 0.0
     let every = 1000
@@ -40,6 +40,9 @@ fn main() raises:
             true_vals[i] = math.sin(15.0 * input[i])
 
         avg_loss += loss.forward_static()[0]
+        loss.backward()
+        loss.optimize["sgd", 0.01]()
+
         if epoch % every == 0:
             print(
                 "Epoch:",
@@ -51,8 +54,5 @@ fn main() raises:
                 "s",
             )
             avg_loss = 0.0
-
-        loss.backward()
-        loss.optimize["sgd", 0.01]()
 
     print("Total Time: ", nanoseconds_to_seconds(now() - initial_start), "s")

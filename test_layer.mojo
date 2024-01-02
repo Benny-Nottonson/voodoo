@@ -9,7 +9,7 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
 
 fn main() raises:
     let input_layer = Layer[type="leaky_relu", in_neurons=1, out_neurons=64]()
-    let dense_layer = Layer[type="leaky_relu", in_neurons=64, out_neurons=64, activation="relu"]()
+    let dense_layer = Layer[type="dense", in_neurons=64, out_neurons=64, activation="relu"]()
     let output_layer = Layer[type="dense", in_neurons=64, out_neurons=1]()
 
     var avg_loss: Float32 = 0.0
@@ -32,6 +32,9 @@ fn main() raises:
             true_vals[i] = math.sin(15.0 * input[i])
 
         avg_loss += loss.forward_static()[0]
+        loss.backward()
+        loss.optimize["sgd", 0.01]()
+
         if epoch % every == 0:
             print(
                 "Epoch:",
@@ -43,8 +46,5 @@ fn main() raises:
                 "s",
             )
             avg_loss = 0.0
-
-        loss.backward()
-        loss.optimize["adam", 0.01]()
 
     print("Total Time: ", nanoseconds_to_seconds(now() - initial_start), "s")

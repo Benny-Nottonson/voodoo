@@ -1,4 +1,4 @@
-from math import abs, log, max, sqrt
+from math import sqrt
 from algorithm import vectorize
 
 from voodoo import Node, Vector
