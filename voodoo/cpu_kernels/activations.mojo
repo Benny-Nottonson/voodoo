@@ -1,11 +1,7 @@
-from math import abs, pow, exp, log, tanh, max, erf
+from math import abs, exp, log, tanh, max, erf
 from algorithm import vectorize
-
 from voodoo import Node
-
-alias DType_F32 = DType.float32
-alias nelts = simdwidthof[DType_F32]()
-alias epsilon = 1e-8
+from .shared import DType_F32, nelts
 
 
 trait Activation:

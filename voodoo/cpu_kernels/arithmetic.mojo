@@ -13,12 +13,8 @@ from math import (
     sinh,
 )
 from algorithm import vectorize
-
-
 from voodoo import Node
-
-alias DType_F32 = DType.float32
-alias nelts = simdwidthof[DType_F32]()
+from .shared import DType_F32, nelts
 
 
 trait UnaryArithmetic:

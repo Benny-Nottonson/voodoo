@@ -1,5 +1,4 @@
 from math import max, log
-from sys.param_env import env_get_int
 from algorithm import vectorize, parallelize
 from voodoo.utils import (
     shape_a,
@@ -9,12 +8,8 @@ from voodoo.utils import (
     recursive_broadcast,
     recursive_broadcast_bw,
 )
-
 from voodoo import Node
-
-alias DType_F32 = DType.float32
-alias nelts = simdwidthof[DType_F32]()
-alias workers = env_get_int["WORKERS", 0]()
+from .shared import DType_F32, nelts, workers
 
 
 trait BinaryArithmetic:

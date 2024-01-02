@@ -1,11 +1,7 @@
 from math import sqrt
 from algorithm import vectorize
-
 from voodoo import Node, Vector
-
-alias DType_F32 = DType.float32
-alias nelts = simdwidthof[DType_F32]()
-alias epsilon = 1e-8
+from .shared import DType_F32, nelts
 
 
 trait Optimizer:

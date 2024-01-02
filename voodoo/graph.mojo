@@ -6,12 +6,13 @@ from .node import Node
 from .utils import Vector, get_broadcasted_shape_for_ew_op
 from .utils.shape import shape
 
-from .cpu_kernels.general import *
+from .cpu_kernels.operations import *
+from .cpu_kernels.binary_operations import *
+from .cpu_kernels.arithmetic import *
+from .cpu_kernels.binary_arithmetic import *
 from .cpu_kernels.activations import *
 from .cpu_kernels.losses import *
 from .cpu_kernels.optimizers import *
-from .cpu_kernels.unary_arithmetic import *
-from .cpu_kernels.binary_arithmetic import *
 
 alias VectorF32 = DTypePointer[DType.float32]
 alias VectorInt = Vector[Int]
@@ -105,8 +106,8 @@ struct Graph:
         kernels.store(bwsqrt_code, op_tuple("bwsqrt", Sqrt.bw, _b, _v, _r))
         kernels.store(abs_code, op_tuple("abs", Abs.fw, _b, _v, _r))
         kernels.store(bwabs_code, op_tuple("bwabs", Abs.bw, _b, _v, _r))
-        kernels.store(copy_code, op_tuple("copy", fw_copy, _b, _v, _r))
-        kernels.store(bwcopy_code, op_tuple("bwcopy", bw_copy, _b, _v, _r))
+        kernels.store(copy_code, op_tuple("copy", Copy.fw, _b, _v, _r))
+        kernels.store(bwcopy_code, op_tuple("bwcopy", Copy.bw, _b, _v, _r))
         kernels.store(add_code, op_tuple("add", _v, Add.fw, _v, _r))
         kernels.store(bwadd_code, op_tuple("bwadd", _v, Add.bw, _v, _r))
         kernels.store(sub_code, op_tuple("sub", _v, Sub.fw, _v, _r))
@@ -119,16 +120,16 @@ struct Graph:
         kernels.store(bwpow_code, op_tuple("bwpow", _v, Pow.bw, _v, _r))
         kernels.store(mmul_code, op_tuple("mmul", _v, MMul.fw, _v, _r))
         kernels.store(bwmmul_code, op_tuple("bwmmul", _v, MMul.bw, _v, _r))
-        kernels.store(reshape_code, op_tuple("reshape", fw_reshape, _b, _v, _r))
-        kernels.store(bwreshape_code, op_tuple("bwreshape", bw_reshape, _b, _v, _r))
-        kernels.store(transp_code, op_tuple("transp", fw_transp, _b, _v, _r))
-        kernels.store(bwtransp_code, op_tuple("bwtransp", bw_transp, _b, _v, _r))
-        kernels.store(sum_code, op_tuple("sum", fw_sum, _b, _v, _r))
-        kernels.store(bwsum_code, op_tuple("bwsum", bw_sum, _b, _v, _r))
-        kernels.store(conv2d_code, op_tuple("conv2d", _v, conv_2d, _v, _r))
-        kernels.store(bwconv2d_code, op_tuple("bwconv2d", _v, bw_conv_2d, _v, _r))
-        kernels.store(mpool2dd_code, op_tuple("mpool2dd", max_pool_2d, _b, _v, _r))
-        kernels.store(bwmpool2d_code, op_tuple("bwmpool2d", bw_max_pool_2d, _b, _v, _r))
+        kernels.store(reshape_code, op_tuple("reshape", Reshape.fw, _b, _v, _r))
+        kernels.store(bwreshape_code, op_tuple("bwreshape", Reshape.bw, _b, _v, _r))
+        kernels.store(transp_code, op_tuple("transp", Transpose.fw, _b, _v, _r))
+        kernels.store(bwtransp_code, op_tuple("bwtransp", Transpose.bw, _b, _v, _r))
+        kernels.store(sum_code, op_tuple("sum", Sum.fw, _b, _v, _r))
+        kernels.store(bwsum_code, op_tuple("bwsum", Sum.bw, _b, _v, _r))
+        kernels.store(conv2d_code, op_tuple("conv2d", _v, Conv2D.fw, _v, _r))
+        kernels.store(bwconv2d_code, op_tuple("bwconv2d", _v, Conv2D.bw, _v, _r))
+        kernels.store(mpool2dd_code, op_tuple("mpool2dd", MaxPool2D.fw, _b, _v, _r))
+        kernels.store(bwmpool2d_code, op_tuple("bwmpool2d", MaxPool2D.bw, _b, _v, _r))
         kernels.store(elu_code, op_tuple("elu", Elu.fw, _b, _v, _r))
         kernels.store(bwelu_code, op_tuple("bwelu", Elu.bw, _b, _v, _r))
         kernels.store(exp_code, op_tuple("exp", Exp.fw, _b, _v, _r))
@@ -173,8 +174,8 @@ struct Graph:
         kernels.store(bwcce_code, op_tuple("bwcce", _v, CCE.bw, _v, _r))
         kernels.store(cfce_code, op_tuple("cfce", _v, CFCE.fw, _v, _r))
         kernels.store(bwcfce_code, op_tuple("bwcfce", _v, CFCE.bw, _v, _r))
-        kernels.store(dropout_code, op_tuple("dropout", fw_dropout, _b, _v, _r))
-        kernels.store(bwdropout_code, op_tuple("bwdropout", bw_dropout, _b, _v, _r))
+        kernels.store(dropout_code, op_tuple("dropout", Dropout.fw, _b, _v, _r))
+        kernels.store(bwdropout_code, op_tuple("bwdropout", Dropout.bw, _b, _v, _r))
 
         let forward_order = Pointer[VectorInt].alloc(1)
         forward_order.store(VectorInt())
