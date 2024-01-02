@@ -784,7 +784,7 @@ struct Graph:
             _ = self.backward_recursive(curr_node_ptr)
 
     fn optimizer_step[type: String, learning_rate: Float32](self) raises:
-        # TODO: Split into seperate functions to avoid if statements
+        # TODO: Switch to Dict
         @parameter
         if type == "sgd":
             self.optimizer_step_sgd[learning_rate]()
@@ -965,7 +965,9 @@ struct Graph:
 
         let out_channels = b.load().shape_ptr.load().load(0)
         if in_channels != b.load().shape_ptr.load().load(1):
-            raise "Error (at conv_2d): number of channels must be equal in the input and the kernels"
+            raise "Error (at conv_2d): number of channels must be equal in the input and the kernels. Got sizes: " + str(
+                in_channels
+            ) + " " + str(b.load().shape_ptr.load().load(1))
         let kernel_width = b.load().shape_ptr.load().load(2)
         let kernel_height = b.load().shape_ptr.load().load(3)
 

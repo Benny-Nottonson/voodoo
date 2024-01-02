@@ -3,8 +3,6 @@ from .code_lookup import get_activation_code
 from .utils.shape import shape
 
 
-# TODO: There has to be a better way for this
-# TODO: UseBias default changes depending on layer, see above
 struct Layer[
     type: String,
     in_neurons: Int,
@@ -55,7 +53,7 @@ struct Layer[
         elif type == "flatten":
             self.init_flatten(in_neurons, out_neurons)
         else:
-            raise Error("Invalid layer type: " + type)
+            raise "Invalid layer type: " + type
 
     fn forward(self, x: Tensor) raises -> Tensor:
         @parameter
@@ -72,7 +70,7 @@ struct Layer[
         elif type == "flatten":
             return self.forward_flatten(x)
         else:
-            raise Error("Invalid layer type: " + type)
+            raise "Invalid layer type: " + type
 
     # Dense
     fn init_dense(

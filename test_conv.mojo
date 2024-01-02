@@ -9,14 +9,12 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
 
 fn main() raises:
     # TODO: Fix this (Specifically channels and the different types of layers that can be implemented)
-    let input_layer = Layer[type="conv2d", activation="relu", kernel_width=3, kernel_height=3](1, 64)
-    let hidden_layer = Layer[type="conv2d", activation="relu", kernel_width=3, kernel_height=3](64, 64)
-    let pool = Layer[type="maxpool2d", pool_size=2](64, 64)
-    let dropout = Layer[type="dropout", dropout_rate=0.25](64, 64)
-    let flatten = Layer[type="flatten"](64, 64)
-    let dense = Layer[type="dense", activation="relu"](64, 128)
-    let dropout2 = Layer[type="dropout", dropout_rate=0.5](128, 128)
-    let output_layer = Layer[type="dense", activation="softmax"](128, 10)
+    let pool = Layer[type="maxpool2d", in_neurons=1, out_neurons=1, pool_size=2, stride=2, padding=0]()
+    let dropout = Layer[type="dropout", in_neurons=1, out_neurons=1, dropout_rate=0.5]()
+    let flatten = Layer[type="flatten", in_neurons=1, out_neurons=1]()
+    let dense = Layer[type="dense", in_neurons=1, out_neurons=1, activation="relu"]()
+    let dropout2 = Layer[type="dropout", in_neurons=1, out_neurons=1, dropout_rate=0.5]()
+    let output_layer = Layer[type="dense", in_neurons=1, out_neurons=1, activation="softmax"]()
 
     var avg_loss: Float32 = 0.0
     let every = 1000
@@ -25,9 +23,7 @@ fn main() raises:
     let input = Tensor(shape(1, 28, 28))
     let true_vals = Tensor(shape(10))
     
-    var x = input_layer.forward(input)
-    x = hidden_layer.forward(x)
-    x = pool.forward(x)
+    var x = pool.forward(input)
     x = dropout.forward(x)
     x = flatten.forward(x)
     x = dense.forward(x)

@@ -45,6 +45,6 @@ fn main() raises:
             avg_loss = 0.0
 
         loss.backward()
-        loss.optimize["adam", 0.001]()
+        loss.optimize["adam", 0.01]()
 
     print("Total Time: ", nanoseconds_to_seconds(now() - initial_start), "s")

@@ -26,48 +26,6 @@ struct Vector[type: AnyRegType]:
 
         return Vector[type] {data: data, len: len, cap: cap}
 
-    fn __init__(*nums: type) -> Self:
-        let _len = len(nums)
-        var _cap = _len
-        if _len < 8:
-            _cap = 8
-        let data_ptr = Pointer[type].alloc(_cap)
-        memset_zero(data_ptr, _cap)
-        let data = Pointer[Pointer[type]].alloc(1)
-        data.store(data_ptr)
-
-        let cap = Pointer[Int].alloc(1)
-        cap.store(_cap)
-
-        let len = Pointer[Int].alloc(1)
-        len.store(_len)
-
-        for i in range(_len):
-            data_ptr.store(i, nums[i])
-
-        return Vector[type] {data: data, len: len, cap: cap}
-
-    fn __init__(d: DynamicVector[Int]) -> Self:
-        let _len = len(d)
-        var _cap = _len
-        if _len < 8:
-            _cap = 8
-        let data_ptr = Pointer[type].alloc(_cap)
-        memset_zero(data_ptr, _cap)
-        let data = Pointer[Pointer[type]].alloc(1)
-        data.store(data_ptr)
-
-        let cap = Pointer[Int].alloc(1)
-        cap.store(_cap)
-
-        let len = Pointer[Int].alloc(1)
-        len.store(_len)
-
-        for i in range(_len):
-            data_ptr.store(i, d[i])
-
-        return Vector[type] {data: data, len: len, cap: cap}
-
     fn push_back(self, elem: type):
         if self.len.load() == self.cap.load():
             let old_data = self.data.load()

@@ -264,7 +264,7 @@ struct Node:
         elif initialization_function == "grad_fill_incr":
             self.grad_fill_incr()
         else:
-            raise Error("Invalid initialization function")
+            raise "Invalid initialization function " + initialization_function
 
     # TODO: Extract to a different module, potentially as cpu instructions
     fn glorot_normal(self):
