@@ -539,7 +539,12 @@ struct Tensor:
     fn flatten(self) raises -> Tensor:
         let new_tensor = self.load_tensor_for_unary_op()
         let shape = Vector[Int]()
-        shape.push_back(self.capacity())
+        shape.push_back(self.node_ptr.load().load().shape_ptr.load().load(0))
+        shape.push_back(
+            self.node_ptr.load().load().shape_ptr.load().load(1)
+            * self.node_ptr.load().load().shape_ptr.load().load(2)
+            * self.node_ptr.load().load().shape_ptr.load().load(3)
+        )
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load().load().reshape(self.node_ptr.load(), shape)
         )

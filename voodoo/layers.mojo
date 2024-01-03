@@ -5,8 +5,8 @@ from .utils.shape import shape
 
 struct Layer[
     type: String,
-    in_neurons: Int,
-    out_neurons: Int,
+    in_neurons: Int = 1,
+    out_neurons: Int = 1,
     # Dense Parameters
     activation: String = "none",
     use_bias: Bool = True,
@@ -18,6 +18,10 @@ struct Layer[
     bias_std: Float32 = 0.05,
     # TODO: Add regularizers, constraints
     # Conv2d Parameters
+    in_batches: Int = 1,
+    in_channels: Int = 1,
+    in_height: Int = 1,
+    in_width: Int = 1,
     padding: Int = 0,
     stride: Int = 1,
     kernel_width: Int = 3,
@@ -103,8 +107,8 @@ struct Layer[
     ) raises:
         self.W = Tensor(
             shape(
-                self.out_neurons,
-                self.in_neurons,
+                self.in_batches,
+                self.in_channels,
                 self.kernel_width,
                 self.kernel_height,
             )
@@ -112,11 +116,21 @@ struct Layer[
 
         @parameter
         if self.use_bias:
-            self.bias = Tensor(shape(self.out_neurons, 1, 1)).initialize[
+            self.bias = Tensor(shape(
+            self.in_batches,
+            self.in_channels,
+            (self.in_width - kernel_width + 2 * padding) // stride + 1,
+            (self.in_height - kernel_height + 2 * padding) // stride + 1,
+        )).initialize[
                 bias_initializer, bias_mean, bias_std
             ]()
         else:
-            self.bias = Tensor(shape(self.out_neurons, 1, 1)).initialize["zeros", 0.0]()
+            self.bias = Tensor(shape(
+            self.in_batches,
+            self.in_channels,
+            (self.in_width - kernel_width + 2 * padding) // stride + 1,
+            (self.in_height - kernel_height + 2 * padding) // stride + 1,
+        )).initialize["zeros", 0.0]()
 
     fn forward_conv2d(self, x: Tensor) raises -> Tensor:
         return conv_2d(
@@ -124,7 +138,7 @@ struct Layer[
             self.W,
             self.stride,
             self.padding,
-        ) + (self.bias * Float32(self.use_bias)) 
+        ) + (self.bias * Float32(self.use_bias))
 
     # TODO: Test
     # Maxpool2d
@@ -134,7 +148,7 @@ struct Layer[
         self.W = self.bias = Tensor(shape(0))
 
     fn forward_maxpool2d(self, x: Tensor) raises -> Tensor:
-        return x.max_pool_2d(self.pool_size, self.pool_size)
+        return x.max_pool_2d(self.pool_size, self.pool_size, self.stride, self.padding)
 
     # TODO: Test
     # Flatten
