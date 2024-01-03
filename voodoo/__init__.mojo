@@ -34,3 +34,5 @@ from .code_lookup import (
 )
 
 from .operator_ids import *
+
+from .utils.shape import shape

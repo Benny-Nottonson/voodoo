@@ -26,16 +26,15 @@ struct Dense[
 
         @parameter
         if self.use_bias:
-            self.bias = Tensor(shape(out_neurons)).initialize[
-                bias_initializer, bias_mean, bias_std
-            ]()
+            self.bias = Tensor(shape(out_neurons)).initialize[bias_initializer, bias_mean, bias_std]()
         else:
-            self.bias = Tensor(shape(out_neurons)).initialize["zeros", 0.0]()
+            self.bias = Tensor(shape(out_neurons))
 
     fn forward(self, x: Tensor) raises -> Tensor:
+        let computed = x @ self.W + (self.bias * Float32(self.use_bias))
+
         @parameter
-        if self.activation == "none":
-            return x @ self.W + (self.bias * Float32(self.use_bias))
-        return (x @ self.W + (self.bias * Float32(self.use_bias))).compute_activation[
-            get_activation_code[activation]()
-        ]()
+        if self.activation != "none":
+            return computed.compute_activation[get_activation_code[activation]()]()
+
+        return computed
