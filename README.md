@@ -1,7 +1,7 @@
 <br/>
 <p align="center">
   <a href="https://github.com/Benny-Nottonson/voodoo">
-    <img src="https://github.com/Benny-Nottonson/voodoo/assets/112336374/02c74541-ebb2-4e41-8d89-efc6577471e1" alt="Logo" width="961" height="200">
+    <img src="https://github.com/Benny-Nottonson/voodoo/assets/112336374/02c74541-ebb2-4e41-8d89-efc6577471e1">
   </a>
   <h3 align="center">Voodoo</h3>
 
