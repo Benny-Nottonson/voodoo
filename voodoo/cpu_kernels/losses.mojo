@@ -21,7 +21,7 @@ struct MAE(Loss):
 
         @parameter
         fn vectorized_mae[nelts: Int](i: Int):
-            let error = abs(y_pred.load_data[nelts](i) - y_true.load_data[nelts](i))
+            let error = abs(y_true.load_data[nelts](i) - y_pred.load_data[nelts](i))
             sum += error.reduce_add()
 
         vectorize[nelts, vectorized_mae](y_pred.load_cap())
