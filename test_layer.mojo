@@ -23,7 +23,7 @@ fn main() raises:
     var x = input_layer.forward(input)
     x = dense_layer.forward(x)
     x = output_layer.forward(x)
-    let loss = x.compute_loss[get_loss_code["mse"]()](true_vals)
+    let loss = x.compute_loss["mse"](true_vals)
 
     let initial_start = now()
     for epoch in range(1, num_epochs + 1):

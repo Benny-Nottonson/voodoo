@@ -28,10 +28,10 @@ fn main() raises:
     let input = Tensor(shape(32, 1)).initialize["random_uniform", 0, 1]()
     let true_vals = Tensor(shape(32, 1))
 
-    var x = (input @ W1 + b1).compute_activation[get_activation_code["relu"]()]()
-    x = (x @ W2 + b2).compute_activation[get_activation_code["relu"]()]()
+    var x = (input @ W1 + b1).compute_activation["relu"]()
+    x = (x @ W2 + b2).compute_activation["relu"]()
     x = x @ W3 + b3
-    let loss = x.compute_loss[get_loss_code["mse"]()](true_vals)
+    let loss = x.compute_loss["mse"](true_vals)
 
     let initial_start = now()
     for epoch in range(1, num_epochs + 1):
