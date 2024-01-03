@@ -1,7 +1,7 @@
 from math import sqrt
 from algorithm import vectorize
 from voodoo import Node, Vector
-from .shared import DType_F32, nelts
+from .constants import DType_F32, nelts
 
 
 trait Optimizer:

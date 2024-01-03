@@ -9,7 +9,7 @@ from voodoo.utils import (
     recursive_broadcast_bw,
 )
 from voodoo import Node
-from .shared import DType_F32, nelts, workers
+from .constants import DType_F32, nelts, workers
 
 
 trait BinaryArithmetic:

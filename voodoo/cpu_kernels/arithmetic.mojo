@@ -14,7 +14,7 @@ from math import (
 )
 from algorithm import vectorize
 from voodoo import Node
-from .shared import DType_F32, nelts
+from .constants import DType_F32, nelts
 
 
 trait UnaryArithmetic:
