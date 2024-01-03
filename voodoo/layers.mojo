@@ -133,12 +133,18 @@ struct Layer[
         )).initialize["zeros", 0.0]()
 
     fn forward_conv2d(self, x: Tensor) raises -> Tensor:
-        return conv_2d(
+        let res = conv_2d(
             x,
             self.W,
             self.stride,
             self.padding,
-        ) + (self.bias * Float32(self.use_bias))
+        )
+
+        @parameter
+        if self.use_bias:
+            return res + self.bias
+
+        return res
 
     # TODO: Test
     # Maxpool2d
