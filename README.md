@@ -26,7 +26,8 @@
 * [Authors](#authors)
 
 ## Example Usage
-![voodoo_example](https://github.com/Benny-Nottonson/voodoo/assets/112336374/e0a6cf12-5690-43f2-ad67-d7a191f02c3e)
+![Voodoo Example](https://github.com/Benny-Nottonson/voodoo/assets/112336374/1d723168-0648-4b85-9a68-0e2b38438ec6)
+
 
 ## Built With
 
