@@ -6,9 +6,13 @@ from .node import Node
 from .utils import Vector, get_broadcasted_shape_for_ew_op
 from .utils.shape import shape
 
-from .cpu_kernels.general import *
+from .cpu_kernels.operations import *
+from .cpu_kernels.binary_operations import *
+from .cpu_kernels.arithmetic import *
+from .cpu_kernels.binary_arithmetic import *
 from .cpu_kernels.activations import *
 from .cpu_kernels.losses import *
+from .cpu_kernels.optimizers import *
 
 alias VectorF32 = DTypePointer[DType.float32]
 alias VectorInt = Vector[Int]
@@ -76,102 +80,102 @@ struct Graph:
         last_node_id.store(-1)
 
         let kernels = Pointer[op_tuple].alloc(120)
-        kernels.store(cos_code, op_tuple("cos", fw_cos, _b, _v, _r))
-        kernels.store(bwcos_code, op_tuple("bwcos", bw_cos, _b, _v, _r))
-        kernels.store(sin_code, op_tuple("sin", fw_sin, _b, _v, _r))
-        kernels.store(bwsin_code, op_tuple("bwsin", bw_sin, _b, _v, _r))
-        kernels.store(tan_code, op_tuple("tan", fw_tan, _b, _v, _r))
-        kernels.store(bwtan_code, op_tuple("bwtan", bw_tan, _b, _v, _r))
-        kernels.store(acos_code, op_tuple("acos", fw_acos, _b, _v, _r))
-        kernels.store(bwacos_code, op_tuple("bwacos", bw_acos, _b, _v, _r))
-        kernels.store(asin_code, op_tuple("asin", fw_asin, _b, _v, _r))
-        kernels.store(bwasin_code, op_tuple("bwasin", bw_asin, _b, _v, _r))
-        kernels.store(atan_code, op_tuple("atan", fw_atan, _b, _v, _r))
-        kernels.store(bwatan_code, op_tuple("bwatan", bw_atan, _b, _v, _r))
-        kernels.store(cosh_code, op_tuple("cosh", fw_cosh, _b, _v, _r))
-        kernels.store(bwcos_code, op_tuple("bwcosh", bw_cosh, _b, _v, _r))
-        kernels.store(sinh_code, op_tuple("sinh", fw_sinh, _b, _v, _r))
-        kernels.store(bwsin_code, op_tuple("bwsinh", bw_sinh, _b, _v, _r))
-        kernels.store(log_code, op_tuple("log", fw_log, _b, _v, _r))
-        kernels.store(bwlog_code, op_tuple("bwlog", bw_log, _b, _v, _r))
-        kernels.store(log2_code, op_tuple("log2", fw_log2, _b, _v, _r))
-        kernels.store(bwlog2_code, op_tuple("bwlog", bw_log2, _b, _v, _r))
-        kernels.store(exp2_code, op_tuple("exp2", fw_exp2, _b, _v, _r))
-        kernels.store(bwexp2_code, op_tuple("bwexp2", bw_exp2, _b, _v, _r))
-        kernels.store(sqrt_code, op_tuple("sqrt", fw_sqrt, _b, _v, _r))
-        kernels.store(bwsqrt_code, op_tuple("bwsqrt", bw_sqrt, _b, _v, _r))
-        kernels.store(abs_code, op_tuple("abs", fw_abs, _b, _v, _r))
-        kernels.store(bwabs_code, op_tuple("bwabs", bw_abs, _b, _v, _r))
-        kernels.store(copy_code, op_tuple("copy", fw_copy, _b, _v, _r))
-        kernels.store(bwcopy_code, op_tuple("bwcopy", bw_copy, _b, _v, _r))
-        kernels.store(add_code, op_tuple("add", _v, fw_add, _v, _r))
-        kernels.store(bwadd_code, op_tuple("bwadd", _v, bw_add, _v, _r))
-        kernels.store(sub_code, op_tuple("sub", _v, fw_sub, _v, _r))
-        kernels.store(bwsub_code, op_tuple("bwsub", _v, bw_sub, _v, _r))
-        kernels.store(mul_code, op_tuple("mul", _v, fw_mul, _v, _r))
-        kernels.store(bwmul_code, op_tuple("bwmul", _v, bw_mul, _v, _r))
-        kernels.store(div_code, op_tuple("div", _v, fw_div, _v, _r))
-        kernels.store(bwdiv_code, op_tuple("bwdiv", _v, bw_div, _v, _r))
-        kernels.store(pow_code, op_tuple("pow", _v, fw_pow, _v, _r))
-        kernels.store(bwpow_code, op_tuple("bwpow", _v, bw_pow, _v, _r))
-        kernels.store(mmul_code, op_tuple("mmul", _v, fw_mmul, _v, _r))
-        kernels.store(bwmmul_code, op_tuple("bwmmul", _v, bw_mmul, _v, _r))
-        kernels.store(reshape_code, op_tuple("reshape", fw_reshape, _b, _v, _r))
-        kernels.store(bwreshape_code, op_tuple("bwreshape", bw_reshape, _b, _v, _r))
-        kernels.store(transp_code, op_tuple("transp", fw_transp, _b, _v, _r))
-        kernels.store(bwtransp_code, op_tuple("bwtransp", bw_transp, _b, _v, _r))
-        kernels.store(sum_code, op_tuple("sum", fw_sum, _b, _v, _r))
-        kernels.store(bwsum_code, op_tuple("bwsum", bw_sum, _b, _v, _r))
-        kernels.store(conv2d_code, op_tuple("conv2d", _v, conv_2d, _v, _r))
-        kernels.store(bwconv2d_code, op_tuple("bwconv2d", _v, bw_conv_2d, _v, _r))
-        kernels.store(mpool2dd_code, op_tuple("mpool2dd", max_pool_2d, _b, _v, _r))
-        kernels.store(bwmpool2d_code, op_tuple("bwmpool2d", bw_max_pool_2d, _b, _v, _r))
-        kernels.store(elu_code, op_tuple("elu", fw_elu, _b, _v, _r))
-        kernels.store(bwelu_code, op_tuple("bwelu", bw_elu, _b, _v, _r))
-        kernels.store(exp_code, op_tuple("exp", fw_exp, _b, _v, _r))
-        kernels.store(bwexp_code, op_tuple("bwexp", bw_exp, _b, _v, _r))
-        kernels.store(gelu_code, op_tuple("gelu", fw_gelu, _b, _v, _r))
-        kernels.store(bwgelu_code, op_tuple("bwgelu", bw_gelu, _b, _v, _r))
-        kernels.store(h_sig_code, op_tuple("h_sig", fw_h_sig, _b, _v, _r))
-        kernels.store(bwh_sig_code, op_tuple("bwh_sig", bw_h_sig, _b, _v, _r))
-        kernels.store(linear_code, op_tuple("linear", fw_linear, _b, _v, _r))
-        kernels.store(bwlinear_code, op_tuple("bwlinear", bw_linear, _b, _v, _r))
-        kernels.store(mish_code, op_tuple("mish", fw_mish, _b, _v, _r))
-        kernels.store(bwmish_code, op_tuple("bwmish", bw_mish, _b, _v, _r))
-        kernels.store(relu_code, op_tuple("relu", fw_relu, _b, _v, _r))
-        kernels.store(bwrelu_code, op_tuple("bwrelu", bw_relu, _b, _v, _r))
-        kernels.store(selu_code, op_tuple("selu", fw_selu, _b, _v, _r))
-        kernels.store(bwselu_code, op_tuple("bwselu", bw_selu, _b, _v, _r))
-        kernels.store(sig_code, op_tuple("sig", fw_sig, _b, _v, _r))
-        kernels.store(bwsig_code, op_tuple("bwsig", bw_sig, _b, _v, _r))
-        kernels.store(softmax_code, op_tuple("softmax", fw_softmax, _b, _v, _r))
-        kernels.store(bwsoftmax_code, op_tuple("bwsoftmax", bw_softmax, _b, _v, _r))
-        kernels.store(softplus_code, op_tuple("softplus", fw_softplus, _b, _v, _r))
-        kernels.store(bwsoftplus_code, op_tuple("bwsoftplus", bw_softplus, _b, _v, _r))
-        kernels.store(softsign_code, op_tuple("softsign", fw_softsign, _b, _v, _r))
-        kernels.store(bwsoftsign_code, op_tuple("bwsoftsign", bw_softsign, _b, _v, _r))
-        kernels.store(swish_code, op_tuple("swish", fw_swish, _b, _v, _r))
-        kernels.store(bwswish_code, op_tuple("bwswish", bw_swish, _b, _v, _r))
-        kernels.store(tanh_code, op_tuple("tanh", fw_tanh, _b, _v, _r))
-        kernels.store(bwtanh_code, op_tuple("bwtanh", bw_tanh, _b, _v, _r))
-        kernels.store(lrelu_code, op_tuple("fwlrelu", fw_leaky_relu, _b, _v, _r))
-        kernels.store(bwlrelu_code, op_tuple("bwlrelu", bw_leaky_relu, _b, _v, _r))
-        kernels.store(mae_code, op_tuple("mae", _v, fw_mae, _v, _r))
-        kernels.store(bwmae_code, op_tuple("bwmae", _v, bw_mae, _v, _r))
-        kernels.store(mape_code, op_tuple("mape", _v, fw_mape, _v, _r))
-        kernels.store(bwmape_code, op_tuple("bwmape", _v, bw_mape, _v, _r))
-        kernels.store(mse_code, op_tuple("mse", _v, fw_mse, _v, _r))
-        kernels.store(bwmse_code, op_tuple("bwmse", _v, bw_mse, _v, _r))
-        kernels.store(msle_code, op_tuple("msle", _v, fw_msle, _v, _r))
-        kernels.store(bwmsle_code, op_tuple("bwmsle", _v, bw_msle, _v, _r))
-        kernels.store(bce_code, op_tuple("bce", _v, fw_bce, _v, _r))
-        kernels.store(bwbce_code, op_tuple("bwbce", _v, bw_bce, _v, _r))
-        kernels.store(cce_code, op_tuple("cce", _v, fw_cce, _v, _r))
-        kernels.store(bwcce_code, op_tuple("bwcce", _v, bw_cce, _v, _r))
-        kernels.store(cfce_code, op_tuple("cfce", _v, fw_cfce, _v, _r))
-        kernels.store(bwcfce_code, op_tuple("bwcfce", _v, bw_cfce, _v, _r))
-        kernels.store(dropout_code, op_tuple("dropout", fw_dropout, _b, _v, _r))
-        kernels.store(bwdropout_code, op_tuple("bwdropout", bw_dropout, _b, _v, _r))
+        kernels.store(cos_code, op_tuple("cos", Cos.fw, _b, _v, _r))
+        kernels.store(bwcos_code, op_tuple("bwcos", Cos.bw, _b, _v, _r))
+        kernels.store(sin_code, op_tuple("sin", Sin.fw, _b, _v, _r))
+        kernels.store(bwsin_code, op_tuple("bwsin", Sin.bw, _b, _v, _r))
+        kernels.store(tan_code, op_tuple("tan", Tan.fw, _b, _v, _r))
+        kernels.store(bwtan_code, op_tuple("bwtan", Tan.bw, _b, _v, _r))
+        kernels.store(acos_code, op_tuple("acos", Acos.fw, _b, _v, _r))
+        kernels.store(bwacos_code, op_tuple("bwacos", Acos.bw, _b, _v, _r))
+        kernels.store(asin_code, op_tuple("asin", Asin.fw, _b, _v, _r))
+        kernels.store(bwasin_code, op_tuple("bwasin", Asin.bw, _b, _v, _r))
+        kernels.store(atan_code, op_tuple("atan", Atan.fw, _b, _v, _r))
+        kernels.store(bwatan_code, op_tuple("bwatan", Atan.bw, _b, _v, _r))
+        kernels.store(cosh_code, op_tuple("cosh", Cosh.fw, _b, _v, _r))
+        kernels.store(bwcos_code, op_tuple("bwcosh", Cosh.bw, _b, _v, _r))
+        kernels.store(sinh_code, op_tuple("sinh", Sinh.fw, _b, _v, _r))
+        kernels.store(bwsin_code, op_tuple("bwsinh", Sinh.bw, _b, _v, _r))
+        kernels.store(log_code, op_tuple("log", Log.fw, _b, _v, _r))
+        kernels.store(bwlog_code, op_tuple("bwlog", Log.bw, _b, _v, _r))
+        kernels.store(log2_code, op_tuple("log2", Log2.fw, _b, _v, _r))
+        kernels.store(bwlog2_code, op_tuple("bwlog", Log2.bw, _b, _v, _r))
+        kernels.store(exp2_code, op_tuple("exp2", Exp2.fw, _b, _v, _r))
+        kernels.store(bwexp2_code, op_tuple("bwexp2", Exp2.bw, _b, _v, _r))
+        kernels.store(sqrt_code, op_tuple("sqrt", Sqrt.fw, _b, _v, _r))
+        kernels.store(bwsqrt_code, op_tuple("bwsqrt", Sqrt.bw, _b, _v, _r))
+        kernels.store(abs_code, op_tuple("abs", Abs.fw, _b, _v, _r))
+        kernels.store(bwabs_code, op_tuple("bwabs", Abs.bw, _b, _v, _r))
+        kernels.store(copy_code, op_tuple("copy", Copy.fw, _b, _v, _r))
+        kernels.store(bwcopy_code, op_tuple("bwcopy", Copy.bw, _b, _v, _r))
+        kernels.store(add_code, op_tuple("add", _v, Add.fw, _v, _r))
+        kernels.store(bwadd_code, op_tuple("bwadd", _v, Add.bw, _v, _r))
+        kernels.store(sub_code, op_tuple("sub", _v, Sub.fw, _v, _r))
+        kernels.store(bwsub_code, op_tuple("bwsub", _v, Sub.bw, _v, _r))
+        kernels.store(mul_code, op_tuple("mul", _v, Mul.fw, _v, _r))
+        kernels.store(bwmul_code, op_tuple("bwmul", _v, Mul.bw, _v, _r))
+        kernels.store(div_code, op_tuple("div", _v, Div.fw, _v, _r))
+        kernels.store(bwdiv_code, op_tuple("bwdiv", _v, Div.bw, _v, _r))
+        kernels.store(pow_code, op_tuple("pow", _v, Pow.fw, _v, _r))
+        kernels.store(bwpow_code, op_tuple("bwpow", _v, Pow.bw, _v, _r))
+        kernels.store(mmul_code, op_tuple("mmul", _v, MMul.fw, _v, _r))
+        kernels.store(bwmmul_code, op_tuple("bwmmul", _v, MMul.bw, _v, _r))
+        kernels.store(reshape_code, op_tuple("reshape", Reshape.fw, _b, _v, _r))
+        kernels.store(bwreshape_code, op_tuple("bwreshape", Reshape.bw, _b, _v, _r))
+        kernels.store(transp_code, op_tuple("transp", Transpose.fw, _b, _v, _r))
+        kernels.store(bwtransp_code, op_tuple("bwtransp", Transpose.bw, _b, _v, _r))
+        kernels.store(sum_code, op_tuple("sum", Sum.fw, _b, _v, _r))
+        kernels.store(bwsum_code, op_tuple("bwsum", Sum.bw, _b, _v, _r))
+        kernels.store(conv2d_code, op_tuple("conv2d", _v, Conv2D.fw, _v, _r))
+        kernels.store(bwconv2d_code, op_tuple("bwconv2d", _v, Conv2D.bw, _v, _r))
+        kernels.store(mpool2dd_code, op_tuple("mpool2dd", MaxPool2D.fw, _b, _v, _r))
+        kernels.store(bwmpool2d_code, op_tuple("bwmpool2d", MaxPool2D.bw, _b, _v, _r))
+        kernels.store(elu_code, op_tuple("elu", Elu.fw, _b, _v, _r))
+        kernels.store(bwelu_code, op_tuple("bwelu", Elu.bw, _b, _v, _r))
+        kernels.store(exp_code, op_tuple("exp", Exp.fw, _b, _v, _r))
+        kernels.store(bwexp_code, op_tuple("bwexp", Exp.bw, _b, _v, _r))
+        kernels.store(gelu_code, op_tuple("gelu", Gelu.fw, _b, _v, _r))
+        kernels.store(bwgelu_code, op_tuple("bwgelu", Gelu.bw, _b, _v, _r))
+        kernels.store(h_sig_code, op_tuple("h_sig", HardSigmoid.fw, _b, _v, _r))
+        kernels.store(bwh_sig_code, op_tuple("bwh_sig", HardSigmoid.bw, _b, _v, _r))
+        kernels.store(linear_code, op_tuple("linear", Linear.fw, _b, _v, _r))
+        kernels.store(bwlinear_code, op_tuple("bwlinear", Linear.bw, _b, _v, _r))
+        kernels.store(mish_code, op_tuple("mish", Mish.fw, _b, _v, _r))
+        kernels.store(bwmish_code, op_tuple("bwmish", Mish.bw, _b, _v, _r))
+        kernels.store(relu_code, op_tuple("relu", ReLu.fw, _b, _v, _r))
+        kernels.store(bwrelu_code, op_tuple("bwrelu", ReLu.bw, _b, _v, _r))
+        kernels.store(selu_code, op_tuple("selu", Selu.fw, _b, _v, _r))
+        kernels.store(bwselu_code, op_tuple("bwselu", Selu.bw, _b, _v, _r))
+        kernels.store(sig_code, op_tuple("sig", Sigmoid.fw, _b, _v, _r))
+        kernels.store(bwsig_code, op_tuple("bwsig", Sigmoid.bw, _b, _v, _r))
+        kernels.store(softmax_code, op_tuple("softmax", Softmax.fw, _b, _v, _r))
+        kernels.store(bwsoftmax_code, op_tuple("bwsoftmax", Softmax.bw, _b, _v, _r))
+        kernels.store(softplus_code, op_tuple("softplus", Softplus.fw, _b, _v, _r))
+        kernels.store(bwsoftplus_code, op_tuple("bwsoftplus", Softplus.bw, _b, _v, _r))
+        kernels.store(softsign_code, op_tuple("softsign", Softsign.fw, _b, _v, _r))
+        kernels.store(bwsoftsign_code, op_tuple("bwsoftsign", Softsign.bw, _b, _v, _r))
+        kernels.store(swish_code, op_tuple("swish", Swish.fw, _b, _v, _r))
+        kernels.store(bwswish_code, op_tuple("bwswish", Swish.bw, _b, _v, _r))
+        kernels.store(tanh_code, op_tuple("tanh", Tanh.fw, _b, _v, _r))
+        kernels.store(bwtanh_code, op_tuple("bwtanh", Tanh.bw, _b, _v, _r))
+        kernels.store(lrelu_code, op_tuple("fwlrelu", LeakyReLu.fw, _b, _v, _r))
+        kernels.store(bwlrelu_code, op_tuple("bwlrelu", LeakyReLu.bw, _b, _v, _r))
+        kernels.store(mae_code, op_tuple("mae", _v, MAE.fw, _v, _r))
+        kernels.store(bwmae_code, op_tuple("bwmae", _v, MAE.bw, _v, _r))
+        kernels.store(mape_code, op_tuple("mape", _v, MAPE.fw, _v, _r))
+        kernels.store(bwmape_code, op_tuple("bwmape", _v, MAPE.bw, _v, _r))
+        kernels.store(mse_code, op_tuple("mse", _v, MSE.fw, _v, _r))
+        kernels.store(bwmse_code, op_tuple("bwmse", _v, MSE.bw, _v, _r))
+        kernels.store(msle_code, op_tuple("msle", _v, MSLE.fw, _v, _r))
+        kernels.store(bwmsle_code, op_tuple("bwmsle", _v, MSLE.bw, _v, _r))
+        kernels.store(bce_code, op_tuple("bce", _v, BCE.fw, _v, _r))
+        kernels.store(bwbce_code, op_tuple("bwbce", _v, BCE.bw, _v, _r))
+        kernels.store(cce_code, op_tuple("cce", _v, CCE.fw, _v, _r))
+        kernels.store(bwcce_code, op_tuple("bwcce", _v, CCE.bw, _v, _r))
+        kernels.store(cfce_code, op_tuple("cfce", _v, CFCE.fw, _v, _r))
+        kernels.store(bwcfce_code, op_tuple("bwcfce", _v, CFCE.bw, _v, _r))
+        kernels.store(dropout_code, op_tuple("dropout", Dropout.fw, _b, _v, _r))
+        kernels.store(bwdropout_code, op_tuple("bwdropout", Dropout.bw, _b, _v, _r))
 
         let forward_order = Pointer[VectorInt].alloc(1)
         forward_order.store(VectorInt())
@@ -787,87 +791,11 @@ struct Graph:
         # TODO: Switch to Dict
         @parameter
         if type == "sgd":
-            self.optimizer_step_sgd[learning_rate]()
+            SGD.step[learning_rate](self.nodes)
         elif type == "adafactor":
-            self.optimizer_step_adafactor[learning_rate]()
+            Adafactor.step[learning_rate](self.nodes)
         elif type == "adam":
-            self.optimizer_step_adam[learning_rate]()
-
-    fn optimizer_step_sgd[learning_rate: Float32](self) raises:
-        for i in range(self.nodes.load().len.load()):
-            let node = self.nodes.load().load(i).load()
-            if node.requires_grad_ptr.load() and node.grad_computed_ptr.load():
-
-                @parameter
-                fn v_sgd_update[_nelts: Int](i: Int):
-                    node.store_data[_nelts](
-                        i,
-                        node.load_data[_nelts](i)
-                        - node.load_grad[_nelts](i) * learning_rate,
-                    )
-
-                vectorize[nelts, v_sgd_update](node.load_cap())
-
-    fn optimizer_step_adafactor[learning_rate: Float32](self) raises:
-        for i in range(self.nodes.load().len.load()):
-            let node = self.nodes.load().load(i).load()
-            if node.requires_grad_ptr.load() and node.grad_computed_ptr.load():
-
-                @parameter
-                fn v_adafactor_update[_nelts: Int](i: Int):
-                    let grad = node.load_grad[_nelts](i)
-                    let data = node.load_data[_nelts](i)
-                    let grad_sq = grad * grad
-                    let data_sq = data * data
-                    let new_grad_sq = grad_sq + 1e-30
-                    let new_data_sq = data_sq + 1e-30
-                    let decay_rate = 0.8
-                    let lr = learning_rate
-                    let param_scale = 1.0
-                    let grad_scale = 1.0
-                    let old_scale = sqrt(new_data_sq) / sqrt(new_grad_sq)
-                    let new_scale = old_scale * param_scale
-                    let update_scale = old_scale * grad_scale
-                    let new_data = data - lr * grad * update_scale
-                    let new_grad_sq_2 = new_grad_sq * decay_rate + new_data_sq * (
-                        1.0 - decay_rate
-                    )
-                    let new_grad = sqrt(new_grad_sq_2) / param_scale * grad
-                    node.store_data[_nelts](i, new_data)
-                    node.store_grad[_nelts](i, new_grad)
-
-                vectorize[nelts, v_adafactor_update](node.load_cap())
-
-    fn optimizer_step_adam[learning_rate: Float32](self) raises:
-        for i in range(self.nodes.load().len.load()):
-            let node = self.nodes.load().load(i).load()
-
-            if node.requires_grad_ptr.load() and node.grad_computed_ptr.load():
-
-                @parameter
-                fn v_adam_update[_nelts: Int](i: Int):
-                    let grad = node.load_grad[_nelts](i)
-                    let data = node.load_data[_nelts](i)
-                    let grad_sq = grad * grad
-                    let data_sq = data * data
-                    let new_grad_sq = grad_sq + 1e-30
-                    let new_data_sq = data_sq + 1e-30
-                    let decay_rate = 0.8
-                    let lr = learning_rate
-                    let param_scale = 1.0
-                    let grad_scale = 1.0
-                    let old_scale = sqrt(new_data_sq) / sqrt(new_grad_sq)
-                    let new_scale = old_scale * param_scale
-                    let update_scale = old_scale * grad_scale
-                    let new_data = data - lr * grad * update_scale
-                    let new_grad_sq_2 = new_grad_sq * decay_rate + new_data_sq * (
-                        1.0 - decay_rate
-                    )
-                    let new_grad = sqrt(new_grad_sq_2) / param_scale * grad
-                    node.store_data[_nelts](i, new_data)
-                    node.store_grad[_nelts](i, new_grad)
-
-                vectorize[nelts, v_adam_update](node.load_cap())
+            Adam.step[learning_rate](self.nodes)
 
     fn copy(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
         let operator_id = copy_code

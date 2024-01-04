@@ -5,8 +5,8 @@ from .utils.shape import shape
 
 struct Layer[
     type: String,
-    in_neurons: Int,
-    out_neurons: Int,
+    in_neurons: Int = 1,
+    out_neurons: Int = 1,
     # Dense Parameters
     activation: String = "none",
     use_bias: Bool = True,
@@ -18,6 +18,10 @@ struct Layer[
     bias_std: Float32 = 0.05,
     # TODO: Add regularizers, constraints
     # Conv2d Parameters
+    in_batches: Int = 1,
+    in_channels: Int = 1,
+    in_height: Int = 1,
+    in_width: Int = 1,
     padding: Int = 0,
     stride: Int = 1,
     kernel_width: Int = 3,
@@ -41,17 +45,17 @@ struct Layer[
         # TODO: Extract into a dict once supported, since some have the same logic (Dense, LeakyRelu, etc.)
         @parameter
         if type == "dense":
-            self.init_dense(in_neurons, out_neurons)
+            self.init_dense()
         elif type == "conv2d":
-            self.init_conv2d(in_neurons, out_neurons)
+            self.init_conv2d()
         elif type == "leaky_relu":
-            self.init_leaky_relu(in_neurons, out_neurons)
+            self.init_leaky_relu()
         elif type == "dropout":
-            self.init_dropout(in_neurons, out_neurons)
+            self.init_dropout()
         elif type == "maxpool2d":
-            self.init_maxpool2d(in_neurons, out_neurons)
+            self.init_maxpool2d()
         elif type == "flatten":
-            self.init_flatten(in_neurons, out_neurons)
+            self.init_flatten()
         else:
             raise "Invalid layer type: " + type
 
@@ -75,8 +79,6 @@ struct Layer[
     # Dense
     fn init_dense(
         inout self,
-        in_neurons: Int,
-        out_neurons: Int,
     ) raises:
         self.W = Tensor(shape(in_neurons, out_neurons)).initialize[
             weight_initializer, weight_mean, weight_std
@@ -102,13 +104,11 @@ struct Layer[
     # Conv2d
     fn init_conv2d(
         inout self,
-        in_channels: Int,
-        out_channels: Int,
     ) raises:
         self.W = Tensor(
             shape(
-                out_channels,
-                in_channels,
+                self.in_batches,
+                self.in_channels,
                 self.kernel_width,
                 self.kernel_height,
             )
@@ -116,38 +116,50 @@ struct Layer[
 
         @parameter
         if self.use_bias:
-            self.bias = Tensor(shape(out_channels, 1, 1)).initialize[
+            self.bias = Tensor(shape(
+            self.in_batches,
+            self.in_channels,
+            (self.in_width - kernel_width + 2 * padding) // stride + 1,
+            (self.in_height - kernel_height + 2 * padding) // stride + 1,
+        )).initialize[
                 bias_initializer, bias_mean, bias_std
             ]()
         else:
-            self.bias = Tensor(shape(out_channels, 1, 1)).initialize["zeros", 0.0]()
+            self.bias = Tensor(shape(
+            self.in_batches,
+            self.in_channels,
+            (self.in_width - kernel_width + 2 * padding) // stride + 1,
+            (self.in_height - kernel_height + 2 * padding) // stride + 1,
+        )).initialize["zeros", 0.0]()
 
     fn forward_conv2d(self, x: Tensor) raises -> Tensor:
-        return conv_2d(
+        let res = conv_2d(
             x,
             self.W,
             self.stride,
             self.padding,
-        ) + (self.bias * Float32(self.use_bias))
+        )
+
+        @parameter
+        if self.use_bias:
+            return res + self.bias
+
+        return res
 
     # TODO: Test
     # Maxpool2d
     fn init_maxpool2d(
         inout self,
-        in_channels: Int,
-        out_channels: Int,
     ) raises:
         self.W = self.bias = Tensor(shape(0))
 
     fn forward_maxpool2d(self, x: Tensor) raises -> Tensor:
-        return x.max_pool_2d(self.pool_size, self.pool_size)
+        return x.max_pool_2d(self.pool_size, self.pool_size, self.stride, self.padding)
 
     # TODO: Test
     # Flatten
     fn init_flatten(
         inout self,
-        in_channels: Int,
-        out_channels: Int,
     ) raises:
         self.W = self.bias = Tensor(shape(0))
 
@@ -158,8 +170,6 @@ struct Layer[
     # Leaky Relu
     fn init_leaky_relu(
         inout self,
-        in_neurons: Int,
-        out_neurons: Int,
     ) raises:
         self.W = Tensor(shape(in_neurons, out_neurons)).initialize[
             weight_initializer, weight_mean, weight_std
@@ -175,15 +185,13 @@ struct Layer[
 
     fn forward_leaky_relu(self, x: Tensor) raises -> Tensor:
         return (x @ self.W + (self.bias * Float32(self.use_bias))).compute_activation[
-            lrelu_code, self.alpha
+            "lrelu", self.alpha
         ]()
 
     # TODO: Test
     # Dropout
     fn init_dropout(
         inout self,
-        in_neurons: Int,
-        out_neurons: Int,
     ) raises:
         self.W = self.bias = Tensor(shape(0))
 

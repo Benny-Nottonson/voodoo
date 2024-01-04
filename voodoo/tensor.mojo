@@ -539,7 +539,12 @@ struct Tensor:
     fn flatten(self) raises -> Tensor:
         let new_tensor = self.load_tensor_for_unary_op()
         let shape = Vector[Int]()
-        shape.push_back(self.capacity())
+        shape.push_back(self.node_ptr.load().load().shape_ptr.load().load(0))
+        shape.push_back(
+            self.node_ptr.load().load().shape_ptr.load().load(1)
+            * self.node_ptr.load().load().shape_ptr.load().load(2)
+            * self.node_ptr.load().load().shape_ptr.load().load(3)
+        )
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load().load().reshape(self.node_ptr.load(), shape)
         )
@@ -577,6 +582,15 @@ struct Tensor:
         )
         return new_tensor
 
+    fn compute_loss[operator_name: String](self, other: Tensor) raises -> Tensor:
+        let new_tensor = self.load_tensor_for_binary_op(other)
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load()
+            .load()
+            .loss_general[get_loss_code[operator_name]()](self.node_ptr.load(), other.node_ptr.load())
+        )
+        return new_tensor
+
     fn compute_activation[operator_id: Int, arg1: Float32 = 0.0](self) raises -> Tensor:
         let new_tensor = self.load_tensor_for_unary_op()
         new_tensor.node_ptr.store(
@@ -585,6 +599,16 @@ struct Tensor:
             .activation_general[operator_id, arg1](self.node_ptr.load())
         )
         return new_tensor
+
+    fn compute_activation[operator_name: String, arg1: Float32 = 0.0](self) raises -> Tensor:
+        let new_tensor = self.load_tensor_for_unary_op()
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load()
+            .load()
+            .activation_general[get_activation_code[operator_name](), arg1](self.node_ptr.load())
+        )
+        return new_tensor
+
 
 
 fn fuse_graphs(

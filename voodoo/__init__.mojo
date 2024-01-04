@@ -35,4 +35,8 @@ from .code_lookup import (
 
 from .operator_ids import *
 
+from .layers import Layer
+
+from .utils import Vector
+
 from .utils.shape import shape

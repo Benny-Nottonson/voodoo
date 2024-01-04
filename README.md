@@ -3,12 +3,8 @@
   <a href="https://github.com/Benny-Nottonson/voodoo">
     <img src="https://github.com/Benny-Nottonson/voodoo/assets/112336374/47703109-a02d-4c70-8561-49eacf1df8a6" alt="Logo" width="200" height="200">
   </a>
-  <h3 align="center">Voodoo</h3>
 
   <p align="center">
-    Machine Learning in pure Mojo
-    <br/>
-    <br/>
     <a href="https://github.com/Benny-Nottonson/voodoo/wiki"><strong>Explore the docs »</strong></a>
     <br/>
     <br/>
@@ -30,7 +26,8 @@
 * [Authors](#authors)
 
 ## Example Usage
-![voodoo_example](https://github.com/Benny-Nottonson/voodoo/assets/112336374/e0a6cf12-5690-43f2-ad67-d7a191f02c3e)
+![Voodoo Example](https://github.com/Benny-Nottonson/voodoo/assets/112336374/1d723168-0648-4b85-9a68-0e2b38438ec6)
+
 
 ## Built With
 
