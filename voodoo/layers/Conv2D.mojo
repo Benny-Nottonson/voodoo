@@ -45,12 +45,7 @@ struct Conv2D[
                 bias_initializer, bias_mean, bias_std
             ]()
         else:
-            self.bias = Tensor(shape(
-            self.in_batches,
-            self.in_channels,
-            (self.in_width - kernel_size + 2 * padding) // stride + 1,
-            (self.in_height - kernel_size + 2 * padding) // stride + 1,
-        )).initialize["zeros", 0.0]()
+            self.bias = Tensor(shape(0))
 
     fn forward(self, x: Tensor) raises -> Tensor:
         let res = conv_2d(
