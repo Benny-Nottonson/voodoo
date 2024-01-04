@@ -885,7 +885,7 @@ struct Graph:
         other_params.push_back(kernel_height)
 
         let b = self.node(
-            new_shape, True, False, checkpoint, operator_id, other_params, a
+            new_shape, False, False, checkpoint, operator_id, other_params, a
         )
 
         return b

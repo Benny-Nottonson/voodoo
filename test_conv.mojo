@@ -51,3 +51,6 @@ fn main() raises:
     let loss = x.compute_loss[get_loss_code["cce"]()](labels)
     
     loss.print()
+    loss.backward()
+    loss.optimize["sgd", 0.01]()
+    loss.print()
