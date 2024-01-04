@@ -25,7 +25,7 @@ fn main() raises:
     let every = 1000
     let num_epochs = 20000
 
-    let input = Tensor(shape(32, 1)).initialize["random_uniform", 0, 1]()
+    let input = Tensor(shape(32, 1)).initialize["random_uniform", 0, 1]().dynamic()
     let true_vals = Tensor(shape(32, 1))
 
     var x = (input @ W1 + b1).compute_activation["relu"]()

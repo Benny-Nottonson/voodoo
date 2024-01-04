@@ -18,7 +18,7 @@ fn main() raises:
     let every = 1000
     let num_epochs = 20000
 
-    let input = Tensor(shape(32, 1)).initialize["he_normal", 0, 1]()
+    let input = Tensor(shape(32, 1)).initialize["he_normal", 0, 1]().dynamic()
     let true_vals = Tensor(shape(32, 1))
 
     # TODO, make a model struct to encapsulate this, variable n middle layers / total loss

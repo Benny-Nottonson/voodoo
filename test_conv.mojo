@@ -30,7 +30,7 @@ fn main() raises:
     let num_epochs = 10
 
     let labels = Tensor(shape(32, 10))
-    let images = Tensor(shape(32, 1, 28, 28))
+    let images = Tensor(shape(32, 1, 28, 28)).dynamic()
 
     for image in range(0, 32):
         for pixel in range(785):
