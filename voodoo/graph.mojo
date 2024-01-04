@@ -834,38 +834,31 @@ struct Graph:
     ) raises -> Pointer[Node]:
         let a_num_dims = a.load().num_dims_ptr.load()
         let b_num_dims = b.load().num_dims_ptr.load()
-
         let batch_size = a.load().shape_ptr.load().load(0)
         let in_channels = a.load().shape_ptr.load().load(1)
         let width = a.load().shape_ptr.load().load(2)
         let height = a.load().shape_ptr.load().load(3)
-
-        let out_channels = b.load().shape_ptr.load().load(1)
+        let out_channels = b.load().shape_ptr.load().load(0)
         if in_channels != out_channels:
             raise "Channels don't fit for 2D Convolution. Got channels: " + str(
                 in_channels
-            ) + " " + str(b.load().shape_ptr.load().load(1))
-
+            ) + " " + str(out_channels)
         let kernel_width = b.load().shape_ptr.load().load(2)
         let kernel_height = b.load().shape_ptr.load().load(3)
-
         let shape = shape(
             batch_size,
             out_channels,
             (width - kernel_width + 2 * padding) // stride + 1,
             (height - kernel_height + 2 * padding) // stride + 1,
         )
-        
-        let operator_id = conv2d_code
+        let operator_id = 58
         let checkpoint = True
         let other_params = Vector[Int]()
         other_params.push_back(padding)
         other_params.push_back(stride)
-        let c = self.node(
-            shape, False, False, checkpoint, operator_id, other_params, a, b
+        return self.node(
+            shape, True, False, checkpoint, operator_id, other_params, a, b
         )
-
-        return c
 
     fn max_pool_2d(
         self,

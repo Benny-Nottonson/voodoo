@@ -363,7 +363,7 @@ struct Tensor:
         )
         return new_tensor
 
-    fn conv_2d(self, other: Tensor, padding: Int = 0, stride: Int = 1) raises -> Tensor:
+    fn conv_2d(self, other: Tensor, stride: Int, padding: Int) raises -> Tensor:
         let new_tensor = self.load_tensor_for_binary_op(other)
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()

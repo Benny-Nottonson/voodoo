@@ -16,9 +16,9 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
 fn main() raises:
     let d = DataLoader("datasets/mnist/mnist.txt")
 
-    let conv1 = Conv2D[in_width=28, in_height=28, in_batches=32, in_channels=1, kernel_size=5, stride=1, padding=0]()
+    let conv1 = Conv2D[in_channels=1, out_channels=1, kernel_width=5, kernel_height=5, stride=1, padding=0]()
     let max_pool1 = MaxPool2D[pool_size=2, stride=2, padding=0]()
-    let conv2 = Conv2D[in_width=12, in_height=12, in_batches=32, in_channels=1, kernel_size=5, stride=1, padding=0]()
+    let conv2 = Conv2D[in_channels=1, out_channels=1, kernel_width=5, kernel_height=5, stride=1, padding=0]()
     let max_pool2 = MaxPool2D[pool_size=2, stride=2, padding=0]()
     let flatten = Flatten()
     let dense1 = Dense[in_neurons=16, out_neurons=16, activation="relu"]()
@@ -39,7 +39,7 @@ fn main() raises:
                 labels.store((image * 10 + data).to_int(), 1.0)
             else:
                 images.store(image * 784 + pixel - 1, data / 255.0)
-    
+
     var x = conv1.forward(images)
     x = max_pool1.forward(x)
     x = conv2.forward(x)
@@ -51,33 +51,3 @@ fn main() raises:
     let loss = x.compute_loss[get_loss_code["cce"]()](labels)
 
     loss.print()
-    
-    let initial_start = now()
-    for epoch in range(1, num_epochs + 1):
-        let epoch_start = now()
-        
-        for image in range(0, 32):
-            for pixel in range(785):
-                let data = d.data.load(image * 785 + pixel + (epoch - 1) * 32 * 785)
-                if pixel == 0:
-                    labels.store((image * 10 + data).to_int(), 1.0)
-                else:
-                    images.store(image * 784 + pixel - 1, data / 255.0)
-
-        avg_loss += loss.forward_static()[0]
-        loss.backward()
-        loss.optimize["sgd", 0.01]()
-
-        if epoch % every == 0:
-            print(
-                "Epoch:",
-                epoch,
-                " Avg Loss: ",
-                avg_loss / every,
-                " Time: ",
-                nanoseconds_to_seconds(now() - epoch_start),
-                "s",
-            )
-            avg_loss = 0.0
-
-    print("Total Time: ", nanoseconds_to_seconds(now() - initial_start), "s")

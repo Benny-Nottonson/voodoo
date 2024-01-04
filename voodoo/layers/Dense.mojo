@@ -17,7 +17,8 @@ struct Dense[
 ](BaseLayer):
     var W: Tensor
     var bias: Tensor
-
+    
+    # TODO: Might need .requires_grad() for weights and bias
     fn __init__(
         inout self,
     ) raises:
