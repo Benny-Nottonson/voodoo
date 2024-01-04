@@ -35,7 +35,7 @@ from .code_lookup import (
 
 from .operator_ids import *
 
-from .layers import Layer
+from .layers import *
 
 from .utils import Vector
 

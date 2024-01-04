@@ -1,5 +1,7 @@
-from voodoo import Tensor, Layer, sin, get_loss_code, Graph
+from voodoo import Tensor, sin, get_loss_code, Graph
 from voodoo.utils.shape import shape
+from voodoo.layers.LeakyReLu import LeakyReLu
+from voodoo.layers.Dense import Dense
 from time.time import now
 
 
@@ -8,9 +10,9 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
 
 
 fn main() raises:
-    let input_layer = Layer[type="leaky_relu", in_neurons=1, out_neurons=64]()
-    let dense_layer = Layer[type="dense", in_neurons=64, out_neurons=64, activation="relu"]()
-    let output_layer = Layer[type="dense", in_neurons=64, out_neurons=1]()
+    let input_layer = LeakyReLu[in_neurons=1, out_neurons=64]()
+    let dense_layer = Dense[in_neurons=64, out_neurons=64, activation="relu"]()
+    let output_layer = Dense[in_neurons=64, out_neurons=1]()
 
     var avg_loss: Float32 = 0.0
     let every = 1000

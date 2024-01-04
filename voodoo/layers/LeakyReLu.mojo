@@ -34,5 +34,5 @@ struct LeakyReLu[
 
     fn forward(self, x: Tensor) raises -> Tensor:
         return (x @ self.W + (self.bias * Float32(self.use_bias))).compute_activation[
-            lrelu_code, self.alpha
+            "lrelu", self.alpha
         ]()

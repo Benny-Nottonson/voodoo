@@ -840,11 +840,12 @@ struct Graph:
         let width = a.load().shape_ptr.load().load(2)
         let height = a.load().shape_ptr.load().load(3)
 
-        let out_channels = b.load().shape_ptr.load().load(0)
-        if in_channels != b.load().shape_ptr.load().load(1):
+        let out_channels = b.load().shape_ptr.load().load(1)
+        if in_channels != out_channels:
             raise "Channels don't fit for 2D Convolution. Got channels: " + str(
                 in_channels
             ) + " " + str(b.load().shape_ptr.load().load(1))
+
         let kernel_width = b.load().shape_ptr.load().load(2)
         let kernel_height = b.load().shape_ptr.load().load(3)
 
@@ -854,6 +855,7 @@ struct Graph:
             (width - kernel_width + 2 * padding) // stride + 1,
             (height - kernel_height + 2 * padding) // stride + 1,
         )
+        
         let operator_id = conv2d_code
         let checkpoint = True
         let other_params = Vector[Int]()

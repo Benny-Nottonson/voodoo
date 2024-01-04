@@ -1,5 +1,10 @@
-from voodoo import Tensor, Layer, sin, get_loss_code, Graph
+from voodoo import Tensor, sin, get_loss_code, Graph
 from voodoo.utils.shape import shape
+from voodoo.layers.Conv2D import Conv2D
+from voodoo.layers.MaxPool2D import MaxPool2D
+from voodoo.layers.Flatten import Flatten
+from voodoo.layers.Dense import Dense
+from voodoo.layers.Dropout import Dropout
 from time.time import now
 from datasets import DataLoader
 
@@ -9,25 +14,27 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
 
 
 fn main() raises:
-    var data = DataLoader["mnist"]()
+    var data = DataLoader("datasets/mnist/mnist.txt")
 
-    let conv1 = Layer[type="conv2d", in_width=28, in_height=28, in_batches=32, kernel_width=5, kernel_height=5, stride=1, padding=0, use_bias=False]()
-    let max_pool1 = Layer[type="maxpool2d", pool_size=2, stride=2, padding=0]()
-    let conv2 = Layer[type="conv2d", in_width=12, in_height=12, in_batches=32, kernel_width=5, kernel_height=5, stride=1, padding=0]()
-    let max_pool2 = Layer[type="maxpool2d", pool_size=2, stride=2, padding=0]()
-    let flatten = Layer[type="flatten"]()
-    let dense1 = Layer[type="dense", in_neurons=16, out_neurons=16, activation="relu"]()
-    let dropout = Layer[type="dropout", dropout_rate=0.1]()
-    let dense2 = Layer[type="dense", in_neurons=16, out_neurons=10, activation="softmax"]()
+    let conv1 = Conv2D[in_width=28, in_height=28, in_batches=32, in_channels=1, kernel_size=5, stride=1, padding=0, use_bias=False]()
+    let max_pool1 = MaxPool2D[pool_size=2, stride=2, padding=0]()
+    let conv2 = Conv2D[in_width=12, in_height=12, in_batches=32, in_channels=1, kernel_size=5, stride=1, padding=0]()
+    let max_pool2 = MaxPool2D[pool_size=2, stride=2, padding=0]()
+    let flatten = Flatten()
+    let dense1 = Dense[in_neurons=16, out_neurons=16, activation="relu"]()
+    let dropout = Dropout[dropout_rate=0.1]()
+    let dense2 = Dense[in_neurons=16, out_neurons=10, activation="softmax"]()
 
     var avg_loss: Float32 = 0.0
     let every = 1000
     let num_epochs = 20000
 
-    let firstData = data.load_data_as_tensor(32, 0) 
-    let firstLabel = data.load_labels_as_tensor(32, 0)
+    let labels = Tensor(shape(32, 10))
+    let images = Tensor(shape(32, 1, 28, 28))
+
+    # INITIALIZE DATA
     
-    var x = conv1.forward(firstData)
+    var x = conv1.forward(images)
     x = max_pool1.forward(x)
     x = conv2.forward(x)
     x = max_pool2.forward(x)
@@ -35,17 +42,17 @@ fn main() raises:
     x = dense1.forward(x)
     x = dropout.forward(x)
     x = dense2.forward(x)
-    let loss = x.compute_loss[get_loss_code["cce"]()](firstLabel)
+    let loss = x.compute_loss[get_loss_code["cce"]()](labels)
 
     loss.print()
+
+    return
     
     let initial_start = now()
     for epoch in range(1, num_epochs + 1):
         let epoch_start = now()
         
-        for i in range(0, 32):
-            let test_data = data.load_data_as_tensor(32, i) 
-            let label = data.load_labels_as_tensor(32, i)
+        # RESET DATA
 
         avg_loss += loss.forward_static()[0]
         loss.backward()
