@@ -22,13 +22,13 @@ struct LeakyReLu[
     ) raises:
         self.W = Tensor(shape(in_neurons, out_neurons)).initialize[
             weight_initializer, weight_mean, weight_std
-        ]()
+        ]().requires_grad()
 
         @parameter
         if self.use_bias:
             self.bias = Tensor(shape(out_neurons)).initialize[
                 bias_initializer, bias_mean, bias_std
-            ]()
+            ]().requires_grad()
         else:
             self.bias = Tensor(shape(out_neurons)).initialize["zeros", 0.0]()
 
