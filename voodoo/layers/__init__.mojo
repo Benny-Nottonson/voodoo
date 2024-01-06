@@ -1,3 +1,4 @@
+from .Activation import Activation
 from .Conv2D import Conv2D
 from .Dense import Dense
 from .Dropout import Dropout
