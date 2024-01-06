@@ -32,6 +32,7 @@
 ## Built With
 
 * [Mojo](https://github.com/modularml/mojo)
+* Compute Graph & Tensor partially derived from [Infermo](https://github.com/TilliFe/Infermo)
 
 ## Roadmap
 
