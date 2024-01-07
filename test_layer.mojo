@@ -39,15 +39,18 @@ fn main() raises:
 
         if epoch % every == 0:
             print_no_newline(chr(27) + "[2J")
-            print()
-            print_no_newline(
-                String("Epoch:") +
-                epoch +
-                " Avg Loss: " +
-                avg_loss / every +
-                " Time: " +
-                nanoseconds_to_seconds(now() - epoch_start) +
-                "s"
+            print(
+                "Epoch:",
+                epoch,
+            )
+            print(
+                " Avg Loss: ",
+                avg_loss / every,
+            )
+            print(
+                " Time: ",
+                nanoseconds_to_seconds(now() - epoch_start),
+                "s",
             )
             avg_loss = 0.0
 
