@@ -44,7 +44,9 @@ fn main() raises:
         loss.optimize["sgd", 0.01]()
 
         if epoch % every == 0:
-            print(
+            print_no_newline(chr(27) + "[2J")
+            print()
+            print_no_newline(
                 "Epoch:",
                 epoch,
                 " Avg Loss: ",

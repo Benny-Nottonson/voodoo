@@ -50,7 +50,34 @@ fn main() raises:
     x = dense2.forward(x)
     let loss = x.compute_loss[get_loss_code["cce"]()](labels)
     
-    loss.print()
-    loss.backward()
-    loss.optimize["sgd", 0.01]()
-    loss.print()
+    let initial_start = now()
+    for epoch in range(1, num_epochs + 1):
+        let epoch_start = now()
+
+        for image in range(epoch, epoch + 32):
+            for pixel in range(785):
+                let data = d.data.load(image * 785 + pixel)
+                if pixel == 0:
+                    labels.store((image * 10 + data).to_int(), 1.0)
+                else:
+                    images.store(image * 784 + pixel - 1, data / 255.0)
+
+        avg_loss += loss.forward_static()[0]
+        loss.backward()
+        loss.optimize["sgd", 0.01]()
+
+        if epoch % every == 0:
+            print_no_newline(chr(27) + "[2J")
+            print()
+            print_no_newline(
+                "Epoch:",
+                epoch,
+                " Avg Loss: ",
+                avg_loss / every,
+                " Time: ",
+                nanoseconds_to_seconds(now() - epoch_start),
+                "s",
+            )
+            avg_loss = 0.0
+
+    print("Total Time: ", nanoseconds_to_seconds(now() - initial_start), "s")

@@ -2,8 +2,8 @@ from voodoo import Tensor, sin, get_loss_code, Graph
 from voodoo.utils.shape import shape
 from voodoo.layers.LeakyReLu import LeakyReLu
 from voodoo.layers.Dense import Dense
+from voodoo.layers.Dropout import Dropout
 from time.time import now
-
 
 fn nanoseconds_to_seconds(t: Int) -> Float64:
     return t / 1_000_000_000.0
@@ -35,17 +35,19 @@ fn main() raises:
 
         avg_loss += loss.forward_static()[0]
         loss.backward()
-        loss.optimize["sgd", 0.01]()
+        loss.optimize["adam", 0.01]()
 
         if epoch % every == 0:
-            print(
-                "Epoch:",
-                epoch,
-                " Avg Loss: ",
-                avg_loss / every,
-                " Time: ",
-                nanoseconds_to_seconds(now() - epoch_start),
-                "s",
+            print_no_newline(chr(27) + "[2J")
+            print()
+            print_no_newline(
+                String("Epoch:") +
+                epoch +
+                " Avg Loss: " +
+                avg_loss / every +
+                " Time: " +
+                nanoseconds_to_seconds(now() - epoch_start) +
+                "s"
             )
             avg_loss = 0.0
 
