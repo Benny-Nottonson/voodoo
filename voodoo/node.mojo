@@ -1,7 +1,7 @@
 from memory import memset_zero
 from algorithm import vectorize
 from math import round, ceil, sin, cos, sqrt, log
-from random import rand, random_si64, seed, randint
+from random import rand, seed
 
 alias VectorF32 = DTypePointer[DType.float32]
 alias VectorInt = Vector[Int]

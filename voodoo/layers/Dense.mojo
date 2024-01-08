@@ -1,4 +1,4 @@
-from voodoo import Tensor, conv_2d, get_activation_code, shape
+from voodoo import Tensor, get_activation_code, shape
 from .BaseLayer import BaseLayer
 
 

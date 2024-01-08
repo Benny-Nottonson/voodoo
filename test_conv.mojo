@@ -1,4 +1,4 @@
-from voodoo import Tensor, sin, get_loss_code, Graph
+from voodoo import Tensor, get_loss_code, Graph
 from voodoo.utils.shape import shape
 from voodoo.layers.Conv2D import Conv2D
 from voodoo.layers.MaxPool2D import MaxPool2D

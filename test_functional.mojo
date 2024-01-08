@@ -1,6 +1,5 @@
 from voodoo import (
     Tensor,
-    sin,
     get_activation_code,
     get_loss_code,
 )

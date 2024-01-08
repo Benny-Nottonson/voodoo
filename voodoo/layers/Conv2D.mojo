@@ -1,4 +1,4 @@
-from voodoo import Tensor, conv_2d, get_activation_code, shape
+from voodoo import Tensor, shape
 from .BaseLayer import BaseLayer
 
 
@@ -41,7 +41,7 @@ struct Conv2D[
             self.bias = Tensor(shape(0))
 
     fn forward(self, x: Tensor) raises -> Tensor:
-        let res = conv_2d(x, self.kernels, self.padding, self.stride)
+        let res = x.conv_2d(self.kernels, self.padding, self.stride)
 
         @parameter
         if self.use_bias:
