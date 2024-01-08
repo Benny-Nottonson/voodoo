@@ -5,6 +5,7 @@ from voodoo.layers.Dense import Dense
 from voodoo.layers.Dropout import Dropout
 from time.time import now
 
+
 fn nanoseconds_to_seconds(t: Int) -> Float64:
     return t / 1_000_000_000.0
 

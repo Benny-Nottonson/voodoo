@@ -1,5 +1,6 @@
 from random import seed, randint
 
+
 fn is_int(s: String) -> Bool:
     if (
         s == "0"
@@ -15,6 +16,7 @@ fn is_int(s: String) -> Bool:
     ):
         return True
     return False
+
 
 struct DataLoader:
     var indeces: DTypePointer[DType.int32]

@@ -121,7 +121,8 @@ struct Conv2D(BinaryOperation):
                                         )
                                         # add to patch sum
                                         patch_sum += (
-                                            a.load_data(a_index) * c.load_grad(c_grad_index)
+                                            a.load_data(a_index)
+                                            * c.load_grad(c_grad_index)
                                         ).reduce_add()
                         let b_grad_index = Self.index(
                             i,
@@ -136,7 +137,7 @@ struct Conv2D(BinaryOperation):
 
         @parameter
         fn batch_loop(p: Int):
-            for j in range(a.shape_ptr.load().load(1)): 
+            for j in range(a.shape_ptr.load().load(1)):
                 for i in range(b.shape_ptr.load().load(0)):
                     for x in range(a.shape_ptr.load().load(2)):
                         for y in range(a.shape_ptr.load().load(3)):

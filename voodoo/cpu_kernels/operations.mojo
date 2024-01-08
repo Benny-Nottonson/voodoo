@@ -127,7 +127,7 @@ struct MaxPool2D(Operation):
         let stride = b.other_params_ptr.load().load(1)
         let kernel_width = b.other_params_ptr.load().load(2)
         let kernel_height = b.other_params_ptr.load().load(3)
-        
+
         for p in range(a.shape_ptr.load().load(0)):
             for i in range(a.shape_ptr.load().load(1)):
                 for x in range(

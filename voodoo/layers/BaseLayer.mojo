@@ -1,5 +1,6 @@
 from voodoo import Tensor
 
+
 trait BaseLayer:
     fn __init__(inout self) raises:
         ...

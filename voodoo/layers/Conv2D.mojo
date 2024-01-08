@@ -29,11 +29,14 @@ struct Conv2D[
             .initialize[weight_initializer, weight_mean, weight_std]()
             .requires_grad()
         )
+
         @parameter
         if self.use_bias:
-            self.bias = Tensor(shape(out_channels, 1, 1)).initialize[
-                bias_initializer, bias_mean, bias_std
-            ]().requires_grad()
+            self.bias = (
+                Tensor(shape(out_channels, 1, 1))
+                .initialize[bias_initializer, bias_mean, bias_std]()
+                .requires_grad()
+            )
         else:
             self.bias = Tensor(shape(0))
 

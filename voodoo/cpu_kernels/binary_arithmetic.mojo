@@ -279,14 +279,20 @@ struct Sub(BinaryArithmetic):
 struct Div(BinaryArithmetic):
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
-        recursive_broadcast[Self.kernel_divectorized_fw, Self.base_case_divectorized_fw](c, a, b)
+        recursive_broadcast[
+            Self.kernel_divectorized_fw, Self.base_case_divectorized_fw
+        ](c, a, b)
 
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
         if not a.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_divectorized_bw_a, Self.base_case_divectorized_bw](c, a, b)
+            recursive_broadcast_bw[
+                Self.kernel_divectorized_bw_a, Self.base_case_divectorized_bw
+            ](c, a, b)
         if not b.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_divectorized_bw_b, Self.base_case_divectorized_bw](c, a, b)
+            recursive_broadcast_bw[
+                Self.kernel_divectorized_bw_b, Self.base_case_divectorized_bw
+            ](c, a, b)
 
     @parameter
     @staticmethod

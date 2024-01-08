@@ -1,5 +1,6 @@
 from voodoo import Tensor
 
+
 fn get_activation_code[name: String]() -> Int:
     @parameter
     if name == "elu":
@@ -33,6 +34,7 @@ fn get_activation_code[name: String]() -> Int:
     elif name == "leaky_relu":
         return lrelu_code
     return linear_code
+
 
 fn get_loss_code[name: String]() -> Int:
     @parameter

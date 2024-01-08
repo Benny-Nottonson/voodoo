@@ -28,10 +28,7 @@ from .tensor import (
     max_pool_2d,
 )
 
-from .code_lookup import (
-    get_activation_code,
-    get_loss_code
-)
+from .code_lookup import get_activation_code, get_loss_code
 
 from .operator_ids import *
 

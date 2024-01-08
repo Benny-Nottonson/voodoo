@@ -587,7 +587,9 @@ struct Tensor:
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()
             .load()
-            .loss_general[get_loss_code[operator_name]()](self.node_ptr.load(), other.node_ptr.load())
+            .loss_general[get_loss_code[operator_name]()](
+                self.node_ptr.load(), other.node_ptr.load()
+            )
         )
         return new_tensor
 
@@ -600,15 +602,18 @@ struct Tensor:
         )
         return new_tensor
 
-    fn compute_activation[operator_name: String, arg1: Float32 = 0.0](self) raises -> Tensor:
+    fn compute_activation[
+        operator_name: String, arg1: Float32 = 0.0
+    ](self) raises -> Tensor:
         let new_tensor = self.load_tensor_for_unary_op()
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()
             .load()
-            .activation_general[get_activation_code[operator_name](), arg1](self.node_ptr.load())
+            .activation_general[get_activation_code[operator_name](), arg1](
+                self.node_ptr.load()
+            )
         )
         return new_tensor
-
 
 
 fn fuse_graphs(

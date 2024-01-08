@@ -16,9 +16,25 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
 fn main() raises:
     let d = DataLoader("datasets/mnist/mnist.txt")
 
-    let conv1 = Conv2D[in_channels=1, out_channels=1, kernel_width=5, kernel_height=5, stride=1, padding=0, use_bias=False]()
+    let conv1 = Conv2D[
+        in_channels=1,
+        out_channels=1,
+        kernel_width=5,
+        kernel_height=5,
+        stride=1,
+        padding=0,
+        use_bias=False,
+    ]()
     let max_pool1 = MaxPool2D[pool_size=2, stride=2, padding=0]()
-    let conv2 = Conv2D[in_channels=1, out_channels=1, kernel_width=5, kernel_height=5, stride=1, padding=0, use_bias=False]()
+    let conv2 = Conv2D[
+        in_channels=1,
+        out_channels=1,
+        kernel_width=5,
+        kernel_height=5,
+        stride=1,
+        padding=0,
+        use_bias=False,
+    ]()
     let max_pool2 = MaxPool2D[pool_size=2, stride=2, padding=0]()
     let flatten = Flatten()
     let dense1 = Dense[in_neurons=16, out_neurons=16, activation="relu"]()
@@ -49,7 +65,7 @@ fn main() raises:
     x = dropout.forward(x)
     x = dense2.forward(x)
     let loss = x.compute_loss[get_loss_code["cce"]()](labels)
-    
+
     let initial_start = now()
     for epoch in range(1, num_epochs + 1):
         let epoch_start = now()
