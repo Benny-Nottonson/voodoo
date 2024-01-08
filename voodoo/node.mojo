@@ -108,9 +108,8 @@ struct Node:
         let strides_ptr = Pointer[Vector[Int]].alloc(1)
         strides_ptr.store(strides)
 
-        let other_params = Vector[Int]()
         let other_params_ptr = Pointer[Vector[Int]].alloc(1)
-        other_params_ptr.store(other_params)
+        other_params_ptr.store(Vector[Int]())
 
         return Node {
             id_ptr: id_ptr,
@@ -430,9 +429,6 @@ struct Node:
                             print_no_newline(self.shape_ptr.load().load(i))
                             if i < num_dims - 1:
                                 print_no_newline(",")
-                        print_no_newline("], ")
-                        if t == 0:
-                            print_no_newline("Data>\n")
-                        else:
-                            print_no_newline("Gradient>\n")
+                        print_no_newline("] ")
+                        print_no_newline(">")
         print(" ")

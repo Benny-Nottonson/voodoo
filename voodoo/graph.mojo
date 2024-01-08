@@ -14,17 +14,11 @@ from .cpu_kernels.activations import *
 from .cpu_kernels.losses import *
 from .cpu_kernels.optimizers import *
 
-alias VectorF32 = DTypePointer[DType.float32]
-alias VectorInt = Vector[Int]
-alias DTVector = Vector[VectorF32]
-alias NodeVector = Vector[Pointer[Node]]
 alias nelts = simdwidthof[DType.float32]()
 
 alias unary_op = fn (b: Node, a: Node) -> None
 alias binary_op = fn (c: Node, a: Node, b: Node) -> None
-alias view_op = fn (b: Node, a: Node) -> None
-alias reduce_op = fn (c: Node, a: Node, b: Node) -> None
-alias op_tuple = Tuple[StringRef, unary_op, binary_op, view_op, reduce_op]
+alias op_tuple = Tuple[StringRef, unary_op, binary_op]
 
 alias memory_pool_size = 30
 
@@ -37,159 +31,151 @@ fn _b(c: Node, a: Node, b: Node):
     ...
 
 
-fn _v(b: Node, a: Node):
-    ...
-
-
-fn _r(c: Node, a: Node, b: Node):
-    ...
-
-
 # TODO: Could combine more unary / binary functions into one main caller (See activations / losses)
 @register_passable("trivial")
 struct Graph:
-    var nodes: Pointer[NodeVector]
-    var memory_pool: Pointer[DTVector]
-    var memory_pool_manager: Pointer[VectorInt]
-    var free_node_ids: Pointer[VectorInt]
-    var free_data_ids: Pointer[VectorInt]
+    var nodes: Pointer[Vector[Pointer[Node]]]
+    var memory_pool: Pointer[Vector[DTypePointer[DType.float32]]]
+    var memory_pool_manager: Pointer[Vector[Int]]
+    var free_node_ids: Pointer[Vector[Int]]
+    var free_data_ids: Pointer[Vector[Int]]
     var last_node_id: Pointer[Int]
     var kernels: Pointer[op_tuple]
-    var forward_order: Pointer[VectorInt]
-    var grad_nodes_order: Pointer[VectorInt]
+    var forward_order: Pointer[Vector[Int]]
+    var grad_nodes_order: Pointer[Vector[Int]]
     var compiled: Pointer[Bool]
 
     fn __init__() -> Self:
-        let nodes = Pointer[NodeVector].alloc(1)
-        nodes.store(NodeVector())
+        let nodes = Pointer[Vector[Pointer[Node]]].alloc(1)
+        nodes.store(Vector[Pointer[Node]]())
 
-        let memory_pool = Pointer[DTVector].alloc(1)
-        memory_pool.store(DTVector())
+        let memory_pool = Pointer[Vector[DTypePointer[DType.float32]]].alloc(1)
+        memory_pool.store(Vector[DTypePointer[DType.float32]]())
 
-        let memory_pool_manager = Pointer[VectorInt].alloc(memory_pool_size)
+        let memory_pool_manager = Pointer[Vector[Int]].alloc(memory_pool_size)
 
         @unroll
         for i in range(memory_pool_size):
-            memory_pool_manager.store(i, VectorInt())
+            memory_pool_manager.store(i, Vector[Int]())
 
-        let free_node_ids = Pointer[VectorInt].alloc(1)
-        free_node_ids.store(VectorInt())
+        let free_node_ids = Pointer[Vector[Int]].alloc(1)
+        free_node_ids.store(Vector[Int]())
 
-        let free_data_ids = Pointer[VectorInt].alloc(1)
-        free_data_ids.store(VectorInt())
+        let free_data_ids = Pointer[Vector[Int]].alloc(1)
+        free_data_ids.store(Vector[Int]())
 
         let last_node_id = Pointer[Int].alloc(1)
         last_node_id.store(-1)
 
         let kernels = Pointer[op_tuple].alloc(120)
-        kernels.store(cos_code, op_tuple("cos", Cos.fw, _b, _v, _r))
-        kernels.store(bwcos_code, op_tuple("bwcos", Cos.bw, _b, _v, _r))
-        kernels.store(sin_code, op_tuple("sin", Sin.fw, _b, _v, _r))
-        kernels.store(bwsin_code, op_tuple("bwsin", Sin.bw, _b, _v, _r))
-        kernels.store(tan_code, op_tuple("tan", Tan.fw, _b, _v, _r))
-        kernels.store(bwtan_code, op_tuple("bwtan", Tan.bw, _b, _v, _r))
-        kernels.store(acos_code, op_tuple("acos", Acos.fw, _b, _v, _r))
-        kernels.store(bwacos_code, op_tuple("bwacos", Acos.bw, _b, _v, _r))
-        kernels.store(asin_code, op_tuple("asin", Asin.fw, _b, _v, _r))
-        kernels.store(bwasin_code, op_tuple("bwasin", Asin.bw, _b, _v, _r))
-        kernels.store(atan_code, op_tuple("atan", Atan.fw, _b, _v, _r))
-        kernels.store(bwatan_code, op_tuple("bwatan", Atan.bw, _b, _v, _r))
-        kernels.store(cosh_code, op_tuple("cosh", Cosh.fw, _b, _v, _r))
-        kernels.store(bwcos_code, op_tuple("bwcosh", Cosh.bw, _b, _v, _r))
-        kernels.store(sinh_code, op_tuple("sinh", Sinh.fw, _b, _v, _r))
-        kernels.store(bwsin_code, op_tuple("bwsinh", Sinh.bw, _b, _v, _r))
-        kernels.store(log_code, op_tuple("log", Log.fw, _b, _v, _r))
-        kernels.store(bwlog_code, op_tuple("bwlog", Log.bw, _b, _v, _r))
-        kernels.store(log2_code, op_tuple("log2", Log2.fw, _b, _v, _r))
-        kernels.store(bwlog2_code, op_tuple("bwlog", Log2.bw, _b, _v, _r))
-        kernels.store(exp2_code, op_tuple("exp2", Exp2.fw, _b, _v, _r))
-        kernels.store(bwexp2_code, op_tuple("bwexp2", Exp2.bw, _b, _v, _r))
-        kernels.store(sqrt_code, op_tuple("sqrt", Sqrt.fw, _b, _v, _r))
-        kernels.store(bwsqrt_code, op_tuple("bwsqrt", Sqrt.bw, _b, _v, _r))
-        kernels.store(abs_code, op_tuple("abs", Abs.fw, _b, _v, _r))
-        kernels.store(bwabs_code, op_tuple("bwabs", Abs.bw, _b, _v, _r))
-        kernels.store(copy_code, op_tuple("copy", Copy.fw, _b, _v, _r))
-        kernels.store(bwcopy_code, op_tuple("bwcopy", Copy.bw, _b, _v, _r))
+        kernels.store(cos_code, op_tuple("cos", Cos.fw, _b))
+        kernels.store(bwcos_code, op_tuple("bwcos", Cos.bw, _b))
+        kernels.store(sin_code, op_tuple("sin", Sin.fw, _b))
+        kernels.store(bwsin_code, op_tuple("bwsin", Sin.bw, _b))
+        kernels.store(tan_code, op_tuple("tan", Tan.fw, _b))
+        kernels.store(bwtan_code, op_tuple("bwtan", Tan.bw, _b))
+        kernels.store(acos_code, op_tuple("acos", Acos.fw, _b))
+        kernels.store(bwacos_code, op_tuple("bwacos", Acos.bw, _b))
+        kernels.store(asin_code, op_tuple("asin", Asin.fw, _b))
+        kernels.store(bwasin_code, op_tuple("bwasin", Asin.bw, _b))
+        kernels.store(atan_code, op_tuple("atan", Atan.fw, _b))
+        kernels.store(bwatan_code, op_tuple("bwatan", Atan.bw, _b))
+        kernels.store(cosh_code, op_tuple("cosh", Cosh.fw, _b))
+        kernels.store(bwcos_code, op_tuple("bwcosh", Cosh.bw, _b))
+        kernels.store(sinh_code, op_tuple("sinh", Sinh.fw, _b))
+        kernels.store(bwsin_code, op_tuple("bwsinh", Sinh.bw, _b))
+        kernels.store(log_code, op_tuple("log", Log.fw, _b))
+        kernels.store(bwlog_code, op_tuple("bwlog", Log.bw, _b))
+        kernels.store(log2_code, op_tuple("log2", Log2.fw, _b))
+        kernels.store(bwlog2_code, op_tuple("bwlog", Log2.bw, _b))
+        kernels.store(exp2_code, op_tuple("exp2", Exp2.fw, _b))
+        kernels.store(bwexp2_code, op_tuple("bwexp2", Exp2.bw, _b))
+        kernels.store(sqrt_code, op_tuple("sqrt", Sqrt.fw, _b))
+        kernels.store(bwsqrt_code, op_tuple("bwsqrt", Sqrt.bw, _b))
+        kernels.store(abs_code, op_tuple("abs", Abs.fw, _b))
+        kernels.store(bwabs_code, op_tuple("bwabs", Abs.bw, _b))
+        kernels.store(copy_code, op_tuple("copy", Copy.fw, _b))
+        kernels.store(bwcopy_code, op_tuple("bwcopy", Copy.bw, _b))
 
-        kernels.store(add_code, op_tuple("add", _u, Add.fw, _v, _r))
-        kernels.store(bwadd_code, op_tuple("bwadd", _u, Add.bw, _v, _r))
-        kernels.store(sub_code, op_tuple("sub", _u, Sub.fw, _v, _r))
-        kernels.store(bwsub_code, op_tuple("bwsub", _u, Sub.bw, _v, _r))
-        kernels.store(mul_code, op_tuple("mul", _u, Mul.fw, _v, _r))
-        kernels.store(bwmul_code, op_tuple("bwmul", _u, Mul.bw, _v, _r))
-        kernels.store(div_code, op_tuple("div", _u, Div.fw, _v, _r))
-        kernels.store(bwdiv_code, op_tuple("bwdiv", _u, Div.bw, _v, _r))
-        kernels.store(pow_code, op_tuple("pow", _u, Pow.fw, _v, _r))
-        kernels.store(bwpow_code, op_tuple("bwpow", _u, Pow.bw, _v, _r))
-        kernels.store(mmul_code, op_tuple("mmul", _u, MMul.fw, _v, _r))
-        kernels.store(bwmmul_code, op_tuple("bwmmul", _u, MMul.bw, _v, _r))
-        kernels.store(reshape_code, op_tuple("reshape", Reshape.fw, _b, _v, _r))
-        kernels.store(bwreshape_code, op_tuple("bwreshape", Reshape.bw, _b, _v, _r))
-        kernels.store(transp_code, op_tuple("transp", Transpose.fw, _b, _v, _r))
-        kernels.store(bwtransp_code, op_tuple("bwtransp", Transpose.bw, _b, _v, _r))
-        kernels.store(sum_code, op_tuple("sum", Sum.fw, _b, _v, _r))
-        kernels.store(bwsum_code, op_tuple("bwsum", Sum.bw, _b, _v, _r))
-        kernels.store(conv2d_code, op_tuple("conv2d", _u, Conv2D.fw, _v, _r))
-        kernels.store(bwconv2d_code, op_tuple("bwconv2d", _u, Conv2D.bw, _v, _r))
+        kernels.store(add_code, op_tuple("add", _u, Add.fw))
+        kernels.store(bwadd_code, op_tuple("bwadd", _u, Add.bw))
+        kernels.store(sub_code, op_tuple("sub", _u, Sub.fw))
+        kernels.store(bwsub_code, op_tuple("bwsub", _u, Sub.bw))
+        kernels.store(mul_code, op_tuple("mul", _u, Mul.fw))
+        kernels.store(bwmul_code, op_tuple("bwmul", _u, Mul.bw))
+        kernels.store(div_code, op_tuple("div", _u, Div.fw))
+        kernels.store(bwdiv_code, op_tuple("bwdiv", _u, Div.bw))
+        kernels.store(pow_code, op_tuple("pow", _u, Pow.fw))
+        kernels.store(bwpow_code, op_tuple("bwpow", _u, Pow.bw))
+        kernels.store(mmul_code, op_tuple("mmul", _u, MMul.fw))
+        kernels.store(bwmmul_code, op_tuple("bwmmul", _u, MMul.bw))
+        kernels.store(reshape_code, op_tuple("reshape", Reshape.fw, _b))
+        kernels.store(bwreshape_code, op_tuple("bwreshape", Reshape.bw, _b))
+        kernels.store(transp_code, op_tuple("transp", Transpose.fw, _b))
+        kernels.store(bwtransp_code, op_tuple("bwtransp", Transpose.bw, _b))
+        kernels.store(sum_code, op_tuple("sum", Sum.fw, _b))
+        kernels.store(bwsum_code, op_tuple("bwsum", Sum.bw, _b))
+        kernels.store(conv2d_code, op_tuple("conv2d", _u, Conv2D.fw))
+        kernels.store(bwconv2d_code, op_tuple("bwconv2d", _u, Conv2D.bw))
 
-        kernels.store(mpool2dd_code, op_tuple("mpool2dd", MaxPool2D.fw, _b, _v, _r))
-        kernels.store(bwmpool2d_code, op_tuple("bwmpool2d", MaxPool2D.bw, _b, _v, _r))
-        kernels.store(elu_code, op_tuple("elu", Elu.fw, _b, _v, _r))
-        kernels.store(bwelu_code, op_tuple("bwelu", Elu.bw, _b, _v, _r))
-        kernels.store(exp_code, op_tuple("exp", Exp.fw, _b, _v, _r))
-        kernels.store(bwexp_code, op_tuple("bwexp", Exp.bw, _b, _v, _r))
-        kernels.store(gelu_code, op_tuple("gelu", Gelu.fw, _b, _v, _r))
-        kernels.store(bwgelu_code, op_tuple("bwgelu", Gelu.bw, _b, _v, _r))
-        kernels.store(h_sig_code, op_tuple("h_sig", HardSigmoid.fw, _b, _v, _r))
-        kernels.store(bwh_sig_code, op_tuple("bwh_sig", HardSigmoid.bw, _b, _v, _r))
-        kernels.store(linear_code, op_tuple("linear", Linear.fw, _b, _v, _r))
-        kernels.store(bwlinear_code, op_tuple("bwlinear", Linear.bw, _b, _v, _r))
-        kernels.store(mish_code, op_tuple("mish", Mish.fw, _b, _v, _r))
-        kernels.store(bwmish_code, op_tuple("bwmish", Mish.bw, _b, _v, _r))
-        kernels.store(relu_code, op_tuple("relu", ReLu.fw, _b, _v, _r))
-        kernels.store(bwrelu_code, op_tuple("bwrelu", ReLu.bw, _b, _v, _r))
-        kernels.store(selu_code, op_tuple("selu", Selu.fw, _b, _v, _r))
-        kernels.store(bwselu_code, op_tuple("bwselu", Selu.bw, _b, _v, _r))
-        kernels.store(sig_code, op_tuple("sig", Sigmoid.fw, _b, _v, _r))
-        kernels.store(bwsig_code, op_tuple("bwsig", Sigmoid.bw, _b, _v, _r))
-        kernels.store(softmax_code, op_tuple("softmax", Softmax.fw, _b, _v, _r))
-        kernels.store(bwsoftmax_code, op_tuple("bwsoftmax", Softmax.bw, _b, _v, _r))
-        kernels.store(softplus_code, op_tuple("softplus", Softplus.fw, _b, _v, _r))
-        kernels.store(bwsoftplus_code, op_tuple("bwsoftplus", Softplus.bw, _b, _v, _r))
-        kernels.store(softsign_code, op_tuple("softsign", Softsign.fw, _b, _v, _r))
-        kernels.store(bwsoftsign_code, op_tuple("bwsoftsign", Softsign.bw, _b, _v, _r))
-        kernels.store(swish_code, op_tuple("swish", Swish.fw, _b, _v, _r))
-        kernels.store(bwswish_code, op_tuple("bwswish", Swish.bw, _b, _v, _r))
-        kernels.store(tanh_code, op_tuple("tanh", Tanh.fw, _b, _v, _r))
-        kernels.store(bwtanh_code, op_tuple("bwtanh", Tanh.bw, _b, _v, _r))
-        kernels.store(lrelu_code, op_tuple("fwlrelu", LeakyReLu.fw, _b, _v, _r))
-        kernels.store(bwlrelu_code, op_tuple("bwlrelu", LeakyReLu.bw, _b, _v, _r))
+        kernels.store(mpool2dd_code, op_tuple("mpool2dd", MaxPool2D.fw, _b))
+        kernels.store(bwmpool2d_code, op_tuple("bwmpool2d", MaxPool2D.bw, _b))
+        kernels.store(elu_code, op_tuple("elu", Elu.fw, _b))
+        kernels.store(bwelu_code, op_tuple("bwelu", Elu.bw, _b))
+        kernels.store(exp_code, op_tuple("exp", Exp.fw, _b))
+        kernels.store(bwexp_code, op_tuple("bwexp", Exp.bw, _b))
+        kernels.store(gelu_code, op_tuple("gelu", Gelu.fw, _b))
+        kernels.store(bwgelu_code, op_tuple("bwgelu", Gelu.bw, _b))
+        kernels.store(h_sig_code, op_tuple("h_sig", HardSigmoid.fw, _b))
+        kernels.store(bwh_sig_code, op_tuple("bwh_sig", HardSigmoid.bw, _b))
+        kernels.store(linear_code, op_tuple("linear", Linear.fw, _b))
+        kernels.store(bwlinear_code, op_tuple("bwlinear", Linear.bw, _b))
+        kernels.store(mish_code, op_tuple("mish", Mish.fw, _b))
+        kernels.store(bwmish_code, op_tuple("bwmish", Mish.bw, _b))
+        kernels.store(relu_code, op_tuple("relu", ReLu.fw, _b))
+        kernels.store(bwrelu_code, op_tuple("bwrelu", ReLu.bw, _b))
+        kernels.store(selu_code, op_tuple("selu", Selu.fw, _b))
+        kernels.store(bwselu_code, op_tuple("bwselu", Selu.bw, _b))
+        kernels.store(sig_code, op_tuple("sig", Sigmoid.fw, _b))
+        kernels.store(bwsig_code, op_tuple("bwsig", Sigmoid.bw, _b))
+        kernels.store(softmax_code, op_tuple("softmax", Softmax.fw, _b))
+        kernels.store(bwsoftmax_code, op_tuple("bwsoftmax", Softmax.bw, _b))
+        kernels.store(softplus_code, op_tuple("softplus", Softplus.fw, _b))
+        kernels.store(bwsoftplus_code, op_tuple("bwsoftplus", Softplus.bw, _b))
+        kernels.store(softsign_code, op_tuple("softsign", Softsign.fw, _b))
+        kernels.store(bwsoftsign_code, op_tuple("bwsoftsign", Softsign.bw, _b))
+        kernels.store(swish_code, op_tuple("swish", Swish.fw, _b))
+        kernels.store(bwswish_code, op_tuple("bwswish", Swish.bw, _b))
+        kernels.store(tanh_code, op_tuple("tanh", Tanh.fw, _b))
+        kernels.store(bwtanh_code, op_tuple("bwtanh", Tanh.bw, _b))
+        kernels.store(lrelu_code, op_tuple("fwlrelu", LeakyReLu.fw, _b))
+        kernels.store(bwlrelu_code, op_tuple("bwlrelu", LeakyReLu.bw, _b))
 
-        kernels.store(mae_code, op_tuple("mae", _u, MAE.fw, _v, _r))
-        kernels.store(bwmae_code, op_tuple("bwmae", _u, MAE.bw, _v, _r))
-        kernels.store(mape_code, op_tuple("mape", _u, MAPE.fw, _v, _r))
-        kernels.store(bwmape_code, op_tuple("bwmape", _u, MAPE.bw, _v, _r))
-        kernels.store(mse_code, op_tuple("mse", _u, MSE.fw, _v, _r))
-        kernels.store(bwmse_code, op_tuple("bwmse", _u, MSE.bw, _v, _r))
-        kernels.store(msle_code, op_tuple("msle", _u, MSLE.fw, _v, _r))
-        kernels.store(bwmsle_code, op_tuple("bwmsle", _u, MSLE.bw, _v, _r))
-        kernels.store(bce_code, op_tuple("bce", _u, BCE.fw, _v, _r))
-        kernels.store(bwbce_code, op_tuple("bwbce", _u, BCE.bw, _v, _r))
-        kernels.store(cce_code, op_tuple("cce", _u, CCE.fw, _v, _r))
-        kernels.store(bwcce_code, op_tuple("bwcce", _u, CCE.bw, _v, _r))
-        kernels.store(cfce_code, op_tuple("cfce", _u, CFCE.fw, _v, _r))
-        kernels.store(bwcfce_code, op_tuple("bwcfce", _u, CFCE.bw, _v, _r))
-        kernels.store(dropout_code, op_tuple("dropout", Dropout.fw, _b, _v, _r))
-        kernels.store(bwdropout_code, op_tuple("bwdropout", Dropout.bw, _b, _v, _r))
+        kernels.store(mae_code, op_tuple("mae", _u, MAE.fw))
+        kernels.store(bwmae_code, op_tuple("bwmae", _u, MAE.bw))
+        kernels.store(mape_code, op_tuple("mape", _u, MAPE.fw))
+        kernels.store(bwmape_code, op_tuple("bwmape", _u, MAPE.bw))
+        kernels.store(mse_code, op_tuple("mse", _u, MSE.fw))
+        kernels.store(bwmse_code, op_tuple("bwmse", _u, MSE.bw))
+        kernels.store(msle_code, op_tuple("msle", _u, MSLE.fw))
+        kernels.store(bwmsle_code, op_tuple("bwmsle", _u, MSLE.bw))
+        kernels.store(bce_code, op_tuple("bce", _u, BCE.fw))
+        kernels.store(bwbce_code, op_tuple("bwbce", _u, BCE.bw))
+        kernels.store(cce_code, op_tuple("cce", _u, CCE.fw))
+        kernels.store(bwcce_code, op_tuple("bwcce", _u, CCE.bw))
+        kernels.store(cfce_code, op_tuple("cfce", _u, CFCE.fw))
+        kernels.store(bwcfce_code, op_tuple("bwcfce", _u, CFCE.bw))
+        kernels.store(dropout_code, op_tuple("dropout", Dropout.fw, _b))
+        kernels.store(bwdropout_code, op_tuple("bwdropout", Dropout.bw, _b))
 
-        let forward_order = Pointer[VectorInt].alloc(1)
-        forward_order.store(VectorInt())
+        let forward_order = Pointer[Vector[Int]].alloc(1)
+        forward_order.store(Vector[Int]())
 
-        let grad_nodes_order = Pointer[VectorInt].alloc(1)
-        grad_nodes_order.store(VectorInt())
+        let grad_nodes_order = Pointer[Vector[Int]].alloc(1)
+        grad_nodes_order.store(Vector[Int]())
 
-        let backward_order = Pointer[VectorInt].alloc(1)
-        backward_order.store(VectorInt())
+        let backward_order = Pointer[Vector[Int]].alloc(1)
+        backward_order.store(Vector[Int]())
 
         let compiled = Pointer[Bool].alloc(1)
         compiled.store(False)
@@ -384,7 +370,7 @@ struct Graph:
                 let data_id = self.get_free_data_id()
                 node.load().data_id.store(data_id)
                 let ceiled_cap = self.load_ceiled_cap(node.load().cap_ptr.load() + 1)
-                let new_data_ptr = VectorF32.alloc(ceiled_cap)
+                let new_data_ptr = DTypePointer[DType.float32].alloc(ceiled_cap)
                 if data_id == self.memory_pool.load().len.load():
                     self.memory_pool.load().push_back(new_data_ptr)
                 else:
@@ -413,7 +399,7 @@ struct Graph:
             let grad_id = self.get_free_data_id()
             node.load().grad_id.store(grad_id)
             let ceiled_cap = self.load_ceiled_cap(node.load().cap_ptr.load())
-            let new_grad_ptr = VectorF32.alloc(ceiled_cap)
+            let new_grad_ptr = DTypePointer[DType.float32].alloc(ceiled_cap)
             if grad_id == self.memory_pool.load().len.load():
                 self.memory_pool.load().push_back(new_grad_ptr)
             else:
@@ -485,7 +471,9 @@ struct Graph:
             for j in range(i + 1, self.memory_pool.load().len.load()):
                 let other = self.memory_pool.load().load(j)
                 if array == other:
-                    self.memory_pool.load().store(i, VectorF32.get_null())
+                    self.memory_pool.load().store(
+                        i, DTypePointer[DType.float32].get_null()
+                    )
 
         let deletable_data = Vector[Bool](self.memory_pool.load().len.load())
         for i in range(self.memory_pool.load().len.load()):
@@ -504,7 +492,8 @@ struct Graph:
         for i in range(deletable_data.len.load()):
             if (
                 deletable_data.load(i)
-                and not self.memory_pool.load().load(i) == VectorF32.get_null()
+                and not self.memory_pool.load().load(i)
+                == DTypePointer[DType.float32].get_null()
             ):
                 self.memory_pool.load().load(i).free()
         deletable_data.free()
