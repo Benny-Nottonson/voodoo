@@ -9,7 +9,6 @@ from .utils.shape import shape
 from .cpu_kernels.optimizers import *
 
 alias nelts = simdwidthof[DType.float32]()
-
 alias memory_pool_size = 30
 
 
