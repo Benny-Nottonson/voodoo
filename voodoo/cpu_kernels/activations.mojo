@@ -3,293 +3,227 @@ from algorithm import vectorize
 from voodoo import Node
 from .constants import DType_F32, nelts
 
-
-trait Activation:
-    @staticmethod
-    fn fw(node: Node, parent1: Node):
-        ...
-
-    @staticmethod
-    fn bw(node: Node, parent1: Node):
-        ...
+alias generic_vectorized = fn[_nelts: Int] (SIMD[DType_F32, _nelts]) -> SIMD[
+    DType_F32, _nelts
+]
 
 
-struct Elu(Activation):
-    # f(x) = x > 0 ? x : e^x - 1
-    # f'(x) = x > 0 ? 1 : e^x
+struct GenericActivation[fw_vec: generic_vectorized, bw_vec: generic_vectorized]:
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter
-        fn vectorized_fw[_nelts: Int](i: Int):
+        fn generic_vectorized_fw[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
+            node.store_data[_nelts](
+                i,
+                fw_vec[_nelts](x),
+            )
+
+        vectorize[nelts, generic_vectorized_fw](node.load_cap())
+
+    @staticmethod
+    fn bw(node: Node, parent1: Node):
+        @parameter
+        fn generic_vectorized_bw[_nelts: Int](i: Int):
+            let x = parent1.load_data[_nelts](i)
+            parent1.store_grad[_nelts](
+                i,
+                parent1.load_grad[_nelts](i)
+                + node.load_grad[_nelts](i) * bw_vec[_nelts](x),
+            )
+
+        vectorize[nelts, generic_vectorized_bw](node.load_cap())
+
+
+fn elu_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return (x > 0.0).cast[DType_F32]() * x + (x <= 0.0).cast[DType_F32]() * (
+        exp(x) - 1.0
+    )
+
+
+fn elu_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return (x > 0.0).cast[DType_F32]() + (x <= 0.0).cast[DType_F32]() * exp(x)
+
+
+alias Elu = GenericActivation[elu_fw_vec, elu_bw_vec]
+
+
+fn exp_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return exp(x)
+
+
+fn exp_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return exp(x)
+
+
+alias Exp = GenericActivation[exp_fw_vec, exp_bw_vec]
+
+
+fn gelu_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return 0.5 * x * (1.0 + erf(x / 1.4142135623730951))
+
+
+fn gelu_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return (x / x) + x * 0.56418958354 * exp(-0.5 * (x / 1.4142135623730951) ** 2)
+
+
+alias Gelu = GenericActivation[gelu_fw_vec, gelu_bw_vec]
+
+
+fn hard_sigmoid_fw_vec[
+    _nelts: Int
+](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return (x > 2.5).cast[DType_F32]() + (x > -2.5).cast[DType_F32]() * (x < 2.5).cast[
+        DType_F32
+    ]() * (0.2 * x + 0.5)
+
+
+fn hard_sigmoid_bw_vec[
+    _nelts: Int
+](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return (x > -2.5).cast[DType_F32]() * (x < 2.5).cast[DType_F32]() * 0.2
+
+
+alias HardSigmoid = GenericActivation[hard_sigmoid_fw_vec, hard_sigmoid_bw_vec]
+
+
+fn linear_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return x
+
+
+fn linear_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return 1
+
+
+alias Linear = GenericActivation[linear_fw_vec, linear_bw_vec]
+
+
+fn mish_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return x * tanh(log(1.0 + exp(x)))
+
+
+fn mish_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return (x / x) + x * (1.0 - tanh(log(1.0 + exp(x))) ** 2) * (1.0 / (1.0 + exp(-x)))
+
+
+alias Mish = GenericActivation[mish_fw_vec, mish_bw_vec]
+
+
+fn relu_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return (x > 0.0).cast[DType_F32]() * x
+
+
+fn relu_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return (x > 0.0).cast[DType_F32]()
+
+
+alias ReLu = GenericActivation[relu_fw_vec, relu_bw_vec]
+
+
+fn selu_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return (x > 0.0).cast[DType_F32]() * 1.05070098 * x + (x <= 0.0).cast[
+        DType_F32
+    ]() * 1.05070098 * 1.67326324 * (exp(x) - 1.0)
+
+
+fn selu_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return (x > 0.0).cast[DType_F32]() + (x <= 0.0).cast[
+        DType_F32
+    ]() * 1.75809932607 * exp(x)
+
+
+alias Selu = GenericActivation[selu_fw_vec, selu_bw_vec]
+
+
+fn sigmoid_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return 1.0 / (1.0 + exp(-x))
+
+
+fn sigmoid_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return exp(x) / (exp(x) + 1.0) ** 2
+
+
+alias Sigmoid = GenericActivation[sigmoid_fw_vec, sigmoid_bw_vec]
+
+
+fn softplus_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return log(1.0 + exp(x))
+
+
+fn softplus_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return exp(x) / (1.0 + exp(x))
+
+
+alias Softplus = GenericActivation[softplus_fw_vec, softplus_bw_vec]
+
+
+fn softsign_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return x / (1.0 + abs(x))
+
+
+fn softsign_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return x**2 / (1.0 + abs(x)) ** 2
+
+
+alias Softsign = GenericActivation[softsign_fw_vec, softsign_bw_vec]
+
+
+fn swish_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return x / (1.0 + exp(-x))
+
+
+fn swish_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return (x / x) + x * (1.0 - x / (1.0 + exp(-x))) * (1.0 / (1.0 + exp(-x)))
+
+
+alias Swish = GenericActivation[swish_fw_vec, swish_bw_vec]
+
+
+fn tanh_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return tanh(x)
+
+
+fn tanh_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return 1.0 - tanh(x) ** 2
+
+
+alias Tanh = GenericActivation[tanh_fw_vec, tanh_bw_vec]
+
+
+struct LeakyReLu:
+    # f(x) = x > 0 ? x : alpha * x
+    # f'(x) = x > 0 ? 1 : alpha
+    @staticmethod
+    fn fw(node: Node, parent1: Node):
+        @parameter
+        fn vectorized_leaky_relu[_nelts: Int](i: Int):
+            let x = parent1.load_data[_nelts](i)
+            let alpha = node.other_params_ptr.load().data.load().load() / 1000000.0
             node.store_data[_nelts](
                 i,
                 (x > 0.0).cast[DType_F32]() * x
-                + (x <= 0.0).cast[DType_F32]() * (exp(x) - 1.0),
+                + (x <= 0.0).cast[DType_F32]() * alpha * x,
             )
 
-        vectorize[nelts, vectorized_fw](node.load_cap())
+        vectorize[nelts, vectorized_leaky_relu](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
-        fn vectorized_bw[_nelts: Int](i: Int):
+        fn vectorized_leaky_relu_bw[_nelts: Int](i: Int):
             let x = parent1.load_data[_nelts](i)
+            let alpha = node.other_params_ptr.load().data.load().load() / 1000000.0
             parent1.store_grad[_nelts](
                 i,
                 parent1.load_grad[_nelts](i)
                 + node.load_grad[_nelts](i)
-                * ((x > 0.0).cast[DType_F32]() + (x <= 0.0).cast[DType_F32]() * exp(x)),
+                * ((x > 0.0).cast[DType_F32]() + (x <= 0.0).cast[DType_F32]() * alpha),
             )
 
-        vectorize[nelts, vectorized_bw](node.load_cap())
+        vectorize[nelts, vectorized_leaky_relu_bw](node.load_cap())
 
 
-struct Exp(Activation):
-    # f(x) = e^x
-    # f'(x) = e^x
-    @staticmethod
-    fn fw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_exp[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            node.store_data[_nelts](i, exp(x))
-
-        vectorize[nelts, vectorized_exp](node.load_cap())
-
-    @staticmethod
-    fn bw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_exp_bw[_nelts: Int](i: Int):
-            let f_x = node.load_data[_nelts](i)
-            parent1.store_grad[_nelts](
-                i,
-                parent1.load_grad[_nelts](i) + node.load_grad[_nelts](i) * f_x,
-            )
-
-        vectorize[nelts, vectorized_exp_bw](node.load_cap())
-
-
-struct Gelu(Activation):
-    # f(x) = .5x * (1 + erf(x / sqrt(2)))
-    # f'(x) = .5 * (1 + erf(x / sqrt(2))) + x * .56418958354 * exp(-.5 * (x / sqrt(2)) ** 2)
-    @staticmethod
-    fn fw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_gelu[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            node.store_data[_nelts](
-                i,
-                0.5 * x * (1.0 + erf(x / 1.4142135623730951)),
-            )
-
-        vectorize[nelts, vectorized_gelu](node.load_cap())
-
-    @staticmethod
-    fn bw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_gelu_bw[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            let f_x = node.load_data[_nelts](i)
-            node.store_grad[_nelts](
-                i,
-                parent1.load_grad[_nelts](i)
-                + node.load_grad[_nelts](i)
-                * (
-                    (f_x / x)
-                    + x * 0.56418958354 * exp(-0.5 * (x / 1.4142135623730951) ** 2)
-                ),
-            )
-
-        vectorize[nelts, vectorized_gelu_bw](node.load_cap())
-
-
-struct HardSigmoid(Activation):
-    # f(x) = x < -2.5 ? 0 : x > 2.5 ? 1 : .2x + .5
-    # f'(x) = x < -2.5 ? 0 : x > 2.5 ? 0 : .2
-    @staticmethod
-    fn fw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_h_sig[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            node.store_data[_nelts](
-                i,
-                (x > 2.5).cast[DType_F32]()
-                + (x > -2.5).cast[DType_F32]()
-                * (x < 2.5).cast[DType_F32]()
-                * (0.2 * x + 0.5),
-            )
-
-        vectorize[nelts, vectorized_h_sig](node.load_cap())
-
-    @staticmethod
-    fn bw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_h_sig_bw[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            parent1.store_grad[_nelts](
-                i,
-                parent1.load_grad[_nelts](i)
-                + node.load_grad[_nelts](i)
-                * (x > -2.5).cast[DType_F32]()
-                * (x < 2.5).cast[DType_F32]()
-                * 0.2,
-            )
-
-        vectorize[nelts, vectorized_h_sig_bw](node.load_cap())
-
-
-struct Linear(Activation):
-    # f(x) = x
-    # f'(x) = 1
-    @staticmethod
-    fn fw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_linear[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            node.store_data[_nelts](i, x)
-
-        vectorize[nelts, vectorized_linear](node.load_cap())
-
-    @staticmethod
-    fn bw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_linear_bw[_nelts: Int](i: Int):
-            parent1.store_grad[_nelts](
-                i,
-                parent1.load_grad[_nelts](i) + node.load_grad[_nelts](i),
-            )
-
-        vectorize[nelts, vectorized_linear_bw](node.load_cap())
-
-
-struct Mish(Activation):
-    # f(x) = x * tanh(ln(1 + e^x))
-    # f'(x) = tanh(ln(1 + e^x)) + x * (1 - tanh(ln(1 + e^x)) ** 2) * (1 / (1 + e^-x))
-    @staticmethod
-    fn fw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_mish[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            node.store_data[_nelts](
-                i,
-                x * tanh(log(1.0 + exp(x))),
-            )
-
-        vectorize[nelts, vectorized_mish](node.load_cap())
-
-    @staticmethod
-    fn bw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_mish_bw[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            let f_x = node.load_data[_nelts](i)
-            node.store_grad[_nelts](
-                i,
-                parent1.load_grad[_nelts](i)
-                + node.load_grad[_nelts](i)
-                * (
-                    (f_x / x)
-                    + x * (1.0 - tanh(log(1.0 + exp(x))) ** 2) * (1.0 / (1.0 + exp(-x)))
-                ),
-            )
-
-        vectorize[nelts, vectorized_mish_bw](node.load_cap())
-
-
-struct ReLu(Activation):
-    # f(x) = x > 0 ? x : 0
-    # f'(x) = x > 0 ? 1 : 0
-    @staticmethod
-    fn fw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_relu[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            node.store_data[_nelts](
-                i,
-                (x > 0.0).cast[DType_F32]() * x,
-            )
-
-        vectorize[nelts, vectorized_relu](node.load_cap())
-
-    @staticmethod
-    fn bw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_relu_bw[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            parent1.store_grad[_nelts](
-                i,
-                parent1.load_grad[_nelts](i)
-                + node.load_grad[_nelts](i) * (x > 0.0).cast[DType_F32](),
-            )
-
-        vectorize[nelts, vectorized_relu_bw](node.load_cap())
-
-
-struct Selu(Activation):
-    # f(x) = x > 0 ? 1.05070098 * x : 1.05070098 * 1.67326324 * e^x - 1
-    # f'(x) = x > 0 ? 1 : 1.75809932607 * e^x - 1
-    @staticmethod
-    fn fw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_selu[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            node.store_data[_nelts](
-                i,
-                (x > 0.0).cast[DType_F32]() * 1.05070098 * x
-                + (x <= 0.0).cast[DType_F32]()
-                * 1.05070098
-                * 1.67326324
-                * (exp(x) - 1.0),
-            )
-
-        vectorize[nelts, vectorized_selu](node.load_cap())
-
-    @staticmethod
-    fn bw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_selu_bw[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            node.store_grad[_nelts](
-                i,
-                parent1.load_grad[_nelts](i)
-                + node.load_grad[_nelts](i)
-                * (
-                    (x > 0.0).cast[DType_F32]()
-                    + (x <= 0.0).cast[DType_F32]() * 1.75809932607 * exp(x)
-                ),
-            )
-
-        vectorize[nelts, vectorized_selu_bw](node.load_cap())
-
-
-struct Sigmoid(Activation):
-    # f(x) = 1 / (1 + e^-x)
-    # f'(x) = e^x / (e^x + 1) ** 2
-    @staticmethod
-    fn fw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_sig[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            node.store_data[_nelts](i, 1.0 / (1.0 + exp(-x)))
-
-        vectorize[nelts, vectorized_sig](node.load_cap())
-
-    @staticmethod
-    fn bw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_sig_bw[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            node.store_grad[_nelts](
-                i,
-                parent1.load_grad[_nelts](i)
-                + node.load_grad[_nelts](i) * (exp(x) / (exp(x) + 1.0) ** 2),
-            )
-
-        vectorize[nelts, vectorized_sig_bw](node.load_cap())
-
-
-struct Softmax(Activation):
+struct Softmax:
     # f(x) = e^wx_i / sum(e^wx_i)
     # f'x(x) = f(x) * (1 - f(x))
     @staticmethod
@@ -356,150 +290,3 @@ struct Softmax(Activation):
                 )
 
             vectorize[nelts, vectorized_softmax_bw_outer](N)
-
-
-struct Softplus(Activation):
-    # f(x) = ln(1 + e^x)
-    # f'(x) = e^x / (1 + e^x)
-    @staticmethod
-    fn fw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_softplus[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            node.store_data[_nelts](i, log(1.0 + exp(x)))
-
-        vectorize[nelts, vectorized_softplus](node.load_cap())
-
-    @staticmethod
-    fn bw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_softplus_bw[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            node.store_grad[_nelts](
-                i,
-                parent1.load_grad[_nelts](i)
-                + node.load_grad[_nelts](i) * (exp(x) / (1.0 + exp(x))),
-            )
-
-        vectorize[nelts, vectorized_softplus_bw](node.load_cap())
-
-
-struct Softsign(Activation):
-    # f(x) = x / (1 + abs(x))
-    # f'(x) = 1 / (1 + abs(x)) ** 2
-    @staticmethod
-    fn fw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_softsign[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            node.store_data[_nelts](
-                i,
-                x / (1.0 + abs(x)),
-            )
-
-        vectorize[nelts, vectorized_softsign](node.load_cap())
-
-    @staticmethod
-    fn bw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_softsign_bw[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            let f_x = node.load_data[_nelts](i)
-            node.store_grad[_nelts](
-                i,
-                parent1.load_grad[_nelts](i) + node.load_grad[_nelts](i) * f_x**2 / x,
-            )
-
-        vectorize[nelts, vectorized_softsign_bw](node.load_cap())
-
-
-struct Swish(Activation):
-    # f(x) = x / (1 + e^-x)
-    # f'(x) = (1 + e^-x + e^-x * x) / (1 + e^-x) ** 2
-    @staticmethod
-    fn fw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_swish[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            node.store_data[_nelts](
-                i,
-                x / (1.0 + exp(-x)),
-            )
-
-        vectorize[nelts, vectorized_swish](node.load_cap())
-
-    @staticmethod
-    fn bw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_swish_bw[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            let f_x = node.load_data[_nelts](i)
-            node.store_grad[_nelts](
-                i,
-                parent1.load_grad[_nelts](i)
-                + node.load_grad[_nelts](i)
-                * (f_x**2)
-                / x
-                * (1 + exp(-x) + exp(-x) * x),
-            )
-
-        vectorize[nelts, vectorized_swish_bw](node.load_cap())
-
-
-struct Tanh(Activation):
-    # f(x) = tanh(x)
-    # f'(x) = 1 - tanh(x) ** 2
-    @staticmethod
-    fn fw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_tanh[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            node.store_data[_nelts](i, tanh(x))
-
-        vectorize[nelts, vectorized_tanh](node.load_cap())
-
-    @staticmethod
-    fn bw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_tanh_bw[_nelts: Int](i: Int):
-            let f_x = node.load_data[_nelts](i)
-            parent1.store_grad[_nelts](
-                i,
-                parent1.load_grad[_nelts](i)
-                + node.load_grad[_nelts](i) * (1.0 - f_x**2),
-            )
-
-        vectorize[nelts, vectorized_tanh_bw](node.load_cap())
-
-
-struct LeakyReLu(Activation):
-    # f(x) = x > 0 ? x : alpha * x
-    # f'(x) = x > 0 ? 1 : alpha
-    @staticmethod
-    fn fw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_leaky_relu[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            let alpha = node.other_params_ptr.load().data.load().load() / 1000000.0
-            node.store_data[_nelts](
-                i,
-                (x > 0.0).cast[DType_F32]() * x
-                + (x <= 0.0).cast[DType_F32]() * alpha * x,
-            )
-
-        vectorize[nelts, vectorized_leaky_relu](node.load_cap())
-
-    @staticmethod
-    fn bw(node: Node, parent1: Node):
-        @parameter
-        fn vectorized_leaky_relu_bw[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            let alpha = node.other_params_ptr.load().data.load().load() / 1000000.0
-            parent1.store_grad[_nelts](
-                i,
-                parent1.load_grad[_nelts](i)
-                + node.load_grad[_nelts](i)
-                * ((x > 0.0).cast[DType_F32]() + (x <= 0.0).cast[DType_F32]() * alpha),
-            )
-
-        vectorize[nelts, vectorized_leaky_relu_bw](node.load_cap())
