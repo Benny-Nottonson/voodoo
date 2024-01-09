@@ -8,7 +8,7 @@ alias generic_vectorized = fn[_nelts: Int] (SIMD[DType_F32, _nelts]) -> SIMD[
 ]
 
 # TODO: Rewrite when lambda functions are supported
-
+# TODO: Rewrite leaky relu and softmax to use GenericActivation
 
 struct GenericActivation[fw_vec: generic_vectorized, bw_vec: generic_vectorized]:
     @staticmethod
