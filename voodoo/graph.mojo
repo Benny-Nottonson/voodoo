@@ -26,6 +26,7 @@ struct Graph:
     var grad_nodes_order: Pointer[Vector[Int]]
     var compiled: Pointer[Bool]
 
+    # TODO: Figure out how to make Kernels compile time constant, may need to rewrite the struct to not be a pointer
     fn __init__() -> Self:
         let nodes = Pointer[Vector[Pointer[Node]]].alloc(1)
         nodes.store(Vector[Pointer[Node]]())
