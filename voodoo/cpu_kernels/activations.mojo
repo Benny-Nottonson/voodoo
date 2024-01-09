@@ -7,6 +7,8 @@ alias generic_vectorized = fn[_nelts: Int] (SIMD[DType_F32, _nelts]) -> SIMD[
     DType_F32, _nelts
 ]
 
+# TODO: Rewrite when lambda functions are supported
+
 
 struct GenericActivation[fw_vec: generic_vectorized, bw_vec: generic_vectorized]:
     @staticmethod

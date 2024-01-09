@@ -16,6 +16,8 @@ from algorithm import vectorize
 from voodoo import Node
 from .constants import DType_F32, nelts
 
+# TODO: Rewrite when lambda functions are supported
+
 
 alias generic_vectorized = fn[_nelts: Int] (SIMD[DType_F32, _nelts]) -> SIMD[
     DType_F32, _nelts
