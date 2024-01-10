@@ -133,6 +133,15 @@ fn relu_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelt
 fn relu_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return (x > 0.0).cast[DType_F32]()
 
+@parameter
+fn relu6_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return (x > 0.0).cast[DType_F32]() * x + (x <= 0.0).cast[DType_F32]() * 6.0
+
+
+@parameter
+fn relu6_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    return (x > 0.0).cast[DType_F32]() - (x > 6.0).cast[DType_F32]()
+
 
 @parameter
 fn selu_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
@@ -298,3 +307,79 @@ struct _Softmax:
                 )
 
             vectorize[nelts, vectorized_softmax_bw_outer](N)
+
+
+struct _LogSoftmax:
+    # f(x) = log(e^wx_i / sum(e^wx_i))
+    # f'x(x) = f(x) * (1 - f(x))
+    # TODO: Factcheck this and softmax
+    @staticmethod
+    fn fw(node: Node, parent1: Node):
+        let num_dims = parent1.num_dims_ptr.load()
+        let N = parent1.shape_ptr.load().load(num_dims - 1)
+        for s in range(node.cap_ptr.load() // N):
+            let offset = s * N
+            var max_el: Float32 = 0.0
+
+            @parameter
+            fn vectorized_max[nelts: Int](i: Int):
+                max_el = max(max_el, parent1.load_data[nelts](offset + i).reduce_max())
+
+            vectorize[nelts, vectorized_max](N)
+            var sum: Float32 = 0.0
+
+            @parameter
+            fn vectorized_exp[nelts: Int](i: Int):
+                let temp = exp(parent1.load_data[nelts](offset + i) - max_el)
+                node.store_data[nelts](offset + i, temp)
+                sum += temp.reduce_add()
+
+            vectorize[nelts, vectorized_exp](N)
+
+            @parameter
+            fn vectorized_div[nelts: Int](i: Int):
+                node.store_data[nelts](
+                    offset + i, node.load_data[nelts](offset + i) / sum
+                )
+
+            vectorize[nelts, vectorized_div](N)
+
+            @parameter
+            fn vectorized_log[nelts: Int](i: Int):
+                node.store_data[nelts](
+                    offset + i, log(node.load_data[nelts](offset + i))
+                )
+
+            vectorize[nelts, vectorized_log](N)
+
+    @staticmethod
+    fn bw(node: Node, parent1: Node):
+        let num_dims = parent1.num_dims_ptr.load()
+        let N = parent1.shape_ptr.load().load(num_dims - 1)
+        for s in range(node.cap_ptr.load() // N):
+            let offset = s * N
+
+            @parameter
+            fn vectorized_log_softmax_bw_outer[nelts: Int](j: Int):
+                var grad: Float32 = 0.0
+
+                @parameter
+                fn vectorized_log_softmax_bw[nelts: Int](i: Int):
+                    if i == j:
+                        grad += (
+                            node.load_grad[nelts](offset + i)
+                            * (1.0 - node.load_data[nelts](offset + i))
+                        ).reduce_add()
+                    else:
+                        grad += (
+                            node.load_grad[nelts](offset + i)
+                            * node.load_data[nelts](offset + j)
+                            * -1
+                        ).reduce_add()
+
+                vectorize[nelts, vectorized_log_softmax_bw](N)
+                parent1.store_grad[nelts](
+                    offset + j, parent1.load_grad[nelts](offset + j) + grad
+                )
+
+            vectorize[nelts, vectorized_log_softmax_bw_outer](N)
