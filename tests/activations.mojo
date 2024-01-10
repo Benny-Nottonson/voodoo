@@ -124,67 +124,81 @@ fn test_fn[
 fn main() raises:
     let tf = Python.import_module("tensorflow")
     var total = 0
-    total += test_fn["elu"](
-        tf.keras.activations.elu, tf.constant, tf.float32, tf.math.reduce_sum
-    )
-    total += test_fn["exp"](
-        tf.keras.activations.exponential,
-        tf.constant,
-        tf.float32,
-        tf.math.reduce_sum,
-    )
-    total += test_fn["gelu"](
-        tf.keras.activations.gelu, tf.constant, tf.float32, tf.math.reduce_sum
-    )
-    total += test_fn["h_sig"](
-        tf.keras.activations.hard_sigmoid,
-        tf.constant,
-        tf.float32,
-        tf.math.reduce_sum,
-    )
-    total += test_fn["linear"](
-        tf.keras.activations.linear, tf.constant, tf.float32, tf.math.reduce_sum
-    )
-    total += test_fn["mish"](
-        tf.keras.activations.mish, tf.constant, tf.float32, tf.math.reduce_sum
-    )
+
     total += test_fn["relu"](
         tf.keras.activations.relu, tf.constant, tf.float32, tf.math.reduce_sum
     )
-    total += test_fn["selu"](
-        tf.keras.activations.selu, tf.constant, tf.float32, tf.math.reduce_sum
-    )
-    total += test_fn["sig"](
+    total += test_fn["sigmoid"](
         tf.keras.activations.sigmoid,
         tf.constant,
         tf.float32,
         tf.math.reduce_sum,
     )
+
     total += test_fn["softmax"](
         tf.keras.activations.softmax,
         tf.constant,
         tf.float32,
         tf.math.reduce_sum,
     )
+
     total += test_fn["softplus"](
         tf.keras.activations.softplus,
         tf.constant,
         tf.float32,
         tf.math.reduce_sum,
     )
+
     total += test_fn["softsign"](
         tf.keras.activations.softsign,
         tf.constant,
         tf.float32,
         tf.math.reduce_sum,
     )
-    total += test_fn["swish"](
-        tf.keras.activations.swish, tf.constant, tf.float32, tf.math.reduce_sum
-    )
+
     total += test_fn["tanh"](
         tf.keras.activations.tanh, tf.constant, tf.float32, tf.math.reduce_sum
     )
 
+    total += test_fn["selu"](
+        tf.keras.activations.selu, tf.constant, tf.float32, tf.math.reduce_sum
+    )
+
+    total += test_fn["elu"](
+        tf.keras.activations.elu, tf.constant, tf.float32, tf.math.reduce_sum
+    )
+
+    total += test_fn["exp"](
+        tf.keras.activations.exponential,
+        tf.constant,
+        tf.float32,
+        tf.math.reduce_sum,
+    )
+
+    total += test_fn["silu"](
+        tf.keras.activations.swish, tf.constant, tf.float32, tf.math.reduce_sum
+    )
+
+    total += test_fn["gelu"](
+        tf.keras.activations.gelu, tf.constant, tf.float32, tf.math.reduce_sum
+    )
+
+
+    total += test_fn["h_sig"](
+        tf.keras.activations.hard_sigmoid,
+        tf.constant,
+        tf.float32,
+        tf.math.reduce_sum,
+    )
+
+    total += test_fn["linear"](
+        tf.keras.activations.linear, tf.constant, tf.float32, tf.math.reduce_sum
+    )
+
+    total += test_fn["mish"](
+        tf.keras.activations.mish, tf.constant, tf.float32, tf.math.reduce_sum
+    )
+    
     if total == 0:
         print("✅ All tests passed")
     elif total == 1:

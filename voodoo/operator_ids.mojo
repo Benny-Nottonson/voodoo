@@ -26,22 +26,25 @@ alias conv2d_code = 46
 alias mpool2dd_code = 48
 
 # Activation Functions
-alias elu_code = 60
-alias exp_code = 62
-alias gelu_code = 64
-alias h_sig_code = 66
-alias linear_code = 68
-alias mish_code = 70
-alias relu_code = 72
-alias selu_code = 74
-alias sig_code = 76
-alias softmax_code = 78
-alias softplus_code = 80
-alias softsign_code = 82
-alias swish_code = 84
-alias tanh_code = 86
-alias lrelu_code = 88
-alias dropout_code = 90
+alias relu_code = 50
+alias sigmoid_code = 52
+alias softmax_code = 54
+alias softplus_code = 56
+alias softsign_code = 58
+alias tanh_code = 60
+alias selu_code = 62
+alias elu_code = 64
+alias exp_code = 66
+alias leaky_relu_code = 68
+alias relu6_code = 70
+alias silu_code = 72
+alias gelu_code = 74
+alias hard_sigmoid_code = 76
+alias linear_code = 78
+alias mish_code = 80
+alias log_softmax_code = 82
+
+alias dropout_code = 84
 
 # Loss functions
 alias mae_code = 92
