@@ -12,6 +12,18 @@ from voodoo import Node
 from .constants import DType_F32, nelts, workers
 
 
+@parameter
+fn base_case_strides(depth: Int, a: Node, b: Node) -> Bool:
+    return strides_a(depth, a, b) * shape_a(depth, a, b) == strides_b(
+        depth, a, b
+    ) * shape_b(depth, a, b)
+
+
+@parameter
+fn base_case_depth(depth: Int, a: Node, b: Node) -> Bool:
+    return depth == max(a.num_dims_ptr.load(), b.num_dims_ptr.load()) - 2
+
+
 trait BinaryArithmetic:
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
@@ -25,21 +37,14 @@ trait BinaryArithmetic:
 struct Add(BinaryArithmetic):
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
-        recursive_broadcast[Self.kernel_add_fw, Self.base_case_add_fw](c, a, b)
+        recursive_broadcast[Self.kernel_add_fw, base_case_strides](c, a, b)
 
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
         if not a.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_add_bw_a, Self.base_case_add_bw](c, a, b)
+            recursive_broadcast_bw[Self.kernel_add_bw_a, base_case_strides](c, a, b)
         if not b.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_add_bw_b, Self.base_case_add_bw](c, a, b)
-
-    @parameter
-    @staticmethod
-    fn base_case_add_fw(depth: Int, a: Node, b: Node) -> Bool:
-        return strides_a(depth, a, b) * shape_a(depth, a, b) == strides_b(
-            depth, a, b
-        ) * shape_b(depth, a, b)
+            recursive_broadcast_bw[Self.kernel_add_bw_b, base_case_strides](c, a, b)
 
     @parameter
     @staticmethod
@@ -59,13 +64,6 @@ struct Add(BinaryArithmetic):
             )
 
         vectorize[nelts, vectorized_add](c_rest)
-
-    @parameter
-    @staticmethod
-    fn base_case_add_bw(depth: Int, a: Node, b: Node) -> Bool:
-        return strides_a(depth, a, b) * shape_a(depth, a, b) == strides_b(
-            depth, a, b
-        ) * shape_b(depth, a, b)
 
     @parameter
     @staticmethod
@@ -109,21 +107,14 @@ struct Add(BinaryArithmetic):
 struct Mul(BinaryArithmetic):
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
-        recursive_broadcast[Self.kernel_mul_fw, Self.base_case_mul_fw](c, a, b)
+        recursive_broadcast[Self.kernel_mul_fw, base_case_strides](c, a, b)
 
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
         if not a.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_mul_bw_a, Self.base_case_mul_bw](c, a, b)
+            recursive_broadcast_bw[Self.kernel_mul_bw_a, base_case_strides](c, a, b)
         if not b.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_mul_bw_b, Self.base_case_mul_bw](c, a, b)
-
-    @parameter
-    @staticmethod
-    fn base_case_mul_fw(depth: Int, a: Node, b: Node) -> Bool:
-        return strides_a(depth, a, b) * shape_a(depth, a, b) == strides_b(
-            depth, a, b
-        ) * shape_b(depth, a, b)
+            recursive_broadcast_bw[Self.kernel_mul_bw_b, base_case_strides](c, a, b)
 
     @parameter
     @staticmethod
@@ -143,13 +134,6 @@ struct Mul(BinaryArithmetic):
             )
 
         vectorize[nelts, vectorized_mul](c_rest)
-
-    @parameter
-    @staticmethod
-    fn base_case_mul_bw(depth: Int, a: Node, b: Node) -> Bool:
-        return strides_a(depth, a, b) * shape_a(depth, a, b) == strides_b(
-            depth, a, b
-        ) * shape_b(depth, a, b)
 
     @parameter
     @staticmethod
@@ -195,21 +179,14 @@ struct Mul(BinaryArithmetic):
 struct Sub(BinaryArithmetic):
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
-        recursive_broadcast[Self.kernel_sub_fw, Self.base_case_sub_fw](c, a, b)
+        recursive_broadcast[Self.kernel_sub_fw, base_case_strides](c, a, b)
 
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
         if not a.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_sub_bw_a, Self.base_case_sub_bw](c, a, b)
+            recursive_broadcast_bw[Self.kernel_sub_bw_a, base_case_strides](c, a, b)
         if not b.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_sub_bw_b, Self.base_case_sub_bw](c, a, b)
-
-    @parameter
-    @staticmethod
-    fn base_case_sub_fw(depth: Int, a: Node, b: Node) -> Bool:
-        return strides_a(depth, a, b) * shape_a(depth, a, b) == strides_b(
-            depth, a, b
-        ) * shape_b(depth, a, b)
+            recursive_broadcast_bw[Self.kernel_sub_bw_b, base_case_strides](c, a, b)
 
     @parameter
     @staticmethod
@@ -229,13 +206,6 @@ struct Sub(BinaryArithmetic):
             )
 
         vectorize[nelts, vectorized_sub](c_rest)
-
-    @parameter
-    @staticmethod
-    fn base_case_sub_bw(depth: Int, a: Node, b: Node) -> Bool:
-        return strides_a(depth, a, b) * shape_a(depth, a, b) == strides_b(
-            depth, a, b
-        ) * shape_b(depth, a, b)
 
     @parameter
     @staticmethod
@@ -279,27 +249,18 @@ struct Sub(BinaryArithmetic):
 struct Div(BinaryArithmetic):
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
-        recursive_broadcast[
-            Self.kernel_divectorized_fw, Self.base_case_divectorized_fw
-        ](c, a, b)
+        recursive_broadcast[Self.kernel_divectorized_fw, base_case_strides](c, a, b)
 
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
         if not a.is_single_ptr.load():
-            recursive_broadcast_bw[
-                Self.kernel_divectorized_bw_a, Self.base_case_divectorized_bw
-            ](c, a, b)
+            recursive_broadcast_bw[Self.kernel_divectorized_bw_a, base_case_strides](
+                c, a, b
+            )
         if not b.is_single_ptr.load():
-            recursive_broadcast_bw[
-                Self.kernel_divectorized_bw_b, Self.base_case_divectorized_bw
-            ](c, a, b)
-
-    @parameter
-    @staticmethod
-    fn base_case_divectorized_fw(depth: Int, a: Node, b: Node) -> Bool:
-        return strides_a(depth, a, b) * shape_a(depth, a, b) == strides_b(
-            depth, a, b
-        ) * shape_b(depth, a, b)
+            recursive_broadcast_bw[Self.kernel_divectorized_bw_b, base_case_strides](
+                c, a, b
+            )
 
     @parameter
     @staticmethod
@@ -319,13 +280,6 @@ struct Div(BinaryArithmetic):
             )
 
         vectorize[nelts, vectorized_div](c_rest)
-
-    @parameter
-    @staticmethod
-    fn base_case_divectorized_bw(depth: Int, a: Node, b: Node) -> Bool:
-        return strides_a(depth, a, b) * shape_a(depth, a, b) == strides_b(
-            depth, a, b
-        ) * shape_b(depth, a, b)
 
     @parameter
     @staticmethod
@@ -373,23 +327,14 @@ struct Div(BinaryArithmetic):
 struct MMul(BinaryArithmetic):
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
-        recursive_broadcast[Self.kernel_mmul_fw, Self.base_case_mmul_fw](c, a, b)
+        recursive_broadcast[Self.kernel_mmul_fw, base_case_depth](c, a, b)
 
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
         if not a.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_mmul_bw_a, Self.base_case_mmul_bw](
-                c, a, b
-            )
+            recursive_broadcast_bw[Self.kernel_mmul_bw_a, base_case_depth](c, a, b)
         if not b.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_mmul_bw_b, Self.base_case_mmul_bw](
-                c, a, b
-            )
-
-    @parameter
-    @staticmethod
-    fn base_case_mmul_fw(depth: Int, a: Node, b: Node) -> Bool:
-        return depth == max(a.num_dims_ptr.load(), b.num_dims_ptr.load()) - 2
+            recursive_broadcast_bw[Self.kernel_mmul_bw_b, base_case_depth](c, a, b)
 
     @parameter
     @staticmethod
@@ -426,11 +371,6 @@ struct MMul(BinaryArithmetic):
                 vectorize[nelts, dot_fw](N)
 
         parallelize[calc_row_fw](M, workers if workers > 0 else M)
-
-    @parameter
-    @staticmethod
-    fn base_case_mmul_bw(depth: Int, a: Node, b: Node) -> Bool:
-        return depth == max(a.num_dims_ptr.load(), b.num_dims_ptr.load()) - 2
 
     @parameter
     @staticmethod
@@ -504,21 +444,14 @@ struct MMul(BinaryArithmetic):
 struct Pow(BinaryArithmetic):
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
-        recursive_broadcast[Self.kernel_pow_fw, Self.base_case_pow_fw](c, a, b)
+        recursive_broadcast[Self.kernel_pow_fw, base_case_strides](c, a, b)
 
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
         if not a.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_pow_bw_a, Self.base_case_pow_bw](c, a, b)
+            recursive_broadcast_bw[Self.kernel_pow_bw_a, base_case_strides](c, a, b)
         if not b.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_pow_bw_b, Self.base_case_pow_bw](c, a, b)
-
-    @parameter
-    @staticmethod
-    fn base_case_pow_fw(depth: Int, a: Node, b: Node) -> Bool:
-        return strides_a(depth, a, b) * shape_a(depth, a, b) == strides_b(
-            depth, a, b
-        ) * shape_b(depth, a, b)
+            recursive_broadcast_bw[Self.kernel_pow_bw_b, base_case_strides](c, a, b)
 
     @parameter
     @staticmethod
@@ -538,13 +471,6 @@ struct Pow(BinaryArithmetic):
             )
 
         vectorize[nelts, vectorized_pow](c_rest)
-
-    @parameter
-    @staticmethod
-    fn base_case_pow_bw(depth: Int, a: Node, b: Node) -> Bool:
-        return strides_a(depth, a, b) * shape_a(depth, a, b) == strides_b(
-            depth, a, b
-        ) * shape_b(depth, a, b)
 
     @parameter
     @staticmethod

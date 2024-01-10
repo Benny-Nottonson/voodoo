@@ -10,6 +10,7 @@ alias generic_vectorized = fn[_nelts: Int] (SIMD[DType_F32, _nelts]) -> SIMD[
 # TODO: Rewrite when lambda functions are supported
 # TODO: Rewrite leaky relu and softmax to use GenericActivation
 
+
 struct GenericActivation[fw_vec: generic_vectorized, bw_vec: generic_vectorized]:
     @staticmethod
     fn fw(node: Node, parent1: Node):
@@ -37,41 +38,54 @@ struct GenericActivation[fw_vec: generic_vectorized, bw_vec: generic_vectorized]
         vectorize[nelts, generic_vectorized_bw](node.load_cap())
 
 
+alias Elu = GenericActivation[elu_fw_vec, elu_bw_vec]
+alias Exp = GenericActivation[exp_fw_vec, exp_bw_vec]
+alias Gelu = GenericActivation[gelu_fw_vec, gelu_bw_vec]
+alias HardSigmoid = GenericActivation[hard_sigmoid_fw_vec, hard_sigmoid_bw_vec]
+alias Linear = GenericActivation[linear_fw_vec, linear_bw_vec]
+alias Mish = GenericActivation[mish_fw_vec, mish_bw_vec]
+alias ReLu = GenericActivation[relu_fw_vec, relu_bw_vec]
+alias Selu = GenericActivation[selu_fw_vec, selu_bw_vec]
+alias Sigmoid = GenericActivation[sigmoid_fw_vec, sigmoid_bw_vec]
+alias Softplus = GenericActivation[softplus_fw_vec, softplus_bw_vec]
+alias Softsign = GenericActivation[softsign_fw_vec, softsign_bw_vec]
+alias Swish = GenericActivation[swish_fw_vec, swish_bw_vec]
+alias Tanh = GenericActivation[tanh_fw_vec, tanh_bw_vec]
+
+
+@parameter
 fn elu_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return (x > 0.0).cast[DType_F32]() * x + (x <= 0.0).cast[DType_F32]() * (
         exp(x) - 1.0
     )
 
 
+@parameter
 fn elu_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return (x > 0.0).cast[DType_F32]() + (x <= 0.0).cast[DType_F32]() * exp(x)
 
 
-alias Elu = GenericActivation[elu_fw_vec, elu_bw_vec]
-
-
+@parameter
 fn exp_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return exp(x)
 
 
+@parameter
 fn exp_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return exp(x)
 
 
-alias Exp = GenericActivation[exp_fw_vec, exp_bw_vec]
-
-
+@parameter
 fn gelu_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return 0.5 * x * (1.0 + erf(x / 1.4142135623730951))
 
 
+@parameter
 fn gelu_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return (x / x) + x * 0.56418958354 * exp(-0.5 * (x / 1.4142135623730951) ** 2)
 
 
-alias Gelu = GenericActivation[gelu_fw_vec, gelu_bw_vec]
-
-
+@parameter
 fn hard_sigmoid_fw_vec[
     _nelts: Int
 ](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
@@ -80,116 +94,105 @@ fn hard_sigmoid_fw_vec[
     ]() * (0.2 * x + 0.5)
 
 
+@parameter
 fn hard_sigmoid_bw_vec[
     _nelts: Int
 ](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return (x > -2.5).cast[DType_F32]() * (x < 2.5).cast[DType_F32]() * 0.2
 
 
-alias HardSigmoid = GenericActivation[hard_sigmoid_fw_vec, hard_sigmoid_bw_vec]
-
-
+@parameter
 fn linear_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return x
 
 
+@parameter
 fn linear_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return 1
 
 
-alias Linear = GenericActivation[linear_fw_vec, linear_bw_vec]
-
-
+@parameter
 fn mish_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return x * tanh(log(1.0 + exp(x)))
 
 
+@parameter
 fn mish_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return (x / x) + x * (1.0 - tanh(log(1.0 + exp(x))) ** 2) * (1.0 / (1.0 + exp(-x)))
 
 
-alias Mish = GenericActivation[mish_fw_vec, mish_bw_vec]
-
-
+@parameter
 fn relu_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return (x > 0.0).cast[DType_F32]() * x
 
 
+@parameter
 fn relu_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return (x > 0.0).cast[DType_F32]()
 
 
-alias ReLu = GenericActivation[relu_fw_vec, relu_bw_vec]
-
-
+@parameter
 fn selu_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return (x > 0.0).cast[DType_F32]() * 1.05070098 * x + (x <= 0.0).cast[
         DType_F32
     ]() * 1.05070098 * 1.67326324 * (exp(x) - 1.0)
 
 
+@parameter
 fn selu_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return (x > 0.0).cast[DType_F32]() + (x <= 0.0).cast[
         DType_F32
     ]() * 1.75809932607 * exp(x)
 
 
-alias Selu = GenericActivation[selu_fw_vec, selu_bw_vec]
-
-
+@parameter
 fn sigmoid_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return 1.0 / (1.0 + exp(-x))
 
 
+@parameter
 fn sigmoid_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return exp(x) / (exp(x) + 1.0) ** 2
 
 
-alias Sigmoid = GenericActivation[sigmoid_fw_vec, sigmoid_bw_vec]
-
-
+@parameter
 fn softplus_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return log(1.0 + exp(x))
 
 
+@parameter
 fn softplus_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return exp(x) / (1.0 + exp(x))
 
 
-alias Softplus = GenericActivation[softplus_fw_vec, softplus_bw_vec]
-
-
+@parameter
 fn softsign_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return x / (1.0 + abs(x))
 
 
+@parameter
 fn softsign_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return x**2 / (1.0 + abs(x)) ** 2
 
 
-alias Softsign = GenericActivation[softsign_fw_vec, softsign_bw_vec]
-
-
+@parameter
 fn swish_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return x / (1.0 + exp(-x))
 
 
+@parameter
 fn swish_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return (x / x) + x * (1.0 - x / (1.0 + exp(-x))) * (1.0 / (1.0 + exp(-x)))
 
 
-alias Swish = GenericActivation[swish_fw_vec, swish_bw_vec]
-
-
+@parameter
 fn tanh_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return tanh(x)
 
 
+@parameter
 fn tanh_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return 1.0 - tanh(x) ** 2
-
-
-alias Tanh = GenericActivation[tanh_fw_vec, tanh_bw_vec]
 
 
 struct LeakyReLu:
