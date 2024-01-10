@@ -1,7 +1,3 @@
-from memory import memset_zero
-from math import ceil
-from algorithm import vectorize
-
 from .node import Node
 from .graph import Graph, memory_pool_size
 from .utils import Vector
@@ -276,50 +272,29 @@ struct Tensor:
         )
         return new_tensor
 
-    fn __add__(self, other: Tensor) raises -> Tensor:
+    fn _magic_arithmetic_generic[operation_code: Int](self, other: Tensor) raises -> Tensor:
         let new_tensor = self.load_tensor_for_binary_op(other)
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()
             .load()
-            .arithmetic_general[add_code](self.node_ptr.load(), other.node_ptr.load())
+            .arithmetic_general[operation_code](self.node_ptr.load(), other.node_ptr.load())
         )
         return new_tensor
+
+    fn __add__(self, other: Tensor) raises -> Tensor:
+        return self._magic_arithmetic_generic[add_code](other)
 
     fn __sub__(self, other: Tensor) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load()
-            .load()
-            .arithmetic_general[sub_code](self.node_ptr.load(), other.node_ptr.load())
-        )
-        return new_tensor
+        return self._magic_arithmetic_generic[sub_code](other)
 
     fn __mul__(self, other: Tensor) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load()
-            .load()
-            .arithmetic_general[mul_code](self.node_ptr.load(), other.node_ptr.load())
-        )
-        return new_tensor
+        return self._magic_arithmetic_generic[mul_code](other)
 
     fn __truediv__(self, other: Tensor) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load()
-            .load()
-            .arithmetic_general[div_code](self.node_ptr.load(), other.node_ptr.load())
-        )
-        return new_tensor
+        return self._magic_arithmetic_generic[div_code](other)
 
     fn __pow__(self, other: Tensor) raises -> Tensor:
-        let new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load()
-            .load()
-            .arithmetic_general[pow_code](self.node_ptr.load(), other.node_ptr.load())
-        )
-        return new_tensor
+        return self._magic_arithmetic_generic[pow_code](other)
 
     fn __matmul__(self, other: Tensor) raises -> Tensor:
         let new_tensor = self.load_tensor_for_binary_op(other)
