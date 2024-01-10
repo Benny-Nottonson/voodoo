@@ -9,6 +9,11 @@ alias DTVector = Vector[VectorF32]
 
 from .utils import Vector
 
+'''
+Orthogonal class
+VarianceScaling class
+'''
+
 
 # TODO: Clean up
 @register_passable("trivial")
@@ -267,6 +272,7 @@ struct Node:
             raise "Invalid initialization function " + initialization_function
 
     # TODO: Extract to a different module, potentially as cpu instructions
+    # TODO: Use generics and implement all needed paramters
     fn glorot_normal(self):
         let fan_in = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 2)
         let fan_out = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 1)
@@ -290,6 +296,7 @@ struct Node:
         self.random_uniform(-scale, scale)
 
     fn he_random(self):
+        # TODO: Check and implement Variance Scaling
         seed()
         let pi = 3.14159265358979
         let u1 = DTypePointer[DType.float32].alloc(self.cap_ptr.load())
@@ -366,6 +373,42 @@ struct Node:
 
     fn zeros(self):
         self.fill(0.0)
+
+
+    fn orthoganal(self, gain: Float32 = 1.0):
+        # TODO: Check
+        let num_dims = self.num_dims_ptr.load()
+        let row: Int = self.shape_ptr.load().load(num_dims - 2)
+        let cols: Int = self.shape_ptr.load().load(num_dims - 1)
+        let col_strides: Int = (
+            self.strides_ptr.load().load(0) * self.shape_ptr.load().load(0)
+        ) // cols
+        let tmp = VectorF32(col_strides)
+        for i in range(col_strides):
+            for j in range(cols):
+                if i == j:
+                    tmp.store(i * cols + j, 1.0)
+                else:
+                    tmp.store(i * cols + j, 0.0)
+        seed()
+        let pi = 3.14159265358979
+        let u1 = DTypePointer[DType.float32].alloc(col_strides)
+        let u2 = DTypePointer[DType.float32].alloc(col_strides)
+        rand(u1, col_strides)
+        rand(u2, col_strides)
+        for i in range(col_strides):
+            let z = sqrt(-2.0 * log(u1.load(i))) * cos(2.0 * pi * u2.load(i))
+            tmp.store(i, z)
+        let tmp2 = VectorF32(col_strides)
+        for i in range(col_strides):
+            tmp2.store(i, tmp.load(i))
+        for i in range(col_strides):
+            for j in range(cols):
+                tmp.store(i * cols + j, tmp2.load(i) * gain)
+        for i in range(col_strides):
+            for j in range(cols):
+                self.store_data(i * cols + j, tmp.load(i * cols + j))
+                
 
     @always_inline
     fn print(self, accuracy: Int = 6):

@@ -38,7 +38,7 @@ struct GenericActivation[fw_vec: generic_vectorized, bw_vec: generic_vectorized]
 
         vectorize[nelts, generic_vectorized_bw](node.load_cap())
 
-
+# TODO: Implement all needed parameters for certain activations
 alias Elu = GenericActivation[elu_fw_vec, elu_bw_vec]
 alias Exp = GenericActivation[exp_fw_vec, exp_bw_vec]
 alias Gelu = GenericActivation[gelu_fw_vec, gelu_bw_vec]
