@@ -54,6 +54,7 @@ alias Swish = GenericActivation[swish_fw_vec, swish_bw_vec]
 alias Tanh = GenericActivation[tanh_fw_vec, tanh_bw_vec]
 alias LeakyReLu = _LeakyReLu
 alias Softmax = _Softmax
+alias LogSoftmax = _LogSoftmax
 
 
 @parameter
@@ -132,6 +133,7 @@ fn relu_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelt
 @parameter
 fn relu_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     return (x > 0.0).cast[DType_F32]()
+
 
 @parameter
 fn relu6_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
