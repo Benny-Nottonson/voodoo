@@ -3,6 +3,8 @@ from algorithm import vectorize
 from voodoo import Node
 from .constants import DType_F32, nelts, epsilon
 
+# TODO: Rewrite to use generic functions where possible
+
 
 trait Loss:
     @staticmethod

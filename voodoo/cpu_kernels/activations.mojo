@@ -9,6 +9,7 @@ alias generic_vectorized = fn[_nelts: Int] (SIMD[DType_F32, _nelts]) -> SIMD[
 
 # TODO: Rewrite when lambda functions are supported
 # TODO: Rewrite leaky relu and softmax to use GenericActivation
+# TODO: Add comments for each function and check for optimized estimatorss
 
 
 struct GenericActivation[fw_vec: generic_vectorized, bw_vec: generic_vectorized]:
@@ -51,6 +52,8 @@ alias Softplus = GenericActivation[softplus_fw_vec, softplus_bw_vec]
 alias Softsign = GenericActivation[softsign_fw_vec, softsign_bw_vec]
 alias Swish = GenericActivation[swish_fw_vec, swish_bw_vec]
 alias Tanh = GenericActivation[tanh_fw_vec, tanh_bw_vec]
+alias LeakyReLu = _LeakyReLu
+alias Softmax = _Softmax
 
 
 @parameter
@@ -195,7 +198,7 @@ fn tanh_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelt
     return 1.0 - tanh(x) ** 2
 
 
-struct LeakyReLu:
+struct _LeakyReLu:
     # f(x) = x > 0 ? x : alpha * x
     # f'(x) = x > 0 ? 1 : alpha
     @staticmethod
@@ -228,7 +231,7 @@ struct LeakyReLu:
         vectorize[nelts, vectorized_leaky_relu_bw](node.load_cap())
 
 
-struct Softmax:
+struct _Softmax:
     # f(x) = e^wx_i / sum(e^wx_i)
     # f'x(x) = f(x) * (1 - f(x))
     @staticmethod

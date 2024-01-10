@@ -11,6 +11,8 @@ from voodoo.utils import (
 from voodoo import Node
 from .constants import DType_F32, nelts, workers
 
+# TODO: Rewrite to use generic functions where possible
+
 
 @parameter
 fn base_case_strides(depth: Int, a: Node, b: Node) -> Bool:

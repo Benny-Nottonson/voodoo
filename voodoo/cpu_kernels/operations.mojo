@@ -4,6 +4,8 @@ from voodoo import Node
 from .constants import DType_F32, nelts
 from algorithm import *
 
+# TODO: Rewrite to use generic functions where possible
+
 
 trait Operation:
     @staticmethod
