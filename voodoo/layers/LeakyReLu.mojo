@@ -7,7 +7,7 @@ struct LeakyReLu[
     out_neurons: Int,
     use_bias: Bool = True,
     weight_initializer: String = "he_normal",
-    bias_initializer: String = "he_normal",
+    bias_initializer: String = "zeros",
     weight_mean: Float32 = 0.0,
     weight_std: Float32 = 0.05,
     bias_mean: Float32 = 0.0,
