@@ -57,7 +57,7 @@ struct Generic[
         let offset_c = c_index * c_rest
 
         @parameter
-        fn vectorized_generic[nelts: Int](i: Int):
+        fn vectorized_fw[nelts: Int](i: Int):
             c.store_data[nelts](
                 offset_c + i,
                 generic_func(
@@ -65,7 +65,7 @@ struct Generic[
                 ),
             )
 
-        vectorize[nelts, vectorized_generic](c_rest)
+        vectorize[nelts, vectorized_fw](c_rest)
 
     @parameter
     @staticmethod
@@ -83,7 +83,7 @@ struct Generic[
         let offset_c = c_index * c_rest
 
         @parameter
-        fn vectorized_generic_a[nelts: Int](i: Int):
+        fn vectorized_bw_a[nelts: Int](i: Int):
             a.store_grad[nelts](
                 offset_a + i,
                 a.load_grad[nelts](offset_a + i)
@@ -95,7 +95,7 @@ struct Generic[
             )
 
         @parameter
-        fn vectorized_generic_b[nelts: Int](i: Int):
+        fn vectorized_bw_b[nelts: Int](i: Int):
             b.store_grad[nelts](
                 offset_b + i,
                 b.load_grad[nelts](offset_b + i)
@@ -108,9 +108,9 @@ struct Generic[
 
         @parameter
         if is_a:
-            vectorize[nelts, vectorized_generic_a](c_rest)
+            vectorize[nelts, vectorized_bw_a](c_rest)
         else:
-            vectorize[nelts, vectorized_generic_b](c_rest)
+            vectorize[nelts, vectorized_bw_b](c_rest)
 
 
 alias Add = Generic[add_fw, bw_add, bw_add]

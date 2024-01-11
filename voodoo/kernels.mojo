@@ -37,7 +37,6 @@ from .cpu_kernels.activations import (
     LeakyRelu,
     Relu6,
     Silu,
-    Swish,
     Gelu,
     HardSigmoid,
     Linear,
@@ -120,7 +119,7 @@ struct Kernels:
         k.store("softmax", softmax_code, Softmax.fw, Softmax.bw)
         k.store("softplus", softplus_code, Softplus.fw, Softplus.bw)
         k.store("softsign", softsign_code, Softsign.fw, Softsign.bw)
-        k.store("swish", silu_code, Swish.fw, Swish.bw)
+        k.store("silu", silu_code, Silu.fw, Silu.bw)
         k.store("tanh", tanh_code, Tanh.fw, Tanh.bw)
         k.store("lrelu", leaky_relu_code, LeakyRelu[0.0].fw, LeakyRelu[0.0].bw)
         k.store("dropout", dropout_code, Dropout.fw, Dropout.bw)

@@ -10,7 +10,7 @@ alias generic_vectorized = fn[
 # TODO: Rewrite when lambda functions are supported
 
 
-struct GenericActivation[
+struct Generic[
     fw_vec: generic_vectorized,
     bw_vec: generic_vectorized,
     arg1: Float32,
@@ -20,18 +20,18 @@ struct GenericActivation[
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter
-        fn generic_vectorized_fw[_nelts: Int](i: Int):
+        fn vectorized_fw[_nelts: Int](i: Int):
             node.store_data[_nelts](
                 i,
                 fw_vec[_nelts, arg1, arg2, arg3](parent1.load_data[_nelts](i)),
             )
 
-        vectorize[nelts, generic_vectorized_fw](node.load_cap())
+        vectorize[nelts, vectorized_fw](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
-        fn generic_vectorized_bw[_nelts: Int](i: Int):
+        fn vectorized_bw[_nelts: Int](i: Int):
             parent1.store_grad[_nelts](
                 i,
                 parent1.load_grad[_nelts](i)
@@ -39,97 +39,90 @@ struct GenericActivation[
                 * bw_vec[_nelts, arg1, arg2, arg3](parent1.load_data[_nelts](i)),
             )
 
-        vectorize[nelts, generic_vectorized_bw](node.load_cap())
+        vectorize[nelts, vectorized_bw](node.load_cap())
 
 
 struct Relu[arg1: Float32 = 0.0, arg2: Float32 = f32_max, arg3: Float32 = 0.0]:
-    alias fw = GenericActivation[relu_fw_vec, relu_bw_vec, arg1, arg2, arg3].fw
-    alias bw = GenericActivation[relu_fw_vec, relu_bw_vec, arg1, arg2, arg3].bw
+    alias fw = Generic[relu_fw_vec, relu_bw_vec, arg1, arg2, arg3].fw
+    alias bw = Generic[relu_fw_vec, relu_bw_vec, arg1, arg2, arg3].bw
 
 
-struct Sigmoid:
-    alias fw = GenericActivation[sigmoid_fw_vec, sigmoid_bw_vec, 0.0, 0.0, 0.0].fw
-    alias bw = GenericActivation[sigmoid_fw_vec, sigmoid_bw_vec, 0.0, 0.0, 0.0].bw
+struct Sigmoid[]:
+    alias fw = Generic[sigmoid_fw_vec, sigmoid_bw_vec, 0.0, 0.0, 0.0].fw
+    alias bw = Generic[sigmoid_fw_vec, sigmoid_bw_vec, 0.0, 0.0, 0.0].bw
 
 
-struct Softmax:
+struct Softmax[]:
     alias fw = _Softmax.fw
     alias bw = _Softmax.bw
 
 
-struct Softplus:
-    alias fw = GenericActivation[softplus_fw_vec, softplus_bw_vec, 0.0, 0.0, 0.0].fw
-    alias bw = GenericActivation[softplus_fw_vec, softplus_bw_vec, 0.0, 0.0, 0.0].bw
+struct Softplus[]:
+    alias fw = Generic[softplus_fw_vec, softplus_bw_vec, 0.0, 0.0, 0.0].fw
+    alias bw = Generic[softplus_fw_vec, softplus_bw_vec, 0.0, 0.0, 0.0].bw
 
 
-struct Softsign:
-    alias fw = GenericActivation[softsign_fw_vec, softsign_bw_vec, 0.0, 0.0, 0.0].fw
-    alias bw = GenericActivation[softsign_fw_vec, softsign_bw_vec, 0.0, 0.0, 0.0].bw
+struct Softsign[]:
+    alias fw = Generic[softsign_fw_vec, softsign_bw_vec, 0.0, 0.0, 0.0].fw
+    alias bw = Generic[softsign_fw_vec, softsign_bw_vec, 0.0, 0.0, 0.0].bw
 
 
-struct Tanh:
-    alias fw = GenericActivation[tanh_fw_vec, tanh_bw_vec, 0.0, 0.0, 0.0].fw
-    alias bw = GenericActivation[tanh_fw_vec, tanh_bw_vec, 0.0, 0.0, 0.0].bw
+struct Tanh[]:
+    alias fw = Generic[tanh_fw_vec, tanh_bw_vec, 0.0, 0.0, 0.0].fw
+    alias bw = Generic[tanh_fw_vec, tanh_bw_vec, 0.0, 0.0, 0.0].bw
 
 
-struct Selu:
-    alias fw = GenericActivation[selu_fw_vec, selu_bw_vec, 0.0, 0.0, 0.0].fw
-    alias bw = GenericActivation[selu_fw_vec, selu_bw_vec, 0.0, 0.0, 0.0].bw
+struct Selu[]:
+    alias fw = Generic[selu_fw_vec, selu_bw_vec, 0.0, 0.0, 0.0].fw
+    alias bw = Generic[selu_fw_vec, selu_bw_vec, 0.0, 0.0, 0.0].bw
 
 
 struct Elu[alpha: Float32 = 1.0]:
-    alias fw = GenericActivation[elu_fw_vec, elu_bw_vec, 0.0, 0.0, alpha].fw
-    alias bw = GenericActivation[elu_fw_vec, elu_bw_vec, 0.0, 0.0, alpha].bw
+    alias fw = Generic[elu_fw_vec, elu_bw_vec, 0.0, 0.0, alpha].fw
+    alias bw = Generic[elu_fw_vec, elu_bw_vec, 0.0, 0.0, alpha].bw
 
 
-struct Exp:
-    alias fw = GenericActivation[exp_fw_vec, exp_bw_vec, 0.0, 0.0, 0.0].fw
-    alias bw = GenericActivation[exp_fw_vec, exp_bw_vec, 0.0, 0.0, 0.0].bw
+struct Exp[]:
+    alias fw = Generic[exp_fw_vec, exp_bw_vec, 0.0, 0.0, 0.0].fw
+    alias bw = Generic[exp_fw_vec, exp_bw_vec, 0.0, 0.0, 0.0].bw
 
 
 struct LeakyRelu[alpha: Float32 = 0.0]:
-    alias fw = GenericActivation[relu_fw_vec, relu_bw_vec, alpha, f32_max, 0.0].fw
-    alias bw = GenericActivation[relu_fw_vec, relu_bw_vec, alpha, f32_max, 0.0].bw
+    alias fw = Generic[relu_fw_vec, relu_bw_vec, alpha, f32_max, 0.0].fw
+    alias bw = Generic[relu_fw_vec, relu_bw_vec, alpha, f32_max, 0.0].bw
 
 
-struct Relu6:
-    alias fw = GenericActivation[relu_fw_vec, relu_bw_vec, 0.0, 6.0, 0.0].fw
-    alias bw = GenericActivation[relu_fw_vec, relu_bw_vec, 0.0, 6.0, 0.0].bw
+struct Relu6[]:
+    alias fw = Generic[relu_fw_vec, relu_bw_vec, 0.0, 6.0, 0.0].fw
+    alias bw = Generic[relu_fw_vec, relu_bw_vec, 0.0, 6.0, 0.0].bw
 
 
-struct Silu:
-    alias fw = GenericActivation[silu_fw_vec, silu_bw_vec, 0.0, 0.0, 0.0].fw
-    alias bw = GenericActivation[silu_fw_vec, silu_bw_vec, 0.0, 0.0, 0.0].bw
-
-
-alias Swish = Silu
+struct Silu[]:
+    alias fw = Generic[silu_fw_vec, silu_bw_vec, 0.0, 0.0, 0.0].fw
+    alias bw = Generic[silu_fw_vec, silu_bw_vec, 0.0, 0.0, 0.0].bw
 
 
 struct Gelu[approximate: Float32 = 0.0]:
-    alias fw = GenericActivation[gelu_fw_vec, gelu_bw_vec, approximate, 0.0, 0.0].fw
-    alias bw = GenericActivation[gelu_fw_vec, gelu_bw_vec, approximate, 0.0, 0.0].bw
+    alias fw = Generic[gelu_fw_vec, gelu_bw_vec, approximate, 0.0, 0.0].fw
+    alias bw = Generic[gelu_fw_vec, gelu_bw_vec, approximate, 0.0, 0.0].bw
 
 
-struct HardSigmoid:
-    alias fw = GenericActivation[
-        hard_sigmoid_fw_vec, hard_sigmoid_bw_vec, 0.0, 0.0, 0.0
-    ].fw
-    alias bw = GenericActivation[
-        hard_sigmoid_fw_vec, hard_sigmoid_bw_vec, 0.0, 0.0, 0.0
-    ].bw
+struct HardSigmoid[]:
+    alias fw = Generic[hard_sigmoid_fw_vec, hard_sigmoid_bw_vec, 0.0, 0.0, 0.0].fw
+    alias bw = Generic[hard_sigmoid_fw_vec, hard_sigmoid_bw_vec, 0.0, 0.0, 0.0].bw
 
 
-struct Linear:
-    alias fw = GenericActivation[linear_fw_vec, linear_bw_vec, 0.0, 0.0, 0.0].fw
-    alias bw = GenericActivation[linear_fw_vec, linear_bw_vec, 0.0, 0.0, 0.0].bw
+struct Linear[]:
+    alias fw = Generic[linear_fw_vec, linear_bw_vec, 0.0, 0.0, 0.0].fw
+    alias bw = Generic[linear_fw_vec, linear_bw_vec, 0.0, 0.0, 0.0].bw
 
 
-struct Mish:
-    alias fw = GenericActivation[mish_fw_vec, mish_bw_vec, 0.0, 0.0, 0.0].fw
-    alias bw = GenericActivation[mish_fw_vec, mish_bw_vec, 0.0, 0.0, 0.0].bw
+struct Mish[]:
+    alias fw = Generic[mish_fw_vec, mish_bw_vec, 0.0, 0.0, 0.0].fw
+    alias bw = Generic[mish_fw_vec, mish_bw_vec, 0.0, 0.0, 0.0].bw
 
 
-struct LogSoftmax:
+struct LogSoftmax[]:
     alias fw = _LogSoftmax.fw
     alias bw = _LogSoftmax.bw
 
