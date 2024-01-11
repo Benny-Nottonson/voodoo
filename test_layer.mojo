@@ -11,7 +11,7 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
 
 
 fn main() raises:
-    let input_layer = LeakyReLu[in_neurons=1, out_neurons=64]()
+    let input_layer = Dense[in_neurons=1, out_neurons=64, activation="relu"]()
     let dense_layer = Dense[in_neurons=64, out_neurons=64, activation="relu"]()
     let output_layer = Dense[in_neurons=64, out_neurons=1]()
 
@@ -36,7 +36,7 @@ fn main() raises:
 
         avg_loss += loss.forward_static()[0]
         loss.backward()
-        loss.optimize["adam", 0.01]()
+        loss.optimize["sgd", 0.01]()
 
         if epoch % every == 0:
             print_no_newline(chr(27) + "[2J")
