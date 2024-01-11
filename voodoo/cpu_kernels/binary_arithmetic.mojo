@@ -13,6 +13,14 @@ from ..constants import DType_F32, nelts, workers
 
 # TODO: Rewrite to use generic functions where possible
 
+alias generic_vectorized = fn[nelts: Int] (
+    SIMD[DType_F32, nelts], SIMD[DType_F32, nelts]
+) -> SIMD[DType_F32, nelts]
+
+alias generic_vectorized_bw = fn[nelts: Int] (
+    SIMD[DType_F32, nelts], SIMD[DType_F32, nelts], SIMD[DType_F32, nelts]
+) -> SIMD[DType_F32, nelts]
+
 
 @parameter
 fn base_case_strides(depth: Int, a: Node, b: Node) -> Bool:
@@ -21,26 +29,10 @@ fn base_case_strides(depth: Int, a: Node, b: Node) -> Bool:
     ) * shape_b(depth, a, b)
 
 
-trait BinaryArithmetic:
-    @staticmethod
-    fn fw(c: Node, a: Node, b: Node):
-        ...
-
-    @staticmethod
-    fn bw(c: Node, a: Node, b: Node):
-        ...
-
-
 struct GenericBinaryArithmetic[
-    generic_func: fn[nelts: Int] (
-        SIMD[DType_F32, nelts], SIMD[DType_F32, nelts]
-    ) -> SIMD[DType_F32, nelts],
-    kernel_bw_a: fn[nelts: Int] (
-        SIMD[DType_F32, nelts], SIMD[DType_F32, nelts], SIMD[DType_F32, nelts]
-    ) -> SIMD[DType_F32, nelts],
-    kernel_bw_b: fn[nelts: Int] (
-        SIMD[DType_F32, nelts], SIMD[DType_F32, nelts], SIMD[DType_F32, nelts]
-    ) -> SIMD[DType_F32, nelts],
+    generic_func: generic_vectorized,
+    kernel_bw_a: generic_vectorized_bw,
+    kernel_bw_b: generic_vectorized_bw,
 ]:
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
@@ -147,36 +139,42 @@ fn kernel_generic_bw_b[
     vectorize[nelts, vectorized_generic](c_rest)
 
 
+@parameter
 fn add_fw[
     nelts: Int
 ](a: SIMD[DType_F32, nelts], b: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return a + b
 
 
+@parameter
 fn mul_fw[
     nelts: Int
 ](a: SIMD[DType_F32, nelts], b: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return a * b
 
 
+@parameter
 fn sub_fw[
     nelts: Int
 ](a: SIMD[DType_F32, nelts], b: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return a - b
 
 
+@parameter
 fn div_fw[
     nelts: Int
 ](a: SIMD[DType_F32, nelts], b: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return a / b
 
 
+@parameter
 fn pow_fw[
     nelts: Int
 ](a: SIMD[DType_F32, nelts], b: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return a**b
 
 
+@parameter
 fn bw_add[
     nelts: Int
 ](
@@ -187,6 +185,7 @@ fn bw_add[
     return c_grad
 
 
+@parameter
 fn bw_mul_a[
     nelts: Int
 ](
@@ -197,6 +196,7 @@ fn bw_mul_a[
     return b_data * c_grad
 
 
+@parameter
 fn bw_sub[
     nelts: Int
 ](
@@ -207,6 +207,7 @@ fn bw_sub[
     return -c_grad
 
 
+@parameter
 fn bw_div_a[
     nelts: Int
 ](
@@ -217,6 +218,7 @@ fn bw_div_a[
     return c_grad / b_data
 
 
+@parameter
 fn bw_pow_a[
     nelts: Int
 ](
@@ -227,6 +229,7 @@ fn bw_pow_a[
     return b_data * (a_data ** (b_data - 1.0)) * c_grad
 
 
+@parameter
 fn bw_mul_b[
     nelts: Int
 ](
@@ -237,6 +240,7 @@ fn bw_mul_b[
     return a_data * c_grad
 
 
+@parameter
 fn bw_div_b[
     nelts: Int
 ](
@@ -247,6 +251,7 @@ fn bw_div_b[
     return -a_data * c_grad / (b_data**2)
 
 
+@parameter
 fn bw_pow_b[
     nelts: Int
 ](
