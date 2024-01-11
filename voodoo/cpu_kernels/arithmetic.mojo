@@ -14,7 +14,7 @@ from math import (
 )
 from algorithm import vectorize
 from voodoo import Node
-from .constants import DType_F32, nelts
+from ..constants import DType_F32, nelts
 
 # TODO: Rewrite when lambda functions are supported
 # TODO: Add comments for each function and check for optimized estimatorss

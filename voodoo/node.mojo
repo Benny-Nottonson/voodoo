@@ -3,16 +3,12 @@ from algorithm import vectorize
 from math import round, ceil, sin, cos, sqrt, log
 from random import rand, seed
 
-alias VectorF32 = DTypePointer[DType.float32]
-alias VectorInt = Vector[Int]
-alias DTVector = Vector[VectorF32]
-
 from .utils import Vector
 
-'''
+"""
 Orthogonal class
 VarianceScaling class
-'''
+"""
 
 
 # TODO: Clean up
@@ -21,9 +17,9 @@ struct Node:
     var id_ptr: Pointer[Int]
     var data_id: Pointer[Int]
     var grad_id: Pointer[Int]
-    var data: Pointer[VectorF32]
-    var parents_ptr: Pointer[VectorInt]
-    var children_ptr: Pointer[VectorInt]
+    var data: Pointer[DTypePointer[DType.float32]]
+    var parents_ptr: Pointer[Vector[Int]]
+    var children_ptr: Pointer[Vector[Int]]
     var dependencies_ptr: Pointer[Int]
     var is_static_ptr: Pointer[Bool]
     var computed_ptr: Pointer[Bool]
@@ -50,15 +46,15 @@ struct Node:
         let grad_id = Pointer[Int].alloc(1)
         grad_id.store(-1)
 
-        let data = Pointer[VectorF32].alloc(2)
-        data.store(0, VectorF32.get_null())
-        data.store(1, VectorF32.get_null())
+        let data = Pointer[DTypePointer[DType.float32]].alloc(2)
+        data.store(0, DTypePointer[DType.float32].get_null())
+        data.store(1, DTypePointer[DType.float32].get_null())
 
-        let parents_ptr = Pointer[VectorInt].alloc(1)
-        parents_ptr.store(VectorInt())
+        let parents_ptr = Pointer[Vector[Int]].alloc(1)
+        parents_ptr.store(Vector[Int]())
 
-        let children_ptr = Pointer[VectorInt].alloc(1)
-        children_ptr.store(VectorInt())
+        let children_ptr = Pointer[Vector[Int]].alloc(1)
+        children_ptr.store(Vector[Int]())
 
         let dependencies_ptr = Pointer[Int].alloc(1)
         dependencies_ptr.store(0)
@@ -374,7 +370,6 @@ struct Node:
     fn zeros(self):
         self.fill(0.0)
 
-
     fn orthoganal(self, gain: Float32 = 1.0):
         # TODO: Check
         let num_dims = self.num_dims_ptr.load()
@@ -383,7 +378,7 @@ struct Node:
         let col_strides: Int = (
             self.strides_ptr.load().load(0) * self.shape_ptr.load().load(0)
         ) // cols
-        let tmp = VectorF32(col_strides)
+        let tmp = DTypePointer[DType.float32](col_strides)
         for i in range(col_strides):
             for j in range(cols):
                 if i == j:
@@ -399,7 +394,7 @@ struct Node:
         for i in range(col_strides):
             let z = sqrt(-2.0 * log(u1.load(i))) * cos(2.0 * pi * u2.load(i))
             tmp.store(i, z)
-        let tmp2 = VectorF32(col_strides)
+        let tmp2 = DTypePointer[DType.float32](col_strides)
         for i in range(col_strides):
             tmp2.store(i, tmp.load(i))
         for i in range(col_strides):
@@ -408,7 +403,6 @@ struct Node:
         for i in range(col_strides):
             for j in range(cols):
                 self.store_data(i * cols + j, tmp.load(i * cols + j))
-                
 
     @always_inline
     fn print(self, accuracy: Int = 6):

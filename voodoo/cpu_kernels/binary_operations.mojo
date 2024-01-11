@@ -1,7 +1,7 @@
 from random import random_float64
 from algorithm import vectorize, parallelize
 from voodoo import Node
-from .constants import DType_F32, nelts, workers
+from ..constants import DType_F32, nelts, workers
 
 
 trait BinaryOperation:

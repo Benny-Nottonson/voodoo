@@ -7,9 +7,7 @@ from .node import Node
 from .utils import Vector, get_broadcasted_shape_for_ew_op
 from .utils.shape import shape
 from .cpu_kernels.optimizers import *
-
-alias nelts = simdwidthof[DType.float32]()
-alias memory_pool_size = 30
+from .constants import nelts, memory_pool_size
 
 
 # TODO: Could combine more unary / binary functions into one main caller (See activations / losses)

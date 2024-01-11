@@ -8,5 +8,5 @@ struct Flatten(BaseLayer):
     ) raises:
         ...
 
-    fn forward(self, x: Tensor) raises -> Tensor:
+    fn forward(self, x: Tensor) raises -> Tensor[False, False]:
         return x.flatten()

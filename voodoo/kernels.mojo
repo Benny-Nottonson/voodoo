@@ -72,7 +72,9 @@ struct Kernels:
         k.store("h_sig", hard_sigmoid_code, HardSigmoid.fw, HardSigmoid.bw)
         k.store("linear", linear_code, Linear.fw, Linear.bw)
         k.store("mish", mish_code, Mish.fw, Mish.bw)
-        k.store("relu", relu_code, Relu[0.0, f32_max, 0.0].fw, Relu[0.0, f32_max, 0.0].bw)
+        k.store(
+            "relu", relu_code, Relu[0.0, f32_max, 0.0].fw, Relu[0.0, f32_max, 0.0].bw
+        )
         k.store("selu", selu_code, Selu.fw, Selu.bw)
         k.store("sig", sigmoid_code, Sigmoid.fw, Sigmoid.bw)
         k.store("softmax", softmax_code, Softmax.fw, Softmax.bw)

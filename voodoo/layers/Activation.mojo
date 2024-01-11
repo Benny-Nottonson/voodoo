@@ -12,5 +12,5 @@ struct Activation[
     ) raises:
         ...
 
-    fn forward(self, x: Tensor) raises -> Tensor:
+    fn forward(self, x: Tensor) raises -> Tensor[False, False]:
         return x.compute_activation[get_activation_code[activation]()]()

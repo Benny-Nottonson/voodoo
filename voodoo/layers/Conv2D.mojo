@@ -40,7 +40,7 @@ struct Conv2D[
         else:
             self.bias = Tensor(shape(0))
 
-    fn forward(self, x: Tensor) raises -> Tensor:
+    fn forward(self, x: Tensor) raises -> Tensor[False, False]:
         let res = x.conv_2d(self.kernels, self.padding, self.stride)
 
         @parameter
