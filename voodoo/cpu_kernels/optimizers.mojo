@@ -22,11 +22,11 @@ struct SGD(Optimizer):
             if node.requires_grad_ptr.load() and node.grad_computed_ptr.load():
 
                 @parameter
-                fn vectorized_sgd_update[_nelts: Int](i: Int):
-                    node.store_data[_nelts](
+                fn vectorized_sgd_update[nelts: Int](i: Int):
+                    node.store_data[nelts](
                         i,
-                        node.load_data[_nelts](i)
-                        - node.load_grad[_nelts](i) * learning_rate,
+                        node.load_data[nelts](i)
+                        - node.load_grad[nelts](i) * learning_rate,
                     )
 
                 vectorize[nelts, vectorized_sgd_update](node.load_cap())
@@ -41,9 +41,9 @@ struct Adafactor(Optimizer):
             if node.requires_grad_ptr.load() and node.grad_computed_ptr.load():
 
                 @parameter
-                fn vectorized_adafactor_update[_nelts: Int](i: Int):
-                    let grad = node.load_grad[_nelts](i)
-                    let data = node.load_data[_nelts](i)
+                fn vectorized_adafactor_update[nelts: Int](i: Int):
+                    let grad = node.load_grad[nelts](i)
+                    let data = node.load_data[nelts](i)
                     let grad_sq = grad * grad
                     let data_sq = data * data
                     let new_grad_sq = grad_sq + 1e-30
@@ -60,8 +60,8 @@ struct Adafactor(Optimizer):
                         1.0 - decay_rate
                     )
                     let new_grad = sqrt(new_grad_sq_2) / param_scale * grad
-                    node.store_data[_nelts](i, new_data)
-                    node.store_grad[_nelts](i, new_grad)
+                    node.store_data[nelts](i, new_data)
+                    node.store_grad[nelts](i, new_grad)
 
                 vectorize[nelts, vectorized_adafactor_update](node.load_cap())
 
@@ -76,9 +76,9 @@ struct Adam(Optimizer):
             if node.requires_grad_ptr.load() and node.grad_computed_ptr.load():
 
                 @parameter
-                fn vectorized_adam_update[_nelts: Int](i: Int):
-                    let grad = node.load_grad[_nelts](i)
-                    let data = node.load_data[_nelts](i)
+                fn vectorized_adam_update[nelts: Int](i: Int):
+                    let grad = node.load_grad[nelts](i)
+                    let data = node.load_data[nelts](i)
                     let grad_sq = grad * grad
                     let data_sq = data * data
                     let new_grad_sq = grad_sq + 1e-30
@@ -95,7 +95,7 @@ struct Adam(Optimizer):
                         1.0 - decay_rate
                     )
                     let new_grad = sqrt(new_grad_sq_2) / param_scale * grad
-                    node.store_data[_nelts](i, new_data)
-                    node.store_grad[_nelts](i, new_grad)
+                    node.store_data[nelts](i, new_data)
+                    node.store_grad[nelts](i, new_grad)
 
                 vectorize[nelts, vectorized_adam_update](node.load_cap())

@@ -45,9 +45,7 @@ struct Generic[
     @parameter
     @staticmethod
     fn kernel_fw[
-        generic_func: fn[nelts: Int] (
-            SIMD[DType_F32, nelts], SIMD[DType_F32, nelts]
-        ) -> SIMD[DType_F32, nelts]
+        generic_func: vectorized_type_fw
     ](
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
@@ -70,9 +68,7 @@ struct Generic[
     @parameter
     @staticmethod
     fn kernel_bw[
-        generic_func: fn[nelts: Int] (
-            SIMD[DType_F32, nelts], SIMD[DType_F32, nelts], SIMD[DType_F32, nelts]
-        ) -> SIMD[DType_F32, nelts],
+        generic_func: vectorized_type_bw,
         is_a: Bool,
     ](
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
@@ -285,12 +281,12 @@ struct _MMul:
             for k in range(K):
 
                 @parameter
-                fn dot_fw[_nelts: Int](n: Int):
-                    c.store_data[_nelts](
+                fn dot_fw[nelts: Int](n: Int):
+                    c.store_data[nelts](
                         offset_c + m * N + n,
-                        c.load_data[_nelts](offset_c + m * N + n)
+                        c.load_data[nelts](offset_c + m * N + n)
                         + a.load_data(offset_a + m * K + k)
-                        * b.load_data[_nelts](offset_b + k * N + n),
+                        * b.load_data[nelts](offset_b + k * N + n),
                     )
 
                 vectorize[nelts, dot_fw](N)

@@ -20,8 +20,8 @@ from ..constants import DType_F32, nelts
 # TODO: Add comments for each function and check for optimized estimatorss
 
 
-alias vectorized_type = fn[_nelts: Int] (SIMD[DType_F32, _nelts]) -> SIMD[
-    DType_F32, _nelts
+alias vectorized_type = fn[nelts: Int] (SIMD[DType_F32, nelts]) -> SIMD[
+    DType_F32, nelts
 ]
 
 
@@ -29,11 +29,11 @@ struct Generic[fw_vec: vectorized_type, bw_vec: vectorized_type]:
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter
-        fn vectorized_fw[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            node.store_data[_nelts](
+        fn vectorized_fw[nelts: Int](i: Int):
+            let x = parent1.load_data[nelts](i)
+            node.store_data[nelts](
                 i,
-                fw_vec[_nelts](x),
+                fw_vec[nelts](x),
             )
 
         vectorize[nelts, vectorized_fw](node.load_cap())
@@ -41,12 +41,12 @@ struct Generic[fw_vec: vectorized_type, bw_vec: vectorized_type]:
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
-        fn vectorized_bw[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
-            parent1.store_grad[_nelts](
+        fn vectorized_bw[nelts: Int](i: Int):
+            let x = parent1.load_data[nelts](i)
+            parent1.store_grad[nelts](
                 i,
-                parent1.load_grad[_nelts](i)
-                + node.load_grad[_nelts](i) * bw_vec[_nelts](x),
+                parent1.load_grad[nelts](i)
+                + node.load_grad[nelts](i) * bw_vec[nelts](x),
             )
 
         vectorize[nelts, vectorized_bw](node.load_cap())
@@ -68,130 +68,130 @@ alias Cosh = Generic[cosh_fw_vec, cosh_bw_vec]
 
 
 @parameter
-fn sqrt_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn sqrt_fw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return sqrt(x)
 
 
 @parameter
-fn sqrt_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn sqrt_bw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return 0.5 / sqrt(x)
 
 
 @parameter
-fn abs_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn abs_fw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return (x >= 0.0).cast[DType_F32]() * x + (x < 0.0).cast[DType_F32]() * (-x)
 
 
 @parameter
-fn abs_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn abs_bw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return 2.0 * (x >= 0.0).cast[DType_F32]() - 1.0
 
 
 @parameter
-fn exp2_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn exp2_fw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return exp2(x)
 
 
 @parameter
-fn exp2_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn exp2_bw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return x * 0.69314718056
 
 
 @parameter
-fn log2_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn log2_fw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return log2(x)
 
 
 @parameter
-fn log2_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn log2_bw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return 1.0 / (x * 0.69314718056)
 
 
 @parameter
-fn log_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn log_fw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return log(x)
 
 
 @parameter
-fn log_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn log_bw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return 1.0 / x
 
 
 @parameter
-fn sin_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn sin_fw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return sin(x)
 
 
 @parameter
-fn sin_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn sin_bw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return cos(x)
 
 
 @parameter
-fn cos_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn cos_fw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return cos(x)
 
 
 @parameter
-fn cos_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn cos_bw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return -sin(x)
 
 
 @parameter
-fn tan_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn tan_fw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return tan(x)
 
 
 @parameter
-fn tan_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn tan_bw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return 1.0 / (cos(x) ** 2)
 
 
 @parameter
-fn asin_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn asin_fw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return asin(x)
 
 
 @parameter
-fn asin_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn asin_bw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return 1.0 / sqrt(1.0 - x**2)
 
 
 @parameter
-fn acos_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn acos_fw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return acos(x)
 
 
 @parameter
-fn acos_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn acos_bw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return -1.0 / sqrt(1.0 - x**2)
 
 
 @parameter
-fn atan_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn atan_fw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return atan(x)
 
 
 @parameter
-fn atan_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn atan_bw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return 1.0 / (1.0 + x**2)
 
 
 @parameter
-fn sinh_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn sinh_fw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return sinh(x)
 
 
 @parameter
-fn sinh_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn sinh_bw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return cosh(x)
 
 
 @parameter
-fn cosh_fw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn cosh_fw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return cosh(x)
 
 
 @parameter
-fn cosh_bw_vec[_nelts: Int](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+fn cosh_bw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     return sinh(x)

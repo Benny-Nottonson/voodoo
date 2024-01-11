@@ -21,16 +21,16 @@ struct Copy(Operation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter
-        fn vectorized_copy[_nelts: Int](i: Int):
-            node.store_data[_nelts](i, parent1.load_data[_nelts](i))
+        fn vectorized_copy[nelts: Int](i: Int):
+            node.store_data[nelts](i, parent1.load_data[nelts](i))
 
         vectorize[nelts, vectorized_copy](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
-        fn vectorized_copy_bw[_nelts: Int](i: Int):
-            parent1.store_grad[_nelts](i, parent1.load_grad[_nelts](i))
+        fn vectorized_copy_bw[nelts: Int](i: Int):
+            parent1.store_grad[nelts](i, parent1.load_grad[nelts](i))
 
         vectorize[nelts, vectorized_copy_bw](node.load_cap())
 
@@ -255,11 +255,11 @@ struct Dropout(Operation):
         let scale = 1.0 / keep_prob
 
         @parameter
-        fn vectorized_dropout[_nelts: Int](i: Int):
-            let data = parent1.load_data[_nelts](i)
-            for i in range(_nelts):
+        fn vectorized_dropout[nelts: Int](i: Int):
+            let data = parent1.load_data[nelts](i)
+            for i in range(nelts):
                 let rand = random_float64()
-                node.store_data[_nelts](
+                node.store_data[nelts](
                     i, (rand < keep_prob).cast[DType_F32]() * data * scale
                 )
 
@@ -272,15 +272,15 @@ struct Dropout(Operation):
         let scale = 1.0 / keep_prob
 
         @parameter
-        fn vectorized_dropout_bw[_nelts: Int](i: Int):
-            let data = parent1.load_data[_nelts](i)
-            for i in range(_nelts):
+        fn vectorized_dropout_bw[nelts: Int](i: Int):
+            let data = parent1.load_data[nelts](i)
+            for i in range(nelts):
                 let rand = random_float64()
-                parent1.store_grad[_nelts](
+                parent1.store_grad[nelts](
                     i,
-                    parent1.load_grad[_nelts](i)
+                    parent1.load_grad[nelts](i)
                     + (rand < keep_prob).cast[DType_F32]()
-                    * node.load_grad[_nelts](i)
+                    * node.load_grad[nelts](i)
                     * scale,
                 )
 

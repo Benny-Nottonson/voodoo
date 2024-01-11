@@ -31,7 +31,7 @@ struct Conv2D(BinaryOperation):
                             for dx in range(b.shape_ptr.load().load(2)):
 
                                 @parameter
-                                fn inner_loop[_nelts: Int](dy: Int):
+                                fn inner_loop[nelts: Int](dy: Int):
                                     let ix = x * stride - padding + dx
                                     let iy = y * stride - padding + dy
                                     if not (
@@ -59,8 +59,8 @@ struct Conv2D(BinaryOperation):
                                             b.shape_ptr.load().load(3),
                                         )
                                         patch_sum += (
-                                            a.load_data[_nelts](a_index)
-                                            * b.load_data[_nelts](b_index)
+                                            a.load_data[nelts](a_index)
+                                            * b.load_data[nelts](b_index)
                                         ).reduce_add()
 
                                 vectorize[nelts, inner_loop](b.shape_ptr.load().load(3))
@@ -145,7 +145,7 @@ struct Conv2D(BinaryOperation):
                             for dx in range(b.shape_ptr.load().load(2)):
 
                                 @parameter
-                                fn dy_loop[_nelts: Int](dy: Int):
+                                fn dy_loop[nelts: Int](dy: Int):
                                     let ix = x * stride - dx + padding
                                     let iy = y * stride - dy + padding
                                     if not (
@@ -173,8 +173,8 @@ struct Conv2D(BinaryOperation):
                                             b.shape_ptr.load().load(3),
                                         )
                                         patch_sum += (
-                                            c.load_grad[_nelts](c_grad_index)
-                                            * c.load_data[_nelts](b_index)
+                                            c.load_grad[nelts](c_grad_index)
+                                            * c.load_data[nelts](b_index)
                                         ).reduce_add()
 
                                 vectorize[nelts, dy_loop](b.shape_ptr.load().load(3))

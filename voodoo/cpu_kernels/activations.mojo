@@ -4,8 +4,8 @@ from voodoo import Node
 from ..constants import DType_F32, nelts, f32_max
 
 alias generic_vectorized = fn[
-    _nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-] (SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]
+    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
+] (SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]
 
 # TODO: Rewrite when lambda functions are supported
 
@@ -20,10 +20,10 @@ struct Generic[
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter
-        fn vectorized_fw[_nelts: Int](i: Int):
-            node.store_data[_nelts](
+        fn vectorized_fw[nelts: Int](i: Int):
+            node.store_data[nelts](
                 i,
-                fw_vec[_nelts, arg1, arg2, arg3](parent1.load_data[_nelts](i)),
+                fw_vec[nelts, arg1, arg2, arg3](parent1.load_data[nelts](i)),
             )
 
         vectorize[nelts, vectorized_fw](node.load_cap())
@@ -31,12 +31,12 @@ struct Generic[
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
-        fn vectorized_bw[_nelts: Int](i: Int):
-            parent1.store_grad[_nelts](
+        fn vectorized_bw[nelts: Int](i: Int):
+            parent1.store_grad[nelts](
                 i,
-                parent1.load_grad[_nelts](i)
-                + node.load_grad[_nelts](i)
-                * bw_vec[_nelts, arg1, arg2, arg3](parent1.load_data[_nelts](i)),
+                parent1.load_grad[nelts](i)
+                + node.load_grad[nelts](i)
+                * bw_vec[nelts, arg1, arg2, arg3](parent1.load_data[nelts](i)),
             )
 
         vectorize[nelts, vectorized_bw](node.load_cap())
@@ -129,11 +129,11 @@ struct LogSoftmax[]:
 
 @parameter
 fn relu_fw_vec[
-    _nelts: Int,
+    nelts: Int,
     negative_slope: Float32 = 0.0,
     max_value: Float32 = f32_max,
     threshold: Float32 = 0.0,
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = x > threshold ? (x > max_value ? max_value : x) : negative_slope * x
     @parameter
     if negative_slope == 0.0 and max_value == f32_max:
@@ -148,11 +148,11 @@ fn relu_fw_vec[
 
 
 fn relu_bw_vec[
-    _nelts: Int,
+    nelts: Int,
     negative_slope: Float32 = 0.0,
     max_value: Float32 = f32_max,
     threshold: Float32 = 0.0,
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = x > threshold ? (x > max_value ? 0 : 1) : negative_slope
     @parameter
     if negative_slope == 0.0 and max_value == f32_max:
@@ -165,65 +165,65 @@ fn relu_bw_vec[
 
 
 fn sigmoid_fw_vec[
-    _nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = 1 / (1 + e^-x)
     return 1.0 / (1.0 + exp(-x))
 
 
 fn sigmoid_bw_vec[
-    _nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = f(x)(1-f(x))
     # simplifies to e^x / (e^x + 1)^2
     return exp(x) / (exp(x) + 1.0) ** 2
 
 
 fn softplus_fw_vec[
-    _nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = log(1 + e^x)
     return log(1.0 + exp(x))
 
 
 fn softplus_bw_vec[
-    _nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = e^x / (1 + e^x)
     return exp(x) / (1.0 + exp(x))
 
 
 fn softsign_fw_vec[
-    _nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = x / (1 + |x|)
     return x / (1.0 + abs(x))
 
 
 fn softsign_bw_vec[
-    _nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = 1 / (1 + |x|)^2
     return 1.0 / (1.0 + abs(x)) ** 2
 
 
 fn tanh_fw_vec[
-    _nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = tanh(x)
     return tanh(x)
 
 
 fn tanh_bw_vec[
-    _nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = 1 - tanh(x)^2
     return 1.0 - tanh(x) ** 2
 
 
 fn selu_fw_vec[
-    _nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = x > 0 ? 1.05070098 * x : 1.05070098 * 1.67326324 * (e^x - 1)
     return (x > 0.0).cast[DType_F32]() * 1.05070098 * x + (x <= 0.0).cast[
         DType_F32
@@ -231,8 +231,8 @@ fn selu_fw_vec[
 
 
 fn selu_bw_vec[
-    _nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = x > 0 ? 1.05070098 : 1.05070098 * 1.67326324 * e^x
     return (x > 0.0).cast[DType_F32]() * 1.05070098 + (x <= 0.0).cast[
         DType_F32
@@ -240,11 +240,11 @@ fn selu_bw_vec[
 
 
 fn elu_fw_vec[
-    _nelts: Int,
+    nelts: Int,
     arg1: Float32,
     arg2: Float32,
     alpha: Float32 = 1.0,
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = x > 0 ? x : alpha * (e^x - 1)
     @parameter
     if alpha == 1.0:
@@ -257,11 +257,11 @@ fn elu_fw_vec[
 
 
 fn elu_bw_vec[
-    _nelts: Int,
+    nelts: Int,
     arg1: Float32,
     arg2: Float32,
     alpha: Float32 = 1.0,
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = x > 0 ? 1 : alpha * e^x
     @parameter
     if alpha == 1.0:
@@ -270,39 +270,39 @@ fn elu_bw_vec[
 
 
 fn exp_fw_vec[
-    _nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = e^x
     return exp(x)
 
 
 fn exp_bw_vec[
-    _nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = e^x
     return exp(x)
 
 
 fn silu_fw_vec[
-    _nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = x / (1 + e^-x)
     return x / (1.0 + exp(-x))
 
 
 fn silu_bw_vec[
-    _nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = (e^x * x + e^x + e^2x) / (e^x + 1)^2
     return (exp(x) * x + exp(x) + exp(2.0 * x)) / (exp(x) + 1.0) ** 2
 
 
 fn gelu_fw_vec[
-    _nelts: Int,
+    nelts: Int,
     arg1: Float32,
     arg2: Float32,
     approximate: Float32 = 0.0,
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) when approximate == 0.0 = 0.5 * x * (1 + erf(x / sqrt(2)))
     # f(x) when approximate != 0.0 = 0.5 * x * (1 + tanh(sqrt(2 / pi) * (x + 0.044715 * x^3)))
     @parameter
@@ -312,11 +312,11 @@ fn gelu_fw_vec[
 
 
 fn gelu_bw_vec[
-    _nelts: Int,
+    nelts: Int,
     arg1: Float32,
     arg2: Float32,
     approximate: Float32 = 0.0,
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) when approximate == 0.0 = 0.5 * (erf(0.7071067811865475 * x) + 1) + 0.3989422804014327 * x * exp(-0.5 * x^2)
     # f'(x) when approximate != 0.0 = 0.5 * (1 + tanh(0.7978845608028654 * (x + 0.044715 * x^3))^2) + 0.7978845608028654 * x * (1 - tanh(0.7978845608028654 * (x + 0.044715 * x^3))^2)
     @parameter
@@ -332,11 +332,11 @@ fn gelu_bw_vec[
 
 
 fn hard_sigmoid_fw_vec[
-    _nelts: Int,
+    nelts: Int,
     arg1: Float32,
     arg2: Float32,
     arg3: Float32,
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = x > 2.5 ? 1 : x < -2.5 ? 0 : 0.2 * x + 0.5
     return (x > 2.5).cast[DType_F32]() + (x > -2.5).cast[DType_F32]() * (x < 2.5).cast[
         DType_F32
@@ -344,51 +344,51 @@ fn hard_sigmoid_fw_vec[
 
 
 fn hard_sigmoid_bw_vec[
-    _nelts: Int,
+    nelts: Int,
     arg1: Float32,
     arg2: Float32,
     arg3: Float32,
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = x > -2.5 ? x < 2.5 ? 0.2 : 0 : 0
     return (x > -2.5).cast[DType_F32]() * (x < 2.5).cast[DType_F32]() * 0.2
 
 
 fn linear_fw_vec[
-    _nelts: Int,
+    nelts: Int,
     arg1: Float32,
     arg2: Float32,
     arg3: Float32,
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = x
     return x
 
 
 fn linear_bw_vec[
-    _nelts: Int,
+    nelts: Int,
     arg1: Float32,
     arg2: Float32,
     arg3: Float32,
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = 1
     return 1.0
 
 
 fn mish_fw_vec[
-    _nelts: Int,
+    nelts: Int,
     arg1: Float32,
     arg2: Float32,
     arg3: Float32,
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = x * tanh(log(1 + e^x))
     return x * tanh(log(1.0 + exp(x)))
 
 
 fn mish_bw_vec[
-    _nelts: Int,
+    nelts: Int,
     arg1: Float32,
     arg2: Float32,
     arg3: Float32,
-](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = (e^x (4 e^x x + 4 x + 6 e^x + 4 e^(2 x) + e^(3 x) + 4))/(2 e^x + e^(2 x) + 2)^2
     return (
         exp(x)

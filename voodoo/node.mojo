@@ -192,11 +192,11 @@ struct Node:
         self.data.load().simd_store(idx, val)
 
     @always_inline
-    fn load_data[_nelts: Int](self, idx: Int) -> SIMD[DType.float32, _nelts]:
-        return self.data.load().simd_load[_nelts](idx)
+    fn load_data[nelts: Int](self, idx: Int) -> SIMD[DType.float32, nelts]:
+        return self.data.load().simd_load[nelts](idx)
 
-    fn store_data[_nelts: Int = 1](self, idx: Int, val: SIMD[DType.float32, _nelts]):
-        self.data.load().simd_store[_nelts](idx, val)
+    fn store_data[nelts: Int = 1](self, idx: Int, val: SIMD[DType.float32, nelts]):
+        self.data.load().simd_store[nelts](idx, val)
 
     fn fill(self, val: Float32):
         for i in range(self.load_cap()):
@@ -214,11 +214,11 @@ struct Node:
         self.data.load(1).simd_store(idx, val)
 
     @always_inline
-    fn load_grad[_nelts: Int](self, idx: Int) -> SIMD[DType.float32, _nelts]:
-        return self.data.load(1).simd_load[_nelts](idx)
+    fn load_grad[nelts: Int](self, idx: Int) -> SIMD[DType.float32, nelts]:
+        return self.data.load(1).simd_load[nelts](idx)
 
-    fn store_grad[_nelts: Int = 1](self, idx: Int, val: SIMD[DType.float32, _nelts]):
-        self.data.load(1).simd_store[_nelts](idx, val)
+    fn store_grad[nelts: Int = 1](self, idx: Int, val: SIMD[DType.float32, nelts]):
+        self.data.load(1).simd_store[nelts](idx, val)
 
     fn grad_fill_incr(self):
         for i in range(self.load_cap()):
