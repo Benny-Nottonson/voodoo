@@ -520,3 +520,79 @@ struct Pow(BinaryArithmetic):
             )
 
         vectorize[nelts, vectorized_pow_bw_b](c_rest)
+
+
+struct Avg(BinaryArithmetic):
+    @staticmethod
+    fn fw(c: Node, a: Node, b: Node):
+        recursive_broadcast[Self.kernel_avg_fw, base_case_strides](c, a, b)
+
+    @staticmethod
+    fn bw(c: Node, a: Node, b: Node):
+        if not a.is_single_ptr.load():
+            recursive_broadcast_bw[Self.kernel_avg_bw_a, base_case_strides](c, a, b)
+        if not b.is_single_ptr.load():
+            recursive_broadcast_bw[Self.kernel_avg_bw_b, base_case_strides](c, a, b)
+
+    @parameter
+    @staticmethod
+    fn kernel_avg_fw(
+        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
+    ):
+        let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
+        let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
+
+        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
+        let offset_c = c_index * c_rest
+
+        @parameter
+        fn vectorized_avg[nelts: Int](i: Int):
+            c.store_data[nelts](
+                offset_c + i,
+                (a.load_data[nelts](offset_a + i) + b.load_data[nelts](offset_b + i))
+                / 2.0,
+            )
+
+        vectorize[nelts, vectorized_avg](c_rest)
+
+    @parameter
+    @staticmethod
+    fn kernel_avg_bw_a(
+        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
+    ):
+        let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
+        let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
+
+        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
+        let offset_c = c_index * c_rest
+
+        @parameter
+        fn vectorized_avg_bw_a[nelts: Int](i: Int):
+            a.store_grad[nelts](
+                offset_a + i, a.load_grad[nelts](offset_a + i) + c.load_grad[nelts](
+                    offset_c + i
+                )
+            )
+
+        vectorize[nelts, vectorized_avg_bw_a](c_rest)
+
+    @parameter
+    @staticmethod
+    fn kernel_avg_bw_b(
+        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
+    ):
+        let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
+        let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
+
+        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
+        let offset_c = c_index * c_rest
+
+        @parameter
+        fn vectorized_avg_bw_b[nelts: Int](i: Int):
+            b.store_grad[nelts](
+                offset_b + i, b.load_grad[nelts](offset_b + i) + c.load_grad[nelts](
+                    offset_c + i
+                )
+            )
+
+        vectorize[nelts, vectorized_avg_bw_b](c_rest)

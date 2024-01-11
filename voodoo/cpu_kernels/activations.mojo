@@ -21,10 +21,9 @@ struct GenericActivation[
     fn fw(node: Node, parent1: Node):
         @parameter
         fn generic_vectorized_fw[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
             node.store_data[_nelts](
                 i,
-                fw_vec[_nelts, arg1, arg2, arg3](x),
+                fw_vec[_nelts, arg1, arg2, arg3](parent1.load_data[_nelts](i)),
             )
 
         vectorize[nelts, generic_vectorized_fw](node.load_cap())
@@ -33,11 +32,11 @@ struct GenericActivation[
     fn bw(node: Node, parent1: Node):
         @parameter
         fn generic_vectorized_bw[_nelts: Int](i: Int):
-            let x = parent1.load_data[_nelts](i)
             parent1.store_grad[_nelts](
                 i,
                 parent1.load_grad[_nelts](i)
-                + node.load_grad[_nelts](i) * bw_vec[_nelts, arg1, arg2, arg3](x),
+                + node.load_grad[_nelts](i)
+                * bw_vec[_nelts, arg1, arg2, arg3](parent1.load_data[_nelts](i)),
             )
 
         vectorize[nelts, generic_vectorized_bw](node.load_cap())
@@ -135,6 +134,7 @@ struct LogSoftmax:
     alias bw = _LogSoftmax.bw
 
 
+@parameter
 fn relu_fw_vec[
     _nelts: Int,
     negative_slope: Float32 = 0.0,
@@ -143,8 +143,8 @@ fn relu_fw_vec[
 ](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     # f(x) = x > threshold ? (x > max_value ? max_value : x) : negative_slope * x
     @parameter
-    if negative_slope == 0.0 and max_value == f32_max and threshold == 0.0:
-        return (x > 0.0).cast[DType_F32]() * x
+    if negative_slope == 0.0 and max_value == f32_max:
+        return (x > threshold).cast[DType_F32]() * x
     return (
         (x > threshold).cast[DType_F32]()
         * (x > max_value).cast[DType_F32]()
@@ -162,8 +162,8 @@ fn relu_bw_vec[
 ](x: SIMD[DType_F32, _nelts]) -> SIMD[DType_F32, _nelts]:
     # f'(x) = x > threshold ? (x > max_value ? 0 : 1) : negative_slope
     @parameter
-    if negative_slope == 0.0 and max_value == f32_max and threshold == 0.0:
-        return (x > 0.0).cast[DType_F32]()
+    if negative_slope == 0.0 and max_value == f32_max:
+        return (x > threshold).cast[DType_F32]()
     return (
         (x > threshold).cast[DType_F32]() * (x > max_value).cast[DType_F32]() * 0.0
         + (x > threshold).cast[DType_F32]() * (x <= max_value).cast[DType_F32]() * 1.0

@@ -2,8 +2,27 @@ from .cpu_kernels.operations import *
 from .cpu_kernels.binary_operations import *
 from .cpu_kernels.arithmetic import *
 from .cpu_kernels.binary_arithmetic import *
-from .cpu_kernels.activations import *
-from .cpu_kernels.losses import *
+from .cpu_kernels.losses import * 
+from .cpu_kernels.activations import (
+    Relu,
+    Sigmoid,
+    Softmax,
+    Softplus,
+    Softsign,
+    Tanh,
+    Selu,
+    Elu,
+    Exp,
+    LeakyRelu,
+    Relu6,
+    Silu,
+    Swish,
+    Gelu,
+    HardSigmoid,
+    Linear,
+    Mish,
+    LogSoftmax,
+)
 
 alias unary_op = fn (b: Node, a: Node) -> None
 alias binary_op = fn (c: Node, a: Node, b: Node) -> None
@@ -91,4 +110,5 @@ struct Kernels:
         k.store("bce", bce_code, BCE.fw, BCE.bw)
         k.store("cce", cce_code, CCE.fw, CCE.bw)
         k.store("cfce", cfce_code, CFCE.fw, CFCE.bw)
+        k.store("avg", avg_code, Avg.fw, Avg.bw)
         return Kernels {kernels: kernels}

@@ -1,5 +1,5 @@
 from .node import Node
-from .graph import Graph, memory_pool_size
+from .graph import Graph
 from .utils import Vector
 
 

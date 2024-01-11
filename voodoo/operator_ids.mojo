@@ -54,3 +54,5 @@ alias msle_code = 98
 alias bce_code = 100
 alias cce_code = 102
 alias cfce_code = 104
+
+alias avg_code = 106
