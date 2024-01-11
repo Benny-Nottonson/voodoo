@@ -2,6 +2,7 @@ from .node import Node
 from .graph import Graph, memory_pool_size
 from .utils import Vector
 
+
 struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     var graph_ptr: Pointer[Pointer[Graph]]
     var node_ptr: Pointer[Pointer[Node]]
@@ -249,12 +250,16 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         )
         return new_tensor
 
-    fn _magic_arithmetic_generic[operation_code: Int](self, other: Tensor) raises -> Tensor[False, False]:
+    fn _magic_arithmetic_generic[
+        operation_code: Int
+    ](self, other: Tensor) raises -> Tensor[False, False]:
         let new_tensor = self.load_tensor_for_binary_op(other)
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()
             .load()
-            .arithmetic_general[operation_code](self.node_ptr.load(), other.node_ptr.load())
+            .arithmetic_general[operation_code](
+                self.node_ptr.load(), other.node_ptr.load()
+            )
         )
         return new_tensor
 
@@ -282,7 +287,9 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         )
         return new_tensor
 
-    fn conv_2d(self, other: Tensor, stride: Int, padding: Int) raises -> Tensor[False, False]:
+    fn conv_2d(
+        self, other: Tensor, stride: Int, padding: Int
+    ) raises -> Tensor[False, False]:
         let new_tensor = self.load_tensor_for_binary_op(other)
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()
@@ -416,7 +423,9 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         )
         return new_tensor
 
-    fn compute_loss[operator_id: Int](self, other: Tensor) raises -> Tensor[False, False]:
+    fn compute_loss[
+        operator_id: Int
+    ](self, other: Tensor) raises -> Tensor[False, False]:
         let new_tensor = self.load_tensor_for_binary_op(other)
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()
@@ -425,7 +434,9 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         )
         return new_tensor
 
-    fn compute_loss[operator_name: String](self, other: Tensor) raises -> Tensor[False, False]:
+    fn compute_loss[
+        operator_name: String
+    ](self, other: Tensor) raises -> Tensor[False, False]:
         let new_tensor = self.load_tensor_for_binary_op(other)
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()
@@ -436,7 +447,9 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         )
         return new_tensor
 
-    fn compute_activation[operator_id: Int, arg1: Float32 = 0.0](self) raises -> Tensor[False, False]:
+    fn compute_activation[
+        operator_id: Int, arg1: Float32 = 0.0
+    ](self) raises -> Tensor[False, False]:
         let new_tensor = self.load_tensor_for_unary_op()
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()

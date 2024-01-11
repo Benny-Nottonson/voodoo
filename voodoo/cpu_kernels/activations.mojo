@@ -9,6 +9,7 @@ alias generic_vectorized = fn[
 
 # TODO: Rewrite when lambda functions are supported
 
+
 struct GenericActivation[
     fw_vec: generic_vectorized,
     bw_vec: generic_vectorized,

@@ -5,10 +5,10 @@ from random import rand, seed
 
 from .utils import Vector
 
-'''
+"""
 Orthogonal class
 VarianceScaling class
-'''
+"""
 
 
 # TODO: Clean up
@@ -370,7 +370,6 @@ struct Node:
     fn zeros(self):
         self.fill(0.0)
 
-
     fn orthoganal(self, gain: Float32 = 1.0):
         # TODO: Check
         let num_dims = self.num_dims_ptr.load()
@@ -404,7 +403,6 @@ struct Node:
         for i in range(col_strides):
             for j in range(cols):
                 self.store_data(i * cols + j, tmp.load(i * cols + j))
-                
 
     @always_inline
     fn print(self, accuracy: Int = 6):

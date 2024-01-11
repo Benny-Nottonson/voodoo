@@ -1,7 +1,7 @@
 from memory import memset_zero
 from math import log, log2, exp, exp2, ceil, round
 from algorithm import vectorize, unswitch
- 
+
 from .kernels import op_tuple, unary_op, binary_op, Kernels
 from .node import Node
 from .utils import Vector, get_broadcasted_shape_for_ew_op

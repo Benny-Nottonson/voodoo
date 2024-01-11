@@ -183,7 +183,6 @@ fn main() raises:
         tf.keras.activations.gelu, tf.constant, tf.float32, tf.math.reduce_sum
     )
 
-
     total += test_fn["h_sig"](
         tf.keras.activations.hard_sigmoid,
         tf.constant,
@@ -198,7 +197,7 @@ fn main() raises:
     total += test_fn["mish"](
         tf.keras.activations.mish, tf.constant, tf.float32, tf.math.reduce_sum
     )
-    
+
     if total == 0:
         print("✅ All tests passed")
     elif total == 1:
