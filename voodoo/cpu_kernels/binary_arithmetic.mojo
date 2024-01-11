@@ -21,11 +21,6 @@ fn base_case_strides(depth: Int, a: Node, b: Node) -> Bool:
     ) * shape_b(depth, a, b)
 
 
-@parameter
-fn base_case_depth(depth: Int, a: Node, b: Node) -> Bool:
-    return depth == max(a.num_dims_ptr.load(), b.num_dims_ptr.load()) - 2
-
-
 trait BinaryArithmetic:
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
@@ -36,307 +31,248 @@ trait BinaryArithmetic:
         ...
 
 
-struct Add(BinaryArithmetic):
+struct GenericBinaryArithmetic[
+    generic_func: fn[nelts: Int] (
+        SIMD[DType_F32, nelts], SIMD[DType_F32, nelts]
+    ) -> SIMD[DType_F32, nelts],
+    kernel_bw_a: fn[nelts: Int] (
+        SIMD[DType_F32, nelts], SIMD[DType_F32, nelts], SIMD[DType_F32, nelts]
+    ) -> SIMD[DType_F32, nelts],
+    kernel_bw_b: fn[nelts: Int] (
+        SIMD[DType_F32, nelts], SIMD[DType_F32, nelts], SIMD[DType_F32, nelts]
+    ) -> SIMD[DType_F32, nelts],
+]:
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
-        recursive_broadcast[Self.kernel_add_fw, base_case_strides](c, a, b)
+        recursive_broadcast[kernel_generic_fw[generic_func], base_case_strides](c, a, b)
 
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
         if not a.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_add_bw_a, base_case_strides](c, a, b)
-        if not b.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_add_bw_b, base_case_strides](c, a, b)
-
-    @parameter
-    @staticmethod
-    fn kernel_add_fw(
-        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
-    ) -> None:
-        let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
-        let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
-        let offset_c = c_index * c_rest
-
-        @parameter
-        fn vectorized_add[nelts: Int](i: Int):
-            c.store_data[nelts](
-                offset_c + i,
-                a.load_data[nelts](offset_a + i) + b.load_data[nelts](offset_b + i),
-            )
-
-        vectorize[nelts, vectorized_add](c_rest)
-
-    @parameter
-    @staticmethod
-    fn kernel_add_bw_a(
-        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
-    ) -> None:
-        let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
-        let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
-        let offset_c = c_index * c_rest
-
-        @parameter
-        fn vectorized_add_grad_a[nelts: Int](i: Int):
-            a.store_grad[nelts](
-                offset_a + i,
-                a.load_grad[nelts](offset_a + i) + c.load_grad[nelts](offset_c + i),
-            )
-
-        vectorize[nelts, vectorized_add_grad_a](c_rest)
-
-    @parameter
-    @staticmethod
-    fn kernel_add_bw_b(
-        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
-    ) -> None:
-        let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
-        let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
-        let offset_c = c_index * c_rest
-
-        @parameter
-        fn vectorized_add_grad_b[nelts: Int](i: Int):
-            b.store_grad[nelts](
-                offset_b + i,
-                b.load_grad[nelts](offset_b + i) + c.load_grad[nelts](offset_c + i),
-            )
-
-        vectorize[nelts, vectorized_add_grad_b](c_rest)
-
-
-struct Mul(BinaryArithmetic):
-    @staticmethod
-    fn fw(c: Node, a: Node, b: Node):
-        recursive_broadcast[Self.kernel_mul_fw, base_case_strides](c, a, b)
-
-    @staticmethod
-    fn bw(c: Node, a: Node, b: Node):
-        if not a.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_mul_bw_a, base_case_strides](c, a, b)
-        if not b.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_mul_bw_b, base_case_strides](c, a, b)
-
-    @parameter
-    @staticmethod
-    fn kernel_mul_fw(
-        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
-    ) -> None:
-        let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
-        let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
-        let offset_c = c_index * c_rest
-
-        @parameter
-        fn vectorized_mul[nelts: Int](i: Int):
-            c.store_data[nelts](
-                offset_c + i,
-                a.load_data[nelts](offset_a + i) * b.load_data[nelts](offset_b + i),
-            )
-
-        vectorize[nelts, vectorized_mul](c_rest)
-
-    @parameter
-    @staticmethod
-    fn kernel_mul_bw_a(
-        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
-    ) -> None:
-        let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
-        let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
-        let offset_c = c_index * c_rest
-
-        @parameter
-        fn vectorized_mul_grad_a[nelts: Int](i: Int):
-            a.store_grad[nelts](
-                offset_a + i,
-                a.load_grad[nelts](offset_a + i)
-                + b.load_data[nelts](offset_b + i) * c.load_grad[nelts](offset_c + i),
-            )
-
-        vectorize[nelts, vectorized_mul_grad_a](c_rest)
-
-    @parameter
-    @staticmethod
-    fn kernel_mul_bw_b(
-        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
-    ) -> None:
-        let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
-        let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
-        let offset_c = c_index * c_rest
-
-        @parameter
-        fn vectorized_mul_grad_b[nelts: Int](i: Int):
-            b.store_grad[nelts](
-                offset_b + i,
-                b.load_grad[nelts](offset_b + i)
-                + a.load_data[nelts](offset_a + i) * c.load_grad[nelts](offset_c + i),
-            )
-
-        vectorize[nelts, vectorized_mul_grad_b](c_rest)
-
-
-struct Sub(BinaryArithmetic):
-    @staticmethod
-    fn fw(c: Node, a: Node, b: Node):
-        recursive_broadcast[Self.kernel_sub_fw, base_case_strides](c, a, b)
-
-    @staticmethod
-    fn bw(c: Node, a: Node, b: Node):
-        if not a.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_sub_bw_a, base_case_strides](c, a, b)
-        if not b.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_sub_bw_b, base_case_strides](c, a, b)
-
-    @parameter
-    @staticmethod
-    fn kernel_sub_fw(
-        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
-    ) -> None:
-        let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
-        let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
-        let offset_c = c_index * c_rest
-
-        @parameter
-        fn vectorized_sub[nelts: Int](i: Int):
-            c.store_data[nelts](
-                offset_c + i,
-                a.load_data[nelts](offset_a + i) - b.load_data[nelts](offset_b + i),
-            )
-
-        vectorize[nelts, vectorized_sub](c_rest)
-
-    @parameter
-    @staticmethod
-    fn kernel_sub_bw_a(
-        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
-    ) -> None:
-        let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
-        let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
-        let offset_c = c_index * c_rest
-
-        @parameter
-        fn vectorized_sub_grad_a[nelts: Int](i: Int):
-            a.store_grad[nelts](
-                offset_a + i,
-                a.load_grad[nelts](offset_a + i) + c.load_grad[nelts](offset_c + i),
-            )
-
-        vectorize[nelts, vectorized_sub_grad_a](c_rest)
-
-    @parameter
-    @staticmethod
-    fn kernel_sub_bw_b(
-        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
-    ) -> None:
-        let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
-        let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
-        let offset_c = c_index * c_rest
-
-        @parameter
-        fn vectorized_sub_grad_b[nelts: Int](i: Int):
-            b.store_grad[nelts](
-                offset_b + i,
-                b.load_grad[nelts](offset_b + i) - c.load_grad[nelts](offset_c + i),
-            )
-
-        vectorize[nelts, vectorized_sub_grad_b](c_rest)
-
-
-struct Div(BinaryArithmetic):
-    @staticmethod
-    fn fw(c: Node, a: Node, b: Node):
-        recursive_broadcast[Self.kernel_divectorized_fw, base_case_strides](c, a, b)
-
-    @staticmethod
-    fn bw(c: Node, a: Node, b: Node):
-        if not a.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_divectorized_bw_a, base_case_strides](
+            recursive_broadcast_bw[kernel_generic_bw_a[kernel_bw_a], base_case_strides](
                 c, a, b
             )
         if not b.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_divectorized_bw_b, base_case_strides](
+            recursive_broadcast_bw[kernel_generic_bw_b[kernel_bw_b], base_case_strides](
                 c, a, b
             )
 
-    @parameter
-    @staticmethod
-    fn kernel_divectorized_fw(
-        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
-    ) -> None:
-        let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
-        let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
-        let offset_c = c_index * c_rest
 
-        @parameter
-        fn vectorized_div[nelts: Int](i: Int):
-            c.store_data[nelts](
-                offset_c + i,
-                a.load_data[nelts](offset_a + i) / b.load_data[nelts](offset_b + i),
-            )
+alias Add = GenericBinaryArithmetic[add_fw, bw_add, bw_add]
+alias Mul = GenericBinaryArithmetic[mul_fw, bw_mul_a, bw_mul_b]
+alias Sub = GenericBinaryArithmetic[sub_fw, bw_sub, bw_sub]
+alias Div = GenericBinaryArithmetic[div_fw, bw_div_a, bw_div_b]
+alias Pow = GenericBinaryArithmetic[pow_fw, bw_pow_a, bw_pow_b]
+alias MMul = _MMul
 
-        vectorize[nelts, vectorized_div](c_rest)
 
-    @parameter
-    @staticmethod
-    fn kernel_divectorized_bw_a(
-        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
-    ) -> None:
-        let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
-        let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
-        let offset_c = c_index * c_rest
-
-        @parameter
-        fn vectorized_divectorized_grad_a[nelts: Int](i: Int):
-            a.store_grad[nelts](
-                offset_a + i,
-                a.load_grad[nelts](offset_a + i)
-                + c.load_grad[nelts](offset_c + i) / b.load_data[nelts](offset_b + i),
-            )
-
-        vectorize[nelts, vectorized_divectorized_grad_a](c_rest)
+@parameter
+fn kernel_generic_fw[
+    generic_func: fn[nelts: Int] (
+        SIMD[DType_F32, nelts], SIMD[DType_F32, nelts]
+    ) -> SIMD[DType_F32, nelts]
+](
+    c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
+) -> None:
+    let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
+    let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
+    let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
+    let offset_c = c_index * c_rest
 
     @parameter
+    fn vectorized_generic[nelts: Int](i: Int):
+        c.store_data[nelts](
+            offset_c + i,
+            generic_func(
+                a.load_data[nelts](offset_a + i), b.load_data[nelts](offset_b + i)
+            ),
+        )
+
+    vectorize[nelts, vectorized_generic](c_rest)
+
+
+@parameter
+fn kernel_generic_bw_a[
+    generic_func: fn[nelts: Int] (
+        SIMD[DType_F32, nelts], SIMD[DType_F32, nelts], SIMD[DType_F32, nelts]
+    ) -> SIMD[DType_F32, nelts]
+](
+    c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
+) -> None:
+    let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
+    let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
+    let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
+    let offset_c = c_index * c_rest
+
+    @parameter
+    fn vectorized_generic[nelts: Int](i: Int):
+        a.store_grad[nelts](
+            offset_a + i,
+            a.load_grad[nelts](offset_a + i)
+            + generic_func(
+                a.load_data[nelts](offset_a + i),
+                b.load_data[nelts](offset_b + i),
+                c.load_grad[nelts](offset_c + i),
+            ),
+        )
+
+    vectorize[nelts, vectorized_generic](c_rest)
+
+
+@parameter
+fn kernel_generic_bw_b[
+    generic_func: fn[nelts: Int] (
+        SIMD[DType_F32, nelts], SIMD[DType_F32, nelts], SIMD[DType_F32, nelts]
+    ) -> SIMD[DType_F32, nelts]
+](
+    c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
+) -> None:
+    let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
+    let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
+    let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
+    let offset_c = c_index * c_rest
+
+    @parameter
+    fn vectorized_generic[nelts: Int](i: Int):
+        b.store_grad[nelts](
+            offset_b + i,
+            b.load_grad[nelts](offset_b + i)
+            + generic_func(
+                a.load_data[nelts](offset_a + i),
+                b.load_data[nelts](offset_b + i),
+                c.load_grad[nelts](offset_c + i),
+            ),
+        )
+
+    vectorize[nelts, vectorized_generic](c_rest)
+
+
+fn add_fw[
+    nelts: Int
+](a: SIMD[DType_F32, nelts], b: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
+    return a + b
+
+
+fn mul_fw[
+    nelts: Int
+](a: SIMD[DType_F32, nelts], b: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
+    return a * b
+
+
+fn sub_fw[
+    nelts: Int
+](a: SIMD[DType_F32, nelts], b: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
+    return a - b
+
+
+fn div_fw[
+    nelts: Int
+](a: SIMD[DType_F32, nelts], b: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
+    return a / b
+
+
+fn pow_fw[
+    nelts: Int
+](a: SIMD[DType_F32, nelts], b: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
+    return a**b
+
+
+fn bw_add[
+    nelts: Int
+](
+    a_data: SIMD[DType_F32, nelts],
+    b_data: SIMD[DType_F32, nelts],
+    c_grad: SIMD[DType_F32, nelts],
+) -> SIMD[DType_F32, nelts]:
+    return c_grad
+
+
+fn bw_mul_a[
+    nelts: Int
+](
+    a_data: SIMD[DType_F32, nelts],
+    b_data: SIMD[DType_F32, nelts],
+    c_grad: SIMD[DType_F32, nelts],
+) -> SIMD[DType_F32, nelts]:
+    return b_data * c_grad
+
+
+fn bw_sub[
+    nelts: Int
+](
+    a_data: SIMD[DType_F32, nelts],
+    b_data: SIMD[DType_F32, nelts],
+    c_grad: SIMD[DType_F32, nelts],
+) -> SIMD[DType_F32, nelts]:
+    return -c_grad
+
+
+fn bw_div_a[
+    nelts: Int
+](
+    a_data: SIMD[DType_F32, nelts],
+    b_data: SIMD[DType_F32, nelts],
+    c_grad: SIMD[DType_F32, nelts],
+) -> SIMD[DType_F32, nelts]:
+    return c_grad / b_data
+
+
+fn bw_pow_a[
+    nelts: Int
+](
+    a_data: SIMD[DType_F32, nelts],
+    b_data: SIMD[DType_F32, nelts],
+    c_grad: SIMD[DType_F32, nelts],
+) -> SIMD[DType_F32, nelts]:
+    return b_data * (a_data ** (b_data - 1.0)) * c_grad
+
+
+fn bw_mul_b[
+    nelts: Int
+](
+    a_data: SIMD[DType_F32, nelts],
+    b_data: SIMD[DType_F32, nelts],
+    c_grad: SIMD[DType_F32, nelts],
+) -> SIMD[DType_F32, nelts]:
+    return a_data * c_grad
+
+
+fn bw_div_b[
+    nelts: Int
+](
+    a_data: SIMD[DType_F32, nelts],
+    b_data: SIMD[DType_F32, nelts],
+    c_grad: SIMD[DType_F32, nelts],
+) -> SIMD[DType_F32, nelts]:
+    return -a_data * c_grad / (b_data**2)
+
+
+fn bw_pow_b[
+    nelts: Int
+](
+    a_data: SIMD[DType_F32, nelts],
+    b_data: SIMD[DType_F32, nelts],
+    c_grad: SIMD[DType_F32, nelts],
+) -> SIMD[DType_F32, nelts]:
+    return a_data**b_data * log(a_data) * c_grad
+
+
+struct _MMul:
+    @parameter
     @staticmethod
-    fn kernel_divectorized_bw_b(
-        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
-    ) -> None:
-        let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
-        let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
-        let offset_c = c_index * c_rest
+    fn base_case_depth(depth: Int, a: Node, b: Node) -> Bool:
+        return depth == max(a.num_dims_ptr.load(), b.num_dims_ptr.load()) - 2
 
-        @parameter
-        fn vectorized_divectorized_grad_b[nelts: Int](i: Int):
-            b.store_grad[nelts](
-                offset_b + i,
-                b.load_grad[nelts](offset_b + i)
-                - a.load_data[nelts](offset_a + i)
-                * c.load_grad[nelts](offset_c + i)
-                / (b.load_data[nelts](offset_b + i)) ** 2,
-            )
-
-        vectorize[nelts, vectorized_divectorized_grad_b](c_rest)
-
-
-struct MMul(BinaryArithmetic):
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
-        recursive_broadcast[Self.kernel_mmul_fw, base_case_depth](c, a, b)
+        recursive_broadcast[Self.kernel_mmul_fw, Self.base_case_depth](c, a, b)
 
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
         if not a.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_mmul_bw_a, base_case_depth](c, a, b)
+            recursive_broadcast_bw[Self.kernel_mmul_bw_a, Self.base_case_depth](c, a, b)
         if not b.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_mmul_bw_b, base_case_depth](c, a, b)
+            recursive_broadcast_bw[Self.kernel_mmul_bw_b, Self.base_case_depth](c, a, b)
 
     @parameter
     @staticmethod
@@ -441,158 +377,3 @@ struct MMul(BinaryArithmetic):
                 vectorize[1, dot_bw_b](N)
 
         parallelize[calc_row_2](K, workers if workers > 0 else K)
-
-
-struct Pow(BinaryArithmetic):
-    @staticmethod
-    fn fw(c: Node, a: Node, b: Node):
-        recursive_broadcast[Self.kernel_pow_fw, base_case_strides](c, a, b)
-
-    @staticmethod
-    fn bw(c: Node, a: Node, b: Node):
-        if not a.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_pow_bw_a, base_case_strides](c, a, b)
-        if not b.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_pow_bw_b, base_case_strides](c, a, b)
-
-    @parameter
-    @staticmethod
-    fn kernel_pow_fw(
-        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
-    ) -> None:
-        let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
-        let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
-        let offset_c = c_index * c_rest
-
-        @parameter
-        fn vectorized_pow[nelts: Int](i: Int):
-            c.store_data[nelts](
-                offset_c + i,
-                a.load_data[nelts](offset_a + i) ** b.load_data[nelts](offset_b + i),
-            )
-
-        vectorize[nelts, vectorized_pow](c_rest)
-
-    @parameter
-    @staticmethod
-    fn kernel_pow_bw_a(
-        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
-    ) -> None:
-        let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
-        let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
-        let offset_c = c_index * c_rest
-
-        @parameter
-        fn vectorized_pow_bw_a[nelts: Int](i: Int):
-            a.store_grad[nelts](
-                offset_a + i,
-                a.load_grad[nelts](offset_a + i)
-                + b.load_data[nelts](offset_b + i)
-                * (
-                    a.load_data[nelts](offset_a + i)
-                    ** (b.load_data[nelts](offset_b + i) - 1.0)
-                )
-                * c.load_grad[nelts](offset_c + i),
-            )
-
-        vectorize[nelts, vectorized_pow_bw_a](c_rest)
-
-    @parameter
-    @staticmethod
-    fn kernel_pow_bw_b(
-        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
-    ) -> None:
-        let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
-        let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
-        let offset_c = c_index * c_rest
-
-        @parameter
-        fn vectorized_pow_bw_b[nelts: Int](i: Int):
-            b.store_grad[nelts](
-                offset_b + i,
-                b.load_grad[nelts](offset_b + i)
-                + c.load_data[nelts](offset_c + i)
-                * log(a.load_data[nelts](offset_a + i))
-                * c.load_grad[nelts](offset_c + i),
-            )
-
-        vectorize[nelts, vectorized_pow_bw_b](c_rest)
-
-
-struct Avg(BinaryArithmetic):
-    @staticmethod
-    fn fw(c: Node, a: Node, b: Node):
-        recursive_broadcast[Self.kernel_avg_fw, base_case_strides](c, a, b)
-
-    @staticmethod
-    fn bw(c: Node, a: Node, b: Node):
-        if not a.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_avg_bw_a, base_case_strides](c, a, b)
-        if not b.is_single_ptr.load():
-            recursive_broadcast_bw[Self.kernel_avg_bw_b, base_case_strides](c, a, b)
-
-    @parameter
-    @staticmethod
-    fn kernel_avg_fw(
-        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
-    ):
-        let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
-        let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-
-        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
-        let offset_c = c_index * c_rest
-
-        @parameter
-        fn vectorized_avg[nelts: Int](i: Int):
-            c.store_data[nelts](
-                offset_c + i,
-                (a.load_data[nelts](offset_a + i) + b.load_data[nelts](offset_b + i))
-                / 2.0,
-            )
-
-        vectorize[nelts, vectorized_avg](c_rest)
-
-    @parameter
-    @staticmethod
-    fn kernel_avg_bw_a(
-        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
-    ):
-        let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
-        let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-
-        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
-        let offset_c = c_index * c_rest
-
-        @parameter
-        fn vectorized_avg_bw_a[nelts: Int](i: Int):
-            a.store_grad[nelts](
-                offset_a + i, a.load_grad[nelts](offset_a + i) + c.load_grad[nelts](
-                    offset_c + i
-                )
-            )
-
-        vectorize[nelts, vectorized_avg_bw_a](c_rest)
-
-    @parameter
-    @staticmethod
-    fn kernel_avg_bw_b(
-        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
-    ):
-        let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
-        let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-
-        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
-        let offset_c = c_index * c_rest
-
-        @parameter
-        fn vectorized_avg_bw_b[nelts: Int](i: Int):
-            b.store_grad[nelts](
-                offset_b + i, b.load_grad[nelts](offset_b + i) + c.load_grad[nelts](
-                    offset_c + i
-                )
-            )
-
-        vectorize[nelts, vectorized_avg_bw_b](c_rest)

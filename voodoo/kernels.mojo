@@ -1,8 +1,29 @@
 from .cpu_kernels.operations import *
 from .cpu_kernels.binary_operations import *
-from .cpu_kernels.arithmetic import *
-from .cpu_kernels.binary_arithmetic import *
-from .cpu_kernels.losses import * 
+from .cpu_kernels.arithmetic import (
+    Sqrt,
+    Abs,
+    Exp2,
+    Log2,
+    Log,
+    Sin,
+    Cos,
+    Tan,
+    Asin,
+    Acos,
+    Atan,
+    Sinh,
+    Cosh,
+)
+from .cpu_kernels.binary_arithmetic import (
+    Add,
+    Mul,
+    Sub,
+    Div,
+    Pow,
+    MMul,
+)
+from .cpu_kernels.losses import *
 from .cpu_kernels.activations import (
     Relu,
     Sigmoid,
@@ -110,5 +131,4 @@ struct Kernels:
         k.store("bce", bce_code, BCE.fw, BCE.bw)
         k.store("cce", cce_code, CCE.fw, CCE.bw)
         k.store("cfce", cfce_code, CFCE.fw, CFCE.bw)
-        k.store("avg", avg_code, Avg.fw, Avg.bw)
         return Kernels {kernels: kernels}
