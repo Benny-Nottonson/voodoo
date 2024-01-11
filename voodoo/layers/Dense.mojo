@@ -38,7 +38,7 @@ struct Dense[
         else:
             self.bias = Tensor(shape(out_neurons))
 
-    fn forward(self, x: Tensor) raises -> Tensor:
+    fn forward(self, x: Tensor) raises -> Tensor[False, False]:
         let computed = x @ self.W + (self.bias * Float32(self.use_bias))
 
         @parameter

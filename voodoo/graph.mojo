@@ -1,15 +1,13 @@
 from memory import memset_zero
 from math import log, log2, exp, exp2, ceil, round
 from algorithm import vectorize, unswitch
-
+ 
 from .kernels import op_tuple, unary_op, binary_op, Kernels
 from .node import Node
 from .utils import Vector, get_broadcasted_shape_for_ew_op
 from .utils.shape import shape
 from .cpu_kernels.optimizers import *
-
-alias nelts = simdwidthof[DType.float32]()
-alias memory_pool_size = 30
+from .constants import nelts, memory_pool_size
 
 
 # TODO: Could combine more unary / binary functions into one main caller (See activations / losses)

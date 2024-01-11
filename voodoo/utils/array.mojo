@@ -1,6 +1,5 @@
 from memory import memset_zero, memcpy
-
-alias nelts = simdwidthof[DType.float32]()
+from ..constants import nelts
 
 
 @register_passable("trivial")

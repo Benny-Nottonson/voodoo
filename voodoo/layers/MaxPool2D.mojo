@@ -12,5 +12,5 @@ struct MaxPool2D[
     ) raises:
         ...
 
-    fn forward(self, x: Tensor) raises -> Tensor:
+    fn forward(self, x: Tensor) raises -> Tensor[False, False]:
         return x.max_pool_2d(self.pool_size, self.pool_size, self.stride, self.padding)

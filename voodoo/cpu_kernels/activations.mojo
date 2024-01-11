@@ -1,7 +1,7 @@
 from math import abs, exp, log, tanh, max, erf
 from algorithm import vectorize
 from voodoo import Node
-from .constants import DType_F32, nelts, f32_max
+from ..constants import DType_F32, nelts, f32_max
 
 alias generic_vectorized = fn[
     _nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
