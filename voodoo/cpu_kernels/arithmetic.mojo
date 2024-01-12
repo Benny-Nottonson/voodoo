@@ -17,8 +17,6 @@ from voodoo import Node
 from ..constants import DType_F32, nelts
 
 # TODO: Rewrite when lambda functions are supported
-# TODO: Add comments for each function and check for optimized estimatorss
-
 
 alias vectorized_type = fn[nelts: Int] (SIMD[DType_F32, nelts]) -> SIMD[
     DType_F32, nelts

@@ -1,5 +1,6 @@
 from math import max, log
 from algorithm import vectorize, parallelize
+from voodoo import Node
 from voodoo.utils import (
     shape_a,
     shape_b,
@@ -8,7 +9,6 @@ from voodoo.utils import (
     recursive_broadcast,
     recursive_broadcast_bw,
 )
-from voodoo import Node
 from ..constants import DType_F32, nelts, workers
 
 # TODO: Rewrite to use generic functions where possible

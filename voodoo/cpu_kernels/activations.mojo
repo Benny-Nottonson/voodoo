@@ -3,11 +3,12 @@ from algorithm import vectorize
 from voodoo import Node
 from ..constants import DType_F32, nelts, f32_max
 
-alias generic_vectorized = fn[
-    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-] (SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]
-
 # TODO: Rewrite when lambda functions are supported
+
+
+alias generic_vectorized = fn[nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32] (
+    SIMD[DType_F32, nelts]
+) -> SIMD[DType_F32, nelts]
 
 
 struct Generic[
@@ -135,14 +136,14 @@ fn relu_fw_vec[
     threshold: Float32 = 0.0,
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = x > threshold ? (x > max_value ? max_value : x) : negative_slope * x
+    let threshold_mask = (x > threshold).cast[DType_F32]()
+
     @parameter
     if negative_slope == 0.0 and max_value == f32_max:
-        return (x > threshold).cast[DType_F32]() * x
+        return threshold_mask * x
     return (
-        (x > threshold).cast[DType_F32]()
-        * (x > max_value).cast[DType_F32]()
-        * max_value
-        + (x > threshold).cast[DType_F32]() * (x <= max_value).cast[DType_F32]() * x
+        threshold_mask * (x > max_value).cast[DType_F32]() * max_value
+        + threshold_mask * (x <= max_value).cast[DType_F32]() * x
         + (x <= threshold).cast[DType_F32]() * negative_slope * x
     )
 
@@ -154,12 +155,14 @@ fn relu_bw_vec[
     threshold: Float32 = 0.0,
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = x > threshold ? (x > max_value ? 0 : 1) : negative_slope
+    let threshold_mask = (x > threshold).cast[DType_F32]()
+
     @parameter
     if negative_slope == 0.0 and max_value == f32_max:
-        return (x > threshold).cast[DType_F32]()
+        return threshold_mask
     return (
-        (x > threshold).cast[DType_F32]() * (x > max_value).cast[DType_F32]() * 0.0
-        + (x > threshold).cast[DType_F32]() * (x <= max_value).cast[DType_F32]() * 1.0
+        threshold_mask * (x > max_value).cast[DType_F32]() * 0.0
+        + threshold_mask * (x <= max_value).cast[DType_F32]() * 1.0
         + (x <= threshold).cast[DType_F32]() * negative_slope
     )
 
@@ -176,7 +179,8 @@ fn sigmoid_bw_vec[
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = f(x)(1-f(x))
     # simplifies to e^x / (e^x + 1)^2
-    return exp(x) / (exp(x) + 1.0) ** 2
+    let e_x = (exp(x))
+    return e_x / (e_x + 1.0) ** 2
 
 
 fn softplus_fw_vec[
@@ -190,7 +194,8 @@ fn softplus_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = e^x / (1 + e^x)
-    return exp(x) / (1.0 + exp(x))
+    let e_x = (exp(x))
+    return e_x / (1.0 + e_x)
 
 
 fn softsign_fw_vec[
@@ -294,7 +299,8 @@ fn silu_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = (e^x * x + e^x + e^2x) / (e^x + 1)^2
-    return (exp(x) * x + exp(x) + exp(2.0 * x)) / (exp(x) + 1.0) ** 2
+    let e_x = exp(x)
+    return (e_x * x + e_x + exp(2.0 * x)) / (e_x + 1.0) ** 2
 
 
 fn gelu_fw_vec[
@@ -324,11 +330,8 @@ fn gelu_bw_vec[
         return 0.5 * (erf(0.7071067811865475 * x) + 1.0) + 0.3989422804014327 * x * exp(
             -0.5 * x**2
         )
-    return 0.5 * (
-        1.0 + tanh(0.7978845608028654 * (x + 0.044715 * x**3)) ** 2
-    ) + 0.7978845608028654 * x * (
-        1.0 - tanh(0.7978845608028654 * (x + 0.044715 * x**3)) ** 2
-    )
+    let tanh_x_2 = tanh(0.7978845608028654 * (x + 0.044715 * x**3)) ** 2
+    return 0.5 * (1.0 + tanh_x_2) + 0.7978845608028654 * x * (1.0 - tanh_x_2)
 
 
 fn hard_sigmoid_fw_vec[
@@ -390,17 +393,12 @@ fn mish_bw_vec[
     arg3: Float32,
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = (e^x (4 e^x x + 4 x + 6 e^x + 4 e^(2 x) + e^(3 x) + 4))/(2 e^x + e^(2 x) + 2)^2
+    let e_x = exp(x)
+    let e_2x = exp(2.0 * x)
     return (
-        exp(x)
-        * (
-            4.0 * exp(x) * x
-            + 4.0 * x
-            + 6.0 * exp(x)
-            + 4.0 * exp(2.0 * x)
-            + exp(3.0 * x)
-            + 4.0
-        )
-        / (2.0 * exp(x) + exp(2.0 * x) + 2.0) ** 2
+        e_x
+        * (4.0 * e_x * x + 4.0 * x + 6.0 * e_x + 4.0 * e_2x + exp(3.0 * x) + 4.0)
+        / (2.0 * e_x + e_2x + 2.0) ** 2
     )
 
 

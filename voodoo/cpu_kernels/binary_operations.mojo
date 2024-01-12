@@ -4,17 +4,7 @@ from voodoo import Node
 from ..constants import DType_F32, nelts, workers
 
 
-trait BinaryOperation:
-    @staticmethod
-    fn fw(c: Node, a: Node, b: Node):
-        ...
-
-    @staticmethod
-    fn bw(c: Node, a: Node, b: Node):
-        ...
-
-
-struct Conv2D(BinaryOperation):
+struct Conv2D:
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
         let padding = c.other_params_ptr.load().load(0)
@@ -119,7 +109,6 @@ struct Conv2D(BinaryOperation):
                                             c.shape_ptr.load().load(2),
                                             c.shape_ptr.load().load(3),
                                         )
-                                        # add to patch sum
                                         patch_sum += (
                                             a.load_data(a_index)
                                             * c.load_grad(c_grad_index)
