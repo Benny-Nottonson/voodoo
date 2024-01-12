@@ -18,12 +18,12 @@ from ..constants import DType_F32, nelts
 
 # TODO: Rewrite when lambda functions are supported
 
-alias vectorized_type = fn[nelts: Int] (SIMD[DType_F32, nelts]) -> SIMD[
+alias generic_vectorized = fn[nelts: Int] (SIMD[DType_F32, nelts]) -> SIMD[
     DType_F32, nelts
 ]
 
 
-struct Generic[fw_vec: vectorized_type, bw_vec: vectorized_type]:
+struct Generic[fw_vec: generic_vectorized, bw_vec: generic_vectorized]:
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter

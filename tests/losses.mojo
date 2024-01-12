@@ -159,12 +159,6 @@ fn main() raises:
         tf.float32,
         tf.math.reduce_sum,
     )
-    total += test_fn["cce"](
-        tf.keras.losses.categorical_crossentropy,
-        tf.constant,
-        tf.float32,
-        tf.math.reduce_sum,
-    )
     total += test_fn["cfce"](
         tf.keras.losses.categorical_hinge,
         tf.constant,

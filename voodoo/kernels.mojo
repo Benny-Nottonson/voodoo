@@ -23,7 +23,11 @@ from .cpu_kernels.binary_arithmetic import (
     Pow,
     MMul,
 )
-from .cpu_kernels.losses import *
+from .cpu_kernels.losses import (
+    MSE,
+    MAE,
+    CE,
+)
 from .cpu_kernels.activations import (
     Relu,
     Sigmoid,
@@ -50,6 +54,7 @@ alias op_tuple = Tuple[String, unary_op, binary_op]
 
 # TODO: Update
 # TODO: Convert all imports to explicit
+
 
 fn _u(b: Node, a: Node):
     ...
@@ -125,11 +130,8 @@ struct Kernels:
         k.store("tanh", tanh_code, Tanh.fw, Tanh.bw)
         k.store("lrelu", leaky_relu_code, LeakyRelu[0.0].fw, LeakyRelu[0.0].bw)
         k.store("dropout", dropout_code, Dropout.fw, Dropout.bw)
-        k.store("mae", mae_code, MAE.fw, MAE.bw)
-        k.store("mape", mape_code, MAPE.fw, MAPE.bw)
+        
         k.store("mse", mse_code, MSE.fw, MSE.bw)
-        k.store("msle", msle_code, MSLE.fw, MSLE.bw)
-        k.store("bce", bce_code, BCE.fw, BCE.bw)
-        k.store("cce", cce_code, CCE.fw, CCE.bw)
-        k.store("cfce", cfce_code, CFCE.fw, CFCE.bw)
+        k.store("mae", mae_code, MAE.fw, MAE.bw)
+        k.store("ce", ce_code, CE.fw, CE.bw)
         return Kernels {kernels: kernels}

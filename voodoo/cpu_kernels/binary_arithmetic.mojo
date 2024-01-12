@@ -13,19 +13,19 @@ from ..constants import DType_F32, nelts, workers
 
 # TODO: Rewrite to use generic functions where possible
 
-alias vectorized_type_fw = fn[nelts: Int] (
+alias generic_vectorized_fw = fn[nelts: Int] (
     SIMD[DType_F32, nelts], SIMD[DType_F32, nelts]
 ) -> SIMD[DType_F32, nelts]
 
-alias vectorized_type_bw = fn[nelts: Int] (
+alias generic_vectorized_bw = fn[nelts: Int] (
     SIMD[DType_F32, nelts], SIMD[DType_F32, nelts], SIMD[DType_F32, nelts]
 ) -> SIMD[DType_F32, nelts]
 
 
 struct Generic[
-    fw_vec: vectorized_type_fw,
-    bw_a_vec: vectorized_type_bw,
-    bw_b_vec: vectorized_type_bw,
+    fw_vec: generic_vectorized_fw,
+    bw_a_vec: generic_vectorized_bw,
+    bw_b_vec: generic_vectorized_bw,
 ]:
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
@@ -45,7 +45,7 @@ struct Generic[
     @parameter
     @staticmethod
     fn kernel_fw[
-        generic_func: vectorized_type_fw
+        generic_func: generic_vectorized_fw
     ](
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
@@ -68,7 +68,7 @@ struct Generic[
     @parameter
     @staticmethod
     fn kernel_bw[
-        generic_func: vectorized_type_bw,
+        generic_func: generic_vectorized_bw,
         is_a: Bool,
     ](
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int

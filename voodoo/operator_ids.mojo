@@ -1,4 +1,5 @@
 # TODO: Cleanup, eventually can be a dict, not yet in mojo
+# TODO: Update and rework
 alias cos_code = 0
 alias sin_code = 2
 alias tan_code = 4
@@ -47,12 +48,8 @@ alias log_softmax_code = 82
 alias dropout_code = 84
 
 # Loss functions
-alias mae_code = 92
-alias mape_code = 94
-alias mse_code = 96
-alias msle_code = 98
-alias bce_code = 100
-alias cce_code = 102
-alias cfce_code = 104
+alias mse_code = 86
+alias mae_code = 88
+alias ce_code = 90
 
 alias avg_code = 106
