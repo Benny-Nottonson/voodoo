@@ -50,6 +50,7 @@ alias dropout_code = 84
 # Loss functions
 alias mse_code = 86
 alias mae_code = 88
-alias ce_code = 90
+alias mape_code = 90
+alias msle_code = 92
 
 alias avg_code = 106

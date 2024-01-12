@@ -48,6 +48,8 @@ fn get_loss_code[name: String]() -> Int:
         return mse_code
     elif name == "mae":
         return mae_code
-    elif name == "ce":
-        return ce_code
+    elif name == "mape":
+        return mape_code
+    elif name == "msle":
+        return msle_code
     return mse_code

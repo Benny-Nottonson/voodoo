@@ -26,7 +26,8 @@ from .cpu_kernels.binary_arithmetic import (
 from .cpu_kernels.losses import (
     MSE,
     MAE,
-    CE,
+    MAPE,
+    MSLE,
 )
 from .cpu_kernels.activations import (
     Relu,
@@ -133,5 +134,6 @@ struct Kernels:
         
         k.store("mse", mse_code, MSE.fw, MSE.bw)
         k.store("mae", mae_code, MAE.fw, MAE.bw)
-        k.store("ce", ce_code, CE.fw, CE.bw)
+        k.store("mape", mape_code, MAPE.fw, MAPE.bw)
+        k.store("msle", msle_code, MSLE.fw, MSLE.bw)
         return Kernels {kernels: kernels}
