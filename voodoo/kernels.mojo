@@ -1,5 +1,5 @@
 from .cpu_kernels.operations import *
-from .cpu_kernels.binary_operations import *
+from .cpu_kernels.binary_operations import Conv2D
 from .cpu_kernels.arithmetic import (
     Sqrt,
     Abs,
@@ -48,6 +48,8 @@ alias unary_op = fn (b: Node, a: Node) -> None
 alias binary_op = fn (c: Node, a: Node, b: Node) -> None
 alias op_tuple = Tuple[String, unary_op, binary_op]
 
+# TODO: Update
+# TODO: Convert all imports to explicit
 
 fn _u(b: Node, a: Node):
     ...
