@@ -29,6 +29,7 @@ fn main() raises:
     let loss = x.compute_loss["mse"](true_vals)
 
     let initial_start = now()
+    let bar_accuracy = 20
     for epoch in range(1, num_epochs + 1):
         let epoch_start = now()
         for i in range(input.initialize["random_uniform", 0, 1]().capacity()):
@@ -39,14 +40,32 @@ fn main() raises:
         loss.optimize["sgd", 0.01]()
 
         if epoch % every == 0:
-            print_no_newline(chr(27) + "[2J")
-            print(
+            print_no_newline(chr(27) + "[2J") #[0;32m
+            print()
+            print_no_newline(
                 "Epoch:",
                 epoch,
+                " ",
+                chr(27) + "[0;32m",
             )
+            for i in range(0, bar_accuracy):
+                if i < ((epoch / num_epochs) * bar_accuracy).to_int():
+                    print_no_newline("█")
+                else:
+                    print_no_newline("░")
+            print_no_newline(chr(27) + "[0m", " ", ((epoch / num_epochs) * 100.0).to_int(), "%")
+            print()
             print(
                 " Avg Loss: ",
                 avg_loss / every,
+            )
+            print(
+                " Example Input: ",
+                input[0],
+                " Output: ",
+                x[0],
+                " True: ",
+                true_vals[0],
             )
             print(
                 " Time: ",
