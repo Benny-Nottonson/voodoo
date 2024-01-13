@@ -26,16 +26,16 @@ fn get_activation_code[name: String]() -> Int:
         return elu_code
     elif name == "exp":
         return exp_code
-    elif name == "leaky_relu":
-        return leaky_relu_code
+    elif name == "lrelu":
+        return lrelu_code
     elif name == "relu6":
         return relu6_code
     elif name == "silu":
         return silu_code
     elif name == "gelu":
         return gelu_code
-    elif name == "hard_sigmoid":
-        return hard_sigmoid_code
+    elif name == "h_sig":
+        return h_sig_code
     elif name == "linear":
         return linear_code
     elif name == "mish":
