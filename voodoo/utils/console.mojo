@@ -14,4 +14,4 @@ fn debug(msg: String):
     print_no_newline(chr(27) + "[0;35m" + msg + chr(27) + "[0;37m")
 
 fn clear():
-    print_no_newline(chr(27) + "[2J")
+    print_no_newline(chr(27) + "[2J" + chr(27) + "[0;37m")
