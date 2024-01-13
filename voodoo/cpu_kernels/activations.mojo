@@ -129,6 +129,7 @@ struct LogSoftmax[]:
 
 
 @parameter
+@always_inline
 fn relu_fw_vec[
     nelts: Int,
     negative_slope: Float32 = 0.0,
@@ -148,6 +149,8 @@ fn relu_fw_vec[
     )
 
 
+@parameter
+@always_inline
 fn relu_bw_vec[
     nelts: Int,
     negative_slope: Float32 = 0.0,
@@ -167,6 +170,8 @@ fn relu_bw_vec[
     )
 
 
+@parameter
+@always_inline
 fn sigmoid_fw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
@@ -174,6 +179,8 @@ fn sigmoid_fw_vec[
     return 1.0 / (1.0 + exp(-x))
 
 
+@parameter
+@always_inline
 fn sigmoid_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
@@ -183,6 +190,8 @@ fn sigmoid_bw_vec[
     return e_x / (e_x + 1.0) ** 2
 
 
+@parameter
+@always_inline
 fn softplus_fw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
@@ -190,6 +199,8 @@ fn softplus_fw_vec[
     return log(1.0 + exp(x))
 
 
+@parameter
+@always_inline
 fn softplus_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
@@ -198,6 +209,8 @@ fn softplus_bw_vec[
     return e_x / (1.0 + e_x)
 
 
+@parameter
+@always_inline
 fn softsign_fw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
@@ -205,6 +218,8 @@ fn softsign_fw_vec[
     return x / (1.0 + abs(x))
 
 
+@parameter
+@always_inline
 fn softsign_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
@@ -212,6 +227,8 @@ fn softsign_bw_vec[
     return 1.0 / (1.0 + abs(x)) ** 2
 
 
+@parameter
+@always_inline
 fn tanh_fw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
@@ -219,6 +236,8 @@ fn tanh_fw_vec[
     return tanh(x)
 
 
+@parameter
+@always_inline
 fn tanh_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
@@ -226,6 +245,8 @@ fn tanh_bw_vec[
     return 1.0 - tanh(x) ** 2
 
 
+@parameter
+@always_inline
 fn selu_fw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
@@ -235,6 +256,8 @@ fn selu_fw_vec[
     ]() * 1.05070098 * 1.67326324 * (exp(x) - 1.0)
 
 
+@parameter
+@always_inline
 fn selu_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
@@ -244,6 +267,8 @@ fn selu_bw_vec[
     ]() * 1.05070098 * 1.75809932607 * exp(x)
 
 
+@parameter
+@always_inline
 fn elu_fw_vec[
     nelts: Int,
     arg1: Float32,
@@ -261,6 +286,8 @@ fn elu_fw_vec[
     )
 
 
+@parameter
+@always_inline
 fn elu_bw_vec[
     nelts: Int,
     arg1: Float32,
@@ -274,6 +301,8 @@ fn elu_bw_vec[
     return (x > 0.0).cast[DType_F32]() + (x <= 0.0).cast[DType_F32]() * alpha * exp(x)
 
 
+@parameter
+@always_inline
 fn exp_fw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
@@ -281,6 +310,8 @@ fn exp_fw_vec[
     return exp(x)
 
 
+@parameter
+@always_inline
 fn exp_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
@@ -288,6 +319,8 @@ fn exp_bw_vec[
     return exp(x)
 
 
+@parameter
+@always_inline
 fn silu_fw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
@@ -295,6 +328,8 @@ fn silu_fw_vec[
     return x / (1.0 + exp(-x))
 
 
+@parameter
+@always_inline
 fn silu_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
@@ -303,6 +338,8 @@ fn silu_bw_vec[
     return (e_x * x + e_x + exp(2.0 * x)) / (e_x + 1.0) ** 2
 
 
+@parameter
+@always_inline
 fn gelu_fw_vec[
     nelts: Int,
     arg1: Float32,
@@ -317,6 +354,8 @@ fn gelu_fw_vec[
     return 0.5 * x * (1.0 + tanh(0.7978845608028654 * (x + 0.044715 * x**3)))
 
 
+@parameter
+@always_inline
 fn gelu_bw_vec[
     nelts: Int,
     arg1: Float32,
@@ -334,6 +373,8 @@ fn gelu_bw_vec[
     return 0.5 * (1.0 + tanh_x_2) + 0.7978845608028654 * x * (1.0 - tanh_x_2)
 
 
+@parameter
+@always_inline
 fn hard_sigmoid_fw_vec[
     nelts: Int,
     arg1: Float32,
@@ -346,6 +387,8 @@ fn hard_sigmoid_fw_vec[
     ]() * (0.2 * x + 0.5)
 
 
+@parameter
+@always_inline
 fn hard_sigmoid_bw_vec[
     nelts: Int,
     arg1: Float32,
@@ -356,6 +399,8 @@ fn hard_sigmoid_bw_vec[
     return (x > -2.5).cast[DType_F32]() * (x < 2.5).cast[DType_F32]() * 0.2
 
 
+@parameter
+@always_inline
 fn linear_fw_vec[
     nelts: Int,
     arg1: Float32,
@@ -366,6 +411,8 @@ fn linear_fw_vec[
     return x
 
 
+@parameter
+@always_inline
 fn linear_bw_vec[
     nelts: Int,
     arg1: Float32,
@@ -376,6 +423,8 @@ fn linear_bw_vec[
     return 1.0
 
 
+@parameter
+@always_inline
 fn mish_fw_vec[
     nelts: Int,
     arg1: Float32,
@@ -386,6 +435,8 @@ fn mish_fw_vec[
     return x * tanh(log(1.0 + exp(x)))
 
 
+@parameter
+@always_inline
 fn mish_bw_vec[
     nelts: Int,
     arg1: Float32,

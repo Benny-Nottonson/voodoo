@@ -62,6 +62,7 @@ alias MSLE = Generic[msle_error, msle_grad]
 
 
 @parameter
+@always_inline
 fn mse_error[
     nelts: Int
 ](y_pred: SIMD[DType_F32, nelts], y_true: SIMD[DType_F32, nelts]) -> SIMD[
@@ -72,6 +73,7 @@ fn mse_error[
 
 
 @parameter
+@always_inline
 fn mse_grad[
     nelts: Int
 ](
@@ -82,6 +84,7 @@ fn mse_grad[
 
 
 @parameter
+@always_inline
 fn mae_error[
     nelts: Int
 ](y_pred: SIMD[DType_F32, nelts], y_true: SIMD[DType_F32, nelts]) -> SIMD[
@@ -92,6 +95,7 @@ fn mae_error[
 
 
 @parameter
+@always_inline
 fn mae_grad[
     nelts: Int
 ](
@@ -102,6 +106,7 @@ fn mae_grad[
 
 
 @parameter
+@always_inline
 fn mape_error[
     nelts: Int
 ](y_pred: SIMD[DType_F32, nelts], y_true: SIMD[DType_F32, nelts]) -> SIMD[
@@ -112,6 +117,7 @@ fn mape_error[
 
 
 @parameter
+@always_inline
 fn mape_grad[
     nelts: Int
 ](
@@ -122,6 +128,7 @@ fn mape_grad[
 
 
 @parameter
+@always_inline
 fn msle_error[
     nelts: Int
 ](y_pred: SIMD[DType_F32, nelts], y_true: SIMD[DType_F32, nelts]) -> SIMD[
@@ -136,6 +143,7 @@ fn msle_error[
 
 
 @parameter
+@always_inline
 fn msle_grad[
     nelts: Int
 ](
