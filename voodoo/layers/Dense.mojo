@@ -19,7 +19,7 @@ struct Dense[
     var bias: Tensor
 
     # TODO: Might need .requires_grad() for weights and bias
-        
+
     @always_inline
     fn __init__(
         inout self,
@@ -39,7 +39,7 @@ struct Dense[
             )
         else:
             self.bias = Tensor(shape(out_neurons))
-    
+
     @always_inline
     fn forward(self, x: Tensor) raises -> Tensor[False, False]:
         let computed = x @ self.W + (self.bias * Float32(self.use_bias))

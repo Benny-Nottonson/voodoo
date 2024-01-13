@@ -7,7 +7,7 @@ struct Vector[type: AnyRegType]:
     var data: Pointer[Pointer[type]]
     var len: Pointer[Int]
     var cap: Pointer[Int]
-    
+
     @always_inline
     fn __init__(_len: Int = 0) -> Self:
         var _cap = _len
@@ -25,7 +25,7 @@ struct Vector[type: AnyRegType]:
         len.store(_len)
 
         return Vector[type] {data: data, len: len, cap: cap}
-    
+
     @always_inline
     fn push_back(self, elem: type):
         if self.len.load() == self.cap.load():
@@ -39,12 +39,12 @@ struct Vector[type: AnyRegType]:
             old_data.free()
         self.data.load().store(self.len.load(), elem)
         self.len.store(self.len.load() + 1)
-    
+
     @always_inline
     fn push_back_return(self, elem: type) -> type:
         self.push_back(elem)
         return self
-    
+
     @always_inline
     fn pop_back(self) -> type:
         self.len.store(self.len.load() - 1)
@@ -58,22 +58,22 @@ struct Vector[type: AnyRegType]:
             old_data.free()
 
         return tmp
-    
+
     @always_inline
     fn load(self, idx: Int) -> type:
         return self.data.load().load(idx)
-    
+
     @always_inline
     fn store(self, idx: Int, value: type):
         self.data.load().store(idx, value)
-    
+
     @always_inline
     fn free(self):
         self.data.load().free()
         self.data.free()
         self.len.free()
         self.cap.free()
-    
+
     @always_inline
     fn clear(self):
         self.data.load().free()
@@ -81,7 +81,7 @@ struct Vector[type: AnyRegType]:
         self.data.store(data)
         self.len.store(0)
         self.cap.store(8)
-    
+
     @always_inline
     fn copy(self) -> Self:
         let new_vector = Vector[type](self.len.load())

@@ -4,7 +4,7 @@ from voodoo.utils import warn
 # TODO: Rewrite to use dictionaries once support is added
 # TODO: Update
 
-    
+
 @always_inline
 fn get_activation_code[name: String]() -> Int:
     @parameter
@@ -45,7 +45,7 @@ fn get_activation_code[name: String]() -> Int:
     warn("Invalid activation function: " + name + " using linear\n")
     return linear_code
 
-    
+
 @always_inline
 fn get_loss_code[name: String]() -> Int:
     @parameter

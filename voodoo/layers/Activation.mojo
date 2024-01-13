@@ -12,7 +12,7 @@ struct Activation[
         inout self,
     ) raises:
         ...
-    
+
     @always_inline
     fn forward(self, x: Tensor) raises -> Tensor[False, False]:
         return x.compute_activation[get_activation_code[activation]()]()

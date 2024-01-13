@@ -1,7 +1,7 @@
 from voodoo import Node
 from math import max, abs
 
-    
+
 @always_inline
 fn shape(*shapes: Int) -> DynamicVector[Int]:
     var _shape = DynamicVector[Int]()
@@ -9,7 +9,7 @@ fn shape(*shapes: Int) -> DynamicVector[Int]:
         _shape.push_back(shapes[i])
     return _shape
 
-    
+
 @always_inline
 fn get_broadcasted_shape_for_ew_op(
     parent1: Pointer[Node], parent2: Pointer[Node]
