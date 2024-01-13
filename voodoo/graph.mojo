@@ -472,7 +472,7 @@ struct Graph:
                 keep_forward_order,
             )
             self.get_free_data_ptr(node_ptr)
-            self.kernels.load(operator_id).get[1, unary_op]()(
+            self.kernels.load(operator_id).get[0, unary_op]()(
                 node_ptr.load(), parent1_ptr.load()
             )
             self.release_data(parent1_ptr)
@@ -486,7 +486,7 @@ struct Graph:
                 keep_forward_order,
             )
             self.get_free_data_ptr(node_ptr)
-            self.kernels.load(operator_id).get[2, binary_op]()(
+            self.kernels.load(operator_id).get[1, binary_op]()(
                 node_ptr.load(), parent1_ptr.load(), parent2_ptr.load()
             )
 
@@ -542,7 +542,7 @@ struct Graph:
             )
             self.get_free_data_ptr(node_ptr, True)
 
-            self.kernels.load(operator_id).get[1, unary_op]()(
+            self.kernels.load(operator_id).get[0, unary_op]()(
                 node_ptr.load(), parent1_ptr.load()
             )
         else:
@@ -554,7 +554,7 @@ struct Graph:
             )
 
             self.get_free_data_ptr(node_ptr, True)
-            self.kernels.load(operator_id).get[2, binary_op]()(
+            self.kernels.load(operator_id).get[1, binary_op]()(
                 node_ptr.load(), parent1_ptr.load(), parent2_ptr.load()
             )
 
@@ -583,7 +583,7 @@ struct Graph:
 
                 parent1_ptr.load().grad_computed_ptr.store(True)
 
-                self.kernels.load(grad_operator_id).get[1, unary_op]()(
+                self.kernels.load(grad_operator_id).get[0, unary_op]()(
                     child_ptr.load(), parent1_ptr.load()
                 )
 
@@ -606,7 +606,7 @@ struct Graph:
                 parent1_ptr.load().grad_computed_ptr.store(True)
                 parent2_ptr.load().grad_computed_ptr.store(True)
 
-                self.kernels.load(grad_operator_id).get[2, binary_op]()(
+                self.kernels.load(grad_operator_id).get[1, binary_op]()(
                     child_ptr.load(), parent1_ptr.load(), parent2_ptr.load()
                 )
 
