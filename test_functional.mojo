@@ -55,7 +55,7 @@ fn main() raises:
                 else:
                     bar += "░"
             clear()
-            print_no_newline("\nEpoch: " + String(epoch) +  " ")
+            print_no_newline("\nEpoch: " + String(epoch) + " ")
             info(bar + " ")
             print_no_newline(String(((epoch * 100) / num_epochs).to_int()) + "%\n")
             print("----------------------------------------\n")

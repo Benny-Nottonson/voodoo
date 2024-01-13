@@ -264,7 +264,11 @@ struct Node:
         elif initialization_function == "grad_fill_incr":
             self.grad_fill_incr()
         else:
-            warn("Invalid initialization function: " + initialization_function + " using zeros\n")
+            warn(
+                "Invalid initialization function: "
+                + initialization_function
+                + " using zeros\n"
+            )
             self.zeros()
 
     # TODO: Extract to a different module, potentially as cpu instructions

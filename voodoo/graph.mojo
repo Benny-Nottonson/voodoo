@@ -672,7 +672,6 @@ struct Graph:
             warn("Invalid optimizer: " + type + " using sgd\n")
             SGD.step[learning_rate](self.nodes)
 
-
     fn copy(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
         let operator_id = copy_code
         let checkpoint = False

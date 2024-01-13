@@ -521,6 +521,8 @@ fn fuse_graphs(
         other_graph.nodes.free()
         other_graph.memory_pool.load().free()
         other_graph.memory_pool.free()
+
+        @unroll
         for i in range(memory_pool_size):
             other_graph.memory_pool_manager.load(i).free()
         other_graph.memory_pool_manager.free()
