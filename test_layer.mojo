@@ -11,9 +11,9 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
 
 
 fn main() raises:
-    let input_layer = Dense[in_neurons=1, out_neurons=64, activation="relu"]()
-    let dense_layer = Dense[in_neurons=64, out_neurons=64, activation="relu"]()
-    let output_layer = Dense[in_neurons=64, out_neurons=1]()
+    let input_layer = Dense[in_neurons=1, out_neurons=64, activation="relu", bias_initializer="he_normal"]()
+    let dense_layer = Dense[in_neurons=64, out_neurons=64, activation="relu", bias_initializer="he_normal"]()
+    let output_layer = Dense[in_neurons=64, out_neurons=1, bias_initializer="he_normal"]()
 
     var avg_loss: Float32 = 0.0
     let every = 1000
