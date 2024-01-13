@@ -7,10 +7,13 @@ struct MaxPool2D[
     stride: Int = 2,
     padding: Int = 0,
 ](BaseLayer):
+    
+    @always_inline
     fn __init__(
         inout self,
     ) raises:
         ...
-
+    
+    @always_inline
     fn forward(self, x: Tensor) raises -> Tensor[False, False]:
         return x.max_pool_2d(self.pool_size, self.pool_size, self.stride, self.padding)

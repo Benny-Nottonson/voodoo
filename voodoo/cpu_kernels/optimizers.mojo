@@ -15,6 +15,7 @@ trait Optimizer:
 
 struct SGD(Optimizer):
     @staticmethod
+    @always_inline
     fn step[learning_rate: Float32](x_ptr: Pointer[Vector[Pointer[Node, 0]], 0]) raises:
         let x = x_ptr.load()
         for i in range(x.len.load()):
@@ -34,6 +35,7 @@ struct SGD(Optimizer):
 
 struct Adafactor(Optimizer):
     @staticmethod
+    @always_inline
     fn step[learning_rate: Float32](x_ptr: Pointer[Vector[Pointer[Node, 0]], 0]) raises:
         let x = x_ptr.load()
         for i in range(x.len.load()):
@@ -68,6 +70,7 @@ struct Adafactor(Optimizer):
 
 struct Adam(Optimizer):
     @staticmethod
+    @always_inline
     fn step[learning_rate: Float32](x_ptr: Pointer[Vector[Pointer[Node, 0]], 0]) raises:
         let x = x_ptr.load()
         for i in range(x.len.load()):

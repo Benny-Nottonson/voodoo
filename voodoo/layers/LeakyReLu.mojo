@@ -16,7 +16,8 @@ struct LeakyReLu[
 ](BaseLayer):
     var W: Tensor
     var bias: Tensor
-
+    
+    @always_inline
     fn __init__(
         inout self,
     ) raises:
@@ -35,7 +36,8 @@ struct LeakyReLu[
             )
         else:
             self.bias = Tensor(shape(out_neurons)).initialize["zeros", 0.0]()
-
+    
+    @always_inline
     fn forward(self, x: Tensor) raises -> Tensor[False, False]:
         return (x @ self.W + (self.bias * Float32(self.use_bias))).compute_activation[
             "lrelu", self.alpha

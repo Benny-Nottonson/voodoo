@@ -84,6 +84,7 @@ struct KernelManager:
 struct Kernels:
     var kernels: Pointer[op_tuple]
 
+    @always_inline
     fn __init__() -> Kernels:
         let kernels = Pointer[op_tuple].alloc(120)
         let k = KernelManager(kernels)

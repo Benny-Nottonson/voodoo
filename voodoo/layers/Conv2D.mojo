@@ -20,7 +20,8 @@ struct Conv2D[
 ](BaseLayer):
     var kernels: Tensor
     var bias: Tensor
-
+    
+    @always_inline
     fn __init__(
         inout self,
     ) raises:
@@ -39,7 +40,8 @@ struct Conv2D[
             )
         else:
             self.bias = Tensor(shape(0))
-
+    
+    @always_inline
     fn forward(self, x: Tensor) raises -> Tensor[False, False]:
         let res = x.conv_2d(self.kernels, self.padding, self.stride)
 

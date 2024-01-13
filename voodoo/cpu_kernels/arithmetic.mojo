@@ -25,8 +25,10 @@ alias generic_vectorized = fn[nelts: Int] (SIMD[DType_F32, nelts]) -> SIMD[
 
 struct Generic[fw_vec: generic_vectorized, bw_vec: generic_vectorized]:
     @staticmethod
+    @always_inline
     fn fw(node: Node, parent1: Node):
         @parameter
+        @always_inline
         fn vectorized_fw[nelts: Int](i: Int):
             let x = parent1.load_data[nelts](i)
             node.store_data[nelts](
@@ -37,8 +39,10 @@ struct Generic[fw_vec: generic_vectorized, bw_vec: generic_vectorized]:
         vectorize[nelts, vectorized_fw](node.load_cap())
 
     @staticmethod
+    @always_inline
     fn bw(node: Node, parent1: Node):
         @parameter
+        @always_inline
         fn vectorized_bw[nelts: Int](i: Int):
             let x = parent1.load_data[nelts](i)
             parent1.store_grad[nelts](

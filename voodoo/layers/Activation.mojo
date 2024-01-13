@@ -7,10 +7,12 @@ struct Activation[
     out_neurons: Int,
     activation: String = "none",
 ](BaseLayer):
+    @always_inline
     fn __init__(
         inout self,
     ) raises:
         ...
-
+    
+    @always_inline
     fn forward(self, x: Tensor) raises -> Tensor[False, False]:
         return x.compute_activation[get_activation_code[activation]()]()

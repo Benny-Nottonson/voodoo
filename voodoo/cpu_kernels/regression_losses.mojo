@@ -20,6 +20,7 @@ struct Generic[
     bw_vec: generic_vectorized_bw,
 ]:
     @staticmethod
+    @always_inline
     fn fw(node: Node, y_pred: Node, y_true: Node):
         let num_dims = y_pred.shape_ptr.load().len.load()
         let N = y_pred.shape_ptr.load().load(num_dims - 1)
@@ -27,6 +28,7 @@ struct Generic[
         var e: Float32 = 0.0
 
         @parameter
+        @always_inline
         fn vectorized_fw[nelts: Int](i: Int):
             let error = fw_vec[nelts](
                 y_true.load_data[nelts](i), y_pred.load_data[nelts](i)
@@ -37,6 +39,7 @@ struct Generic[
         node.store_data(0, e / cap / Float32(N))
 
     @staticmethod
+    @always_inline
     fn bw(node: Node, y_pred: Node, y_true: Node):
         let num_dims = y_pred.shape_ptr.load().len.load()
         let N = y_pred.shape_ptr.load().load(num_dims - 1)
@@ -44,6 +47,7 @@ struct Generic[
         let scalar = cap / Float32(N)
 
         @parameter
+        @always_inline
         fn vectorized_mae_bw[nelts: Int](i: Int):
             let grad = bw_vec[nelts](
                 y_true.load_data[nelts](i), y_pred.load_data[nelts](i), cap, N

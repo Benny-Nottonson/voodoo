@@ -34,7 +34,8 @@ struct Node:
     var shape_ptr: Pointer[Vector[Int]]
     var strides_ptr: Pointer[Vector[Int]]
     var other_params_ptr: Pointer[Vector[Int]]
-
+    
+    @always_inline
     fn __init__(id: Int, shape: Vector[Int], is_static: Bool = True) -> Self:
         let id_ptr = Pointer[Int].alloc(1)
         id_ptr.store(id)
@@ -134,74 +135,93 @@ struct Node:
             strides_ptr: strides_ptr,
             other_params_ptr: other_params_ptr,
         }
-
+    
+    @always_inline
     fn store_id(self, id: Int):
         self.id_ptr.store(id)
-
+    
+    @always_inline
     fn load_id(self) -> Int:
         return self.id_ptr.load()
-
+    
+    @always_inline
     fn load_dependencies(self) -> Int:
         return self.dependencies_ptr.load()
-
+    
+    @always_inline
     fn incr_dependencies(self):
         self.dependencies_ptr.store(self.dependencies_ptr.load() + 1)
-
+    
+    @always_inline
     fn decr_dependencies(self):
         self.dependencies_ptr.store(self.dependencies_ptr.load() - 1)
-
+    
+    @always_inline
     fn load_cap(self) -> Int:
         return self.cap_ptr.load()
-
+    
+    @always_inline
     fn add_parent(self, node_id: Int):
         let vec = self.parents_ptr.load()
         vec.push_back(node_id)
         self.parents_ptr.store(vec)
-
+    
+    @always_inline
     fn add_child(self, node_id: Int):
         let vec = self.children_ptr.load()
         vec.push_back(node_id)
         self.children_ptr.store(vec)
-
+    
+    @always_inline
     fn load_parent_id(self, idx: Int) -> Int:
         return self.parents_ptr.load().load(idx)
-
+    
+    @always_inline
     fn load_child_id(self, idx: Int) -> Int:
         return self.parents_ptr.load().load(idx)
-
+    
+    @always_inline
     fn load_num_parents(self) -> Int:
         return self.parents_ptr.load().len.load()
-
+    
+    @always_inline
     fn load_num_children(self) -> Int:
         return self.children_ptr.load().len.load()
-
+    
+    @always_inline
     fn load_is_static(self) -> Bool:
         return self.is_static_ptr.load()
-
+    
+    @always_inline
     fn load_computed(self) -> Bool:
         return self.computed_ptr.load()
-
+    
+    @always_inline
     fn store_computed(self, value: Bool):
         self.computed_ptr.store(value)
 
     @always_inline
     fn load_data(self, idx: Int) -> Float32:
         return self.data.load().load(idx)
-
+    
+    @always_inline
     fn store_data(self, idx: Int, val: Float32):
         self.data.load().simd_store(idx, val)
 
     @always_inline
     fn load_data[nelts: Int](self, idx: Int) -> SIMD[DType.float32, nelts]:
         return self.data.load().simd_load[nelts](idx)
-
+    
+    @always_inline
     fn store_data[nelts: Int = 1](self, idx: Int, val: SIMD[DType.float32, nelts]):
         self.data.load().simd_store[nelts](idx, val)
-
+    
+    @always_inline
     fn fill(self, val: Float32):
         for i in range(self.load_cap()):
             self.data.load().store(i, val)
-
+    
+    @always_inline
     fn fill_incr(self):
         for i in range(self.load_cap()):
             self.data.load(0).store(i, Float32(i))
@@ -209,25 +229,30 @@ struct Node:
     @always_inline
     fn load_grad(self, idx: Int) -> Float32:
         return self.data.load(1).load(idx)
-
+    
+    @always_inline
     fn store_grad(self, idx: Int, val: Float32):
         self.data.load(1).simd_store(idx, val)
 
     @always_inline
     fn load_grad[nelts: Int](self, idx: Int) -> SIMD[DType.float32, nelts]:
         return self.data.load(1).simd_load[nelts](idx)
-
+    
+    @always_inline
     fn store_grad[nelts: Int = 1](self, idx: Int, val: SIMD[DType.float32, nelts]):
         self.data.load(1).simd_store[nelts](idx, val)
-
+    
+    @always_inline
     fn grad_fill_incr(self):
         for i in range(self.load_cap()):
             self.data.load(1).store(i, Float32(i))
-
+    
+    @always_inline
     fn fill_grad(self, val: Float32):
         for i in range(self.load_cap()):
             self.data.load(1).store(i, val)
-
+    
+    @always_inline
     fn initialize[
         initialization_function: String, val: Float32 = 0, val2: Float32 = 0
     ](self):
@@ -273,28 +298,34 @@ struct Node:
 
     # TODO: Extract to a different module, potentially as cpu instructions
     # TODO: Use generics and implement all needed paramters
+        
+    @always_inline
     fn glorot_normal(self):
         let fan_in = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 2)
         let fan_out = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 1)
         let scale = sqrt(2.0 / Float32(fan_in + fan_out))
         self.random_normal(scale, 0.0)
-
+    
+    @always_inline
     fn glorot_uniform(self):
         let fan_in = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 2)
         let fan_out = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 1)
         let scale = sqrt(6.0 / Float32(fan_in + fan_out))
         self.random_uniform(-scale, scale)
-
+    
+    @always_inline
     fn he_normal(self):
         let fan_in = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 2)
         let scale = sqrt(2.0 / Float32(fan_in))
         self.random_normal(scale, 0.0)
-
+    
+    @always_inline
     fn he_uniform(self):
         let fan_in = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 2)
         let scale = sqrt(6.0 / Float32(fan_in))
         self.random_uniform(-scale, scale)
-
+    
+    @always_inline
     fn he_random(self):
         # TODO: Check and implement Variance Scaling
         seed()
@@ -312,7 +343,8 @@ struct Node:
                 )
             )
             self.store_data(i, z * sigma)
-
+    
+    @always_inline
     fn identity(self):
         let num_dims = self.num_dims_ptr.load()
         let row: Int = self.shape_ptr.load().load(num_dims - 2)
@@ -326,20 +358,24 @@ struct Node:
                     self.store_data(i * cols + j, 1.0)
                 else:
                     self.store_data(i * cols + j, 0.0)
-
+    
+    @always_inline
     fn lecun_normal(self):
         let fan_in = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 2)
         let scale = sqrt(1.0 / Float32(fan_in))
         self.random_normal(scale, 0.0)
-
+    
+    @always_inline
     fn lecun_uniform(self):
         let fan_in = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 2)
         let scale = sqrt(3.0 / Float32(fan_in))
         self.random_uniform(-scale, scale)
-
+    
+    @always_inline
     fn ones(self):
         self.fill(1.0)
-
+    
+    @always_inline
     fn random_normal(self, std: Float32 = 1.0, mu: Float32 = 0.0):
         seed()
         let pi = 3.14159265358979
@@ -350,13 +386,15 @@ struct Node:
         for i in range(self.cap_ptr.load()):
             let z = sqrt(-2.0 * log(u1.load(i))) * cos(2.0 * pi * u2.load(i))
             self.store_data(i, z * std + mu)
-
+    
+    @always_inline
     fn random_uniform(self, min: Float32, max: Float32):
         seed()
         rand(self.data.load(0), self.cap_ptr.load())
         for i in range(self.cap_ptr.load()):
             self.store_data(i, self.load_data(i) * (max - min) + min)
-
+    
+    @always_inline
     fn truncated_normal(self, std: Float32 = 1.0, mu: Float32 = 0.0):
         seed()
         let pi = 3.14159265358979
@@ -370,10 +408,12 @@ struct Node:
                 self.store_data(i, z * std + mu)
             else:
                 self.store_data(i, 0.0)
-
+    
+    @always_inline
     fn zeros(self):
         self.fill(0.0)
-
+    
+    @always_inline
     fn orthoganal(self, gain: Float32 = 1.0):
         # TODO: Check
         let num_dims = self.num_dims_ptr.load()
