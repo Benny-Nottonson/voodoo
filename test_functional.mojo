@@ -3,6 +3,10 @@ from voodoo import (
     get_activation_code,
     get_loss_code,
 )
+from voodoo.utils import (
+    info,
+    clear,
+)
 from voodoo.utils.shape import shape
 from time.time import now
 
@@ -44,38 +48,23 @@ fn main() raises:
         loss.optimize["sgd", 0.01]()
 
         if epoch % every == 0:
-            print_no_newline(chr(27) + "[2J") #[0;32m
-            print()
-            print_no_newline(
-                "Epoch:",
-                epoch,
-                " ",
-                chr(27) + "[0;32m",
-            )
-            for i in range(0, bar_accuracy):
-                if i < ((epoch / num_epochs) * bar_accuracy).to_int():
-                    print_no_newline("█")
+            var bar = String("")
+            for i in range(bar_accuracy):
+                if i < ((epoch * bar_accuracy) / num_epochs).to_int():
+                    bar += "█"
                 else:
-                    print_no_newline("░")
-            print_no_newline(chr(27) + "[0m", " ", ((epoch / num_epochs) * 100.0).to_int(), "%")
-            print()
-            print(
-                " Avg Loss: ",
-                avg_loss / every,
-            )
-            print(
-                " Example Input: ",
-                input[0],
-                " Output: ",
-                x[0],
-                " True: ",
-                true_vals[0],
-            )
-            print(
-                " Time: ",
-                nanoseconds_to_seconds(now() - epoch_start),
-                "s",
-            )
+                    bar += "░"
+            clear()
+            print_no_newline("\nEpoch: " + String(epoch) +  " ")
+            info(bar + " ")
+            print_no_newline(String(((epoch * 100) / num_epochs).to_int()) + "%\n")
+            print("----------------------------------------\n")
+            print_no_newline("Average Loss: ")
+            info(String(avg_loss / every) + "\n")
+            print_no_newline("Time: ")
+            info(String(nanoseconds_to_seconds(now() - epoch_start)) + "s\n")
+            print("\n----------------------------------------\n")
             avg_loss = 0.0
 
-    print("Total Time: ", nanoseconds_to_seconds(now() - initial_start), "s")
+    print_no_newline("Total Time: ")
+    info(String(nanoseconds_to_seconds(now() - initial_start)) + "s\n\n")

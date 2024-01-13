@@ -1,4 +1,5 @@
 from voodoo import Tensor
+from voodoo.utils import warn
 
 # TODO: Rewrite to use dictionaries once support is added
 # TODO: Update
@@ -40,6 +41,7 @@ fn get_activation_code[name: String]() -> Int:
         return mish_code
     elif name == "log_softmax":
         return log_softmax_code
+    warn("Invalid activation function: " + name + " using linear\n")
     return linear_code
 
 
@@ -53,4 +55,5 @@ fn get_loss_code[name: String]() -> Int:
         return mape_code
     elif name == "msle":
         return msle_code
+    warn("Invalid loss function: " + name + " using mse\n")
     return mse_code

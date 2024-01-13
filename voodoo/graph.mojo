@@ -4,7 +4,7 @@ from algorithm import vectorize, unswitch
 
 from .kernels import op_tuple, unary_op, binary_op, Kernels
 from .node import Node
-from .utils import Vector, get_broadcasted_shape_for_ew_op
+from .utils import Vector, get_broadcasted_shape_for_ew_op, warn
 from .utils.shape import shape
 from .cpu_kernels.optimizers import *
 
@@ -668,6 +668,10 @@ struct Graph:
             Adafactor.step[learning_rate](self.nodes)
         elif type == "adam":
             Adam.step[learning_rate](self.nodes)
+        else:
+            warn("Invalid optimizer: " + type + " using sgd\n")
+            SGD.step[learning_rate](self.nodes)
+
 
     fn copy(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
         let operator_id = copy_code

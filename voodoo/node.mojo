@@ -2,7 +2,7 @@ from memory import memset_zero
 from algorithm import vectorize
 from math import round, ceil, sin, cos, sqrt, log
 from random import rand, seed
-from .utils import Vector
+from .utils import Vector, warn
 
 """
 Orthogonal class
@@ -230,7 +230,7 @@ struct Node:
 
     fn initialize[
         initialization_function: String, val: Float32 = 0, val2: Float32 = 0
-    ](self) raises:
+    ](self):
         # TODO: Clean up with dictionary
         @parameter
         if initialization_function == "glorot_normal":
@@ -264,7 +264,8 @@ struct Node:
         elif initialization_function == "grad_fill_incr":
             self.grad_fill_incr()
         else:
-            raise "Invalid initialization function " + initialization_function
+            warn("Invalid initialization function: " + initialization_function + " using zeros\n")
+            self.zeros()
 
     # TODO: Extract to a different module, potentially as cpu instructions
     # TODO: Use generics and implement all needed paramters
