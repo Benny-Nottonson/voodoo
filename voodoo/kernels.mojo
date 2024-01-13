@@ -61,9 +61,6 @@ alias unary_op = fn (b: Node, a: Node) -> None
 alias binary_op = fn (c: Node, a: Node, b: Node) -> None
 alias op_tuple = Tuple[unary_op, binary_op]
 
-# TODO: Update
-# TODO: Convert all imports to explicit
-
 
 fn _u(b: Node, a: Node):
     ...
@@ -74,29 +71,28 @@ fn _b(c: Node, a: Node, b: Node):
 
 
 @register_passable("trivial")
-struct KernelManager:
-    var kernels: Pointer[op_tuple]
+struct KernelManager[kernels: Pointer[op_tuple]]:
+    @staticmethod
+    fn store(opcode: Int, fw: unary_op, bw: unary_op):
+        Self.kernels.store(opcode, op_tuple(fw, _b))
+        Self.kernels.store(opcode + 1, op_tuple(bw, _b))
 
-    fn __init__(kernels: Pointer[op_tuple]) -> Self:
-        return KernelManager {kernels: kernels}
+    @staticmethod
+    fn store(opcode: Int, fw: binary_op, bw: binary_op):
+        Self.kernels.store(opcode, op_tuple(_u, fw))
+        Self.kernels.store(opcode + 1, op_tuple(_u, bw))
 
-    fn store(self, opcode: Int, fw: unary_op, bw: unary_op):
-        self.kernels.store(opcode, op_tuple(fw, _b))
-        self.kernels.store(opcode + 1, op_tuple(bw, _b))
-
-    fn store(self, opcode: Int, fw: binary_op, bw: binary_op):
-        self.kernels.store(opcode, op_tuple(_u, fw))
-        self.kernels.store(opcode + 1, op_tuple(_u, bw))
+    @staticmethod
+    fn get_kernels() -> Pointer[op_tuple]:
+        return Self.kernels
 
 
 @register_passable("trivial")
 struct Kernels:
-    var kernels: Pointer[op_tuple]
-
     @always_inline
-    fn __init__() -> Kernels:
-        let kernels = Pointer[op_tuple].alloc(100)
-        let k = KernelManager(kernels)
+    @staticmethod
+    fn ld() -> Pointer[op_tuple]:
+        alias k = KernelManager[Pointer[op_tuple].alloc(100)]
         k.store(copy_code, Copy.fw, Copy.bw)
         k.store(reshape_code, Reshape.fw, Reshape.bw)
         k.store(transp_code, Transpose.fw, Transpose.bw)
@@ -144,4 +140,4 @@ struct Kernels:
         k.store(linear_code, Linear.fw, Linear.bw)
         k.store(mish_code, Mish.fw, Mish.bw)
         k.store(log_softmax_code, LogSoftmax.fw, LogSoftmax.bw)
-        return Kernels{kernels: kernels}
+        return k.get_kernels()

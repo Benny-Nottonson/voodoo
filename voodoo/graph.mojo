@@ -66,7 +66,7 @@ struct Graph:
             free_node_ids: free_node_ids,
             free_data_ids: free_data_ids,
             last_node_id: last_node_id,
-            kernels: Kernels().kernels,
+            kernels: Kernels.ld(),
             forward_order: forward_order,
             grad_nodes_order: grad_nodes_order,
             compiled: compiled,
