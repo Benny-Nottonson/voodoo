@@ -1,5 +1,5 @@
 from .cpu_kernels.operations import *
-from .cpu_kernels.binary_operations import Conv2D
+from .cpu_kernels.binary_operations import Conv2D, MMul
 from .cpu_kernels.arithmetic import (
     Sqrt,
     Abs,
@@ -21,7 +21,6 @@ from .cpu_kernels.binary_arithmetic import (
     Sub,
     Div,
     Pow,
-    MMul,
 )
 from .cpu_kernels.regression_losses import (
     MSE,
