@@ -3,6 +3,7 @@ from voodoo import Tensor
 # TODO: Rewrite to use dictionaries once support is added
 # TODO: Update
 
+
 fn get_activation_code[name: String]() -> Int:
     @parameter
     if name == "relu":

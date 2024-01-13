@@ -23,7 +23,7 @@ from .cpu_kernels.binary_arithmetic import (
     Pow,
     MMul,
 )
-from .cpu_kernels.losses import (
+from .cpu_kernels.regression_losses import (
     MSE,
     MAE,
     MAPE,
@@ -131,7 +131,7 @@ struct Kernels:
         k.store("tanh", tanh_code, Tanh.fw, Tanh.bw)
         k.store("lrelu", leaky_relu_code, LeakyRelu[0.0].fw, LeakyRelu[0.0].bw)
         k.store("dropout", dropout_code, Dropout.fw, Dropout.bw)
-        
+
         k.store("mse", mse_code, MSE.fw, MSE.bw)
         k.store("mae", mae_code, MAE.fw, MAE.bw)
         k.store("mape", mape_code, MAPE.fw, MAPE.bw)

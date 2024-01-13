@@ -1,4 +1,4 @@
-from math import abs, log, max
+from math import abs, log, max, sqrt
 from algorithm import vectorize
 from voodoo import Node
 from ..constants import DType_F32, nelts, epsilon
@@ -10,21 +10,14 @@ alias generic_vectorized_fw = fn[nelts: Int] (
     SIMD[DType_F32, nelts], SIMD[DType_F32, nelts]
 ) -> SIMD[DType_F32, nelts]
 
-alias generic_vectorized_fw_modifier = fn[nelts: Int] (Float32, Int, Int) -> Float32
-
-alias generic_vectorized_fw_a = fn[nelts: Int] (
+alias generic_vectorized_bw = fn[nelts: Int] (
     SIMD[DType_F32, nelts], SIMD[DType_F32, nelts], Float32, Int
-) -> SIMD[DType_F32, nelts]
-
-alias generic_vectorized_fw_b = fn[nelts: Int] (
-    SIMD[DType_F32, nelts], SIMD[DType_F32, nelts], SIMD[DType_F32, nelts], Float32, Int
 ) -> SIMD[DType_F32, nelts]
 
 
 struct Generic[
     fw_vec: generic_vectorized_fw,
-    bw_vec_a: generic_vectorized_fw_a,
-    bw_vec_b: generic_vectorized_fw_b,
+    bw_vec: generic_vectorized_bw,
 ]:
     @staticmethod
     fn fw(node: Node, y_pred: Node, y_true: Node):
@@ -52,23 +45,20 @@ struct Generic[
 
         @parameter
         fn vectorized_mae_bw[nelts: Int](i: Int):
-            let grad_a = bw_vec_a[nelts](
+            let grad = bw_vec[nelts](
                 y_true.load_data[nelts](i), y_pred.load_data[nelts](i), cap, N
-            )
-            let grad_b = bw_vec_b[nelts](
-                grad_a, y_true.load_data[nelts](i), y_pred.load_data[nelts](i), cap, N
-            )
-            y_pred.store_grad[nelts](i, y_pred.load_grad[nelts](i) + grad_a / scalar)
-            y_true.store_grad[nelts](i, y_true.load_grad[nelts](i) + grad_b / scalar)
+            ) / scalar
+
+            y_pred.store_grad[nelts](i, y_pred.load_grad[nelts](i) + grad)
+            y_true.store_grad[nelts](i, y_true.load_grad[nelts](i) - grad)
 
         vectorize[nelts, vectorized_mae_bw](y_pred.load_cap())
 
 
-alias MSE = Generic[mse_error, mse_grad_a, mse_grad_b]
-alias MAE = Generic[mae_error, mae_grad_a, mae_grad_b]
-alias MAPE = Generic[mape_error, mape_grad_a, mape_grad_b]
-alias MSLE = Generic[msle_error, msle_grad_a, msle_grad_b]
-# alias CE = Generic[ce_error, ce_grad_a, ce_grad_b]
+alias MSE = Generic[mse_error, mse_grad]
+alias MAE = Generic[mae_error, mae_grad]
+alias MAPE = Generic[mape_error, mape_grad]
+alias MSLE = Generic[msle_error, msle_grad]
 
 
 @parameter
@@ -82,27 +72,13 @@ fn mse_error[
 
 
 @parameter
-fn mse_grad_a[
+fn mse_grad[
     nelts: Int
 ](
     y_pred: SIMD[DType_F32, nelts], y_true: SIMD[DType_F32, nelts], cap: Float32, N: Int
 ) -> SIMD[DType_F32, nelts]:
     # f'(x, y) with respect to y = -2(x - y)
     return -Float32(2.0) * (y_pred - y_true)
-
-
-@parameter
-fn mse_grad_b[
-    nelts: Int
-](
-    grad_a: SIMD[DType_F32, nelts],
-    y_pred: SIMD[DType_F32, nelts],
-    y_true: SIMD[DType_F32, nelts],
-    cap: Float32,
-    N: Int,
-) -> SIMD[DType_F32, nelts]:
-    # f'(x, y) with respect to x = 2(x - y)
-    return -grad_a
 
 
 @parameter
@@ -116,27 +92,13 @@ fn mae_error[
 
 
 @parameter
-fn mae_grad_a[
+fn mae_grad[
     nelts: Int
 ](
     y_pred: SIMD[DType_F32, nelts], y_true: SIMD[DType_F32, nelts], cap: Float32, N: Int
 ) -> SIMD[DType_F32, nelts]:
     # f'(x, y) with respect to y = -1 if x > y else 1
     return (y_pred > y_true).cast[DType_F32]() * Float32(-2.0) + Float32(1.0)
-
-
-@parameter
-fn mae_grad_b[
-    nelts: Int
-](
-    grad_a: SIMD[DType_F32, nelts],
-    y_pred: SIMD[DType_F32, nelts],
-    y_true: SIMD[DType_F32, nelts],
-    cap: Float32,
-    N: Int,
-) -> SIMD[DType_F32, nelts]:
-    # f'(x, y) with respect to x = 1 if x > y else -1
-    return -grad_a
 
 
 @parameter
@@ -150,27 +112,13 @@ fn mape_error[
 
 
 @parameter
-fn mape_grad_a[
+fn mape_grad[
     nelts: Int
 ](
     y_pred: SIMD[DType_F32, nelts], y_true: SIMD[DType_F32, nelts], cap: Float32, N: Int
 ) -> SIMD[DType_F32, nelts]:
     # f'(x, y) with respect to y = -1 if x > y else 1
     return (y_pred > y_true).cast[DType_F32]() * Float32(-2.0) + Float32(1.0)
-
-
-@parameter
-fn mape_grad_b[
-    nelts: Int
-](
-    grad_a: SIMD[DType_F32, nelts],
-    y_pred: SIMD[DType_F32, nelts],
-    y_true: SIMD[DType_F32, nelts],
-    cap: Float32,
-    N: Int,
-) -> SIMD[DType_F32, nelts]:
-    # f'(x, y) with respect to x = 1 if x > y else -1
-    return -grad_a
 
 
 @parameter
@@ -188,7 +136,7 @@ fn msle_error[
 
 
 @parameter
-fn msle_grad_a[
+fn msle_grad[
     nelts: Int
 ](
     y_pred: SIMD[DType_F32, nelts], y_true: SIMD[DType_F32, nelts], cap: Float32, N: Int
@@ -201,49 +149,3 @@ fn msle_grad_a[
         * (log(y_pred_clipped + Float32(1.0)) - log(y_true_clipped + Float32(1.0)))
         / (y_true_clipped + Float32(1.0))
     )
-
-
-@parameter
-fn msle_grad_b[
-    nelts: Int
-](
-    grad_a: SIMD[DType_F32, nelts],
-    y_pred: SIMD[DType_F32, nelts],
-    y_true: SIMD[DType_F32, nelts],
-    cap: Float32,
-    N: Int,
-) -> SIMD[DType_F32, nelts]:
-    # f'(x, y) with respect to x = 2(log(x + 1) - log(y + 1)) / (x + 1)
-    return -grad_a
-
-'''
-@parameter
-fn ce_error[
-    nelts: Int
-](y_pred: SIMD[DType_F32, nelts], y_true: SIMD[DType_F32, nelts]) -> SIMD[
-    DType_F32, nelts
-]:
-    return -y_pred * log(y_true + epsilon)
-
-
-@parameter
-fn ce_grad_a[
-    nelts: Int
-](
-    y_pred: SIMD[DType_F32, nelts], y_true: SIMD[DType_F32, nelts], cap: Float32, N: Int
-) -> SIMD[DType_F32, nelts]:
-    return -log(y_true + epsilon) / cap * Float32(N)
-
-
-@parameter
-fn ce_grad_b[
-    nelts: Int
-](
-    grad_a: SIMD[DType_F32, nelts],
-    y_pred: SIMD[DType_F32, nelts],
-    y_true: SIMD[DType_F32, nelts],
-    cap: Float32,
-    N: Int,
-) -> SIMD[DType_F32, nelts]:
-    return -y_pred / (y_true + epsilon) / cap * Float32(N)
-'''

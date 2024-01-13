@@ -30,7 +30,7 @@ fn main() raises:
     var x = (input @ W1 + b1).compute_activation["relu"]()
     x = (x @ W2 + b2).compute_activation["relu"]()
     x = x @ W3 + b3
-    let loss = x.compute_loss["msle"](true_vals)
+    let loss = x.compute_loss["mse"](true_vals)
 
     let initial_start = now()
     for epoch in range(1, num_epochs + 1):
@@ -51,6 +51,14 @@ fn main() raises:
             print(
                 " Avg Loss: ",
                 avg_loss / every,
+            )
+            print(
+                " Example Input: ",
+                input[0],
+                " Output: ",
+                x[0],
+                " True: ",
+                true_vals[0],
             )
             print(
                 " Time: ",
