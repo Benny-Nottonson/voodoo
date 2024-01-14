@@ -131,6 +131,7 @@ struct LogSoftmax[]:
     alias fw = _LogSoftmax.fw
     alias bw = _LogSoftmax.bw
 
+# TODO!IMPORATNT: Improve using SIMD.fma, select, etc.
 
 @parameter
 @always_inline
@@ -141,15 +142,12 @@ fn relu_fw_vec[
     threshold: Float32 = 0.0,
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = x > threshold ? (x > max_value ? max_value : x) : negative_slope * x
-    let threshold_mask = (x > threshold).cast[DType_F32]()
-
     @parameter
     if negative_slope == 0.0 and max_value == f32_max:
-        return threshold_mask * x
-    return (
-        threshold_mask * (x > max_value).cast[DType_F32]() * max_value
-        + threshold_mask * (x <= max_value).cast[DType_F32]() * x
-        + (x <= threshold).cast[DType_F32]() * negative_slope * x
+        return (x > threshold).select(x, 0.0)
+
+    return (x > max_value).select(
+        max_value, (x > threshold).select(x, negative_slope * x)
     )
 
 
@@ -166,11 +164,9 @@ fn relu_bw_vec[
 
     @parameter
     if negative_slope == 0.0 and max_value == f32_max:
-        return threshold_mask
+        return (x > threshold).cast[DType_F32]()
     return (
-        threshold_mask * (x > max_value).cast[DType_F32]() * 0.0
-        + threshold_mask * (x <= max_value).cast[DType_F32]() * 1.0
-        + (x <= threshold).cast[DType_F32]() * negative_slope
+        ((x > threshold) & (x <= max_value)).cast[DType_F32]()
     )
 
 
@@ -255,9 +251,7 @@ fn selu_fw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = x > 0 ? 1.05070098 * x : 1.05070098 * 1.67326324 * (e^x - 1)
-    return (x > 0.0).cast[DType_F32]() * 1.05070098 * x + (x <= 0.0).cast[
-        DType_F32
-    ]() * 1.05070098 * 1.67326324 * (exp(x) - 1.0)
+    return (x > 0.0).select(1.05070098 * x, 1.75809932607 * (exp(x) - 1.0))
 
 
 @parameter
@@ -266,9 +260,7 @@ fn selu_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = x > 0 ? 1.05070098 : 1.05070098 * 1.67326324 * e^x
-    return (x > 0.0).cast[DType_F32]() * 1.05070098 + (x <= 0.0).cast[
-        DType_F32
-    ]() * 1.05070098 * 1.75809932607 * exp(x)
+    return (x > 0.0).select(1.05070098, 1.75809932607 * exp(x))
 
 
 @parameter
@@ -282,12 +274,8 @@ fn elu_fw_vec[
     # f(x) = x > 0 ? x : alpha * (e^x - 1)
     @parameter
     if alpha == 1.0:
-        return (x > 0.0).cast[DType_F32]() * x + (x <= 0.0).cast[DType_F32]() * (
-            exp(x) - 1.0
-        )
-    return (x > 0.0).cast[DType_F32]() * x + (x <= 0.0).cast[DType_F32]() * alpha * (
-        exp(x) - 1.0
-    )
+        return (x > 0.0).select(x, exp(x) - 1.0)
+    return (x > 0.0).select(x, alpha * (exp(x) - 1.0))
 
 
 @parameter
@@ -301,8 +289,8 @@ fn elu_bw_vec[
     # f'(x) = x > 0 ? 1 : alpha * e^x
     @parameter
     if alpha == 1.0:
-        return (x > 0.0).cast[DType_F32]() + (x <= 0.0).cast[DType_F32]() * exp(x)
-    return (x > 0.0).cast[DType_F32]() + (x <= 0.0).cast[DType_F32]() * alpha * exp(x)
+        return (x > 0.0).select(1.0, exp(x))
+    return (x > 0.0).select(1.0, alpha * exp(x))
 
 
 @parameter
@@ -339,7 +327,7 @@ fn silu_bw_vec[
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = (e^x * x + e^x + e^2x) / (e^x + 1)^2
     let e_x = exp(x)
-    return (e_x * x + e_x + exp(2.0 * x)) / (e_x + 1.0) ** 2
+    return (e_x.fma(x, e_x) + exp(2.0 * x)) / (e_x + 1.0) ** 2
 
 
 @parameter
@@ -354,7 +342,7 @@ fn gelu_fw_vec[
     # f(x) when approximate != 0.0 = 0.5 * x * (1 + tanh(sqrt(2 / pi) * (x + 0.044715 * x^3)))
     @parameter
     if approximate == 0.0:
-        return 0.5 * x * (1.0 + erf(x / 1.4142135623730951))
+        return x * erf(x / 1.4142135623730951).fma(0.5, 0.5)
     return 0.5 * x * (1.0 + tanh(0.7978845608028654 * (x + 0.044715 * x**3)))
 
 
