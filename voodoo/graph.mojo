@@ -702,7 +702,7 @@ struct Graph:
         )
 
     fn conv_2d(
-        self, a: Pointer[Node], b: Pointer[Node], padding: Int, stride: Int
+        self, a: Pointer[Node], b: Pointer[Node], stride: Int, padding: Int
     ) raises -> Pointer[Node]:
         let a_num_dims = a.load().num_dims_ptr.load()
         let b_num_dims = b.load().num_dims_ptr.load()
