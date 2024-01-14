@@ -701,67 +701,6 @@ struct Graph:
             shape, False, False, checkpoint, operator_id, other_params, a, b
         )
 
-    fn conv_2d(
-        self, a: Pointer[Node], b: Pointer[Node], stride: Int, padding: Int
-    ) raises -> Pointer[Node]:
-        let a_num_dims = a.load().num_dims_ptr.load()
-        let b_num_dims = b.load().num_dims_ptr.load()
-        let batch_size = a.load().shape_ptr.load().load(0)
-        let in_channels = a.load().shape_ptr.load().load(1)
-        let width = a.load().shape_ptr.load().load(2)
-        let height = a.load().shape_ptr.load().load(3)
-        let out_channels = b.load().shape_ptr.load().load(0)
-        if in_channels != out_channels:
-            raise "Channels don't fit for 2D Convolution. Got channels: " + str(
-                in_channels
-            ) + " " + str(out_channels)
-        let kernel_width = b.load().shape_ptr.load().load(2)
-        let kernel_height = b.load().shape_ptr.load().load(3)
-        let shape = shape(
-            batch_size,
-            out_channels,
-            (width - kernel_width + 2 * padding) // stride + 1,
-            (height - kernel_height + 2 * padding) // stride + 1,
-        )
-        let operator_id = 58
-        let checkpoint = True
-        let other_params = Vector[Int]()
-        other_params.push_back(padding)
-        other_params.push_back(stride)
-        return self.node(
-            shape, True, False, checkpoint, operator_id, other_params, a, b
-        )
-
-    fn max_pool_2d(
-        self,
-        a: Pointer[Node],
-        kernel_width: Int,
-        kernel_height: Int,
-        stride: Int,
-        padding: Int,
-    ) raises -> Pointer[Node]:
-        let new_shape = shape(
-            a.load().shape_ptr.load().load(0),
-            a.load().shape_ptr.load().load(1),
-            (a.load().shape_ptr.load().load(2) - kernel_width + 2 * padding) // stride
-            + 1,
-            (a.load().shape_ptr.load().load(3) - kernel_height + 2 * padding) // stride
-            + 1,
-        )
-        let operator_id = mpool2dd_code
-        let checkpoint = False
-        let other_params = Vector[Int]()
-        other_params.push_back(padding)
-        other_params.push_back(stride)
-        other_params.push_back(kernel_width)
-        other_params.push_back(kernel_height)
-
-        let b = self.node(
-            new_shape, False, False, checkpoint, operator_id, other_params, a
-        )
-
-        return b
-
     fn dropout(
         self, a: Pointer[Node], dropout_rate: Float32, noise_shape: DynamicVector[Int]
     ) raises -> Pointer[Node]:

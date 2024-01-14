@@ -226,19 +226,6 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         )
         return new_tensor
 
-    fn max_pool_2d(
-        self, kernel_width: Int, kernel_height: Int, stride: Int = 1, padding: Int = 0
-    ) raises -> Tensor[False, False]:
-        let new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load()
-            .load()
-            .max_pool_2d(
-                self.node_ptr.load(), kernel_width, kernel_height, stride, padding
-            )
-        )
-        return new_tensor
-
     fn dropout[
         dropout_rate: Float32, noise_shape: DynamicVector[Int]
     ](self) raises -> Tensor[False, False]:
@@ -284,17 +271,6 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
             new_tensor.graph_ptr.load()
             .load()
             .mmul(self.node_ptr.load(), other.node_ptr.load())
-        )
-        return new_tensor
-
-    fn conv_2d(
-        self, other: Tensor, stride: Int, padding: Int
-    ) raises -> Tensor[False, False]:
-        let new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr.store(
-            new_tensor.graph_ptr.load()
-            .load()
-            .conv_2d(self.node_ptr.load(), other.node_ptr.load(), padding, stride)
         )
         return new_tensor
 

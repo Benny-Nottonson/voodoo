@@ -3,10 +3,9 @@ from .cpu_kernels.operations import (
     Reshape,
     Transpose,
     Sum,
-    MaxPool2D,
     Dropout,
 )
-from .cpu_kernels.binary_operations import Conv2D, MMul
+from .cpu_kernels.binary_operations import MMul
 from .cpu_kernels.arithmetic import (
     Sqrt,
     Abs,
@@ -94,9 +93,7 @@ struct Kernels:
         k.store(reshape_code, Reshape.fw, Reshape.bw)
         k.store(transp_code, Transpose.fw, Transpose.bw)
         k.store(sum_code, Sum.fw, Sum.bw)
-        k.store(mpool2dd_code, MaxPool2D.fw, MaxPool2D.bw)
         k.store(dropout_code, Dropout.fw, Dropout.bw)
-        k.store(conv2d_code, Conv2D.fw, Conv2D.bw)
         k.store(mmul_code, MMul.fw, MMul.bw)
         k.store(sqrt_code, Sqrt.fw, Sqrt.bw)
         k.store(abs_code, Abs.fw, Abs.bw)

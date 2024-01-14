@@ -15,7 +15,7 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
     return Float64(t) / 1_000_000_000.0
 
 
-alias data_shape = shape(4, 1)
+alias data_shape = shape(32, 1)
 
 
 fn main() raises:
