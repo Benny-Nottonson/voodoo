@@ -3,8 +3,6 @@ from algorithm import vectorize
 from voodoo import Node
 from ..constants import DType_F32, nelts, f32_max
 
-# TODO: Rewrite when lambda functions are supported
-
 
 alias generic_vectorized = fn[nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32] (
     SIMD[DType_F32, nelts]

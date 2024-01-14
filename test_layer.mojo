@@ -35,7 +35,6 @@ fn main() raises:
     let input = Tensor(data_shape).initialize["he_normal", 0, 1]().dynamic()
     let true_vals = Tensor(data_shape)
 
-    # TODO, make a model struct to encapsulate this, variable n middle layers / total loss
     var x = input_layer.forward(input)
     x = dense_layer.forward(x)
     x = output_layer.forward(x)

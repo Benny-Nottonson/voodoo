@@ -1,8 +1,6 @@
 from voodoo import Tensor
 from voodoo.utils import warn
 
-# TODO: Rewrite to use dictionaries once support is added
-
 
 fn get_activation_code[name: String]() -> Int:
     if name == "relu":

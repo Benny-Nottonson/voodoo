@@ -369,7 +369,9 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         shape.push_back(self.node_ptr.load().load().shape_ptr.load().load(0))
         shape.push_back(1)
         for i in range(1, dims):
-            shape.store(0, shape.load(0) * self.node_ptr.load().load().shape_ptr.load().load(i))
+            shape.store(
+                0, shape.load(0) * self.node_ptr.load().load().shape_ptr.load().load(i)
+            )
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load().load().reshape(self.node_ptr.load(), shape)
         )

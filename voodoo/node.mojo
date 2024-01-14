@@ -10,7 +10,6 @@ VarianceScaling class
 """
 
 
-# TODO: Clean up
 @register_passable("trivial")
 struct Node:
     var id_ptr: Pointer[Int]
@@ -227,7 +226,6 @@ struct Node:
     fn initialize[
         initialization_function: String, val: Float32 = 0, val2: Float32 = 0
     ](self):
-        # TODO: Clean up with dictionary
         if initialization_function == "glorot_normal":
             self.glorot_normal()
         elif initialization_function == "glorot_uniform":
@@ -266,9 +264,6 @@ struct Node:
             )
             self.zeros()
 
-    # TODO: Extract to a different module, potentially as cpu instructions
-    # TODO!IMPORTANT: Use generics and implement all needed paramters
-
     fn glorot_normal(self):
         let fan_in = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 2)
         let fan_out = self.shape_ptr.load().load(self.shape_ptr.load().len.load() - 1)
@@ -292,7 +287,6 @@ struct Node:
         self.random_uniform(-scale, scale)
 
     fn he_random(self):
-        # TODO: Check and implement Variance Scaling
         seed()
         let pi = 3.14159265358979
         let u1 = DTypePointer[DType.float32].alloc(self.cap_ptr.load())
@@ -371,7 +365,6 @@ struct Node:
         self.fill(0.0)
 
     fn orthoganal(self, gain: Float32 = 1.0):
-        # TODO: Check
         let num_dims = self.num_dims_ptr.load()
         let row: Int = self.shape_ptr.load().load(num_dims - 2)
         let cols: Int = self.shape_ptr.load().load(num_dims - 1)

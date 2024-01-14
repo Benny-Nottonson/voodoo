@@ -9,7 +9,6 @@ from .utils.shape import shape
 from .cpu_kernels.optimizers import *
 
 
-# TODO: Could combine more unary / binary functions into one main caller (See activations / losses)
 @register_passable("trivial")
 struct Graph:
     var nodes: Pointer[Vector[Pointer[Node]]]
@@ -23,7 +22,6 @@ struct Graph:
     var grad_nodes_order: Pointer[Vector[Int]]
     var compiled: Pointer[Bool]
 
-    # TODO: Figure out how to make Kernels compile time constant, may need to rewrite the struct to not be a pointer
     fn __init__() -> Self:
         let nodes = Pointer[Vector[Pointer[Node]]].alloc(1)
         nodes.store(Vector[Pointer[Node]]())
@@ -659,7 +657,6 @@ struct Graph:
             _ = self.backward_recursive(curr_node_ptr)
 
     fn optimizer_step[type: String, learning_rate: Float32](self) raises:
-        # TODO: Switch to Dict
         if type == "sgd":
             SGD.step[learning_rate](self.nodes)
         elif type == "adafactor":

@@ -10,9 +10,6 @@ trait Optimizer:
         ...
 
 
-# TODO!IMPORTANT: Rewrite to use generic functions where possible
-
-
 struct SGD(Optimizer):
     @staticmethod
     fn step[learning_rate: Float32](x_ptr: Pointer[Vector[Pointer[Node, 0]], 0]) raises:
