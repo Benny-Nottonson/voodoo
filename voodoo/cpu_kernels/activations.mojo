@@ -1,4 +1,4 @@
-from math import abs, exp, log, tanh, max, erf
+from math import abs, exp, log, tanh, max, erf, cosh
 from algorithm import vectorize
 from voodoo import Node
 from ..constants import DType_F32, nelts, f32_max
@@ -88,8 +88,8 @@ struct Elu[alpha: Float32 = 1.0]:
 
 
 struct Exp[]:
-    alias fw = Generic[exp_fw_vec, exp_bw_vec, 0.0, 0.0, 0.0].fw
-    alias bw = Generic[exp_fw_vec, exp_bw_vec, 0.0, 0.0, 0.0].bw
+    alias fw = Generic[exp_vec, exp_vec, 0.0, 0.0, 0.0].fw
+    alias bw = Generic[exp_vec, exp_vec, 0.0, 0.0, 0.0].bw
 
 
 struct LeakyRelu[alpha: Float32 = 0.0]:
@@ -131,7 +131,6 @@ struct LogSoftmax[]:
     alias fw = _LogSoftmax.fw
     alias bw = _LogSoftmax.bw
 
-# TODO!IMPORATNT: Improve using SIMD.fma, select, etc.
 
 @parameter
 @always_inline
@@ -142,13 +141,11 @@ fn relu_fw_vec[
     threshold: Float32 = 0.0,
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = x > threshold ? (x > max_value ? max_value : x) : negative_slope * x
+    # Best is 4 instructions (compare, select, mul, min), 2 if max == f32_max and slope == 0
     @parameter
     if negative_slope == 0.0 and max_value == f32_max:
         return (x > threshold).select(x, 0.0)
-
-    return (x > max_value).select(
-        max_value, (x > threshold).select(x, negative_slope * x)
-    )
+    return (x > threshold).select(x, negative_slope * x).min(max_value)
 
 
 @parameter
@@ -160,14 +157,11 @@ fn relu_bw_vec[
     threshold: Float32 = 0.0,
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = x > threshold ? (x > max_value ? 0 : 1) : negative_slope
-    let threshold_mask = (x > threshold).cast[DType_F32]()
-
+    # Best is 4 instructions (compare, select, compare, select), 2 max == f32_max and slope == 0
     @parameter
     if negative_slope == 0.0 and max_value == f32_max:
         return (x > threshold).cast[DType_F32]()
-    return (
-        ((x > threshold) & (x <= max_value)).cast[DType_F32]()
-    )
+    return (x < max_value).select((x > threshold).select(1.0, negative_slope), 0.0)
 
 
 @parameter
@@ -176,6 +170,7 @@ fn sigmoid_fw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = 1 / (1 + e^-x)
+    # Best is 3 instructions (exp, add, div)
     return 1.0 / (1.0 + exp(-x))
 
 
@@ -186,8 +181,9 @@ fn sigmoid_bw_vec[
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = f(x)(1-f(x))
     # simplifies to e^x / (e^x + 1)^2
+    # Best is 4 instructions (exp, div, fma, fma)
     let e_x = (exp(x))
-    return e_x / (e_x + 1.0) ** 2
+    return e_x / e_x.fma(e_x, x.fma(2, 1))
 
 
 @parameter
@@ -196,6 +192,7 @@ fn softplus_fw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = log(1 + e^x)
+    # Best is 3 instructions (exp, add, log)
     return log(1.0 + exp(x))
 
 
@@ -205,6 +202,7 @@ fn softplus_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = e^x / (1 + e^x)
+    # Best is 3 instructions (exp, add, div)
     let e_x = (exp(x))
     return e_x / (1.0 + e_x)
 
@@ -215,6 +213,7 @@ fn softsign_fw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = x / (1 + |x|)
+    # Best is 3 instructions (abs, add, div)
     return x / (1.0 + abs(x))
 
 
@@ -224,7 +223,9 @@ fn softsign_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = 1 / (1 + |x|)^2
-    return 1.0 / (1.0 + abs(x)) ** 2
+    # Simplifies to 1 / (1 + x^2 + 2|x|)
+    # Best is 4 instructions (div, abs, fma, fma)
+    return 1.0 / abs(x).fma(2.0, x.fma(x, 1.0))
 
 
 @parameter
@@ -233,6 +234,7 @@ fn tanh_fw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = tanh(x)
+    # Best is 1 instruction (tanh)
     return tanh(x)
 
 
@@ -242,7 +244,9 @@ fn tanh_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = 1 - tanh(x)^2
-    return 1.0 - tanh(x) ** 2
+    # Best is 2 instructions (tanh, fma)
+    let tanh_x = tanh(x)
+    return tanh_x.fma(tanh_x, -1.0)
 
 
 @parameter
@@ -251,7 +255,8 @@ fn selu_fw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = x > 0 ? 1.05070098 * x : 1.05070098 * 1.67326324 * (e^x - 1)
-    return (x > 0.0).select(1.05070098 * x, 1.75809932607 * (exp(x) - 1.0))
+    # Best is 5 instructions (compare, select, mul, exp, fma)
+    return (x > 0.0).select(1.05070098 * x, exp(x).fma(1.75809932607, -1.75809932607))
 
 
 @parameter
@@ -260,6 +265,7 @@ fn selu_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = x > 0 ? 1.05070098 : 1.05070098 * 1.67326324 * e^x
+    # Best is 4 instructions (compare, select, mul, exp)
     return (x > 0.0).select(1.05070098, 1.75809932607 * exp(x))
 
 
@@ -272,6 +278,7 @@ fn elu_fw_vec[
     alpha: Float32 = 1.0,
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = x > 0 ? x : alpha * (e^x - 1)
+    # Best is 5 instructions (compare, select, mul, exp, sub), 4 if alpha == 1
     @parameter
     if alpha == 1.0:
         return (x > 0.0).select(x, exp(x) - 1.0)
@@ -287,6 +294,7 @@ fn elu_bw_vec[
     alpha: Float32 = 1.0,
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = x > 0 ? 1 : alpha * e^x
+    # Best is 4 instructions (compare, select, mul, exp), 3 if alpha == 1
     @parameter
     if alpha == 1.0:
         return (x > 0.0).select(1.0, exp(x))
@@ -295,19 +303,11 @@ fn elu_bw_vec[
 
 @parameter
 @always_inline
-fn exp_fw_vec[
+fn exp_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = e^x
-    return exp(x)
-
-
-@parameter
-@always_inline
-fn exp_bw_vec[
-    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
-    # f'(x) = e^x
+    # Best is 1 instruction (exp)
     return exp(x)
 
 
@@ -317,6 +317,7 @@ fn silu_fw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = x / (1 + e^-x)
+    # Best is 4 instructions (div, add, exp, inverse)
     return x / (1.0 + exp(-x))
 
 
@@ -326,6 +327,7 @@ fn silu_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = (e^x * x + e^x + e^2x) / (e^x + 1)^2
+    # Best is 8 instructions (exp, fma, add, exp, mul, div, add, pow)
     let e_x = exp(x)
     return (e_x.fma(x, e_x) + exp(2.0 * x)) / (e_x + 1.0) ** 2
 
@@ -340,10 +342,13 @@ fn gelu_fw_vec[
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) when approximate == 0.0 = 0.5 * x * (1 + erf(x / sqrt(2)))
     # f(x) when approximate != 0.0 = 0.5 * x * (1 + tanh(sqrt(2 / pi) * (x + 0.044715 * x^3)))
+    # Best is 6 instructions (mul, tanh, fma, mul, pow, fma), 4 if approximate == 0
+    let x_05 = x * 0.5
+
     @parameter
     if approximate == 0.0:
-        return x * erf(x / 1.4142135623730951).fma(0.5, 0.5)
-    return 0.5 * x * (1.0 + tanh(0.7978845608028654 * (x + 0.044715 * x**3)))
+        return erf(x / 1.4142135623730951).fma(x_05, x_05)
+    return tanh(x.fma(0.7978845608028654, 0.03567740813 * x**3)).fma(x_05, x_05)
 
 
 @parameter
@@ -356,13 +361,17 @@ fn gelu_bw_vec[
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) when approximate == 0.0 = 0.5 * (erf(0.7071067811865475 * x) + 1) + 0.3989422804014327 * x * exp(-0.5 * x^2)
     # f'(x) when approximate != 0.0 = 0.5 * (1 + tanh(0.7978845608028654 * (x + 0.044715 * x^3))^2) + 0.7978845608028654 * x * (1 - tanh(0.7978845608028654 * (x + 0.044715 * x^3))^2)
+    # Best is 7 instructions (tanh, fma, fma, mul, mul, sub, pow), 7 if approximate == 0
     @parameter
     if approximate == 0.0:
-        return 0.5 * (erf(0.7071067811865475 * x) + 1.0) + 0.3989422804014327 * x * exp(
-            -0.5 * x**2
+        return x.fma(
+            0.3989422804014327 * exp(-0.5 * x**2),
+            erf(0.7071067811865475 * x).fma(0.5, 0.5),
         )
-    let tanh_x_2 = tanh(0.7978845608028654 * (x + 0.044715 * x**3)) ** 2
-    return 0.5 * (1.0 + tanh_x_2) + 0.7978845608028654 * x * (1.0 - tanh_x_2)
+    let tanh_x = tanh(x.fma(0.7978845608028654, 0.03567740813 * x**3))
+    return tanh_x.fma(tanh_x, 1.0).fma(
+        0.5, 0.7978845608028654 * x * (1.0 - tanh_x**2)
+    )
 
 
 @parameter
@@ -374,9 +383,8 @@ fn hard_sigmoid_fw_vec[
     arg3: Float32,
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = x > 2.5 ? 1 : x < -2.5 ? 0 : 0.2 * x + 0.5
-    return (x > 2.5).cast[DType_F32]() + (x > -2.5).cast[DType_F32]() * (x < 2.5).cast[
-        DType_F32
-    ]() * (0.2 * x + 0.5)
+    # Best is 5 instructions (compare, select, compare, select, fma)
+    return (x > 2.5).select(1.0, (x > -2.5).select(x.fma(0.2, 0.5), 0.0))
 
 
 @parameter
@@ -388,7 +396,8 @@ fn hard_sigmoid_bw_vec[
     arg3: Float32,
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = x > -2.5 ? x < 2.5 ? 0.2 : 0 : 0
-    return (x > -2.5).cast[DType_F32]() * (x < 2.5).cast[DType_F32]() * 0.2
+    # Best is 5 instructions (compare, and, compare, cast, mul)
+    return ((x > -2.5) & (x < 2.5)).cast[DType_F32]() * 0.2
 
 
 @parameter
@@ -400,6 +409,7 @@ fn linear_fw_vec[
     arg3: Float32,
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = x
+    # Best is 1 instruction (mov)
     return x
 
 
@@ -412,6 +422,7 @@ fn linear_bw_vec[
     arg3: Float32,
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f'(x) = 1
+    # Best is 1 instruction (mov)
     return 1.0
 
 
@@ -424,6 +435,7 @@ fn mish_fw_vec[
     arg3: Float32,
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
     # f(x) = x * tanh(log(1 + e^x))
+    # Best is 5 instructions (mul, tanh, log, add, exp)
     return x * tanh(log(1.0 + exp(x)))
 
 
@@ -435,16 +447,13 @@ fn mish_bw_vec[
     arg2: Float32,
     arg3: Float32,
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
-    # f'(x) = (e^x (4 e^x x + 4 x + 6 e^x + 4 e^(2 x) + e^(3 x) + 4))/(2 e^x + e^(2 x) + 2)^2
+    # f'(x) = tanh(log(exp(x) + 1)) + (x * exp(x) * (1 / cosh(ln(exp(x) + 1)) ^ 2)) / (exp(x) + 1)
+    # Best is 14 instructions (exp, tanh, log, add, add, mul, mul, div, cosh, log, add, pow, div, add)
     let e_x = exp(x)
-    let e_2x = exp(2.0 * x)
-    return (
-        e_x
-        * (4.0 * e_x * x + 4.0 * x + 6.0 * e_x + 4.0 * e_2x + exp(3.0 * x) + 4.0)
-        / (2.0 * e_x + e_2x + 2.0) ** 2
-    )
+    return tanh(log(e_x + 1)) + (x * e_x * (1 / cosh(log(e_x + 1)) ** 2)) / (e_x + 1)
 
 
+# TODO: Not my problem (From infermo, should rewrite)
 struct _Softmax:
     # f(x) = e^wx_i / sum(e^wx_i)
     # f'x(x) = f(x) * (1 - f(x))

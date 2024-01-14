@@ -71,7 +71,7 @@ fn mse_error[
     DType_F32, nelts
 ]:
     # f(x, y) = (x - y)^2
-    return (y_pred - y_true) * (y_pred - y_true)
+    return (y_pred - y_true) ** 2.0
 
 
 @parameter
@@ -82,7 +82,7 @@ fn mse_grad[
     y_pred: SIMD[DType_F32, nelts], y_true: SIMD[DType_F32, nelts], cap: Float32, N: Int
 ) -> SIMD[DType_F32, nelts]:
     # f'(x, y) with respect to y = -2(x - y)
-    return -Float32(2.0) * (y_pred - y_true)
+    return -2.0 * (y_pred - y_true)
 
 
 @parameter
@@ -104,7 +104,7 @@ fn mae_grad[
     y_pred: SIMD[DType_F32, nelts], y_true: SIMD[DType_F32, nelts], cap: Float32, N: Int
 ) -> SIMD[DType_F32, nelts]:
     # f'(x, y) with respect to y = -1 if x > y else 1
-    return (y_pred > y_true).cast[DType_F32]() * Float32(-2.0) + Float32(1.0)
+    return (y_pred > y_true).select(Float32(-1.0), 1.0)
 
 
 @parameter
