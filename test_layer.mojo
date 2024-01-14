@@ -14,6 +14,9 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
     return t / 1_000_000_000.0
 
 
+alias data_shape = shape(32, 1)
+
+
 fn main() raises:
     let input_layer = Dense[
         in_neurons=1, out_neurons=64, activation="relu", bias_initializer="he_normal"
@@ -29,8 +32,8 @@ fn main() raises:
     let every = 1000
     let num_epochs = 20000
 
-    let input = Tensor(shape(32, 1)).initialize["he_normal", 0, 1]().dynamic()
-    let true_vals = Tensor(shape(32, 1))
+    let input = Tensor(data_shape).initialize["he_normal", 0, 1]().dynamic()
+    let true_vals = Tensor(data_shape)
 
     # TODO, make a model struct to encapsulate this, variable n middle layers / total loss
     var x = input_layer.forward(input)

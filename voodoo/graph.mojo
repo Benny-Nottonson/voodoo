@@ -302,46 +302,45 @@ struct Graph:
 
     @always_inline
     fn release_data(self, node_ptr: Pointer[Node]) raises:
+        let node = node_ptr.load()
         if (
-            node_ptr.load().is_static_ptr.load()
-            or node_ptr.load().checkpoint_ptr.load()
-            or node_ptr.load().is_single_ptr.load()
-            or node_ptr.load().data_id.load() == -1
+            node.is_static_ptr.load()
+            or node.checkpoint_ptr.load()
+            or node.is_single_ptr.load()
+            or node.data_id.load() == -1
         ):
             return
 
-        if node_ptr.load().dependencies_ptr.load() == 0:
-            let index = self.get_index(node_ptr.load().cap_ptr.load())
-            let data_id = node_ptr.load().data_id.load()
+        if node.dependencies_ptr.load() == 0:
+            let index = self.get_index(node.cap_ptr.load())
+            let data_id = node.data_id.load()
             self.memory_pool_manager.load(index).push_back(data_id)
-            node_ptr.load().data_id.store(-1)
-            node_ptr.load().dependencies_ptr.store(
-                node_ptr.load().children_ptr.load().len.load()
-            )
-            node_ptr.load().computed_ptr.store(False)
+            node.data_id.store(-1)
+            node.dependencies_ptr.store(node.children_ptr.load().len.load())
+            node.computed_ptr.store(False)
 
     @always_inline
     fn release_data_forced(self, node_ptr: Pointer[Node]) raises:
-        if node_ptr.load().is_static_ptr.load() or node_ptr.load().data_id.load() == -1:
+        let node = node_ptr.load()
+        if node.is_static_ptr.load() or node.data_id.load() == -1:
             return
-        let index = self.get_index(node_ptr.load().cap_ptr.load())
-        let data_id = node_ptr.load().data_id.load()
+        let index = self.get_index(node.cap_ptr.load())
+        let data_id = node.data_id.load()
         self.memory_pool_manager.load(index).push_back(data_id)
-        node_ptr.load().data_id.store(-1)
-        node_ptr.load().computed_ptr.store(False)
-        node_ptr.load().dependencies_ptr.store(
-            node_ptr.load().children_ptr.load().len.load()
-        )
+        node.data_id.store(-1)
+        node.computed_ptr.store(False)
+        node.dependencies_ptr.store(node.children_ptr.load().len.load())
 
     @always_inline
     fn release_grad_forced(self, node_ptr: Pointer[Node]) raises:
-        if node_ptr.load().is_static_ptr.load() or node_ptr.load().grad_id.load() == -1:
+        let node = node_ptr.load()
+        if node.is_static_ptr.load() or node.grad_id.load() == -1:
             return
-        let index = self.get_index(node_ptr.load().cap_ptr.load())
-        let grad_id = node_ptr.load().grad_id.load()
+        let index = self.get_index(node.cap_ptr.load())
+        let grad_id = node.grad_id.load()
         self.memory_pool_manager.load(index).push_back(grad_id)
-        node_ptr.load().grad_id.store(-1)
-        node_ptr.load().grad_computed_ptr.store(False)
+        node.grad_id.store(-1)
+        node.grad_computed_ptr.store(False)
 
     @always_inline
     fn clear_cache(self, reset_static_nodes: Bool = False) raises:
@@ -397,44 +396,44 @@ struct Graph:
             if node_ptr == Pointer[Node].get_null():
                 continue
 
-            if not node_ptr.load().load_is_static():
-                self.free_node_ids.load().push_back(node_ptr.load().load_id())
+            let node = node_ptr.load()
 
-                node_ptr.load().id_ptr.free()
-                node_ptr.load().data_id.free()
-                node_ptr.load().grad_id.free()
-                node_ptr.load().data.free()
-                node_ptr.load().parents_ptr.load().free()
-                node_ptr.load().parents_ptr.free()
-                node_ptr.load().children_ptr.load().free()
-                node_ptr.load().children_ptr.free()
-                node_ptr.load().dependencies_ptr.free()
-                node_ptr.load().is_static_ptr.free()
-                node_ptr.load().computed_ptr.free()
-                node_ptr.load().grad_computed_ptr.free()
-                node_ptr.load().operator_id_ptr.free()
-                node_ptr.load().grad_operator_id_ptr.free()
-                node_ptr.load().requires_grad_ptr.free()
-                node_ptr.load().tmp_visited_ptr.free()
-                node_ptr.load().checkpoint_ptr.free()
+            if not node.load_is_static():
+                self.free_node_ids.load().push_back(node.load_id())
 
-                node_ptr.load().cap_ptr.free()
-                node_ptr.load().num_dims_ptr.free()
-                node_ptr.load().shape_ptr.load().free()
-                node_ptr.load().shape_ptr.free()
-                node_ptr.load().strides_ptr.load().free()
-                node_ptr.load().strides_ptr.free()
-                node_ptr.load().other_params_ptr.load().free()
-                node_ptr.load().other_params_ptr.free()
-
+                node.id_ptr.free()
+                node.data_id.free()
+                node.grad_id.free()
+                node.data.free()
+                node.parents_ptr.load().free()
+                node.parents_ptr.free()
+                node.children_ptr.load().free()
+                node.children_ptr.free()
+                node.dependencies_ptr.free()
+                node.is_static_ptr.free()
+                node.computed_ptr.free()
+                node.grad_computed_ptr.free()
+                node.operator_id_ptr.free()
+                node.grad_operator_id_ptr.free()
+                node.requires_grad_ptr.free()
+                node.tmp_visited_ptr.free()
+                node.checkpoint_ptr.free()
+                node.cap_ptr.free()
+                node.num_dims_ptr.free()
+                node.shape_ptr.load().free()
+                node.shape_ptr.free()
+                node.strides_ptr.load().free()
+                node.strides_ptr.free()
+                node.other_params_ptr.load().free()
+                node.other_params_ptr.free()
                 node_ptr.free()
             else:
-                node_ptr.load().children_ptr.load().clear()
-                node_ptr.load().parents_ptr.load().clear()
-                node_ptr.load().dependencies_ptr.store(0)
-                node_ptr.load().id_ptr.store(0)
-                node_ptr.load().data_id.store(0)
-                node_ptr.load().grad_id.store(0)
+                node.children_ptr.load().clear()
+                node.parents_ptr.load().clear()
+                node.dependencies_ptr.store(0)
+                node.id_ptr.store(0)
+                node.data_id.store(0)
+                node.grad_id.store(0)
 
     @always_inline
     fn clear(self, reset_static_nodes: Bool = False) raises:
@@ -462,41 +461,40 @@ struct Graph:
     fn forward_recursive(
         self, node_ptr: Pointer[Node], keep_forward_order: Bool = False
     ) raises -> Pointer[Node]:
-        if node_ptr.load().load_computed():
+        let node = node_ptr.load()
+        if node.load_computed():
             return node_ptr
 
-        let operator_id = node_ptr.load().operator_id_ptr.load()
-        if node_ptr.load().load_num_parents() == 1:
+        let operator_id = node.operator_id_ptr.load()
+        if node.load_num_parents() == 1:
             let parent1_ptr = self.forward_recursive(
-                self.nodes.load().load(node_ptr.load().load_parent_id(0)),
+                self.nodes.load().load(node.load_parent_id(0)),
                 keep_forward_order,
             )
             self.get_free_data_ptr(node_ptr)
-            self.kernels.load(operator_id).get[0, unary_op]()(
-                node_ptr.load(), parent1_ptr.load()
-            )
+            self.kernels.load(operator_id).get[0, unary_op]()(node, parent1_ptr.load())
             self.release_data(parent1_ptr)
         else:
             let parent1_ptr = self.forward_recursive(
-                self.nodes.load().load(node_ptr.load().load_parent_id(0)),
+                self.nodes.load().load(node.load_parent_id(0)),
                 keep_forward_order,
             )
             let parent2_ptr = self.forward_recursive(
-                self.nodes.load().load(node_ptr.load().load_parent_id(1)),
+                self.nodes.load().load(node.load_parent_id(1)),
                 keep_forward_order,
             )
             self.get_free_data_ptr(node_ptr)
             self.kernels.load(operator_id).get[1, binary_op]()(
-                node_ptr.load(), parent1_ptr.load(), parent2_ptr.load()
+                node, parent1_ptr.load(), parent2_ptr.load()
             )
 
             self.release_data(parent1_ptr)
             self.release_data(parent2_ptr)
 
         if keep_forward_order:
-            self.forward_order.load().push_back(node_ptr.load().load_id())
+            self.forward_order.load().push_back(node.load_id())
 
-        node_ptr.load().computed_ptr.store(True)
+        node.computed_ptr.store(True)
 
         return node_ptr
 
@@ -532,42 +530,42 @@ struct Graph:
     fn forward_recursive_graph_slice(
         self, node_ptr: Pointer[Node]
     ) raises -> Pointer[Node]:
-        if node_ptr.load().computed_ptr.load():
+        let node = node_ptr.load()
+        if node.computed_ptr.load():
             return node_ptr
 
-        let operator_id = node_ptr.load().operator_id_ptr.load()
-        if node_ptr.load().load_num_parents() == 1:
+        let operator_id = node.operator_id_ptr.load()
+        if node.load_num_parents() == 1:
             let parent1_ptr = self.forward_recursive_graph_slice(
-                self.nodes.load().load(node_ptr.load().parents_ptr.load().load(0))
+                self.nodes.load().load(node.parents_ptr.load().load(0))
             )
             self.get_free_data_ptr(node_ptr, True)
 
-            self.kernels.load(operator_id).get[0, unary_op]()(
-                node_ptr.load(), parent1_ptr.load()
-            )
+            self.kernels.load(operator_id).get[0, unary_op]()(node, parent1_ptr.load())
         else:
             let parent1_ptr = self.forward_recursive_graph_slice(
-                self.nodes.load().load(node_ptr.load().parents_ptr.load().load(0))
+                self.nodes.load().load(node.parents_ptr.load().load(0))
             )
             let parent2_ptr = self.forward_recursive_graph_slice(
-                self.nodes.load().load(node_ptr.load().parents_ptr.load().load(1))
+                self.nodes.load().load(node.parents_ptr.load().load(1))
             )
 
             self.get_free_data_ptr(node_ptr, True)
             self.kernels.load(operator_id).get[1, binary_op]()(
-                node_ptr.load(), parent1_ptr.load(), parent2_ptr.load()
+                node, parent1_ptr.load(), parent2_ptr.load()
             )
 
-        node_ptr.load().computed_ptr.store(True)
+        node.computed_ptr.store(True)
 
         return node_ptr
 
     fn backward_recursive(self, node_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        if node_ptr.load().grad_computed_ptr.load():
+        let node = node_ptr.load()
+        if node.grad_computed_ptr.load():
             return node_ptr
 
-        for i in range(node_ptr.load().children_ptr.load().len.load()):
-            let child_id = node_ptr.load().children_ptr.load().load(i)
+        for i in range(node.children_ptr.load().len.load()):
+            let child_id = node.children_ptr.load().load(i)
             let child_ptr = self.nodes.load().load(child_id)
             _ = self.backward_recursive(child_ptr)
 
@@ -671,8 +669,9 @@ struct Graph:
                     )
 
         self.get_free_grad_ptr(node_ptr)
-        node_ptr.load().fill_grad(1.0)
-        node_ptr.load().grad_computed_ptr.store(True)
+        let node = node_ptr.load()
+        node.fill_grad(1.0)
+        node.grad_computed_ptr.store(True)
         for i in range(self.grad_nodes_order.load().len.load()):
             let curr_node_ptr = self.nodes.load().load(
                 self.grad_nodes_order.load().load(i)
@@ -708,20 +707,18 @@ struct Graph:
         let operator_id = mmul_code
         let checkpoint = True
         var shape = get_broadcasted_shape_for_ew_op(a, b)
-        shape[len(shape) - 2] = (
-            a.load().shape_ptr.load().copy().load(a.load().num_dims_ptr.load() - 2)
-        )
-        shape[len(shape) - 1] = (
-            b.load().shape_ptr.load().copy().load(b.load().num_dims_ptr.load() - 1)
-        )
-        if a.load().shape_ptr.load().load(
-            a.load().num_dims_ptr.load() - 1
-        ) != b.load().shape_ptr.load().load(b.load().num_dims_ptr.load() - 2):
+        let a_loaded = a.load()
+        let b_loaded = b.load()
+        let a_dims = a_loaded.num_dims_ptr.load()
+        let b_dims = b_loaded.num_dims_ptr.load()
+        shape[len(shape) - 2] = a_loaded.shape_ptr.load().copy().load(a_dims - 2)
+        shape[len(shape) - 1] = b_loaded.shape_ptr.load().copy().load(b_dims - 1)
+        if a_loaded.shape_ptr.load().load(a_dims - 1) != b_loaded.shape_ptr.load().load(
+            b_dims - 2
+        ):
             raise "Shapes don't fit for matrix multiplication. Got shapes: " + str(
-                a.load().shape_ptr.load().load(a.load().num_dims_ptr.load() - 1)
-            ) + " " + str(
-                b.load().shape_ptr.load().load(b.load().num_dims_ptr.load() - 2)
-            )
+                a_loaded.shape_ptr.load().load(a_dims - 1)
+            ) + " " + str(b_loaded.shape_ptr.load().load(b_dims - 2))
         let other_params = Vector[Int]()
         return self.node(
             shape, False, False, checkpoint, operator_id, other_params, a, b
