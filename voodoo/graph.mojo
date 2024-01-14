@@ -660,7 +660,6 @@ struct Graph:
 
     fn optimizer_step[type: String, learning_rate: Float32](self) raises:
         # TODO: Switch to Dict
-        @parameter
         if type == "sgd":
             SGD.step[learning_rate](self.nodes)
         elif type == "adafactor":

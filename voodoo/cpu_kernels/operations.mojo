@@ -126,24 +126,22 @@ struct Dropout(Operation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         let params = node.other_params_ptr.load()
-        let keep_prob = params.load(0) / 1000000.0
+        let keep_prob = 1 - params.load(0) / 1000000.0
         let scale = 1.0 / keep_prob
 
         @parameter
         fn vectorized_dropout[nelts: Int](i: Int):
-            let data = parent1.load_data[nelts](i)
-            for i in range(nelts):
-                let rand = random_float64()
-                node.store_data[nelts](
-                    i, (rand < keep_prob).cast[DType_F32]() * data * scale
-                )
+            let rand = random_float64()
+            node.store_data[nelts](
+                i, (rand < keep_prob).cast[DType_F32]() * parent1.load_data[nelts](i)
+            )
 
         vectorize[nelts, vectorized_dropout](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         let params = node.other_params_ptr.load()
-        let keep_prob = params.load(0) / 1000000.0
+        let keep_prob = 1 - params.load(0) / 1000000.0
         let scale = 1.0 / keep_prob
 
         @parameter

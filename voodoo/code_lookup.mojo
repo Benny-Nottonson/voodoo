@@ -5,7 +5,6 @@ from voodoo.utils import warn
 
 
 fn get_activation_code[name: String]() -> Int:
-    @parameter
     if name == "relu":
         return relu_code
     elif name == "sigmoid":
@@ -41,7 +40,6 @@ fn get_activation_code[name: String]() -> Int:
 
 
 fn get_loss_code[name: String]() -> Int:
-    @parameter
     if name == "mse":
         return mse_code
     elif name == "mae":

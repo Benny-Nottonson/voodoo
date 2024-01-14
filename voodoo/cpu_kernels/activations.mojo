@@ -43,7 +43,7 @@ struct Generic[
         vectorize[nelts, vectorized_bw](node.load_cap())
 
 
-struct Relu[arg1: Float32 = 0.0, arg2: Float32 = f32_max, arg3: Float32 = 0.0]:
+struct Relu[arg1: Float32, arg2: Float32, arg3: Float32]:
     alias fw = Generic[relu_fw_vec, relu_bw_vec, arg1, arg2, arg3].fw
     alias bw = Generic[relu_fw_vec, relu_bw_vec, arg1, arg2, arg3].bw
 
@@ -73,7 +73,7 @@ struct Selu[]:
     alias bw = Generic[selu_fw_vec, selu_bw_vec, 0.0, 0.0, 0.0].bw
 
 
-struct Elu[alpha: Float32 = 1.0]:
+struct Elu[alpha: Float32]:
     alias fw = Generic[elu_fw_vec, elu_bw_vec, 0.0, 0.0, alpha].fw
     alias bw = Generic[elu_fw_vec, elu_bw_vec, 0.0, 0.0, alpha].bw
 
@@ -83,7 +83,7 @@ struct Exp[]:
     alias bw = Generic[exp_vec, exp_vec, 0.0, 0.0, 0.0].bw
 
 
-struct LeakyRelu[alpha: Float32 = 0.0]:
+struct LeakyRelu[alpha: Float32]:
     alias fw = Generic[relu_fw_vec, relu_bw_vec, alpha, f32_max, 0.0].fw
     alias bw = Generic[relu_fw_vec, relu_bw_vec, alpha, f32_max, 0.0].bw
 
@@ -98,7 +98,7 @@ struct Silu[]:
     alias bw = Generic[silu_fw_vec, silu_bw_vec, 0.0, 0.0, 0.0].bw
 
 
-struct Gelu[approximate: Float32 = 0.0]:
+struct Gelu[approximate: Float32]:
     alias fw = Generic[gelu_fw_vec, gelu_bw_vec, approximate, 0.0, 0.0].fw
     alias bw = Generic[gelu_fw_vec, gelu_bw_vec, approximate, 0.0, 0.0].bw
 

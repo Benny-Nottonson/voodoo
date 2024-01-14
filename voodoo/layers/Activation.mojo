@@ -5,7 +5,7 @@ from .BaseLayer import BaseLayer
 struct Activation[
     in_neurons: Int,
     out_neurons: Int,
-    activation: String = "none",
+    activation: String,
 ](BaseLayer):
     fn __init__(
         inout self,

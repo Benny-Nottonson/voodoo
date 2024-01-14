@@ -228,7 +228,6 @@ struct Node:
         initialization_function: String, val: Float32 = 0, val2: Float32 = 0
     ](self):
         # TODO: Clean up with dictionary
-        @parameter
         if initialization_function == "glorot_normal":
             self.glorot_normal()
         elif initialization_function == "glorot_uniform":
