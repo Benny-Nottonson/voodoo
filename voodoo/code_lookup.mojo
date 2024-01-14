@@ -10,8 +10,6 @@ fn get_activation_code[name: String]() -> Int:
         return relu_code
     elif name == "sigmoid":
         return sigmoid_code
-    elif name == "softmax":
-        return softmax_code
     elif name == "softplus":
         return softplus_code
     elif name == "softsign":
@@ -38,8 +36,6 @@ fn get_activation_code[name: String]() -> Int:
         return linear_code
     elif name == "mish":
         return mish_code
-    elif name == "log_softmax":
-        return log_softmax_code
     warn("Invalid activation function: " + name + " using linear\n")
     return linear_code
 

@@ -35,7 +35,6 @@ alias msle_code = 58
 
 alias relu_code = 60
 alias sigmoid_code = 62
-alias softmax_code = 64
 alias softplus_code = 66
 alias softsign_code = 68
 alias tanh_code = 70
@@ -49,4 +48,3 @@ alias gelu_code = 84
 alias h_sig_code = 86
 alias linear_code = 88
 alias mish_code = 90
-alias log_softmax_code = 92

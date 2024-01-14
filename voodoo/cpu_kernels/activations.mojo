@@ -53,11 +53,6 @@ struct Sigmoid[]:
     alias bw = Generic[sigmoid_fw_vec, sigmoid_bw_vec, 0.0, 0.0, 0.0].bw
 
 
-struct Softmax[]:
-    alias fw = Generic[softmax_fw_vec, softmax_bw_vec, 0.0, 0.0, 0.0].fw
-    alias bw = Generic[softmax_fw_vec, softmax_bw_vec, 0.0, 0.0, 0.0].bw
-
-
 struct Softplus[]:
     alias fw = Generic[softplus_fw_vec, softplus_bw_vec, 0.0, 0.0, 0.0].fw
     alias bw = Generic[softplus_fw_vec, softplus_bw_vec, 0.0, 0.0, 0.0].bw
@@ -121,11 +116,6 @@ struct Linear[]:
 struct Mish[]:
     alias fw = Generic[mish_fw_vec, mish_bw_vec, 0.0, 0.0, 0.0].fw
     alias bw = Generic[mish_fw_vec, mish_bw_vec, 0.0, 0.0, 0.0].bw
-
-
-struct LogSoftmax[]:
-    alias fw = Generic[log_softmax_fw_vec, log_softmax_bw_vec, 0.0, 0.0, 0.0].fw
-    alias bw = Generic[log_softmax_fw_vec, log_softmax_bw_vec, 0.0, 0.0, 0.0].bw
 
 
 @parameter
@@ -445,44 +435,3 @@ fn mish_bw_vec[
     # Best is 14 instructions (exp, tanh, log, add, add, mul, mul, div, cosh, log, add, pow, div, add)
     let e_x = exp(x)
     return tanh(log(e_x + 1)) + (x * e_x * (1 / cosh(log(e_x + 1)) ** 2)) / (e_x + 1)
-
-
-@parameter
-@always_inline
-fn softmax_fw_vec[
-    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
-    # f(x) = e^x / sum(e^x)
-    # Best is 4 instructions (exp, add, div, reduce)
-    return exp(x) / exp(x).reduce_add()
-
-
-@parameter
-@always_inline
-fn softmax_bw_vec[
-    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
-    # f'(x) = e^x * (sum(e^x) - e^x) / sum(e^x)^2
-    # Best is 6 instructions (exp, reduce, fma, exp, mul, div)
-    let e_x = exp(x)
-    return e_x * (e_x.reduce_add() - e_x) / e_x.reduce_add() ** 2
-
-
-@parameter
-@always_inline
-fn log_softmax_fw_vec[
-    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
-    # f(x) = x - log(sum(e^x))
-    # Best is 4 instructions (exp, add, log, reduce)
-    return x - log(exp(x).reduce_add())
-
-
-@parameter
-@always_inline
-fn log_softmax_bw_vec[
-    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
-    # f'(x) = 1 - e^x / sum(e^x)
-    # Best is 4 instructions (exp, reduce, div, sub)
-    return 1.0 - exp(x) / exp(x).reduce_add()

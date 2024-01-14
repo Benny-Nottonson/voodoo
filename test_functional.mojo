@@ -15,7 +15,7 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
     return Float64(t) / 1_000_000_000.0
 
 
-alias data_shape = shape(32, 1)
+alias data_shape = shape(4, 1)
 
 
 fn main() raises:
@@ -34,8 +34,8 @@ fn main() raises:
     let input = Tensor(data_shape).initialize["he_normal", 0, 1]().dynamic()
     let true_vals = Tensor(data_shape)
 
-    var x = (input @ W1 + b1).compute_activation["gelu"]()
-    x = (x @ W2 + b2).compute_activation["gelu"]()
+    var x = (input @ W1 + b1).compute_activation["relu"]()
+    x = (x @ W2 + b2).compute_activation["relu"]()
     x = x @ W3 + b3
     let loss = x.compute_loss["mse"](true_vals)
 

@@ -40,7 +40,6 @@ from .cpu_kernels.regression_losses import (
 from .cpu_kernels.activations import (
     Relu,
     Sigmoid,
-    Softmax,
     Softplus,
     Softsign,
     Tanh,
@@ -54,7 +53,6 @@ from .cpu_kernels.activations import (
     HardSigmoid,
     Linear,
     Mish,
-    LogSoftmax,
 )
 
 alias unary_op = fn (b: Node, a: Node) -> None
@@ -124,7 +122,6 @@ struct Kernels:
         k.store(msle_code, MSLE.fw, MSLE.bw)
         k.store(relu_code, Relu[0.0, f32_max, 0.0].fw, Relu[0.0, f32_max, 0.0].bw)
         k.store(sigmoid_code, Sigmoid.fw, Sigmoid.bw)
-        k.store(softmax_code, Softmax.fw, Softmax.bw)
         k.store(softplus_code, Softplus.fw, Softplus.bw)
         k.store(softsign_code, Softsign.fw, Softsign.bw)
         k.store(tanh_code, Tanh.fw, Tanh.bw)
@@ -138,5 +135,4 @@ struct Kernels:
         k.store(h_sig_code, HardSigmoid.fw, HardSigmoid.bw)
         k.store(linear_code, Linear.fw, Linear.bw)
         k.store(mish_code, Mish.fw, Mish.bw)
-        k.store(log_softmax_code, LogSoftmax.fw, LogSoftmax.bw)
         return k.get_kernels()
