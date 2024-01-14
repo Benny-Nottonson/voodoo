@@ -121,7 +121,7 @@ struct Transpose(Operation):
 
                 vectorize[nelts, vectorized_transp_bw](N)
 
-
+# TODO!IMPORTANT: Fix bw
 struct Dropout(Operation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
@@ -146,15 +146,12 @@ struct Dropout(Operation):
 
         @parameter
         fn vectorized_dropout_bw[nelts: Int](i: Int):
-            let data = parent1.load_data[nelts](i)
-            for i in range(nelts):
-                let rand = random_float64()
-                parent1.store_grad[nelts](
-                    i,
-                    parent1.load_grad[nelts](i)
-                    + (rand < keep_prob).cast[DType_F32]()
-                    * node.load_grad[nelts](i)
-                    * scale,
-                )
+            let previous = node.load_data[nelts](i)
+            node.store_grad[nelts](
+                i,
+                (previous == 0.0).cast[DType_F32]()
+                * parent1.load_grad[nelts](i)
+                * scale,
+            )
 
         vectorize[nelts, vectorized_dropout_bw](node.load_cap())
