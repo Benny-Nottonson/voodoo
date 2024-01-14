@@ -659,10 +659,6 @@ struct Graph:
     fn optimizer_step[type: String, learning_rate: Float32](self) raises:
         if type == "sgd":
             SGD.step[learning_rate](self.nodes)
-        elif type == "adafactor":
-            Adafactor.step[learning_rate](self.nodes)
-        elif type == "adam":
-            Adam.step[learning_rate](self.nodes)
         else:
             warn("Invalid optimizer: " + type + " using sgd\n")
             SGD.step[learning_rate](self.nodes)
