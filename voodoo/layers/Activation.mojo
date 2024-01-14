@@ -7,7 +7,6 @@ struct Activation[
     out_neurons: Int,
     activation: String = "none",
 ](BaseLayer):
-    @always_inline
     fn __init__(
         inout self,
     ) raises:

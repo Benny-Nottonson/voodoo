@@ -2,7 +2,6 @@ from voodoo import Tensor
 
 
 trait BaseLayer:
-    @always_inline
     fn __init__(inout self) raises:
         ...
 

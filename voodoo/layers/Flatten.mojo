@@ -3,7 +3,6 @@ from .BaseLayer import BaseLayer
 
 
 struct Flatten(BaseLayer):
-    @always_inline
     fn __init__(
         inout self,
     ) raises:

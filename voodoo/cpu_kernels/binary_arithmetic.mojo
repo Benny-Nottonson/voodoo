@@ -24,12 +24,10 @@ struct Generic[
     bw_b_vec: generic_vectorized,
 ]:
     @staticmethod
-    @always_inline
     fn fw(c: Node, a: Node, b: Node):
         recursive_broadcast[Self.kernel_fw[fw_vec], base_case_strides](c, a, b)
 
     @staticmethod
-    @always_inline
     fn bw(c: Node, a: Node, b: Node):
         if not a.is_single_ptr.load():
             recursive_broadcast_bw[Self.kernel_bw[bw_a_vec, True], base_case_strides](
@@ -42,7 +40,6 @@ struct Generic[
 
     @parameter
     @staticmethod
-    @always_inline
     fn kernel_fw[
         generic_func: generic_vectorized
     ](
@@ -54,7 +51,6 @@ struct Generic[
         let offset_c = c_index * c_rest
 
         @parameter
-        @always_inline
         fn vectorized_fw[nelts: Int](i: Int):
             c.store_data[nelts](
                 offset_c + i,
@@ -67,7 +63,6 @@ struct Generic[
 
     @parameter
     @staticmethod
-    @always_inline
     fn kernel_bw[
         generic_func: generic_vectorized,
         is_a: Bool,
@@ -80,7 +75,6 @@ struct Generic[
         let offset_c = c_index * c_rest
 
         @parameter
-        @always_inline
         fn vectorized_bw_a[nelts: Int](i: Int):
             a.store_grad[nelts](
                 offset_a + i,
@@ -93,7 +87,6 @@ struct Generic[
             )
 
         @parameter
-        @always_inline
         fn vectorized_bw_b[nelts: Int](i: Int):
             b.store_grad[nelts](
                 offset_b + i,

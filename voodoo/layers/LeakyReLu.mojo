@@ -17,7 +17,6 @@ struct LeakyReLu[
     var W: Tensor
     var bias: Tensor
 
-    @always_inline
     fn __init__(
         inout self,
     ) raises:

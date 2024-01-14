@@ -7,7 +7,6 @@ struct Dropout[
     noise_shape: DynamicVector[Int] = DynamicVector[Int](),
     # TODO: add noise shape functionality
 ](BaseLayer):
-    @always_inline
     fn __init__(
         inout self,
     ) raises:

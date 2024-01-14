@@ -7,7 +7,6 @@ struct MaxPool2D[
     stride: Int = 2,
     padding: Int = 0,
 ](BaseLayer):
-    @always_inline
     fn __init__(
         inout self,
     ) raises:

@@ -21,7 +21,6 @@ struct Conv2D[
     var kernels: Tensor
     var bias: Tensor
 
-    @always_inline
     fn __init__(
         inout self,
     ) raises:

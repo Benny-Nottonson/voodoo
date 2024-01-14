@@ -11,7 +11,6 @@ from ..constants import DType_F32, nelts, workers
 
 struct Conv2D:
     @staticmethod
-    @always_inline
     fn fw(c: Node, a: Node, b: Node):
         let padding = c.other_params_ptr.load().load(0)
         let stride = c.other_params_ptr.load().load(1)
@@ -76,7 +75,6 @@ struct Conv2D:
         )
 
     @staticmethod
-    @always_inline
     fn bw(c: Node, a: Node, b: Node):
         let padding = c.other_params_ptr.load().load(0)
         let stride = c.other_params_ptr.load().load(1)
@@ -191,8 +189,8 @@ struct Conv2D:
             workers if workers > 0 else a.shape_ptr.load().load(0),
         )
 
-    @always_inline
     @staticmethod
+    @always_inline
     fn index(
         n: Int, c: Int, h: Int, w: Int, num_channels: Int, width: Int, height: Int
     ) -> Int:
@@ -209,12 +207,10 @@ struct MMul:
         return depth == max(a.num_dims_ptr.load(), b.num_dims_ptr.load()) - 2
 
     @staticmethod
-    @always_inline
     fn fw(c: Node, a: Node, b: Node):
         recursive_broadcast[Self.kernel_mmul_fw, Self.base_case_depth](c, a, b)
 
     @staticmethod
-    @always_inline
     fn bw(c: Node, a: Node, b: Node):
         if not a.is_single_ptr.load():
             recursive_broadcast_bw[Self.kernel_mmul_bw_a, Self.base_case_depth](c, a, b)
@@ -223,7 +219,6 @@ struct MMul:
 
     @parameter
     @staticmethod
-    @always_inline
     fn kernel_mmul_fw(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
@@ -260,7 +255,6 @@ struct MMul:
 
     @parameter
     @staticmethod
-    @always_inline
     fn kernel_mmul_bw_a(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
@@ -295,7 +289,6 @@ struct MMul:
 
     @parameter
     @staticmethod
-    @always_inline
     fn kernel_mmul_bw_b(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:

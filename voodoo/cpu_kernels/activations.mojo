@@ -19,10 +19,8 @@ struct Generic[
     arg3: Float32,
 ]:
     @staticmethod
-    @always_inline
     fn fw(node: Node, parent1: Node):
         @parameter
-        @always_inline
         fn vectorized_fw[nelts: Int](i: Int):
             node.store_data[nelts](
                 i,
@@ -32,10 +30,8 @@ struct Generic[
         vectorize[nelts, vectorized_fw](node.load_cap())
 
     @staticmethod
-    @always_inline
     fn bw(node: Node, parent1: Node):
         @parameter
-        @always_inline
         fn vectorized_bw[nelts: Int](i: Int):
             parent1.store_grad[nelts](
                 i,

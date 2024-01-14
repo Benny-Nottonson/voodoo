@@ -89,7 +89,6 @@ struct KernelManager[kernels: Pointer[op_tuple]]:
 
 @register_passable("trivial")
 struct Kernels:
-    @always_inline
     @staticmethod
     fn ld() -> Pointer[op_tuple]:
         alias k = KernelManager[Pointer[op_tuple].alloc(100)]

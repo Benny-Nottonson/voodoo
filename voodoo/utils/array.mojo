@@ -8,7 +8,6 @@ struct Vector[type: AnyRegType]:
     var len: Pointer[Int]
     var cap: Pointer[Int]
 
-    @always_inline
     fn __init__(_len: Int = 0) -> Self:
         var _cap = _len
         if _len < 8:
@@ -26,7 +25,6 @@ struct Vector[type: AnyRegType]:
 
         return Vector[type] {data: data, len: len, cap: cap}
 
-    @always_inline
     fn push_back(self, elem: type):
         if self.len.load() == self.cap.load():
             let old_data = self.data.load()
@@ -40,12 +38,10 @@ struct Vector[type: AnyRegType]:
         self.data.load().store(self.len.load(), elem)
         self.len.store(self.len.load() + 1)
 
-    @always_inline
     fn push_back_return(self, elem: type) -> type:
         self.push_back(elem)
         return self
 
-    @always_inline
     fn pop_back(self) -> type:
         self.len.store(self.len.load() - 1)
         let tmp = self.data.load().load(self.len.load())
@@ -59,22 +55,18 @@ struct Vector[type: AnyRegType]:
 
         return tmp
 
-    @always_inline
     fn load(self, idx: Int) -> type:
         return self.data.load().load(idx)
 
-    @always_inline
     fn store(self, idx: Int, value: type):
         self.data.load().store(idx, value)
 
-    @always_inline
     fn free(self):
         self.data.load().free()
         self.data.free()
         self.len.free()
         self.cap.free()
 
-    @always_inline
     fn clear(self):
         self.data.load().free()
         let data = Pointer[type].alloc(8)
@@ -82,7 +74,6 @@ struct Vector[type: AnyRegType]:
         self.len.store(0)
         self.cap.store(8)
 
-    @always_inline
     fn copy(self) -> Self:
         let new_vector = Vector[type](self.len.load())
         memcpy(new_vector.data.load(), self.data.load(), self.len.load())

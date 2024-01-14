@@ -24,7 +24,6 @@ struct Graph:
     var compiled: Pointer[Bool]
 
     # TODO: Figure out how to make Kernels compile time constant, may need to rewrite the struct to not be a pointer
-    @always_inline
     fn __init__() -> Self:
         let nodes = Pointer[Vector[Pointer[Node]]].alloc(1)
         nodes.store(Vector[Pointer[Node]]())
@@ -72,7 +71,6 @@ struct Graph:
             compiled: compiled,
         }
 
-    @always_inline
     fn print_memory_pool_manager(self) raises:
         @unroll
         for i in range(memory_pool_size):
@@ -85,7 +83,6 @@ struct Graph:
                     print_no_newline(", ")
             print("]")
 
-    @always_inline
     fn print(self, accuracy: Int = 6) raises:
         print("\nGraph (Nodes):")
         for i in range(self.nodes.load().len.load()):
@@ -94,7 +91,6 @@ struct Graph:
                 continue
             node.load().print(accuracy)
 
-    @always_inline
     fn get_free_node_id(self) raises -> Int:
         var fid: Int = 0
         if self.free_node_ids.load().len.load() > 0:
@@ -103,7 +99,6 @@ struct Graph:
             fid = self.nodes.load().len.load()
         return fid
 
-    @always_inline
     fn get_free_node_id_no_pop(self) raises -> Int:
         var fid: Int = 0
         if self.free_node_ids.load().len.load() > 0:
@@ -114,21 +109,17 @@ struct Graph:
             fid = self.nodes.load().len.load()
         return fid
 
-    @always_inline
     fn get_free_data_id(self) raises -> Int:
         if self.free_data_ids.load().len.load() > 0:
             return self.free_data_ids.load().pop_back()
         return self.memory_pool.load().len.load()
 
-    @always_inline
     fn load_ceiled_cap(self, cap: Int) raises -> Int:
         return exp2(ceil(log2(Float32(cap)))).to_int()
 
-    @always_inline
     fn get_index(self, cap: Int) raises -> Int:
         return ceil(log2(Float32(cap))).to_int()
 
-    @always_inline
     fn node(
         self,
         shape: Vector[Int],
@@ -167,7 +158,6 @@ struct Graph:
 
         return node_ptr
 
-    @always_inline
     fn node(
         self,
         shape: DynamicVector[Int],
@@ -209,7 +199,6 @@ struct Graph:
 
         return node_ptr
 
-    @always_inline
     fn get_free_data_ptr(self, node: Pointer[Node], unique: Bool = False) raises:
         if node.load().data_id.load() != -1:
             return
@@ -270,7 +259,6 @@ struct Graph:
                 )
                 memset_zero(node.load().data.load(0), ceiled_cap)
 
-    @always_inline
     fn get_free_grad_ptr(self, node: Pointer[Node]) raises:
         if node.load().grad_id.load() != -1:
             return
@@ -300,7 +288,6 @@ struct Graph:
             )
             memset_zero(node.load().data.load(1), ceiled_cap)
 
-    @always_inline
     fn release_data(self, node_ptr: Pointer[Node]) raises:
         let node = node_ptr.load()
         if (
@@ -319,7 +306,6 @@ struct Graph:
             node.dependencies_ptr.store(node.children_ptr.load().len.load())
             node.computed_ptr.store(False)
 
-    @always_inline
     fn release_data_forced(self, node_ptr: Pointer[Node]) raises:
         let node = node_ptr.load()
         if node.is_static_ptr.load() or node.data_id.load() == -1:
@@ -331,7 +317,6 @@ struct Graph:
         node.computed_ptr.store(False)
         node.dependencies_ptr.store(node.children_ptr.load().len.load())
 
-    @always_inline
     fn release_grad_forced(self, node_ptr: Pointer[Node]) raises:
         let node = node_ptr.load()
         if node.is_static_ptr.load() or node.grad_id.load() == -1:
@@ -342,7 +327,6 @@ struct Graph:
         node.grad_id.store(-1)
         node.grad_computed_ptr.store(False)
 
-    @always_inline
     fn clear_cache(self, reset_static_nodes: Bool = False) raises:
         if self.last_node_id.load() != -1:
             let node_ptr = self.nodes.load().load(self.last_node_id.load())
@@ -435,7 +419,6 @@ struct Graph:
                 node.data_id.store(0)
                 node.grad_id.store(0)
 
-    @always_inline
     fn clear(self, reset_static_nodes: Bool = False) raises:
         self.clear_cache(reset_static_nodes)
 
@@ -498,7 +481,6 @@ struct Graph:
 
         return node_ptr
 
-    @always_inline
     fn forward(
         self, node_ptr: Pointer[Node], keep_forward_order: Bool = False
     ) raises -> Pointer[Node]:
@@ -614,7 +596,6 @@ struct Graph:
 
         return node_ptr
 
-    @always_inline
     fn find_grad_nodes_order(self, node_ptr: Pointer[Node]) raises:
         self.grad_nodes_order.store(Vector[Int]())
         for i in range(self.nodes.load().len.load()):
@@ -640,7 +621,6 @@ struct Graph:
             self.nodes.load().load(currId).load().tmp_visited_ptr.store(True)
             it += 1
 
-    @always_inline
     fn backward(self, node_ptr: Pointer[Node]) raises:
         self.find_grad_nodes_order(node_ptr)
 
@@ -678,7 +658,6 @@ struct Graph:
             )
             _ = self.backward_recursive(curr_node_ptr)
 
-    @always_inline
     fn optimizer_step[type: String, learning_rate: Float32](self) raises:
         # TODO: Switch to Dict
         @parameter
@@ -692,7 +671,6 @@ struct Graph:
             warn("Invalid optimizer: " + type + " using sgd\n")
             SGD.step[learning_rate](self.nodes)
 
-    @always_inline
     fn copy(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
         let operator_id = copy_code
         let checkpoint = False
@@ -702,7 +680,6 @@ struct Graph:
             shape, True, False, checkpoint, operator_id, other_params, parent1_ptr
         )
 
-    @always_inline
     fn mmul(self, a: Pointer[Node], b: Pointer[Node]) raises -> Pointer[Node]:
         let operator_id = mmul_code
         let checkpoint = True
@@ -724,7 +701,6 @@ struct Graph:
             shape, False, False, checkpoint, operator_id, other_params, a, b
         )
 
-    @always_inline
     fn conv_2d(
         self, a: Pointer[Node], b: Pointer[Node], padding: Int, stride: Int
     ) raises -> Pointer[Node]:
@@ -756,7 +732,6 @@ struct Graph:
             shape, True, False, checkpoint, operator_id, other_params, a, b
         )
 
-    @always_inline
     fn max_pool_2d(
         self,
         a: Pointer[Node],
@@ -787,7 +762,6 @@ struct Graph:
 
         return b
 
-    @always_inline
     fn dropout(
         self, a: Pointer[Node], dropout_rate: Float32, noise_shape: DynamicVector[Int]
     ) raises -> Pointer[Node]:
@@ -800,7 +774,6 @@ struct Graph:
             other_params.push_back(noise_shape[i])
         return self.node(shape, False, False, checkpoint, operator_id, other_params, a)
 
-    @always_inline
     fn reshape(
         self, parent1_ptr: Pointer[Node], shape: Vector[Int]
     ) raises -> Pointer[Node]:
@@ -811,7 +784,6 @@ struct Graph:
             shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
         )
 
-    @always_inline
     fn transp(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
         let operator_id = transp_code
         let checkpoint = False
@@ -829,7 +801,6 @@ struct Graph:
             shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
         )
 
-    @always_inline
     fn sum(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
         let operator_id = sum_code
         let checkpoint = False
@@ -839,7 +810,6 @@ struct Graph:
             shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
         )
 
-    @always_inline
     fn function_general[
         operator_id: Int
     ](self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
@@ -850,7 +820,6 @@ struct Graph:
             shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
         )
 
-    @always_inline
     fn arithmetic_general[
         operator_id: Int
     ](self, a: Pointer[Node], b: Pointer[Node]) raises -> Pointer[Node]:
@@ -861,7 +830,6 @@ struct Graph:
             shape, False, False, checkpoint, operator_id, other_params, a, b
         )
 
-    @always_inline
     fn activation_general[
         operator_id: Int,
         arg1: Float32 = 0.0,
@@ -874,7 +842,6 @@ struct Graph:
             shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
         )
 
-    @always_inline
     fn loss_general[
         operator_id: Int
     ](self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]) raises -> Pointer[

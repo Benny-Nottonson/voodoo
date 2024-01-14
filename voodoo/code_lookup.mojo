@@ -4,7 +4,6 @@ from voodoo.utils import warn
 # TODO: Rewrite to use dictionaries once support is added
 
 
-@always_inline
 fn get_activation_code[name: String]() -> Int:
     @parameter
     if name == "relu":
@@ -45,7 +44,6 @@ fn get_activation_code[name: String]() -> Int:
     return linear_code
 
 
-@always_inline
 fn get_loss_code[name: String]() -> Int:
     @parameter
     if name == "mse":

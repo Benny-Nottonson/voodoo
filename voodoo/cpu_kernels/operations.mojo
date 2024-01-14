@@ -19,7 +19,6 @@ trait Operation:
 
 struct Copy(Operation):
     @staticmethod
-    @always_inline
     fn fw(node: Node, parent1: Node):
         @parameter
         fn vectorized_copy[nelts: Int](i: Int):
@@ -28,7 +27,6 @@ struct Copy(Operation):
         vectorize[nelts, vectorized_copy](node.load_cap())
 
     @staticmethod
-    @always_inline
     fn bw(node: Node, parent1: Node):
         @parameter
         fn vectorized_copy_bw[nelts: Int](i: Int):
@@ -39,7 +37,6 @@ struct Copy(Operation):
 
 struct Sum(Operation):
     @staticmethod
-    @always_inline
     fn fw(node: Node, parent1: Node):
         var sum: Float32 = 0.0
 
@@ -51,7 +48,6 @@ struct Sum(Operation):
         node.store_data(0, sum)
 
     @staticmethod
-    @always_inline
     fn bw(node: Node, parent1: Node):
         @parameter
         fn vectorized_sum_bw[nelts: Int](i: Int):
@@ -64,7 +60,6 @@ struct Sum(Operation):
 
 struct Reshape(Operation):
     @staticmethod
-    @always_inline
     fn fw(node: Node, parent1: Node):
         for s in range(node.cap_ptr.load() // parent1.cap_ptr.load()):
             let offset = s * parent1.cap_ptr.load()
@@ -76,7 +71,6 @@ struct Reshape(Operation):
             vectorize[nelts, vectorized_reshape](parent1.cap_ptr.load())
 
     @staticmethod
-    @always_inline
     fn bw(node: Node, parent1: Node):
         for s in range(node.cap_ptr.load() // parent1.cap_ptr.load()):
             let offset = s * parent1.cap_ptr.load()
@@ -92,7 +86,6 @@ struct Reshape(Operation):
 
 struct Transpose(Operation):
     @staticmethod
-    @always_inline
     fn fw(node: Node, parent1: Node):
         let num_dims = parent1.num_dims_ptr.load()
         let M = parent1.shape_ptr.load().load(num_dims - 2)
@@ -110,7 +103,6 @@ struct Transpose(Operation):
                 vectorize[nelts, vectorized_transp](N)
 
     @staticmethod
-    @always_inline
     fn bw(node: Node, parent1: Node):
         let num_dims = parent1.num_dims_ptr.load()
         let M = parent1.shape_ptr.load().load(num_dims - 2)
@@ -132,7 +124,6 @@ struct Transpose(Operation):
 
 struct MaxPool2D(Operation):
     @staticmethod
-    @always_inline
     fn fw(b: Node, a: Node):
         let padding = b.other_params_ptr.load().load(0)
         let stride = b.other_params_ptr.load().load(1)
@@ -189,7 +180,6 @@ struct MaxPool2D(Operation):
                         b.store_data(idx, max_val)
 
     @staticmethod
-    @always_inline
     fn bw(b: Node, a: Node):
         let padding = b.other_params_ptr.load().load(0)
         let stride = b.other_params_ptr.load().load(1)
@@ -259,7 +249,6 @@ struct MaxPool2D(Operation):
 
 struct Dropout(Operation):
     @staticmethod
-    @always_inline
     fn fw(node: Node, parent1: Node):
         let params = node.other_params_ptr.load()
         let keep_prob = params.load(0) / 1000000.0
@@ -277,7 +266,6 @@ struct Dropout(Operation):
         vectorize[nelts, vectorized_dropout](node.load_cap())
 
     @staticmethod
-    @always_inline
     fn bw(node: Node, parent1: Node):
         let params = node.other_params_ptr.load()
         let keep_prob = params.load(0) / 1000000.0
