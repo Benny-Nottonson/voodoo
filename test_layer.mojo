@@ -19,10 +19,10 @@ alias data_shape = shape(32, 1)
 
 fn main() raises:
     let input_layer = Dense[
-        in_neurons=1, out_neurons=64, activation="relu", bias_initializer="he_normal"
+        in_neurons=1, out_neurons=64, activation="gelu", bias_initializer="he_normal"
     ]()
     let dense_layer = Dense[
-        in_neurons=64, out_neurons=64, activation="relu", bias_initializer="he_normal"
+        in_neurons=64, out_neurons=64, activation="gelu", bias_initializer="he_normal"
     ]()
     let output_layer = Dense[
         in_neurons=64, out_neurons=1, bias_initializer="he_normal"

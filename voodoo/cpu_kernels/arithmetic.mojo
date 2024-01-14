@@ -84,13 +84,13 @@ fn sqrt_bw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
 @parameter
 @always_inline
 fn abs_fw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
-    return (x >= 0.0).cast[DType_F32]() * x + (x < 0.0).cast[DType_F32]() * (-x)
+    return (x > 0).select(x, -x)
 
 
 @parameter
 @always_inline
 fn abs_bw_vec[nelts: Int](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
-    return 2.0 * (x >= 0.0).cast[DType_F32]() - 1.0
+    return (x > 0).select(Float32(1.0), Float32(-1.0))
 
 
 @parameter
