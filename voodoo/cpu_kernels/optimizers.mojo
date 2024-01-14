@@ -10,7 +10,7 @@ trait Optimizer:
         ...
 
 
-# TODO: Rewrite to use generic functions where possible
+# TODO!IMPORTANT: Rewrite to use generic functions where possible
 
 
 struct SGD(Optimizer):

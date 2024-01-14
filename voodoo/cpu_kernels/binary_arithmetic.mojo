@@ -112,7 +112,6 @@ struct Generic[
             vectorize[nelts, vectorized_bw_b](c_rest)
 
 
-# TODO: Implement all methods from https://docs.modular.com/mojo/stdlib/builtin/simd
 alias Add = Generic[add_fw, add_bw, add_bw]
 alias Sub = Generic[sub_fw, sub_bw_a, sub_bw_b]
 alias Mul = Generic[mul_fw, mul_bw_a, mul_bw_b]

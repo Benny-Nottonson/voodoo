@@ -13,12 +13,10 @@ struct Dense[
     weight_std: Float32 = 0.05,
     bias_mean: Float32 = 0.0,
     bias_std: Float32 = 0.05,
-    # TODO: Add regularizers and constraints
+    # TODO!IMPORTANT: Add regularizers and constraints
 ](BaseLayer):
     var W: Tensor
     var bias: Tensor
-
-    # TODO: Might need .requires_grad() for weights and bias
 
     @always_inline
     fn __init__(

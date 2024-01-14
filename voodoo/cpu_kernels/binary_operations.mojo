@@ -22,7 +22,6 @@ struct Conv2D:
                 for x in range(c.shape_ptr.load().load(2)):
                     for y in range(c.shape_ptr.load().load(3)):
                         var patch_sum: Float32 = 0.0
-                        # TODO: Vectorize
                         for k in range(a.shape_ptr.load().load(1)):
                             for dx in range(b.shape_ptr.load().load(2)):
 

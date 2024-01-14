@@ -2,7 +2,6 @@ from voodoo import Tensor
 from voodoo.utils import warn
 
 # TODO: Rewrite to use dictionaries once support is added
-# TODO: Update
 
 
 @always_inline

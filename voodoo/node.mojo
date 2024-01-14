@@ -297,7 +297,7 @@ struct Node:
             self.zeros()
 
     # TODO: Extract to a different module, potentially as cpu instructions
-    # TODO: Use generics and implement all needed paramters
+    # TODO!IMPORTANT: Use generics and implement all needed paramters
 
     @always_inline
     fn glorot_normal(self):
