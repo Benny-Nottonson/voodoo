@@ -58,8 +58,8 @@ struct Sigmoid[]:
 
 
 struct Softmax[]:
-    alias fw = _Softmax.fw
-    alias bw = _Softmax.bw
+    alias fw = Generic[softmax_fw_vec, softmax_bw_vec, 0.0, 0.0, 0.0].fw
+    alias bw = Generic[softmax_fw_vec, softmax_bw_vec, 0.0, 0.0, 0.0].bw
 
 
 struct Softplus[]:
@@ -128,8 +128,8 @@ struct Mish[]:
 
 
 struct LogSoftmax[]:
-    alias fw = _LogSoftmax.fw
-    alias bw = _LogSoftmax.bw
+    alias fw = Generic[log_softmax_fw_vec, log_softmax_bw_vec, 0.0, 0.0, 0.0].fw
+    alias bw = Generic[log_softmax_fw_vec, log_softmax_bw_vec, 0.0, 0.0, 0.0].bw
 
 
 @parameter
@@ -179,11 +179,10 @@ fn sigmoid_fw_vec[
 fn sigmoid_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
-    # f'(x) = f(x)(1-f(x))
-    # simplifies to e^x / (e^x + 1)^2
-    # Best is 4 instructions (exp, div, fma, fma)
-    let e_x = (exp(x))
-    return e_x / e_x.fma(e_x, x.fma(2, 1))
+    # f'(x) = e^-x / (1 + e^-x)^2
+    # Best is 6 instructions (exp, div, fma, exp, mul, add)
+    let e_nx = (exp(-x))
+    return e_nx / (1.0 + e_nx) ** 2
 
 
 @parameter
@@ -243,10 +242,9 @@ fn tanh_fw_vec[
 fn tanh_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
-    # f'(x) = 1 - tanh(x)^2
-    # Best is 2 instructions (tanh, fma)
-    let tanh_x = tanh(x)
-    return tanh_x.fma(tanh_x, -1.0)
+    # f'(x) = 1 / cosh(x)^2
+    # Best is 3 instructions (cosh, pow, div)
+    return 1.0 / cosh(x) ** 2
 
 
 @parameter
@@ -453,146 +451,42 @@ fn mish_bw_vec[
     return tanh(log(e_x + 1)) + (x * e_x * (1 / cosh(log(e_x + 1)) ** 2)) / (e_x + 1)
 
 
-# TODO: Not my problem (From infermo, should rewrite)
-struct _Softmax:
-    # f(x) = e^wx_i / sum(e^wx_i)
-    # f'x(x) = f(x) * (1 - f(x))
-    @staticmethod
-    fn fw(node: Node, parent1: Node):
-        let num_dims = parent1.num_dims_ptr.load()
-        let N = parent1.shape_ptr.load().load(num_dims - 1)
-        for s in range(node.cap_ptr.load() // N):
-            let offset = s * N
-            var max_el: Float32 = 0.0
-
-            @parameter
-            fn vectorized_max[nelts: Int](i: Int):
-                max_el = max(max_el, parent1.load_data[nelts](offset + i).reduce_max())
-
-            vectorize[nelts, vectorized_max](N)
-            var sum: Float32 = 0.0
-
-            @parameter
-            fn vectorized_exp[nelts: Int](i: Int):
-                let temp = exp(parent1.load_data[nelts](offset + i) - max_el)
-                node.store_data[nelts](offset + i, temp)
-                sum += temp.reduce_add()
-
-            vectorize[nelts, vectorized_exp](N)
-
-            @parameter
-            fn vectorized_div[nelts: Int](i: Int):
-                node.store_data[nelts](
-                    offset + i, node.load_data[nelts](offset + i) / sum
-                )
-
-            vectorize[nelts, vectorized_div](N)
-
-    @staticmethod
-    fn bw(node: Node, parent1: Node):
-        let num_dims = parent1.num_dims_ptr.load()
-        let N = parent1.shape_ptr.load().load(num_dims - 1)
-        for s in range(node.cap_ptr.load() // N):
-            let offset = s * N
-
-            @parameter
-            fn vectorized_softmax_bw_outer[nelts: Int](j: Int):
-                var grad: Float32 = 0.0
-
-                @parameter
-                fn vectorized_softmax_bw[nelts: Int](i: Int):
-                    if i == j:
-                        grad += (
-                            node.load_grad[nelts](offset + i)
-                            * node.load_data[nelts](offset + i)
-                            * (1.0 - node.load_data[nelts](offset + i))
-                        ).reduce_add()
-                    else:
-                        grad += (
-                            node.load_grad[nelts](offset + i)
-                            * node.load_data[nelts](offset + i)
-                            * node.load_data[nelts](offset + j)
-                            * -1
-                        ).reduce_add()
-
-                vectorize[nelts, vectorized_softmax_bw](N)
-                parent1.store_grad[nelts](
-                    offset + j, parent1.load_grad[nelts](offset + j) + grad
-                )
-
-            vectorize[nelts, vectorized_softmax_bw_outer](N)
+@parameter
+@always_inline
+fn softmax_fw_vec[
+    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
+    # f(x) = e^x / sum(e^x)
+    # Best is 4 instructions (exp, add, div, reduce)
+    return exp(x) / exp(x).reduce_add()
 
 
-struct _LogSoftmax:
-    # f(x) = log(e^wx_i / sum(e^wx_i))
-    # f'x(x) = f(x) * (1 - f(x))
-    @staticmethod
-    fn fw(node: Node, parent1: Node):
-        let num_dims = parent1.num_dims_ptr.load()
-        let N = parent1.shape_ptr.load().load(num_dims - 1)
-        for s in range(node.cap_ptr.load() // N):
-            let offset = s * N
-            var max_el: Float32 = 0.0
+@parameter
+@always_inline
+fn softmax_bw_vec[
+    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
+    # f'(x) = e^x * (sum(e^x) - e^x) / sum(e^x)^2
+    # Best is 6 instructions (exp, reduce, fma, exp, mul, div)
+    let e_x = exp(x)
+    return e_x * (e_x.reduce_add() - e_x) / e_x.reduce_add() ** 2
 
-            @parameter
-            fn vectorized_max[nelts: Int](i: Int):
-                max_el = max(max_el, parent1.load_data[nelts](offset + i).reduce_max())
 
-            vectorize[nelts, vectorized_max](N)
-            var sum: Float32 = 0.0
+@parameter
+@always_inline
+fn log_softmax_fw_vec[
+    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
+    # f(x) = x - log(sum(e^x))
+    # Best is 4 instructions (exp, add, log, reduce)
+    return x - log(exp(x).reduce_add())
 
-            @parameter
-            fn vectorized_exp[nelts: Int](i: Int):
-                let temp = exp(parent1.load_data[nelts](offset + i) - max_el)
-                node.store_data[nelts](offset + i, temp)
-                sum += temp.reduce_add()
 
-            vectorize[nelts, vectorized_exp](N)
-
-            @parameter
-            fn vectorized_div[nelts: Int](i: Int):
-                node.store_data[nelts](
-                    offset + i, node.load_data[nelts](offset + i) / sum
-                )
-
-            vectorize[nelts, vectorized_div](N)
-
-            @parameter
-            fn vectorized_log[nelts: Int](i: Int):
-                node.store_data[nelts](
-                    offset + i, log(node.load_data[nelts](offset + i))
-                )
-
-            vectorize[nelts, vectorized_log](N)
-
-    @staticmethod
-    fn bw(node: Node, parent1: Node):
-        let num_dims = parent1.num_dims_ptr.load()
-        let N = parent1.shape_ptr.load().load(num_dims - 1)
-        for s in range(node.cap_ptr.load() // N):
-            let offset = s * N
-
-            @parameter
-            fn vectorized_log_softmax_bw_outer[nelts: Int](j: Int):
-                var grad: Float32 = 0.0
-
-                @parameter
-                fn vectorized_log_softmax_bw[nelts: Int](i: Int):
-                    if i == j:
-                        grad += (
-                            node.load_grad[nelts](offset + i)
-                            * (1.0 - node.load_data[nelts](offset + i))
-                        ).reduce_add()
-                    else:
-                        grad += (
-                            node.load_grad[nelts](offset + i)
-                            * node.load_data[nelts](offset + j)
-                            * -1
-                        ).reduce_add()
-
-                vectorize[nelts, vectorized_log_softmax_bw](N)
-                parent1.store_grad[nelts](
-                    offset + j, parent1.load_grad[nelts](offset + j) + grad
-                )
-
-            vectorize[nelts, vectorized_log_softmax_bw_outer](N)
+@parameter
+@always_inline
+fn log_softmax_bw_vec[
+    nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
+](x: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
+    # f'(x) = 1 - e^x / sum(e^x)
+    # Best is 4 instructions (exp, reduce, div, sub)
+    return 1.0 - exp(x) / exp(x).reduce_add()
