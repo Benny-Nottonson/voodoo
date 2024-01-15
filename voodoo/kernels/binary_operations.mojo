@@ -43,16 +43,18 @@ struct MMul:
         let offset_b = b_index * K * shape_b.load(b.num_dims_ptr.load() - 1)
         let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
 
-        @parameter
-        fn calc_row_fw(m: Int):
+        for m in range(M):
+            let _a_off = offset_a + m * K
+            let _c_off = offset_c + m * N
             for k in range(K):
-                let a_off = offset_a + m * K + k
+                let a_off = _a_off + k
                 let a_scalar = a.load_data(a_off)
+                let _b_off = offset_b + k * N
 
                 @parameter
                 fn dot_fw[nelts: Int](n: Int):
-                    let b_off = offset_b + k * N + n
-                    let c_off = offset_c + m * N + n
+                    let b_off = _b_off + n
+                    let c_off = _c_off + n
                     c.store_data[nelts](
                         c_off,
                         b.load_data[nelts](b_off).fma(
@@ -62,8 +64,6 @@ struct MMul:
                     )
 
                 vectorize[nelts, dot_fw](N)
-                
-        parallelize[calc_row_fw](M, workers if workers > 0 else M // 2)
 
     @parameter
     @staticmethod
@@ -82,15 +82,19 @@ struct MMul:
         let offset_b = b_index * K * shape_b.load(b.num_dims_ptr.load() - 1)
         let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
 
+
         for m in range(M):
+            let _a_off = offset_a + m * K
+            let _c_off = offset_c + m * N
             for n in range(N):
-                let c_offset = offset_c + m * N + n
+                let c_offset = _c_off + n
                 let c_grad = c.load_grad(c_offset)
+                let _b_off = offset_b + n
 
                 @parameter
                 fn dot_bw[nelts: Int](k: Int):
-                    let a_off = offset_a + m * K + k
-                    let b_off = offset_b + k * N + n
+                    let a_off = _a_off + k
+                    let b_off = _b_off + k * N
                     a.store_grad[nelts](
                         a_off,
                         b.load_data[nelts](b_off).fma(
@@ -119,14 +123,17 @@ struct MMul:
         let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
 
         for k in range(K):
+            let _a_off = offset_a + k
+            let _b_off = offset_b + k * N
             for m in range(M):
-                let a_offset = offset_a + m * K + k
+                let a_offset = _a_off + m * K
                 let a_data = a.load_data(a_offset)
+                let _c_off = offset_c + m * N
 
                 @parameter
                 fn dot_bw[nelts: Int](n: Int):
-                    let b_off = offset_b + k * N + n
-                    let c_off = offset_c + m * N + n
+                    let b_off = _b_off + n
+                    let c_off = _c_off + n
                     b.store_grad[nelts](
                         b_off,
                         c.load_grad[nelts](c_off).fma(
