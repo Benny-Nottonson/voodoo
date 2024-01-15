@@ -20,7 +20,6 @@ struct Graph:
     var kernels: Pointer[op_tuple]
     var forward_order: Pointer[Vector[Int]]
     var grad_nodes_order: Pointer[Vector[Int]]
-    var compiled: Pointer[Bool]
 
     fn __init__() -> Self:
         let nodes = Pointer[Vector[Pointer[Node]]].alloc(1)
@@ -53,9 +52,6 @@ struct Graph:
         let backward_order = Pointer[Vector[Int]].alloc(1)
         backward_order.store(Vector[Int]())
 
-        let compiled = Pointer[Bool].alloc(1)
-        compiled.store(False)
-
         return Graph {
             nodes: nodes,
             memory_pool: memory_pool,
@@ -66,7 +62,6 @@ struct Graph:
             kernels: get_kernels(),
             forward_order: forward_order,
             grad_nodes_order: grad_nodes_order,
-            compiled: compiled,
         }
 
     fn print_memory_pool_manager(self) raises:
@@ -437,7 +432,6 @@ struct Graph:
         self.kernels.free()
         self.forward_order.load().free()
         self.forward_order.free()
-        self.compiled.free()
 
     fn forward_recursive(
         self, node_ptr: Pointer[Node], keep_forward_order: Bool = False
@@ -483,7 +477,6 @@ struct Graph:
         self, node_ptr: Pointer[Node], keep_forward_order: Bool = False
     ) raises -> Pointer[Node]:
         self.last_node_id.store(node_ptr.load().load_id())
-        self.compiled.store(False)
         let res = self.forward_recursive(node_ptr, keep_forward_order)
         return res
 
