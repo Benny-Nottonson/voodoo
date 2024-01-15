@@ -1,6 +1,7 @@
 from math import abs, log, max, sqrt
 from algorithm import vectorize
 from voodoo import Node
+from ..constants import DType_F32, nelts, epsilon
 
 
 alias generic_vectorized_fw = fn[nelts: Int] (

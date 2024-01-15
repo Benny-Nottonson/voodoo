@@ -1,6 +1,7 @@
 from random import random_float64
 from algorithm import vectorize
 from voodoo import Node
+from ..constants import DType_F32, nelts
 from algorithm import *
 
 

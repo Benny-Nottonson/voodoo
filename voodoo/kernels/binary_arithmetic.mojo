@@ -9,6 +9,7 @@ from voodoo.utils import (
     recursive_broadcast,
     recursive_broadcast_bw,
 )
+from ..constants import DType_F32, nelts, workers
 
 alias generic_vectorized = fn[nelts: Int] (
     SIMD[DType_F32, nelts], SIMD[DType_F32, nelts]

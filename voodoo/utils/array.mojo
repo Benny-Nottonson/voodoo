@@ -1,4 +1,5 @@
 from memory import memset_zero, memcpy
+from ..constants import nelts
 
 
 @register_passable("trivial")
