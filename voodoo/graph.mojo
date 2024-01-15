@@ -321,6 +321,7 @@ struct Graph:
         node.grad_computed_ptr.store(False)
 
     fn clear_cache(self, reset_static_nodes: Bool = False) raises:
+        let memory_pool = self.memory_pool.load()
         if self.last_node_id.load() != -1:
             let node_ptr = self.nodes.load().load(self.last_node_id.load())
             self.release_data_forced(node_ptr)
@@ -336,17 +337,15 @@ struct Graph:
                     self.nodes.load().store(i, Pointer[Node].get_null())
                     break
 
-        for i in range(self.memory_pool.load().len.load()):
-            let array = self.memory_pool.load().load(i)
-            for j in range(i + 1, self.memory_pool.load().len.load()):
-                let other = self.memory_pool.load().load(j)
+        for i in range(memory_pool.len.load()):
+            let array = memory_pool.load(i)
+            for j in range(i + 1, memory_pool.len.load()):
+                let other = memory_pool.load(j)
                 if array == other:
-                    self.memory_pool.load().store(
-                        i, DTypePointer[DType.float32].get_null()
-                    )
+                    memory_pool.store(i, DTypePointer[DType.float32].get_null())
 
-        let deletable_data = Vector[Bool](self.memory_pool.load().len.load())
-        for i in range(self.memory_pool.load().len.load()):
+        let deletable_data = Vector[Bool](memory_pool.len.load())
+        for i in range(memory_pool.len.load()):
             deletable_data.store(i, True)
         for i in range(self.nodes.load().len.load()):
             let node = self.nodes.load().load(i)
@@ -362,10 +361,9 @@ struct Graph:
         for i in range(deletable_data.len.load()):
             if (
                 deletable_data.load(i)
-                and not self.memory_pool.load().load(i)
-                == DTypePointer[DType.float32].get_null()
+                and not memory_pool.load(i) == DTypePointer[DType.float32].get_null()
             ):
-                self.memory_pool.load().load(i).free()
+                memory_pool.load(i).free()
         deletable_data.free()
 
         for i in range(self.nodes.load().len.load() - 1, -1, -1):

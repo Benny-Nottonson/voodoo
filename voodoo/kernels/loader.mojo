@@ -54,6 +54,7 @@ from .activations import (
     Mish,
 )
 
+
 fn load_kernels() -> Pointer[op_tuple]:
     let kernels = Pointer[op_tuple].alloc(100)
     kernels.store(copy_code, op_tuple(Copy.fw, _b))

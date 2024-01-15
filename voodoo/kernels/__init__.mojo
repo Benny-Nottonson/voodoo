@@ -12,6 +12,7 @@ fn _u(b: Node, a: Node):
 fn _b(c: Node, a: Node, b: Node):
     ...
 
+
 @always_inline
 fn get_kernels() -> Pointer[op_tuple]:
     return load_kernels()
