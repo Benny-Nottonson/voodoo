@@ -63,24 +63,24 @@ struct MMul:
 
         parallelize[calc_row_fw](M, workers if workers > 0 else M)
 
+    # IMPORTANT: These two functions take BY FAR the most time in the entire program.
+    # How can they be optimized?
     @parameter
     @staticmethod
     fn kernel_mmul_bw_a(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let offset_a = a_index * a.shape_ptr.load().load(
-            a.num_dims_ptr.load() - 2
-        ) * a.shape_ptr.load().load(a.num_dims_ptr.load() - 1)
-        let offset_b = b_index * b.shape_ptr.load().load(
-            b.num_dims_ptr.load() - 2
-        ) * b.shape_ptr.load().load(b.num_dims_ptr.load() - 1)
-        let offset_c = c_index * c.shape_ptr.load().load(
-            c.num_dims_ptr.load() - 2
-        ) * c.shape_ptr.load().load(c.num_dims_ptr.load() - 1)
+        let shape_a = a.shape_ptr.load()
+        let shape_b = b.shape_ptr.load()
+        let shape_c = c.shape_ptr.load()
 
-        let M = a.shape_ptr.load().load(a.num_dims_ptr.load() - 2)
-        let K = b.shape_ptr.load().load(b.num_dims_ptr.load() - 2)
-        let N = b.shape_ptr.load().load(b.num_dims_ptr.load() - 1)
+        let M = shape_a.load(a.num_dims_ptr.load() - 2)
+        let K = shape_b.load(b.num_dims_ptr.load() - 2)
+        let N = shape_c.load(b.num_dims_ptr.load() - 1)
+
+        let offset_a = a_index * M * shape_a.load(a.num_dims_ptr.load() - 1)
+        let offset_b = b_index * K * shape_b.load(b.num_dims_ptr.load() - 1)
+        let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
 
         @parameter
         fn calc_row_1(m: Int):
@@ -88,10 +88,11 @@ struct MMul:
 
                 @parameter
                 fn dot_bw_a[nelts: Int](k: Int):
-                    let val = a.load_grad(offset_a + m * K + k) + c.load_grad(
-                        offset_c + m * N + n
-                    ) * b.load_data(offset_b + k * N + n)
-                    a.store_grad(offset_a + m * K + k, val)
+                    let val = b.load_data[nelts](offset_b + k * N + n).fma(
+                        c.load_grad[nelts](offset_c + m * N + n),
+                        a.load_grad[nelts](offset_a + m * K + k),
+                    )
+                    a.store_grad[nelts](offset_a + m * K + k, val)
 
                 vectorize[1, dot_bw_a](K)
 
@@ -102,19 +103,17 @@ struct MMul:
     fn kernel_mmul_bw_b(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let offset_a = a_index * a.shape_ptr.load().load(
-            a.num_dims_ptr.load() - 2
-        ) * a.shape_ptr.load().load(a.num_dims_ptr.load() - 1)
-        let offset_b = b_index * b.shape_ptr.load().load(
-            b.num_dims_ptr.load() - 2
-        ) * b.shape_ptr.load().load(b.num_dims_ptr.load() - 1)
-        let offset_c = c_index * c.shape_ptr.load().load(
-            c.num_dims_ptr.load() - 2
-        ) * c.shape_ptr.load().load(c.num_dims_ptr.load() - 1)
+        let shape_a = a.shape_ptr.load()
+        let shape_b = b.shape_ptr.load()
+        let shape_c = c.shape_ptr.load()
 
-        let M = a.shape_ptr.load().load(a.num_dims_ptr.load() - 2)
-        let K = b.shape_ptr.load().load(b.num_dims_ptr.load() - 2)
-        let N = b.shape_ptr.load().load(b.num_dims_ptr.load() - 1)
+        let M = shape_a.load(a.num_dims_ptr.load() - 2)
+        let K = shape_b.load(b.num_dims_ptr.load() - 2)
+        let N = shape_c.load(b.num_dims_ptr.load() - 1)
+
+        let offset_a = a_index * M * shape_a.load(a.num_dims_ptr.load() - 1)
+        let offset_b = b_index * K * shape_b.load(b.num_dims_ptr.load() - 1)
+        let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
 
         @parameter
         fn calc_row_2(k: Int):
@@ -122,10 +121,11 @@ struct MMul:
 
                 @parameter
                 fn dot_bw_b[nelts: Int](n: Int):
-                    let val = b.load_grad(offset_b + k * N + n) + a.load_data(
-                        offset_a + m * K + k
-                    ) * c.load_grad(offset_c + m * N + n)
-                    b.store_grad(offset_b + k * N + n, val)
+                    let val = a.load_data[nelts](offset_a + m * K + k).fma(
+                        c.load_grad[nelts](offset_c + m * N + n),
+                        b.load_grad[nelts](offset_b + k * N + n),
+                    )
+                    b.store_grad[nelts](offset_b + k * N + n, val)
 
                 vectorize[1, dot_bw_b](N)
 
