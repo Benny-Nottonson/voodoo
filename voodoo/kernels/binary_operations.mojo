@@ -1,12 +1,11 @@
 from random import random_float64
-from algorithm import vectorize, parallelize
+from algorithm import *
 from math import max
 from voodoo import Node
 from voodoo.utils import (
     recursive_broadcast,
     recursive_broadcast_bw,
 )
-from ..constants import DType_F32, nelts, workers
 
 
 struct MMul:
@@ -32,19 +31,17 @@ struct MMul:
     fn kernel_mmul_fw(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let offset_a = a_index * a.shape_ptr.load().load(
-            a.num_dims_ptr.load() - 2
-        ) * a.shape_ptr.load().load(a.num_dims_ptr.load() - 1)
-        let offset_b = b_index * b.shape_ptr.load().load(
-            b.num_dims_ptr.load() - 2
-        ) * b.shape_ptr.load().load(b.num_dims_ptr.load() - 1)
-        let offset_c = c_index * c.shape_ptr.load().load(
-            c.num_dims_ptr.load() - 2
-        ) * c.shape_ptr.load().load(c.num_dims_ptr.load() - 1)
+        let shape_a = a.shape_ptr.load()
+        let shape_b = b.shape_ptr.load()
+        let shape_c = c.shape_ptr.load()
 
-        let M = a.shape_ptr.load().load(a.num_dims_ptr.load() - 2)
-        let K = b.shape_ptr.load().load(b.num_dims_ptr.load() - 2)
-        let N = b.shape_ptr.load().load(b.num_dims_ptr.load() - 1)
+        let M = shape_a.load(a.num_dims_ptr.load() - 2)
+        let K = shape_b.load(b.num_dims_ptr.load() - 2)
+        let N = shape_c.load(b.num_dims_ptr.load() - 1)
+
+        let offset_a = a_index * M * shape_a.load(a.num_dims_ptr.load() - 1)
+        let offset_b = b_index * K * shape_b.load(b.num_dims_ptr.load() - 1)
+        let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
 
         @parameter
         fn calc_row_fw(m: Int):
@@ -52,16 +49,19 @@ struct MMul:
 
                 @parameter
                 fn dot_fw[nelts: Int](n: Int):
+                    let a_off = offset_a + m * K + k
+                    let b_off = offset_b + k * N + n
+                    let c_off = offset_c + m * N + n
                     c.store_data[nelts](
-                        offset_c + m * N + n,
-                        c.load_data[nelts](offset_c + m * N + n)
-                        + a.load_data(offset_a + m * K + k)
-                        * b.load_data[nelts](offset_b + k * N + n),
+                        c_off,
+                        b.load_data[nelts](b_off).fma(
+                            a.load_data(a_off), c.load_data[nelts](c_off)
+                        ),
                     )
 
                 vectorize[nelts, dot_fw](N)
 
-        parallelize[calc_row_fw](M, workers if workers > 0 else M)
+        parallelize[calc_row_fw](M, workers if workers > 0 else M // 2)
 
     # IMPORTANT: These two functions take BY FAR the most time in the entire program.
     # How can they be optimized?
@@ -88,15 +88,20 @@ struct MMul:
 
                 @parameter
                 fn dot_bw_a[nelts: Int](k: Int):
-                    let val = b.load_data[nelts](offset_b + k * N + n).fma(
-                        c.load_grad[nelts](offset_c + m * N + n),
-                        a.load_grad[nelts](offset_a + m * K + k),
+                    let a_off = offset_a + m * K + k
+                    let b_off = offset_b + k * N + n
+                    let c_off = offset_c + m * N + n
+                    a.store_grad[nelts](
+                        a_off,
+                        b.load_data[nelts](b_off).fma(
+                            c.load_grad[nelts](c_off),
+                            a.load_grad[nelts](a_off),
+                        ),
                     )
-                    a.store_grad[nelts](offset_a + m * K + k, val)
 
                 vectorize[1, dot_bw_a](K)
 
-        parallelize[calc_row_1](M, workers if workers > 0 else M)
+        parallelize[calc_row_1](M, workers if workers > 0 else M // 2)
 
     @parameter
     @staticmethod
@@ -121,12 +126,17 @@ struct MMul:
 
                 @parameter
                 fn dot_bw_b[nelts: Int](n: Int):
-                    let val = a.load_data[nelts](offset_a + m * K + k).fma(
-                        c.load_grad[nelts](offset_c + m * N + n),
-                        b.load_grad[nelts](offset_b + k * N + n),
+                    let a_off = offset_a + m * K + k
+                    let b_off = offset_b + k * N + n
+                    let c_off = offset_c + m * N + n
+                    b.store_grad[nelts](
+                        b_off,
+                        a.load_data[nelts](a_off).fma(
+                            c.load_grad[nelts](c_off),
+                            b.load_grad[nelts](b_off),
+                        ),
                     )
-                    b.store_grad[nelts](offset_b + k * N + n, val)
 
                 vectorize[1, dot_bw_b](N)
 
-        parallelize[calc_row_2](K, workers if workers > 0 else K)
+        parallelize[calc_row_2](K, workers if workers > 0 else K // 2)
