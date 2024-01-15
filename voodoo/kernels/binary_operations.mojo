@@ -6,7 +6,7 @@ from voodoo.utils import (
     recursive_broadcast,
     recursive_broadcast_bw,
 )
-from sys.intrinsics import prefetch, PrefetchOptions
+from sys.intrinsics import PrefetchOptions
 
 alias prefetch_options = PrefetchOptions().for_read().high_locality().to_data_cache()
 
@@ -53,15 +53,15 @@ struct MMul:
             let _a_off = offset_a + m * K
             let _c_off = offset_c + m * N
 
-            prefetch[prefetch_options](a.data.load() + _a_off)
+            (a.data.load() + _a_off).prefetch[prefetch_options]()
 
             for k in range(K):
                 let a_off = _a_off + k
                 let a_scalar = a.load_data(a_off)
                 let _b_off = offset_b + k * N
 
-                prefetch[prefetch_options](b.data.load() + _b_off)
-                prefetch[prefetch_options](c.data.load() + _c_off)
+                (b.data.load() + _b_off).prefetch[prefetch_options]()
+                (c.data.load() + _c_off).prefetch[prefetch_options]()
 
                 @parameter
                 fn dot_fw[nelts: Int](n: Int):
@@ -101,13 +101,16 @@ struct MMul:
         for m in range(M):
             let _a_off = offset_a + m * K
             let _c_off = offset_c + m * N
+
+            (c.data.load(1) + _c_off).prefetch[prefetch_options]()
+
             for n in range(N):
                 let c_offset = _c_off + n
                 let c_grad = c.load_grad(c_offset)
                 let _b_off = offset_b + n
 
-                prefetch[prefetch_options](a.data.load() + _a_off)
-                prefetch[prefetch_options](b.data.load() + _b_off)
+                (a.data.load(1) + _a_off).prefetch[prefetch_options]()
+                (b.data.load(0) + _b_off).prefetch[prefetch_options]()
 
                 @parameter
                 fn dot_bw[nelts: Int](k: Int):
@@ -147,14 +150,15 @@ struct MMul:
             let _a_off = offset_a + k
             let _b_off = offset_b + k * N
 
-            prefetch[prefetch_options](a.data.load() + _a_off)
+            (a.data.load(0) + _a_off).prefetch[prefetch_options]()
 
             for m in range(M):
                 let a_data = a.load_data(_a_off + m * K)
                 let _c_off = offset_c + m * N
 
-                prefetch[prefetch_options](c.data.load() + _c_off)
-
+                (b.data.load(1) + _b_off).prefetch[prefetch_options]()
+                (c.data.load(1) + _c_off).prefetch[prefetch_options]()
+                
                 @parameter
                 fn dot_bw[nelts: Int](n: Int):
                     let b_off = _b_off + n

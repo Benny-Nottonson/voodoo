@@ -3,11 +3,7 @@ from algorithm import vectorize
 from math import round, ceil, sin, cos, sqrt, log
 from random import rand, seed
 from .utils import Vector, warn
-
-"""
-Orthogonal class
-VarianceScaling class
-"""
+from memory.buffer import Buffer
 
 
 @register_passable("trivial")
