@@ -2,11 +2,11 @@ from memory import memset_zero
 from math import log, log2, exp, exp2, ceil, round
 from algorithm import vectorize, unswitch
 
-from .kernels import op_tuple, unary_op, binary_op, Kernels
+from voodoo.kernels import op_tuple, binary_op, unary_op, get_kernels
 from .node import Node
 from .utils import Vector, get_broadcasted_shape_for_ew_op, warn
 from .utils.shape import shape
-from .cpu_kernels.optimizers import *
+from .kernels.optimizers import *
 
 
 @register_passable("trivial")
@@ -63,7 +63,7 @@ struct Graph:
             free_node_ids: free_node_ids,
             free_data_ids: free_data_ids,
             last_node_id: last_node_id,
-            kernels: Kernels.ld(),
+            kernels: get_kernels(),
             forward_order: forward_order,
             grad_nodes_order: grad_nodes_order,
             compiled: compiled,
