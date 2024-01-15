@@ -41,3 +41,4 @@ alias gelu_code = 78
 alias h_sig_code = 80
 alias linear_code = 82
 alias mish_code = 84
+alias conv_code = 86

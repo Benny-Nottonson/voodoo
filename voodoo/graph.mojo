@@ -684,6 +684,37 @@ struct Graph:
             shape, False, False, checkpoint, operator_id, other_params, a, b
         )
 
+    fn conv_2d(
+        self,
+        a: Pointer[Node],
+        b: Pointer[Node],
+        padding: StaticIntTuple[2],
+        stride: StaticIntTuple[2],
+    ) raises -> Pointer[Node]:
+        let batch_size = a.load().shape_ptr.load().load(0)
+        let in_channels = a.load().shape_ptr.load().load(1)
+        let width = a.load().shape_ptr.load().load(2)
+        let height = a.load().shape_ptr.load().load(3)
+        let kernel_width = b.load().shape_ptr.load().load(1)
+        let kernel_height = b.load().shape_ptr.load().load(2)
+
+        let shape = shape(
+            batch_size,
+            in_channels,
+            (width - kernel_width + 2 * padding[0]) // stride[0] + 1,
+            (height - kernel_height + 2 * padding[1]) // stride[1] + 1,
+        )
+
+        let other_params = Vector[Int]()
+        other_params.push_back(padding[0])
+        other_params.push_back(padding[1])
+        other_params.push_back(stride[0])
+        other_params.push_back(stride[1])
+
+        return self.node(
+            shape, False, False, True, conv_code, other_params, a, b
+        )
+
     fn dropout(
         self, a: Pointer[Node], dropout_rate: Float32, noise_shape: DynamicVector[Int]
     ) raises -> Pointer[Node]:

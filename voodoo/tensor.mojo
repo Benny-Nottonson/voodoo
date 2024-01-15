@@ -447,6 +447,17 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         )
         return new_tensor
 
+    fn conv_2d(
+        self, other: Tensor, padding: StaticIntTuple[2], stride: StaticIntTuple[2]
+    ) raises -> Tensor[False, False]:
+        let new_tensor = self.load_tensor_for_binary_op(other)
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load()
+            .load()
+            .conv_2d(self.node_ptr.load(), other.node_ptr.load(), padding, stride)
+        )
+        return new_tensor
+
 
 fn fuse_graphs(
     graph_ptr: Pointer[Pointer[Graph]],

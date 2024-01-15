@@ -1,6 +1,7 @@
 from voodoo import Tensor, get_loss_code, Graph
 from voodoo.utils.shape import shape
 from voodoo.layers.Dense import Dense
+from voodoo.layers.Conv2D import Conv2D
 from voodoo.utils import (
     info,
     clear,
@@ -19,6 +20,14 @@ fn main() raises:
     let input_layer = Dense[
         in_neurons=1, out_neurons=64, activation="relu", bias_initializer="he_normal"
     ]()
+    let conv_layer = Conv2D[
+        in_channels=1,
+        kernel_width=3,
+        kernel_height=3,
+        stride=1,
+        padding=1,
+        bias_initializer="he_normal",
+    ]()
     let dense_layer = Dense[
         in_neurons=64, out_neurons=64, activation="relu", bias_initializer="he_normal"
     ]()
@@ -34,6 +43,7 @@ fn main() raises:
     let true_vals = Tensor(data_shape)
 
     var x = input_layer.forward(input)
+    x = conv_layer.forward(x)
     x = dense_layer.forward(x)
     x = output_layer.forward(x)
     let loss = x.compute_loss["mse"](true_vals)
@@ -49,7 +59,7 @@ fn main() raises:
         loss.backward()
         loss.optimize["sgd", 0.01]()
 
-        if epoch % every == 0:
+        if epoch % every == 0:  
             var bar = String("")
             for i in range(bar_accuracy):
                 if i < ((epoch * bar_accuracy) / num_epochs).to_int():
