@@ -49,19 +49,18 @@ struct MMul:
         let offset_b = b_index * K * shape_b.load(b_dims - 1)
         let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
 
+        DTypePointer.prefetch[prefetch_options](a.data.load())
+        DTypePointer.prefetch[prefetch_options](b.data.load())
+        DTypePointer.prefetch[prefetch_options](c.data.load())
+
         for m in range(M):
             let _a_off = offset_a + m * K
             let _c_off = offset_c + m * N
-
-            (a.data.load() + _a_off).prefetch[prefetch_options]()
 
             for k in range(K):
                 let a_off = _a_off + k
                 let a_scalar = a.load_data(a_off)
                 let _b_off = offset_b + k * N
-
-                (b.data.load() + _b_off).prefetch[prefetch_options]()
-                (c.data.load() + _c_off).prefetch[prefetch_options]()
 
                 @parameter
                 fn dot_fw[nelts: Int](n: Int):
@@ -98,19 +97,18 @@ struct MMul:
         let offset_b = b_index * K * shape_b.load(b_dims - 1)
         let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
 
+        DTypePointer.prefetch[prefetch_options](a.data.load(1))
+        DTypePointer.prefetch[prefetch_options](b.data.load(0))
+        DTypePointer.prefetch[prefetch_options](c.data.load(1))
+
         for m in range(M):
             let _a_off = offset_a + m * K
             let _c_off = offset_c + m * N
-
-            (c.data.load(1) + _c_off).prefetch[prefetch_options]()
 
             for n in range(N):
                 let c_offset = _c_off + n
                 let c_grad = c.load_grad(c_offset)
                 let _b_off = offset_b + n
-
-                (a.data.load(1) + _a_off).prefetch[prefetch_options]()
-                (b.data.load(0) + _b_off).prefetch[prefetch_options]()
 
                 @parameter
                 fn dot_bw[nelts: Int](k: Int):
@@ -146,19 +144,18 @@ struct MMul:
         let offset_b = b_index * K * shape_b.load(b_dims - 1)
         let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
 
+        DTypePointer.prefetch[prefetch_options](a.data.load(0))
+        DTypePointer.prefetch[prefetch_options](b.data.load(1))
+        DTypePointer.prefetch[prefetch_options](c.data.load(1))
+
         for k in range(K):
             let _a_off = offset_a + k
             let _b_off = offset_b + k * N
-
-            (a.data.load(0) + _a_off).prefetch[prefetch_options]()
 
             for m in range(M):
                 let a_data = a.load_data(_a_off + m * K)
                 let _c_off = offset_c + m * N
 
-                (b.data.load(1) + _b_off).prefetch[prefetch_options]()
-                (c.data.load(1) + _c_off).prefetch[prefetch_options]()
-                
                 @parameter
                 fn dot_bw[nelts: Int](n: Int):
                     let b_off = _b_off + n
