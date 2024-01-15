@@ -14,7 +14,6 @@ from math import (
 )
 from algorithm import vectorize
 from voodoo import Node
-from ..constants import DType_F32, nelts
 
 alias generic_vectorized = fn[nelts: Int] (SIMD[DType_F32, nelts]) -> SIMD[
     DType_F32, nelts

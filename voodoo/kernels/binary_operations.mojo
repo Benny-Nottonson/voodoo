@@ -28,6 +28,7 @@ struct MMul:
 
     @parameter
     @staticmethod
+    @always_inline
     fn kernel_mmul_fw(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
@@ -67,6 +68,7 @@ struct MMul:
     # How can they be optimized?
     @parameter
     @staticmethod
+    @always_inline
     fn kernel_mmul_bw_a(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
@@ -85,26 +87,23 @@ struct MMul:
         @parameter
         fn calc_row_1(m: Int):
             for n in range(N):
-
-                @parameter
-                fn dot_bw_a[nelts: Int](k: Int):
+                for k in range(K):
                     let a_off = offset_a + m * K + k
                     let b_off = offset_b + k * N + n
                     let c_off = offset_c + m * N + n
-                    a.store_grad[nelts](
+                    a.store_grad(
                         a_off,
-                        b.load_data[nelts](b_off).fma(
-                            c.load_grad[nelts](c_off),
-                            a.load_grad[nelts](a_off),
+                        b.load_data(b_off).fma(
+                            c.load_grad(c_off),
+                            a.load_grad(a_off),
                         ),
                     )
-
-                vectorize[1, dot_bw_a](K)
 
         parallelize[calc_row_1](M, workers if workers > 0 else M // 2)
 
     @parameter
     @staticmethod
+    @always_inline
     fn kernel_mmul_bw_b(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
@@ -123,20 +122,16 @@ struct MMul:
         @parameter
         fn calc_row_2(k: Int):
             for m in range(M):
-
-                @parameter
-                fn dot_bw_b[nelts: Int](n: Int):
+                for n in range(N):
                     let a_off = offset_a + m * K + k
                     let b_off = offset_b + k * N + n
                     let c_off = offset_c + m * N + n
-                    b.store_grad[nelts](
+                    b.store_grad(
                         b_off,
-                        a.load_data[nelts](a_off).fma(
-                            c.load_grad[nelts](c_off),
-                            b.load_grad[nelts](b_off),
+                        a.load_data(a_off).fma(
+                            c.load_grad(c_off),
+                            b.load_grad(b_off),
                         ),
                     )
-
-                vectorize[1, dot_bw_b](N)
 
         parallelize[calc_row_2](K, workers if workers > 0 else K // 2)

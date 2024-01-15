@@ -1,7 +1,6 @@
 from math import sqrt
 from algorithm import vectorize
 from voodoo import Node, Vector
-from ..constants import DType_F32, nelts
 
 alias generic_vectorized = fn[nelts: Int, learning_rate: Float32] (
     SIMD[DType_F32, nelts]
