@@ -8,7 +8,6 @@ from voodoo.utils import (
     clear,
 )
 from voodoo.utils.shape import shape
-from time.time import now
 
 
 fn nanoseconds_to_seconds(t: Int) -> Float64:
@@ -34,13 +33,11 @@ fn main() raises:
     let input = Tensor(data_shape).initialize["he_normal", 0, 1]().dynamic()
     let true_vals = Tensor(data_shape)
 
-    var x = (input @ W1 + b1).compute_activation["relu"]()
-    x = (x @ W2 + b2).compute_activation["relu"]()
+    var x = (input @ W1 + b1).compute_activation["gelu"]()
+    x = (x @ W2 + b2).compute_activation["gelu"]()
     x = x @ W3 + b3
     let loss = x.compute_loss["mse"](true_vals)
 
-    let initial_start = now()
-    var epoch_start = now()
     let bar_accuracy = 20
     for epoch in range(1, num_epochs + 1):
         for i in range(input.initialize["random_uniform", 0, 1]().capacity()):
@@ -57,18 +54,9 @@ fn main() raises:
                     bar += "█"
                 else:
                     bar += "░"
-            clear()
             print_no_newline("\nEpoch: " + String(epoch) + " ")
             info(bar + " ")
             print_no_newline(String(((epoch * 100) / num_epochs).to_int()) + "%\n")
-            print("----------------------------------------\n")
-            print_no_newline("Average Loss: ")
-            info(String(avg_loss / every) + "\n")
-            print_no_newline("Time: ")
-            info(String(nanoseconds_to_seconds(now() - epoch_start)) + "s\n")
-            epoch_start = now()
-            print("\n----------------------------------------\n")
-            avg_loss = 0.0
 
-    print_no_newline("Total Time: ")
-    info(String(nanoseconds_to_seconds(now() - initial_start)) + "s\n\n")
+    print("\n\n")
+    info("Avgloss: " + String(avg_loss / num_epochs) + "\n")

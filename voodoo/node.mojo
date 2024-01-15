@@ -183,15 +183,19 @@ struct Node:
     fn store_computed(self, value: Bool):
         self.computed_ptr.store(value)
 
+    @always_inline
     fn load_data(self, idx: Int) -> Float32:
         return self.data.load().load(idx)
 
+    @always_inline
     fn store_data(self, idx: Int, val: Float32):
         self.data.load().simd_store(idx, val)
 
+    @always_inline
     fn load_data[nelts: Int](self, idx: Int) -> SIMD[DType.float32, nelts]:
         return self.data.load().simd_load[nelts](idx)
 
+    @always_inline
     fn store_data[nelts: Int = 1](self, idx: Int, val: SIMD[DType.float32, nelts]):
         self.data.load().simd_store[nelts](idx, val)
 
@@ -203,15 +207,19 @@ struct Node:
         for i in range(self.load_cap()):
             self.data.load(0).store(i, Float32(i))
 
+    @always_inline
     fn load_grad(self, idx: Int) -> Float32:
         return self.data.load(1).load(idx)
 
+    @always_inline
     fn store_grad(self, idx: Int, val: Float32):
         self.data.load(1).simd_store(idx, val)
 
+    @always_inline
     fn load_grad[nelts: Int](self, idx: Int) -> SIMD[DType.float32, nelts]:
         return self.data.load(1).simd_load[nelts](idx)
 
+    @always_inline
     fn store_grad[nelts: Int = 1](self, idx: Int, val: SIMD[DType.float32, nelts]):
         self.data.load(1).simd_store[nelts](idx, val)
 

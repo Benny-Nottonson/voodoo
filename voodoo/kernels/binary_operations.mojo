@@ -1,12 +1,14 @@
 from random import random_float64
-from algorithm import vectorize, parallelize
+from algorithm import *
 from math import max
 from voodoo import Node
 from voodoo.utils import (
     recursive_broadcast,
     recursive_broadcast_bw,
 )
-from ..constants import DType_F32, nelts, workers
+from sys.intrinsics import prefetch, PrefetchOptions
+
+alias prefetch_options = PrefetchOptions().for_read().high_locality().to_data_cache()
 
 
 struct MMul:
@@ -32,39 +34,50 @@ struct MMul:
     fn kernel_mmul_fw(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let offset_a = a_index * a.shape_ptr.load().load(
-            a.num_dims_ptr.load() - 2
-        ) * a.shape_ptr.load().load(a.num_dims_ptr.load() - 1)
-        let offset_b = b_index * b.shape_ptr.load().load(
-            b.num_dims_ptr.load() - 2
-        ) * b.shape_ptr.load().load(b.num_dims_ptr.load() - 1)
-        let offset_c = c_index * c.shape_ptr.load().load(
-            c.num_dims_ptr.load() - 2
-        ) * c.shape_ptr.load().load(c.num_dims_ptr.load() - 1)
+        let shape_a = a.shape_ptr.load()
+        let shape_b = b.shape_ptr.load()
+        let shape_c = c.shape_ptr.load()
 
-        let M = a.shape_ptr.load().load(a.num_dims_ptr.load() - 2)
-        let K = b.shape_ptr.load().load(b.num_dims_ptr.load() - 2)
-        let N = b.shape_ptr.load().load(b.num_dims_ptr.load() - 1)
+        let a_dims = a.num_dims_ptr.load()
+        let b_dims = b.num_dims_ptr.load()
 
-        @parameter
-        fn calc_row_fw(m: Int):
+        let M = shape_a.load(a_dims - 2)
+        let K = shape_b.load(b_dims - 2)
+        let N = shape_c.load(b_dims - 1)
+
+        let offset_a = a_index * M * shape_a.load(a_dims - 1)
+        let offset_b = b_index * K * shape_b.load(b_dims - 1)
+        let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
+
+        for m in range(M):
+            let _a_off = offset_a + m * K
+            let _c_off = offset_c + m * N
+
+            prefetch[prefetch_options](a.data.load() + _a_off)
+
             for k in range(K):
+                let a_off = _a_off + k
+                let a_scalar = a.load_data(a_off)
+                let _b_off = offset_b + k * N
+
+                prefetch[prefetch_options](b.data.load() + _b_off)
+                prefetch[prefetch_options](c.data.load() + _c_off)
 
                 @parameter
                 fn dot_fw[nelts: Int](n: Int):
+                    let b_off = _b_off + n
+                    let c_off = _c_off + n
+
                     c.store_data[nelts](
-                        offset_c + m * N + n,
-                        c.load_data[nelts](offset_c + m * N + n)
-                        + a.load_data(offset_a + m * K + k)
-                        * b.load_data[nelts](offset_b + k * N + n),
+                        c_off,
+                        b.load_data[nelts](b_off).fma(
+                            a_scalar,
+                            c.load_data[nelts](c_off),
+                        ),
                     )
 
                 vectorize[nelts, dot_fw](N)
 
-        parallelize[calc_row_fw](M, workers if workers > 0 else M)
-
-    # IMPORTANT: These two functions take BY FAR the most time in the entire program.
-    # How can they be optimized?
     @parameter
     @staticmethod
     fn kernel_mmul_bw_a(
@@ -74,29 +87,41 @@ struct MMul:
         let shape_b = b.shape_ptr.load()
         let shape_c = c.shape_ptr.load()
 
-        let M = shape_a.load(a.num_dims_ptr.load() - 2)
-        let K = shape_b.load(b.num_dims_ptr.load() - 2)
-        let N = shape_c.load(b.num_dims_ptr.load() - 1)
+        let a_dims = a.num_dims_ptr.load()
+        let b_dims = b.num_dims_ptr.load()
 
-        let offset_a = a_index * M * shape_a.load(a.num_dims_ptr.load() - 1)
-        let offset_b = b_index * K * shape_b.load(b.num_dims_ptr.load() - 1)
+        let M = shape_a.load(a_dims - 2)
+        let K = shape_b.load(b_dims - 2)
+        let N = shape_c.load(b_dims - 1)
+
+        let offset_a = a_index * M * shape_a.load(a_dims - 1)
+        let offset_b = b_index * K * shape_b.load(b_dims - 1)
         let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
 
-        @parameter
-        fn calc_row_1(m: Int):
+        for m in range(M):
+            let _a_off = offset_a + m * K
+            let _c_off = offset_c + m * N
             for n in range(N):
+                let c_offset = _c_off + n
+                let c_grad = c.load_grad(c_offset)
+                let _b_off = offset_b + n
+
+                prefetch[prefetch_options](a.data.load() + _a_off)
+                prefetch[prefetch_options](b.data.load() + _b_off)
 
                 @parameter
-                fn dot_bw_a[nelts: Int](k: Int):
-                    let val = b.load_data[nelts](offset_b + k * N + n).fma(
-                        c.load_grad[nelts](offset_c + m * N + n),
-                        a.load_grad[nelts](offset_a + m * K + k),
+                fn dot_bw[nelts: Int](k: Int):
+                    let a_off = _a_off + k
+
+                    a.store_grad[nelts](
+                        a_off,
+                        b.load_data[nelts](_b_off + k * N).fma(
+                            c_grad,
+                            a.load_grad[nelts](a_off),
+                        ),
                     )
-                    a.store_grad[nelts](offset_a + m * K + k, val)
 
-                vectorize[1, dot_bw_a](K)
-
-        parallelize[calc_row_1](M, workers if workers > 0 else M)
+                vectorize[nelts, dot_bw](K)
 
     @parameter
     @staticmethod
@@ -107,26 +132,39 @@ struct MMul:
         let shape_b = b.shape_ptr.load()
         let shape_c = c.shape_ptr.load()
 
-        let M = shape_a.load(a.num_dims_ptr.load() - 2)
-        let K = shape_b.load(b.num_dims_ptr.load() - 2)
-        let N = shape_c.load(b.num_dims_ptr.load() - 1)
+        let a_dims = a.num_dims_ptr.load()
+        let b_dims = b.num_dims_ptr.load()
 
-        let offset_a = a_index * M * shape_a.load(a.num_dims_ptr.load() - 1)
-        let offset_b = b_index * K * shape_b.load(b.num_dims_ptr.load() - 1)
+        let M = shape_a.load(a_dims - 2)
+        let K = shape_b.load(b_dims - 2)
+        let N = shape_c.load(b_dims - 1)
+
+        let offset_a = a_index * M * shape_a.load(a_dims - 1)
+        let offset_b = b_index * K * shape_b.load(b_dims - 1)
         let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
 
-        @parameter
-        fn calc_row_2(k: Int):
+        for k in range(K):
+            let _a_off = offset_a + k
+            let _b_off = offset_b + k * N
+
+            prefetch[prefetch_options](a.data.load() + _a_off)
+
             for m in range(M):
+                let a_data = a.load_data(_a_off + m * K)
+                let _c_off = offset_c + m * N
+
+                prefetch[prefetch_options](c.data.load() + _c_off)
 
                 @parameter
-                fn dot_bw_b[nelts: Int](n: Int):
-                    let val = a.load_data[nelts](offset_a + m * K + k).fma(
-                        c.load_grad[nelts](offset_c + m * N + n),
-                        b.load_grad[nelts](offset_b + k * N + n),
+                fn dot_bw[nelts: Int](n: Int):
+                    let b_off = _b_off + n
+
+                    b.store_grad[nelts](
+                        b_off,
+                        c.load_grad[nelts](_c_off + n).fma(
+                            a_data,
+                            b.load_grad[nelts](b_off),
+                        ),
                     )
-                    b.store_grad[nelts](offset_b + k * N + n, val)
 
-                vectorize[1, dot_bw_b](N)
-
-        parallelize[calc_row_2](K, workers if workers > 0 else K)
+                vectorize[nelts, dot_bw](N)
