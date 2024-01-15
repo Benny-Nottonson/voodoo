@@ -54,7 +54,9 @@ fn main() raises:
                     bar += "█"
                 else:
                     bar += "░"
-            clear()
             print_no_newline("\nEpoch: " + String(epoch) + " ")
             info(bar + " ")
             print_no_newline(String(((epoch * 100) / num_epochs).to_int()) + "%\n")
+
+    print("\n\n")
+    info("Avgloss: " + String(avg_loss / num_epochs) + "\n")

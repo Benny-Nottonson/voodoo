@@ -1,8 +1,6 @@
 from voodoo import Tensor, get_loss_code, Graph
 from voodoo.utils.shape import shape
-from voodoo.layers.LeakyReLu import LeakyReLu
 from voodoo.layers.Dense import Dense
-from voodoo.layers.Dropout import Dropout
 from voodoo.utils import (
     info,
     clear,

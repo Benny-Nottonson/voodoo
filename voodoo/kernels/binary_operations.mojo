@@ -28,7 +28,6 @@ struct MMul:
 
     @parameter
     @staticmethod
-    @always_inline
     fn kernel_mmul_fw(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
@@ -47,28 +46,27 @@ struct MMul:
         @parameter
         fn calc_row_fw(m: Int):
             for k in range(K):
+                let a_off = offset_a + m * K + k
+                let a_scalar = a.load_data(a_off)
 
                 @parameter
                 fn dot_fw[nelts: Int](n: Int):
-                    let a_off = offset_a + m * K + k
                     let b_off = offset_b + k * N + n
                     let c_off = offset_c + m * N + n
                     c.store_data[nelts](
                         c_off,
                         b.load_data[nelts](b_off).fma(
-                            a.load_data(a_off), c.load_data[nelts](c_off)
+                            a_scalar,
+                            c.load_data[nelts](c_off),
                         ),
                     )
 
                 vectorize[nelts, dot_fw](N)
-
+                
         parallelize[calc_row_fw](M, workers if workers > 0 else M // 2)
 
-    # IMPORTANT: These two functions take BY FAR the most time in the entire program.
-    # How can they be optimized?
     @parameter
     @staticmethod
-    @always_inline
     fn kernel_mmul_bw_a(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
@@ -84,26 +82,27 @@ struct MMul:
         let offset_b = b_index * K * shape_b.load(b.num_dims_ptr.load() - 1)
         let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
 
-        @parameter
-        fn calc_row_1(m: Int):
+        for m in range(M):
             for n in range(N):
-                for k in range(K):
+                let c_offset = offset_c + m * N + n
+                let c_grad = c.load_grad(c_offset)
+
+                @parameter
+                fn dot_bw[nelts: Int](k: Int):
                     let a_off = offset_a + m * K + k
                     let b_off = offset_b + k * N + n
-                    let c_off = offset_c + m * N + n
-                    a.store_grad(
+                    a.store_grad[nelts](
                         a_off,
-                        b.load_data(b_off).fma(
-                            c.load_grad(c_off),
-                            a.load_grad(a_off),
+                        b.load_data[nelts](b_off).fma(
+                            c_grad,
+                            a.load_grad[nelts](a_off),
                         ),
                     )
 
-        parallelize[calc_row_1](M, workers if workers > 0 else M // 2)
+                vectorize[nelts, dot_bw](K)
 
     @parameter
     @staticmethod
-    @always_inline
     fn kernel_mmul_bw_b(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
@@ -119,19 +118,21 @@ struct MMul:
         let offset_b = b_index * K * shape_b.load(b.num_dims_ptr.load() - 1)
         let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
 
-        @parameter
-        fn calc_row_2(k: Int):
+        for k in range(K):
             for m in range(M):
-                for n in range(N):
-                    let a_off = offset_a + m * K + k
+                let a_offset = offset_a + m * K + k
+                let a_data = a.load_data(a_offset)
+
+                @parameter
+                fn dot_bw[nelts: Int](n: Int):
                     let b_off = offset_b + k * N + n
                     let c_off = offset_c + m * N + n
-                    b.store_grad(
+                    b.store_grad[nelts](
                         b_off,
-                        a.load_data(a_off).fma(
-                            c.load_grad(c_off),
-                            b.load_grad(b_off),
+                        c.load_grad[nelts](c_off).fma(
+                            a_data,
+                            b.load_grad[nelts](b_off),
                         ),
                     )
 
-        parallelize[calc_row_2](K, workers if workers > 0 else K // 2)
+                vectorize[nelts, dot_bw](N)
