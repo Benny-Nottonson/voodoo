@@ -144,5 +144,4 @@ fn load_kernels() -> Pointer[op_tuple]:
     kernels.store(mish_code, op_tuple(Mish.fw, _b))
     kernels.store(mish_code + 1, op_tuple(Mish.bw, _b))
     kernels.store(conv_code, op_tuple(_u, Conv2D.fw))
-    kernels.store(conv_code + 1, op_tuple(_u, Conv2D.bw))
     return kernels
