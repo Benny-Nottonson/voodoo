@@ -174,23 +174,137 @@ struct MMul:
 struct Conv2D:
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
-        let padding: StaticIntTuple[2] = (
-            c.other_params_ptr.load().load(0),
-            c.other_params_ptr.load().load(0),
-        )
-        let stride: StaticIntTuple[2] = (
-            c.other_params_ptr.load().load(1),
-            c.other_params_ptr.load().load(1),
-        )
+        let padding_x =  c.other_params_ptr.load().load(0)
+        let padding_y =  c.other_params_ptr.load().load(1)
+        let stride_x =  c.other_params_ptr.load().load(2)
+        let stride_y =  c.other_params_ptr.load().load(3)
 
         let input_shape = a.shape_ptr.load()
         let kernel_shape = b.shape_ptr.load()
         let output_shape = c.shape_ptr.load()
 
-        # Steps for Conv2D
-        # Add padding to input tensor
-        # Iterator over the input tensor MxN times, where MxN is the size of the result
-        # For each iteration, get the slice of the input tensor that corresponds to the current position of the kernel
-        # Then multiply them and take the sum
-        # Since this is 2D, flatten the kernel and the slice of the input tensor
-                
+        let batches = input_shape.load(0)
+        let channels = input_shape.load(1)
+        let input_width = input_shape.load(2)
+        let input_height = input_shape.load(3)
+
+        let kernel_width = kernel_shape.load(1)
+        let kernel_height = kernel_shape.load(2)
+
+        let output_width = output_shape.load(2)
+        let output_height = output_shape.load(3)
+
+        for batch in range(batches):
+            for channel in range(channels):
+                for output_y in range(output_height):
+                    for output_x in range(output_width):
+                        let input_x = output_x - padding_x
+                        let input_y = output_y - padding_y
+
+                        let input_off = (
+                            batch * channels * input_width * input_height
+                            + channel * input_width * input_height
+                            + input_y * input_width
+                            + input_x
+                        )
+
+                        let output_off = (
+                            batch * channels * output_width * output_height
+                            + channel * output_width * output_height
+                            + output_y * output_width
+                            + output_x
+                        )
+
+                        var output = c.load_data(output_off)
+
+                        for kernel_y in range(kernel_height):
+                            for kernel_x in range(kernel_width):
+                                let kernel_off = (
+                                    channel * kernel_width * kernel_height
+                                    + kernel_y * kernel_width
+                                    + kernel_x
+                                )
+
+                                let input_off = (
+                                    input_off
+                                    + kernel_y * input_width
+                                    + kernel_x
+                                )
+
+                                let input = a.load_data(input_off)
+                                let kernel = b.load_data(kernel_off)
+
+                                output = output + input * kernel
+
+                        c.store_data(output_off, output)
+
+    @staticmethod   
+    fn bw(c: Node, a: Node, b: Node):
+        let padding_x =  c.other_params_ptr.load().load(0)
+        let padding_y =  c.other_params_ptr.load().load(1)
+        let stride_x =  c.other_params_ptr.load().load(2)
+        let stride_y =  c.other_params_ptr.load().load(3)
+
+        let input_shape = a.shape_ptr.load()
+        let kernel_shape = b.shape_ptr.load()
+        let output_shape = c.shape_ptr.load()
+
+        let batches = input_shape.load(0)
+        let channels = input_shape.load(1)
+        let input_width = input_shape.load(2)
+        let input_height = input_shape.load(3)
+
+        let kernel_width = kernel_shape.load(1)
+        let kernel_height = kernel_shape.load(2)
+
+        let output_width = output_shape.load(2)
+        let output_height = output_shape.load(3)
+
+        for batch in range(batches):
+            for channel in range(channels):
+                for output_y in range(output_height):
+                    for output_x in range(output_width):
+                        let input_x = output_x - padding_x
+                        let input_y = output_y - padding_y
+
+                        let input_off = (
+                            batch * channels * input_width * input_height
+                            + channel * input_width * input_height
+                            + input_y * input_width
+                            + input_x
+                        )
+
+                        let output_off = (
+                            batch * channels * output_width * output_height
+                            + channel * output_width * output_height
+                            + output_y * output_width
+                            + output_x
+                        )
+
+                        let output_grad = c.load_grad(output_off)
+
+                        for kernel_y in range(kernel_height):
+                            for kernel_x in range(kernel_width):
+                                let kernel_off = (
+                                    channel * kernel_width * kernel_height
+                                    + kernel_y * kernel_width
+                                    + kernel_x
+                                )
+
+                                let input_off = (
+                                    input_off
+                                    + kernel_y * input_width
+                                    + kernel_x
+                                )
+
+                                let input = a.load_data(input_off)
+                                let kernel = b.load_data(kernel_off)
+                                let input_grad = a.load_grad(input_off)
+                                let kernel_grad = b.load_grad(kernel_off)
+
+                                let final_input_grad = input_grad + output_grad * kernel
+                                let final_kernel_grad = kernel_grad + output_grad * input
+
+                                a.store_grad(input_off, final_input_grad)
+                                b.store_grad(kernel_off, final_kernel_grad)
+        
