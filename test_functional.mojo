@@ -37,6 +37,7 @@ fn main() raises:
     var x = (input @ W1 + b1).compute_activation["relu"]()
     x = (x @ W2 + b2).compute_activation["relu"]()
     x = x @ W3 + b3
+    x.print()
     let loss = x.compute_loss["mse"](true_vals)
 
     let initial_start = now()

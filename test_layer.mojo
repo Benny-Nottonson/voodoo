@@ -2,7 +2,7 @@ from voodoo import Tensor, get_loss_code, Graph
 from voodoo.utils.shape import shape
 from voodoo.layers.Dense import Dense
 from voodoo.layers.Conv2D import Conv2D
-from voodoo.layers.Flatten import Flatten
+from voodoo.layers.Reshape import Reshape
 from voodoo.utils import (
     info,
     clear,
@@ -14,7 +14,7 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
     return t / 1_000_000_000.0
 
 
-alias data_shape = shape(32, 1, 28, 28)
+alias data_shape = shape(32, 1, 12, 12)
 
 
 fn main() raises:
@@ -26,9 +26,11 @@ fn main() raises:
         padding=0,
         bias_initializer="he_normal",
     ]()
-    let flatten_layer = Flatten[]()
+    let reshape_layer = Reshape[
+        new_shape=shape(32, 64)
+    ]()
     let dense_layer = Dense[
-        in_neurons=18432, out_neurons=64, activation="relu", bias_initializer="he_normal"
+        in_neurons=64, out_neurons=64, activation="relu", bias_initializer="he_normal"
     ]()
     let output_layer = Dense[
         in_neurons=64, out_neurons=1, bias_initializer="he_normal"
@@ -39,13 +41,15 @@ fn main() raises:
     let num_epochs = 20000
 
     let input = Tensor(data_shape).initialize["he_normal", 0, 1]().dynamic()
-    let true_vals = Tensor(shape(81, 1))
+    let true_vals = Tensor(shape(32, 1))
     var x = conv_layer.forward(input)
-    x = flatten_layer.forward(x)
+    x = reshape_layer.forward(x)
     x = dense_layer.forward(x)
     x = output_layer.forward(x)
     let loss = x.compute_loss["mse"](true_vals)
-    
+
+    loss.print()
+
     let initial_start = now()
     var epoch_start = now()
     let bar_accuracy = 20

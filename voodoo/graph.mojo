@@ -730,11 +730,9 @@ struct Graph:
     fn reshape(
         self, parent1_ptr: Pointer[Node], shape: Vector[Int]
     ) raises -> Pointer[Node]:
-        let operator_id = reshape_code
-        let checkpoint = False
         let other_params = Vector[Int]()
         return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
+            shape, False, False, False, reshape_code, other_params, parent1_ptr
         )
 
     fn transp(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:

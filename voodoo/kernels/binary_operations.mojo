@@ -258,41 +258,40 @@ struct Conv2D:
         let output_width = output_shape.load(2)
         let output_height = output_shape.load(3)
 
-        for i in range(a.shape_ptr.load().load(1)):
-            for j in range(b.shape_ptr.load().load(0)):
-                for x in range(b.shape_ptr.load().load(2)):
-                    for y in range(b.shape_ptr.load().load(3)):
+        for i in range(channels):
+            for j in range(channels):
+                for x in range(kernel_width):
+                    for y in range(kernel_height):
                         var patch_sum: Float32 = 0.0
-                        for b in range(a.shape_ptr.load().load(0)):
-                            for dx in range(c.shape_ptr.load().load(2)):
-                                for dy in range(c.shape_ptr.load().load(3)):
+                        for b in range(batches):
+                            for dx in range(output_width):
+                                for dy in range(output_height):
                                     let ix = x * stride_x - padding_x + dx
                                     let iy = y * stride_y - padding_y + dy
                                     if not (
                                         ix < 0
                                         or iy < 0
-                                        or ix >= a.shape_ptr.load().load(2)
-                                        or iy >= a.shape_ptr.load().load(3)
+                                        or ix >= input_shape.load(2)
+                                        or iy >= input_shape.load(3)
                                     ):
                                         let a_index = index(
                                             b,
                                             i,
                                             ix,
                                             iy,
-                                            a.shape_ptr.load().load(1),
-                                            a.shape_ptr.load().load(2),
-                                            a.shape_ptr.load().load(3),
+                                            channels,
+                                            input_width,
+                                            input_height,
                                         )
                                         let c_grad_index = index(
                                             b,
                                             j,
                                             dx,
                                             dy,
-                                            c.shape_ptr.load().load(1),
-                                            c.shape_ptr.load().load(2),
-                                            c.shape_ptr.load().load(3),
+                                            channels,
+                                            output_width,
+                                            output_height,
                                         )
-                                        # add to patch sum
                                         patch_sum += (
                                             a.load_data(a_index)
                                             * c.load_grad(c_grad_index)
@@ -302,72 +301,67 @@ struct Conv2D:
                             j,
                             x,
                             y,
-                            b.shape_ptr.load().load(0),
-                            b.shape_ptr.load().load(2),
-                            b.shape_ptr.load().load(3),
+                            channels,
+                            kernel_width,
+                            kernel_height,
                         )
                         b.store_grad(b_grad_index, patch_sum)
 
-        @parameter
-        fn batch_loop(p: Int):
-            for j in range(a.shape_ptr.load().load(1)):
-                for i in range(b.shape_ptr.load().load(0)):
-                    for x in range(a.shape_ptr.load().load(2)):
-                        for y in range(a.shape_ptr.load().load(3)):
+        for p in range(batches):
+            for j in range(channels):
+                for i in range(channels):
+                    for x in range(input_width):
+                        for y in range(input_height):
                             var patch_sum: Float32 = 0.0
-                            for dx in range(b.shape_ptr.load().load(2)):
+                            for dx in range(kernel_width):
 
                                 @parameter
                                 fn dy_loop[_nelts: Int](dy: Int):
                                     let ix = x * stride_x - dx + padding_x
-                                    let iy = y * stride_x - dy + padding_x
+                                    let iy = y * stride_y - dy + padding_y
                                     if not (
                                         ix < 0
                                         or iy < 0
-                                        or ix >= c.shape_ptr.load().load(2)
-                                        or iy >= c.shape_ptr.load().load(3)
+                                        or ix >= output_width
+                                        or iy >= output_height
                                     ):
                                         let c_grad_index = index(
                                             p,
                                             i,
                                             ix,
                                             iy,
-                                            c.shape_ptr.load().load(1),
-                                            c.shape_ptr.load().load(2),
-                                            c.shape_ptr.load().load(3),
+                                            channels,
+                                            input_width,
+                                            input_height,
                                         )
                                         let b_index = index(
                                             i,
                                             j,
-                                            b.shape_ptr.load().load(2) - dx - 1,
-                                            b.shape_ptr.load().load(3) - dy - 1,
-                                            b.shape_ptr.load().load(1),
-                                            b.shape_ptr.load().load(2),
-                                            b.shape_ptr.load().load(3),
+                                            kernel_width - dx - 1,
+                                            kernel_height - dy - 1,
+                                            channels,
+                                            kernel_width,
+                                            kernel_height,
                                         )
                                         patch_sum += (
                                             c.load_grad[_nelts](c_grad_index)
                                             * c.load_data[_nelts](b_index)
                                         ).reduce_add()
 
-                                vectorize[nelts, dy_loop](b.shape_ptr.load().load(3))
+                                vectorize[nelts, dy_loop](kernel_width)
+
                             let a_grad_index = index(
                                 p,
                                 j,
                                 x,
                                 y,
-                                a.shape_ptr.load().load(1),
-                                a.shape_ptr.load().load(2),
-                                a.shape_ptr.load().load(3),
+                                channels,
+                                input_width,
+                                input_height,
                             )
                             a.store_grad(
                                 a_grad_index, a.load_grad(a_grad_index) + patch_sum
                             )
-
-        parallelize[batch_loop](
-            a.shape_ptr.load().load(0),
-            workers if workers > 0 else a.shape_ptr.load().load(0),
-        )
 
 
 fn index(
