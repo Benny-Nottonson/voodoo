@@ -655,17 +655,17 @@ struct Graph:
             SGD.step[learning_rate](self.nodes)
 
     fn copy(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = copy_code
-        let checkpoint = False
-        let shape = parent1_ptr.load().shape_ptr.load().copy()
-        let other_params = Vector[Int]()
         return self.node(
-            shape, True, False, checkpoint, operator_id, other_params, parent1_ptr
+            parent1_ptr.load().shape_ptr.load().copy(),
+            True,
+            False,
+            False,
+            copy_code,
+            Vector[Int](),
+            parent1_ptr,
         )
 
     fn mmul(self, a: Pointer[Node], b: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = mmul_code
-        let checkpoint = True
         var shape = get_broadcasted_shape_for_ew_op(a, b)
         let a_loaded = a.load()
         let b_loaded = b.load()
@@ -679,10 +679,10 @@ struct Graph:
             raise "Shapes don't fit for matrix multiplication. Got shapes: " + str(
                 a_loaded.shape_ptr.load().load(a_dims - 1)
             ) + " " + str(b_loaded.shape_ptr.load().load(b_dims - 2))
+
         let other_params = Vector[Int]()
-        return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, a, b
-        )
+
+        return self.node(shape, False, False, True, mmul_code, other_params, a, b)
 
     fn conv_2d(
         self,
@@ -692,17 +692,17 @@ struct Graph:
         stride: StaticIntTuple[2],
     ) raises -> Pointer[Node]:
         let batch_size = a.load().shape_ptr.load().load(0)
-        let in_channels = a.load().shape_ptr.load().load(1)
-        let width = a.load().shape_ptr.load().load(2)
-        let height = a.load().shape_ptr.load().load(3)
+        let channels = a.load().shape_ptr.load().load(1)
+        let input_width = a.load().shape_ptr.load().load(2)
+        let input_height = a.load().shape_ptr.load().load(3)
         let kernel_width = b.load().shape_ptr.load().load(1)
         let kernel_height = b.load().shape_ptr.load().load(2)
 
         let shape = shape(
             batch_size,
-            in_channels,
-            (width - kernel_width + 2 * padding[0]) // stride[0] + 1,
-            (height - kernel_height + 2 * padding[1]) // stride[1] + 1,
+            channels,
+            (input_width - kernel_width + 2 * padding[0]) // stride[0] + 1,
+            (input_height - kernel_height + 2 * padding[1]) // stride[1] + 1,
         )
 
         let other_params = Vector[Int]()
@@ -711,86 +711,85 @@ struct Graph:
         other_params.push_back(stride[0])
         other_params.push_back(stride[1])
 
-        return self.node(
-            shape, False, False, True, conv_code, other_params, a, b
-        )
+        return self.node(shape, False, False, True, conv_code, other_params, a, b)
 
     fn dropout(
         self, a: Pointer[Node], dropout_rate: Float32, noise_shape: DynamicVector[Int]
     ) raises -> Pointer[Node]:
-        let operator_id = dropout_code
-        let checkpoint = False
-        let shape = a.load().shape_ptr.load().copy()
-        let other_params = Vector[Int]()
-        other_params.push_back(round(dropout_rate * 1000000.0).to_int())
-        for i in range(len(noise_shape)):
-            other_params.push_back(noise_shape[i])
-        return self.node(shape, False, False, checkpoint, operator_id, other_params, a)
+        return self.node(
+            a.load().shape_ptr.load().copy(),
+            False,
+            False,
+            False,
+            dropout_code,
+            Vector[Int](),
+            a,
+        )
 
     fn reshape(
         self, parent1_ptr: Pointer[Node], shape: Vector[Int]
     ) raises -> Pointer[Node]:
-        let other_params = Vector[Int]()
         return self.node(
-            shape, False, False, False, reshape_code, other_params, parent1_ptr
+            shape, False, False, False, reshape_code, Vector[Int](), parent1_ptr
         )
 
     fn transp(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = transp_code
-        let checkpoint = False
-        let shape = parent1_ptr.load().shape_ptr.load().copy()
-        shape.store(
-            shape.len.load() - 2,
-            parent1_ptr.load().shape_ptr.load().load(shape.len.load() - 1),
-        )
-        shape.store(
-            shape.len.load() - 1,
-            parent1_ptr.load().shape_ptr.load().load(shape.len.load() - 2),
-        )
-        let other_params = Vector[Int]()
         return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
+            parent1_ptr.load().shape_ptr.load().copy().get_transposed(),
+            False,
+            False,
+            False,
+            transp_code,
+            Vector[Int](),
+            parent1_ptr,
         )
 
     fn sum(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        let operator_id = sum_code
-        let checkpoint = False
-        let shape = shape(1)
-        let other_params = Vector[Int]()
         return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
+            shape(1), False, False, False, sum_code, Vector[Int](), parent1_ptr
         )
 
     fn function_general[
         operator_id: Int
     ](self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        let checkpoint = False
-        let shape = parent1_ptr.load().shape_ptr.load().copy()
-        let other_params = Vector[Int]()
         return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
+            parent1_ptr.load().shape_ptr.load().copy(),
+            False,
+            False,
+            False,
+            operator_id,
+            Vector[Int](),
+            parent1_ptr,
         )
 
     fn arithmetic_general[
         operator_id: Int
     ](self, a: Pointer[Node], b: Pointer[Node]) raises -> Pointer[Node]:
-        let checkpoint = False
-        let shape = get_broadcasted_shape_for_ew_op(a, b)
-        let other_params = Vector[Int]()
         return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, a, b
+            get_broadcasted_shape_for_ew_op(a, b),
+            False,
+            False,
+            False,
+            operator_id,
+            Vector[Int](),
+            a,
+            b,
         )
 
     fn activation_general[
         operator_id: Int,
         arg1: Float32 = 0.0,
     ](self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        let checkpoint = False
-        let shape = parent1_ptr.load().shape_ptr.load().copy()
         let other_params = Vector[Int]()
         other_params.push_back(round(arg1 * 1000000.0).to_int())
         return self.node(
-            shape, False, False, checkpoint, operator_id, other_params, parent1_ptr
+            parent1_ptr.load().shape_ptr.load().copy(),
+            False,
+            False,
+            False,
+            operator_id,
+            other_params,
+            parent1_ptr,
         )
 
     fn loss_general[
@@ -798,16 +797,13 @@ struct Graph:
     ](self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]) raises -> Pointer[
         Node
     ]:
-        let checkpoint = False
-        let shape = shape(1)
-        let other_params = Vector[Int]()
         return self.node(
-            shape,
+            shape(1),
             False,
             False,
-            checkpoint,
+            False,
             operator_id,
-            other_params,
+            Vector[Int](),
             parent1_ptr,
             parent2_ptr,
         )
