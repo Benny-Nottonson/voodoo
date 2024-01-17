@@ -26,24 +26,15 @@ fn main() raises:
         padding=0,
         bias_initializer="he_normal",
     ]()
-    let reshape_layer = Reshape[new_shape = shape(32, 64)]()
-    let dense_layer = Dense[
-        in_neurons=64, out_neurons=64, activation="relu", bias_initializer="he_normal"
-    ]()
-    let output_layer = Dense[
-        in_neurons=64, out_neurons=64, activation="relu", bias_initializer="he_normal"
-    ]()
 
     var avg_loss: Float32 = 0.0
     let every = 1000
     let num_epochs = 20000
 
     let input = Tensor(data_shape).initialize["he_normal", 0, 1]().dynamic()
-    let true_vals = Tensor(shape(32, 1))
+    let true_vals = Tensor(shape(32, 1, 8, 8))
+
     var x = conv_layer.forward(input)
-    x = reshape_layer.forward(x)
-    x = dense_layer.forward(x)
-    x = output_layer.forward(x)
     let loss = x.compute_loss["mse"](true_vals)
 
     let initial_start = now()

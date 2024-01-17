@@ -1,6 +1,177 @@
-from algorithm import vectorize, tile
+from algorithm import *
 from math import max, min
 from voodoo import Node
+
+# from algorithm import vectorize
+# from math import max
+# from voodoo import Node
+# from voodoo.utils import (
+#     recursive_broadcast,
+#     recursive_broadcast_bw,
+# )
+# from sys.intrinsics import PrefetchOptions
+
+# alias prefetch_options = PrefetchOptions().for_read().high_locality().to_data_cache()
+
+
+# struct MMul:
+#     @parameter
+#     @staticmethod
+#     @always_inline
+#     fn base_case_depth(depth: Int, a: Node, b: Node) -> Bool:
+#         return depth == max(a.num_dims_ptr.load(), b.num_dims_ptr.load()) - 2
+
+#     @staticmethod
+#     fn fw(c: Node, a: Node, b: Node):
+#         recursive_broadcast[Self.kernel_mmul_fw, Self.base_case_depth](c, a, b)
+
+#     @staticmethod
+#     fn bw(c: Node, a: Node, b: Node):
+#         if not a.is_single_ptr.load():
+#             recursive_broadcast_bw[Self.kernel_mmul_bw_a, Self.base_case_depth](c, a, b)
+#         if not b.is_single_ptr.load():
+#             recursive_broadcast_bw[Self.kernel_mmul_bw_b, Self.base_case_depth](c, a, b)
+
+#     @parameter
+#     @staticmethod
+#     fn kernel_mmul_fw(
+#         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
+#     ) -> None:
+#         let shape_a = a.shape_ptr.load()
+#         let shape_b = b.shape_ptr.load()
+#         let shape_c = c.shape_ptr.load()
+
+#         let a_dims = a.num_dims_ptr.load()
+#         let b_dims = b.num_dims_ptr.load()
+
+#         let M = shape_a.load(a_dims - 2)
+#         let K = shape_b.load(b_dims - 2)
+#         let N = shape_c.load(b_dims - 1)
+
+#         let offset_a = a_index * M * shape_a.load(a_dims - 1)
+#         let offset_b = b_index * K * shape_b.load(b_dims - 1)
+#         let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
+
+#         DTypePointer.prefetch[prefetch_options](a.data.load())
+#         DTypePointer.prefetch[prefetch_options](b.data.load())
+#         DTypePointer.prefetch[prefetch_options](c.data.load())
+
+#         for m in range(M):
+#             let _a_off = offset_a + m * K
+#             let _c_off = offset_c + m * N
+
+#             for k in range(K):
+#                 let a_off = _a_off + k
+#                 let a_scalar = a.load_data(a_off)
+#                 let _b_off = offset_b + k * N
+
+#                 @parameter
+#                 fn dot_fw[nelts: Int](n: Int):
+#                     let b_off = _b_off + n
+#                     let c_off = _c_off + n
+
+#                     c.store_data[nelts](
+#                         c_off,
+#                         b.load_data[nelts](b_off).fma(
+#                             a_scalar,
+#                             c.load_data[nelts](c_off),
+#                         ),
+#                     )
+
+#                 vectorize[nelts, dot_fw](N)
+
+#     @parameter
+#     @staticmethod
+#     fn kernel_mmul_bw_a(
+#         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
+#     ) -> None:
+#         let shape_a = a.shape_ptr.load()
+#         let shape_b = b.shape_ptr.load()
+#         let shape_c = c.shape_ptr.load()
+
+#         let a_dims = a.num_dims_ptr.load()
+#         let b_dims = b.num_dims_ptr.load()
+
+#         let M = shape_a.load(a_dims - 2)
+#         let K = shape_b.load(b_dims - 2)
+#         let N = shape_c.load(b_dims - 1)
+
+#         let offset_a = a_index * M * shape_a.load(a_dims - 1)
+#         let offset_b = b_index * K * shape_b.load(b_dims - 1)
+#         let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
+
+#         DTypePointer.prefetch[prefetch_options](a.data.load(1))
+#         DTypePointer.prefetch[prefetch_options](b.data.load(0))
+#         DTypePointer.prefetch[prefetch_options](c.data.load(1))
+
+#         for m in range(M):
+#             let _a_off = offset_a + m * K
+#             let _c_off = offset_c + m * N
+
+#             for n in range(N):
+#                 let c_offset = _c_off + n
+#                 let c_grad = c.load_grad(c_offset)
+#                 let _b_off = offset_b + n
+
+#                 @parameter
+#                 fn dot_bw[nelts: Int](k: Int):
+#                     let a_off = _a_off + k
+
+#                     a.store_grad[nelts](
+#                         a_off,
+#                         b.load_data[nelts](_b_off + k * N).fma(
+#                             c_grad,
+#                             a.load_grad[nelts](a_off),
+#                         ),
+#                     )
+
+#                 vectorize[nelts, dot_bw](K)
+
+#     @parameter
+#     @staticmethod
+#     fn kernel_mmul_bw_b(
+#         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
+#     ) -> None:
+#         let shape_a = a.shape_ptr.load()
+#         let shape_b = b.shape_ptr.load()
+#         let shape_c = c.shape_ptr.load()
+
+#         let a_dims = a.num_dims_ptr.load()
+#         let b_dims = b.num_dims_ptr.load()
+
+#         let M = shape_a.load(a_dims - 2)
+#         let K = shape_b.load(b_dims - 2)
+#         let N = shape_c.load(b_dims - 1)
+
+#         let offset_a = a_index * M * shape_a.load(a_dims - 1)
+#         let offset_b = b_index * K * shape_b.load(b_dims - 1)
+#         let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
+
+#         DTypePointer.prefetch[prefetch_options](a.data.load(0))
+#         DTypePointer.prefetch[prefetch_options](b.data.load(1))
+#         DTypePointer.prefetch[prefetch_options](c.data.load(1))
+
+#         for k in range(K):
+#             let _a_off = offset_a + k
+#             let _b_off = offset_b + k * N
+
+#             for m in range(M):
+#                 let a_data = a.load_data(_a_off + m * K)
+#                 let _c_off = offset_c + m * N
+
+#                 @parameter
+#                 fn dot_bw[nelts: Int](n: Int):
+#                     let b_off = _b_off + n
+
+#                     b.store_grad[nelts](
+#                         b_off,
+#                         c.load_grad[nelts](_c_off + n).fma(
+#                             a_data,
+#                             b.load_grad[nelts](b_off),
+#                         ),
+#                     )
+
+#                 vectorize[nelts, dot_bw](N)
 
 
 struct Conv2D:
@@ -28,43 +199,31 @@ struct Conv2D:
         let output_width = output_shape.load(2)
         let output_height = output_shape.load(3)
 
-        let input_size = input_width * input_height
-        let output_size = output_width * output_height
-        let input_size_c = input_size * channels
-        let output_size_c = output_size * channels
-
         for batch in range(batches):
-            let batch_offset_input = batch * input_size_c
-            let batch_offset_output = batch * output_size_c
             for channel in range(channels):
-                let channel_offset_input = channel * input_size + batch_offset_input
-                let channel_offset_output = channel * output_size + batch_offset_output
-                let kernel_offset = channel * kernel_width * kernel_height
                 for output_y in range(output_height):
                     for output_x in range(output_width):
-                        let input_off = channel_offset_input + (
-                            output_y - padding_y
-                        ) * input_width + (output_x - padding_x)
-                        let output_off = channel_offset_output + output_y * output_width + output_x
+                        var sum: Float32 = 0.0
+                        for kernel_x in range(kernel_width):
+                            for kernel_y in range(kernel_height):
+                                sum += a.load_data(
+                                    batch * channels * input_width * input_height +
+                                    channel * input_width * input_height +
+                                    (output_x * stride_x + kernel_x - padding_x) * input_height +
+                                    (output_y * stride_y + kernel_y - padding_y)
+                                ) * b.load_data(
+                                    channel * kernel_width * kernel_height +
+                                    kernel_x * kernel_height +
+                                    kernel_y
+                                )
 
-                        var output: Float32 = 0.0
-
-                        @parameter
-                        fn tiled_kernel_add(kernel_y: Int, kernel_x: Int):
-                            let kernel_off = kernel_y * kernel_width + kernel_offset
-                            let input_off_y = input_off + kernel_off
-                            output += (
-                                a.load_data(input_off_y + kernel_x)
-                                * b.load_data(kernel_off + kernel_x)
-                            ).reduce_add()
-
-                        tile[tiled_kernel_add](
-                            max(0, padding_x - output_x),
-                            min(kernel_width, input_width + padding_x - output_x),
-                            kernel_width,
+                        c.store_data(
+                            batch * channels * output_width * output_height +
+                            channel * output_width * output_height +
+                            output_x * output_height +
+                            output_y,
+                            sum
                         )
-
-                        c.store_data(output_off, c.load_data(output_off) + output)
 
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
@@ -90,104 +249,40 @@ struct Conv2D:
         let output_width = output_shape.load(2)
         let output_height = output_shape.load(3)
 
-        let x_diff = stride_x - padding_x
-        let y_diff = stride_y - padding_y
+        
+        for batch in range(batches):
+            for channel in range(channels):
+                for output_y in range(output_height):
+                    for output_x in range(output_width):
+                        let c_grad = c.load_grad(
+                            batch * channels * output_width * output_height +
+                            channel * output_width * output_height +
+                            output_x * output_height +
+                            output_y
+                        )
 
-        let input_size = input_width * input_height
-        let output_size = output_width * output_height
-        let kernel_size = kernel_width * kernel_height
-        let input_size_c = input_size * channels
-        let output_size_c = output_size * channels
-        let kernel_size_c = kernel_size * channels
+                        for kernel_x in range(kernel_width):
+                            for kernel_y in range(kernel_height):
+                                a.store_grad(
+                                    batch * channels * input_width * input_height +
+                                    channel * input_width * input_height +
+                                    (output_x * stride_x + kernel_x - padding_x) * input_height +
+                                    (output_y * stride_y + kernel_y - padding_y),
+                                    b.load_data(
+                                        channel * kernel_width * kernel_height +
+                                        kernel_x * kernel_height +
+                                        kernel_y
+                                    ) * c_grad
+                                )
 
-        for in_channels in range(channels):
-            for out_channels in range(channels):
-                for kernel_x in range(kernel_width):
-                    let _x = kernel_x * x_diff
-                    for kernel_y in range(kernel_height):
-                        let _y = kernel_y * y_diff
-                        var patch_sum: Float32 = 0.0
-                        for batches in range(batches):
-                            for dx in range(output_width):
-                                for dy in range(output_height):
-                                    let ix = _x + dx
-                                    let iy = _y + dy
-                                    if not (
-                                        ix < 0
-                                        or iy < 0
-                                        or ix >= input_shape.load(2)
-                                        or iy >= input_shape.load(3)
-                                    ):
-                                        let c_index = batches * (
-                                            output_size_c
-                                        ) + output_size_c + dy * output_width + dx
-                                        let b_index = out_channels * (
-                                            kernel_size_c
-                                        ) + kernel_size_c + kernel_y * kernel_width + kernel_x
-                                        let a_index = batches * (
-                                            input_size_c
-                                        ) + input_size_c + iy * input_width + ix
-                                        patch_sum += (
-                                            c.load_grad(c_index) * b.load_data(b_index)
-                                        ).reduce_add()
-                        let b_grad_index = out_channels * (
-                            kernel_size_c
-                        ) + kernel_size_c + kernel_y * kernel_width + kernel_x
-                        b.store_grad(b_grad_index, patch_sum)
-
-        for p in range(batches):
-            for j in range(channels):
-                for i in range(channels):
-                    for x in range(input_width):
-                        for y in range(input_height):
-                            let a_grad_index = index(
-                                p,
-                                j,
-                                x,
-                                y,
-                                channels,
-                                input_width,
-                                input_height,
-                            )
-                            var patch_sum: Float32 = a.load_grad(a_grad_index)
-                            for dx in range(kernel_width):
-                                for dy in range(kernel_height):
-                                    let ix = x * stride_x - dx + padding_x
-                                    let iy = y * stride_y - dy + padding_y
-                                    if not (
-                                        ix < 0
-                                        or iy < 0
-                                        or ix >= output_width
-                                        or iy >= output_height
-                                    ):
-                                        let c_grad_index = index(
-                                            p,
-                                            i,
-                                            ix,
-                                            iy,
-                                            channels,
-                                            input_width,
-                                            input_height,
-                                        )
-                                        let b_index = index(
-                                            i,
-                                            j,
-                                            kernel_width - dx - 1,
-                                            kernel_height - dy - 1,
-                                            channels,
-                                            kernel_width,
-                                            kernel_height,
-                                        )
-                                        patch_sum += (
-                                            c.load_grad(c_grad_index)
-                                            * c.load_data(b_index)
-                                        ).reduce_add()
-
-                            a.store_grad(a_grad_index, patch_sum)
-
-
-@always_inline
-fn index(
-    n: Int, c: Int, h: Int, w: Int, num_channels: Int, width: Int, height: Int
-) -> Int:
-    return n * (num_channels * height * width) + c * (height * width) + h * width + w
+                                b.store_grad(
+                                    channel * kernel_width * kernel_height +
+                                    kernel_x * kernel_height +
+                                    kernel_y,
+                                    a.load_data(
+                                        batch * channels * input_width * input_height +
+                                        channel * input_width * input_height +
+                                        (output_x * stride_x + kernel_x - padding_x) * input_height +
+                                        (output_y * stride_y + kernel_y - padding_y)
+                                    ) * c_grad
+                                )
