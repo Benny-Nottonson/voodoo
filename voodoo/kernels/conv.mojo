@@ -1,5 +1,5 @@
-from algorithm import vectorize
-from math import max
+from algorithm import vectorize, tile
+from math import max, min
 from voodoo import Node
 
 
@@ -30,48 +30,41 @@ struct Conv2D:
 
         let input_size = input_width * input_height
         let output_size = output_width * output_height
+        let input_size_c = input_size * channels
+        let output_size_c = output_size * channels
 
         for batch in range(batches):
+            let batch_offset_input = batch * input_size_c
+            let batch_offset_output = batch * output_size_c
             for channel in range(channels):
+                let channel_offset_input = channel * input_size + batch_offset_input
+                let channel_offset_output = channel * output_size + batch_offset_output
+                let kernel_offset = channel * kernel_width * kernel_height
                 for output_y in range(output_height):
                     for output_x in range(output_width):
-                        let input_x = output_x - padding_x
-                        let input_y = output_y - padding_y
+                        let input_off = channel_offset_input + (
+                            output_y - padding_y
+                        ) * input_width + (output_x - padding_x)
+                        let output_off = channel_offset_output + output_y * output_width + output_x
 
-                        let input_off = (
-                            batch * channels * input_width * input_height
-                            + channel * input_width * input_height
-                            + input_y * input_width
-                            + input_x
+                        var output: Float32 = 0.0
+
+                        @parameter
+                        fn tiled_kernel_add(kernel_y: Int, kernel_x: Int):
+                            let kernel_off = kernel_y * kernel_width + kernel_offset
+                            let input_off_y = input_off + kernel_off
+                            output += (
+                                a.load_data(input_off_y + kernel_x)
+                                * b.load_data(kernel_off + kernel_x)
+                            ).reduce_add()
+
+                        tile[tiled_kernel_add](
+                            max(0, padding_x - output_x),
+                            min(kernel_width, input_width + padding_x - output_x),
+                            kernel_width,
                         )
 
-                        let output_off = (
-                            batch * channels * output_width * output_height
-                            + channel * output_width * output_height
-                            + output_y * output_width
-                            + output_x
-                        )
-
-                        var output = c.load_data(output_off)
-
-                        for kernel_y in range(kernel_height):
-                            for kernel_x in range(kernel_width):
-                                let kernel_off = (
-                                    channel * kernel_width * kernel_height
-                                    + kernel_y * kernel_width
-                                    + kernel_x
-                                )
-
-                                let input_off = (
-                                    input_off + kernel_y * input_width + kernel_x
-                                )
-
-                                let input = a.load_data(input_off)
-                                let kernel = b.load_data(kernel_off)
-
-                                output = output + input * kernel
-
-                        c.store_data(output_off, output)
+                        c.store_data(output_off, c.load_data(output_off) + output)
 
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
@@ -100,14 +93,21 @@ struct Conv2D:
         let x_diff = stride_x - padding_x
         let y_diff = stride_y - padding_y
 
-        for i in range(channels):
-            for j in range(channels):
-                for x in range(kernel_width):
-                    let _x = x * x_diff
-                    for y in range(kernel_height):
-                        let _y = y * y_diff
+        let input_size = input_width * input_height
+        let output_size = output_width * output_height
+        let kernel_size = kernel_width * kernel_height
+        let input_size_c = input_size * channels
+        let output_size_c = output_size * channels
+        let kernel_size_c = kernel_size * channels
+
+        for in_channels in range(channels):
+            for out_channels in range(channels):
+                for kernel_x in range(kernel_width):
+                    let _x = kernel_x * x_diff
+                    for kernel_y in range(kernel_height):
+                        let _y = kernel_y * y_diff
                         var patch_sum: Float32 = 0.0
-                        for b in range(batches):
+                        for batches in range(batches):
                             for dx in range(output_width):
                                 for dy in range(output_height):
                                     let ix = _x + dx
@@ -118,37 +118,21 @@ struct Conv2D:
                                         or ix >= input_shape.load(2)
                                         or iy >= input_shape.load(3)
                                     ):
-                                        let a_index = index(
-                                            b,
-                                            i,
-                                            ix,
-                                            iy,
-                                            channels,
-                                            input_width,
-                                            input_height,
-                                        )
-                                        let c_grad_index = index(
-                                            b,
-                                            j,
-                                            dx,
-                                            dy,
-                                            channels,
-                                            output_width,
-                                            output_height,
-                                        )
+                                        let c_index = batches * (
+                                            output_size_c
+                                        ) + output_size_c + dy * output_width + dx
+                                        let b_index = out_channels * (
+                                            kernel_size_c
+                                        ) + kernel_size_c + kernel_y * kernel_width + kernel_x
+                                        let a_index = batches * (
+                                            input_size_c
+                                        ) + input_size_c + iy * input_width + ix
                                         patch_sum += (
-                                            a.load_data(a_index)
-                                            * c.load_grad(c_grad_index)
+                                            c.load_grad(c_index) * b.load_data(b_index)
                                         ).reduce_add()
-                        let b_grad_index = index(
-                            i,
-                            j,
-                            x,
-                            y,
-                            channels,
-                            kernel_width,
-                            kernel_height,
-                        )
+                        let b_grad_index = out_channels * (
+                            kernel_size_c
+                        ) + kernel_size_c + kernel_y * kernel_width + kernel_x
                         b.store_grad(b_grad_index, patch_sum)
 
         for p in range(batches):

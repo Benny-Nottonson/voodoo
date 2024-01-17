@@ -26,9 +26,7 @@ fn main() raises:
         padding=0,
         bias_initializer="he_normal",
     ]()
-    let reshape_layer = Reshape[
-        new_shape=shape(32, 64)
-    ]()
+    let reshape_layer = Reshape[new_shape = shape(32, 64)]()
     let dense_layer = Dense[
         in_neurons=64, out_neurons=64, activation="relu", bias_initializer="he_normal"
     ]()
@@ -47,7 +45,7 @@ fn main() raises:
     x = dense_layer.forward(x)
     x = output_layer.forward(x)
     let loss = x.compute_loss["mse"](true_vals)
-    
+
     let initial_start = now()
     var epoch_start = now()
     let bar_accuracy = 20
@@ -59,7 +57,7 @@ fn main() raises:
         loss.backward()
         loss.optimize["sgd", 0.01]()
 
-        if epoch % every == 0:  
+        if epoch % every == 0:
             var bar = String("")
             for i in range(bar_accuracy):
                 if i < ((epoch * bar_accuracy) / num_epochs).to_int():
