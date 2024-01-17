@@ -5,7 +5,8 @@ from .operations import (
     Sum,
     Dropout,
 )
-from .binary_operations import MMul, Conv2D
+from .matmul import MMul
+from .conv import Conv2D
 from .arithmetic import (
     Sqrt,
     Abs,
