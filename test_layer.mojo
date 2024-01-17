@@ -30,7 +30,10 @@ fn main() raises:
         new_shape=shape(32, 64)
     ]()
     let dense_layer = Dense[
-        in_neurons=64, out_neurons=1, activation="relu", bias_initializer="he_normal"
+        in_neurons=64, out_neurons=64, activation="relu", bias_initializer="he_normal"
+    ]()
+    let output_layer = Dense[
+        in_neurons=64, out_neurons=64, activation="relu", bias_initializer="he_normal"
     ]()
 
     var avg_loss: Float32 = 0.0
@@ -42,6 +45,7 @@ fn main() raises:
     var x = conv_layer.forward(input)
     x = reshape_layer.forward(x)
     x = dense_layer.forward(x)
+    x = output_layer.forward(x)
     let loss = x.compute_loss["mse"](true_vals)
     
     let initial_start = now()

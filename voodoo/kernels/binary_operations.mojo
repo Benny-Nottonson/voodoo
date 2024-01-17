@@ -174,10 +174,12 @@ struct MMul:
 struct Conv2D:
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
-        let padding_x = c.other_params_ptr.load().load(0)
-        let padding_y = c.other_params_ptr.load().load(1)
-        let stride_x = c.other_params_ptr.load().load(2)
-        let stride_y = c.other_params_ptr.load().load(3)
+        let params = c.other_params_ptr.load()
+
+        let padding_x = params.load(0)
+        let padding_y = params.load(1)
+        let stride_x = params.load(2)
+        let stride_y = params.load(3)
 
         let input_shape = a.shape_ptr.load()
         let kernel_shape = b.shape_ptr.load()
@@ -193,6 +195,9 @@ struct Conv2D:
 
         let output_width = output_shape.load(2)
         let output_height = output_shape.load(3)
+
+        let input_size = input_width * input_height
+        let output_size = output_width * output_height
 
         for batch in range(batches):
             for channel in range(channels):
@@ -238,10 +243,12 @@ struct Conv2D:
 
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
-        let padding_x = c.other_params_ptr.load().load(0)
-        let padding_y = c.other_params_ptr.load().load(1)
-        let stride_x = c.other_params_ptr.load().load(2)
-        let stride_y = c.other_params_ptr.load().load(3)
+        let params = c.other_params_ptr.load()
+
+        let padding_x = params.load(0)
+        let padding_y = params.load(1)
+        let stride_x = params.load(2)
+        let stride_y = params.load(3)
 
         let input_shape = a.shape_ptr.load()
         let kernel_shape = b.shape_ptr.load()
@@ -258,16 +265,21 @@ struct Conv2D:
         let output_width = output_shape.load(2)
         let output_height = output_shape.load(3)
 
+        let x_diff = stride_x - padding_x
+        let y_diff = stride_y - padding_y
+
         for i in range(channels):
             for j in range(channels):
                 for x in range(kernel_width):
+                    let _x = x * x_diff
                     for y in range(kernel_height):
+                        let _y = y * y_diff
                         var patch_sum: Float32 = 0.0
                         for b in range(batches):
                             for dx in range(output_width):
                                 for dy in range(output_height):
-                                    let ix = x * stride_x - padding_x + dx
-                                    let iy = y * stride_y - padding_y + dy
+                                    let ix = _x + dx
+                                    let iy = _y + dy
                                     if not (
                                         ix < 0
                                         or iy < 0
@@ -312,11 +324,18 @@ struct Conv2D:
                 for i in range(channels):
                     for x in range(input_width):
                         for y in range(input_height):
-                            var patch_sum: Float32 = 0.0
+                            let a_grad_index = index(
+                                p,
+                                j,
+                                x,
+                                y,
+                                channels,
+                                input_width,
+                                input_height,
+                            )
+                            var patch_sum: Float32 = a.load_grad(a_grad_index)
                             for dx in range(kernel_width):
-
-                                @parameter
-                                fn dy_loop[_nelts: Int](dy: Int):
+                                for dy in range(kernel_height):
                                     let ix = x * stride_x - dx + padding_x
                                     let iy = y * stride_y - dy + padding_y
                                     if not (
@@ -344,147 +363,14 @@ struct Conv2D:
                                             kernel_height,
                                         )
                                         patch_sum += (
-                                            c.load_grad[_nelts](c_grad_index)
-                                            * c.load_data[_nelts](b_index)
+                                            c.load_grad(c_grad_index)
+                                            * c.load_data(b_index)
                                         ).reduce_add()
 
-                                vectorize[nelts, dy_loop](kernel_width)
-
-                            let a_grad_index = index(
-                                p,
-                                j,
-                                x,
-                                y,
-                                channels,
-                                input_width,
-                                input_height,
-                            )
-                            a.store_grad(
-                                a_grad_index, a.load_grad(a_grad_index) + patch_sum
-                            )
+                            a.store_grad(a_grad_index, patch_sum)
 
 
-# @staticmethod
-# fn bw(c: Node, a: Node, b: Node):
-#     let padding_x = c.other_params_ptr.load().load(0)
-#     let padding_y = c.other_params_ptr.load().load(1)
-#     let stride_x = c.other_params_ptr.load().load(2)
-#     let stride_y = c.other_params_ptr.load().load(3)
-
-#     let input_shape = a.shape_ptr.load()
-#     let kernel_shape = b.shape_ptr.load()
-#     let output_shape = c.shape_ptr.load()
-
-#     let batches = input_shape.load(0)
-#     let channels = input_shape.load(1)
-#     let input_width = input_shape.load(2)
-#     let input_height = input_shape.load(3)
-
-#     let kernel_width = kernel_shape.load(1)
-#     let kernel_height = kernel_shape.load(2)
-
-#     let output_width = output_shape.load(2)
-#     let output_height = output_shape.load(3)
-
-#     for i in range(channels):
-#         for j in range(channels):
-#             for x in range(kernel_width):
-#                 for y in range(kernel_height):
-#                     var patch_sum: Float32 = 0.0
-#                     for b in range(batches):
-#                         for dx in range(output_width):
-
-#                             @parameter
-#                             fn inner_loop[_nelts: Int](dy: Int):
-#                                 let ix = x * stride_x - padding_x + dx
-#                                 let iy = y * stride_y - padding_y + dy
-#                                 if not (
-#                                     ix < 0
-#                                     or iy < 0
-#                                     or ix >= input_width
-#                                     or iy >= input_height
-#                                 ):
-#                                     let a_index = index(
-#                                         b,
-#                                         i,
-#                                         ix,
-#                                         iy,
-#                                         channels,
-#                                         input_width,
-#                                         input_height,
-#                                     )
-#                                     let c_grad_index = index(
-#                                         b,
-#                                         j,
-#                                         dx,
-#                                         dy,
-#                                         channels,
-#                                         output_width,
-#                                         output_height,
-#                                     )
-#                                     patch_sum += (
-#                                         a.load_data[_nelts](a_index)
-#                                         * c.load_data[_nelts](c_grad_index)
-#                                     ).reduce_add()
-
-#                             vectorize[nelts, inner_loop](output_height)
-#                     let b_grad_index = index(
-#                         i, j, x, y, channels, kernel_width, kernel_height
-#                     )
-#                     b.store_grad(
-#                         b_grad_index, b.load_grad(b_grad_index) + patch_sum
-#                     )
-
-#     for p in range(batches):
-#         for j in range(channels):
-#             for i in range(channels):
-#                 for x in range(input_width):
-#                     for y in range(input_height):
-#                         var patch_sum: Float32 = 0.0
-#                         for dx in range(kernel_width):
-
-#                             @parameter
-#                             fn dy_loop[_nelts: Int](dy: Int):
-#                                 let ix = x * stride_x - dx + padding_x
-#                                 let iy = y * stride_y - dy + padding_y
-#                                 if not (
-#                                     ix < 0
-#                                     or iy < 0
-#                                     or ix >= output_width
-#                                     or iy >= output_height
-#                                 ):
-#                                     let c_grad_index = index(
-#                                         p,
-#                                         i,
-#                                         ix,
-#                                         iy,
-#                                         channels,
-#                                         output_width,
-#                                         output_height,
-#                                     )
-#                                     let b_index = index(
-#                                         i,
-#                                         j,
-#                                         kernel_width - dx - 1,
-#                                         kernel_height - dy - 1,
-#                                         1,
-#                                         kernel_width,
-#                                         kernel_height,
-#                                     )
-#                                     patch_sum += (
-#                                         c.load_data[_nelts](b_index)
-#                                         * c.load_grad[_nelts](c_grad_index)
-#                                     ).reduce_add()
-
-#                             vectorize[nelts, dy_loop](kernel_height)
-#                         let a_grad_index = index(
-#                             p, j, x, y, channels, input_width, input_height
-#                         )
-#                         a.store_grad(
-#                             a_grad_index, a.load_grad(a_grad_index) + patch_sum
-#                         )
-
-
+@always_inline
 fn index(
     n: Int, c: Int, h: Int, w: Int, num_channels: Int, width: Int, height: Int
 ) -> Int:
