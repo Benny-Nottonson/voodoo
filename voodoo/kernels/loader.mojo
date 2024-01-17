@@ -77,7 +77,7 @@ fn k_add[
 
 @always_inline
 fn load_kernels() -> Pointer[op_tuple]:
-    let kernels = Pointer[op_tuple].alloc(100)
+    let kernels = Pointer[op_tuple].alloc(90)
     k_add[copy_code, Copy.fw, Copy.bw](kernels)
     k_add[reshape_code, Reshape.fw, Reshape.bw](kernels)
     k_add[transp_code, Transpose.fw, Transpose.bw](kernels)
