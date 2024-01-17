@@ -51,6 +51,7 @@ struct Vector[type: AnyRegType]:
 
         return tmp
 
+    @always_inline
     fn load(self, idx: Int) -> type:
         return self.data.load().load(idx)
 
