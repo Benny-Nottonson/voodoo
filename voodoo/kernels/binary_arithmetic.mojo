@@ -111,7 +111,7 @@ alias Pow = Generic[pow_fw, pow_bw_a, pow_bw_b]
 
 
 @parameter
-@always_inline
+
 fn add_fw[
     nelts: Int
 ](a: SIMD[DType_F32, nelts], b: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
@@ -120,7 +120,7 @@ fn add_fw[
 
 
 @parameter
-@always_inline
+
 fn add_bw[
     nelts: Int
 ](
@@ -134,7 +134,7 @@ fn add_bw[
 
 
 @parameter
-@always_inline
+
 fn sub_fw[
     nelts: Int
 ](a: SIMD[DType_F32, nelts], b: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
@@ -143,7 +143,7 @@ fn sub_fw[
 
 
 @parameter
-@always_inline
+
 fn sub_bw_a[
     nelts: Int
 ](
@@ -157,7 +157,7 @@ fn sub_bw_a[
 
 
 @parameter
-@always_inline
+
 fn sub_bw_b[
     nelts: Int
 ](
@@ -171,7 +171,7 @@ fn sub_bw_b[
 
 
 @parameter
-@always_inline
+
 fn mul_fw[
     nelts: Int
 ](a: SIMD[DType_F32, nelts], b: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
@@ -180,7 +180,7 @@ fn mul_fw[
 
 
 @parameter
-@always_inline
+
 fn mul_bw_a[
     nelts: Int
 ](
@@ -194,7 +194,7 @@ fn mul_bw_a[
 
 
 @parameter
-@always_inline
+
 fn mul_bw_b[
     nelts: Int
 ](
@@ -208,7 +208,7 @@ fn mul_bw_b[
 
 
 @parameter
-@always_inline
+
 fn div_fw[
     nelts: Int
 ](a: SIMD[DType_F32, nelts], b: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
@@ -217,7 +217,7 @@ fn div_fw[
 
 
 @parameter
-@always_inline
+
 fn div_bw_a[
     nelts: Int
 ](
@@ -231,7 +231,7 @@ fn div_bw_a[
 
 
 @parameter
-@always_inline
+
 fn div_bw_b[
     nelts: Int
 ](
@@ -245,7 +245,7 @@ fn div_bw_b[
 
 
 @parameter
-@always_inline
+
 fn pow_fw[
     nelts: Int
 ](a: SIMD[DType_F32, nelts], b: SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]:
@@ -254,7 +254,7 @@ fn pow_fw[
 
 
 @parameter
-@always_inline
+
 fn pow_bw_a[
     nelts: Int
 ](
@@ -268,7 +268,7 @@ fn pow_bw_a[
 
 
 @parameter
-@always_inline
+
 fn pow_bw_b[
     nelts: Int
 ](
@@ -282,7 +282,7 @@ fn pow_bw_b[
 
 
 @parameter
-@always_inline
+
 fn base_case_strides(depth: Int, a: Node, b: Node) -> Bool:
     return strides_a(depth, a, b) * shape_a(depth, a, b) == strides_b(
         depth, a, b

@@ -1,42 +1,40 @@
-from voodoo import (
-    Tensor,
-    get_activation_code,
-    get_loss_code,
-)
+from voodoo import Tensor, get_loss_code, Graph
+from voodoo.utils.shape import shape
+from voodoo.layers.Dense import Dense
+from voodoo.layers.Conv2D import Conv2D
+from voodoo.layers.Reshape import Reshape
 from voodoo.utils import (
     info,
     clear,
 )
-from voodoo.utils.shape import shape
 from time.time import now
 
 
 fn nanoseconds_to_seconds(t: Int) -> Float64:
-    return Float64(t) / 1_000_000_000.0
+    return t / 1_000_000_000.0
 
 
-alias data_shape = shape(32, 1)
+alias data_shape = shape(32, 1, 12, 12)
 
 
 fn main() raises:
-    let W1 = Tensor(shape(1, 64)).initialize["he_normal"]()
-    let W2 = Tensor(shape(64, 64)).initialize["he_normal"]()
-    let W3 = Tensor(shape(64, 1)).initialize["he_normal"]()
-
-    let b1 = Tensor(shape(64)).initialize["he_normal"]()
-    let b2 = Tensor(shape(64)).initialize["he_normal"]()
-    let b3 = Tensor(shape(1)).initialize["he_normal"]()
+    let conv_layer = Conv2D[
+        in_channels=1,
+        kernel_width=5,
+        kernel_height=5,
+        stride=1,
+        padding=0,
+        bias_initializer="he_normal",
+    ]()
 
     var avg_loss: Float32 = 0.0
     let every = 1000
     let num_epochs = 20000
 
     let input = Tensor(data_shape).initialize["he_normal", 0, 1]().dynamic()
-    let true_vals = Tensor(data_shape)
+    let true_vals = Tensor(shape(32, 1, 8, 8))
 
-    var x = (input @ W1 + b1).compute_activation["relu"]()
-    x = (x @ W2 + b2).compute_activation["relu"]()
-    x = x @ W3 + b3
+    let x = conv_layer.forward(input)
     let loss = x.compute_loss["mse"](true_vals)
 
     let initial_start = now()

@@ -2,7 +2,7 @@ from memory import memset_zero
 from math import log, log2, exp, exp2, ceil, round
 from algorithm import vectorize, unswitch
 
-from voodoo.kernels import op_tuple, binary_op, unary_op, get_kernels
+from voodoo.kernels import op_tuple, binary_op, unary_op, load_kernels
 from .node import Node
 from .utils import Vector, get_broadcasted_shape_for_ew_op, warn
 from .utils.shape import shape
@@ -59,7 +59,7 @@ struct Graph:
             free_node_ids: free_node_ids,
             free_data_ids: free_data_ids,
             last_node_id: last_node_id,
-            kernels: get_kernels(),
+            kernels: load_kernels(),
             forward_order: forward_order,
             grad_nodes_order: grad_nodes_order,
         }

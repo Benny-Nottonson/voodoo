@@ -39,7 +39,7 @@ struct Conv2D[
         else:
             self.bias = Tensor(shape(0))
 
-    @always_inline
+    
     fn forward(self, x: Tensor) raises -> Tensor[False, False]:
         let res = x.conv_2d(self.W, self.padding, self.stride)
 
