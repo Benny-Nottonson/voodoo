@@ -70,4 +70,4 @@ fn main() raises:
 
     print_no_newline("Total Time: ")
     info(String(nanoseconds_to_seconds(now() - initial_start)) + "s\n\n")
-    _ = sys.external_call["exit", Int32]()
+    sys.external_call["exit", NoneType]()
