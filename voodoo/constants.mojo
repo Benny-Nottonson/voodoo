@@ -3,7 +3,7 @@ from math.limit import inf
 from sys.intrinsics import PrefetchOptions
 
 alias nelts = simdwidthof[DType.float32]()
-alias memory_pool_size = 30
+alias memory_pool_size = 2500
 alias DType_F32 = DType.float32
 alias workers = env_get_int["WORKERS", 0]()
 alias epsilon = 1e-8

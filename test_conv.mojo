@@ -62,8 +62,8 @@ fn main() raises:
     ]()
 
     var avg_loss: Float32 = 0.0
-    let every = 1000
-    let num_epochs = 20000
+    let every = 100
+    let num_epochs = 2000
 
     let input = Tensor(data_shape).initialize["he_normal", 0, 1]().dynamic()
     let true_vals = Tensor(shape(32, 10))
