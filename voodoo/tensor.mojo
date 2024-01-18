@@ -457,6 +457,17 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         )
         return new_tensor
 
+    fn maxpool_2d(
+        self, kernel_size: StaticIntTuple[2], stride: Int, padding: Int
+    ) raises -> Tensor[False, False]:
+        let new_tensor = self.load_tensor_for_unary_op()
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load()
+            .load()
+            .maxpool_2d(self.node_ptr.load(), kernel_size, stride, padding)
+        )
+        return new_tensor
+
 
 fn fuse_graphs(
     graph_ptr: Pointer[Pointer[Graph]],

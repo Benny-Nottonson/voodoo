@@ -3,6 +3,8 @@ from voodoo.utils.shape import shape
 from voodoo.layers.Dense import Dense
 from voodoo.layers.Conv2D import Conv2D
 from voodoo.layers.Reshape import Reshape
+from voodoo.layers.MaxPool2D import MaxPool2D
+from voodoo.layers.Dropout import Dropout
 from voodoo.utils import (
     info,
     clear,
@@ -14,16 +16,48 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
     return t / 1_000_000_000.0
 
 
-alias data_shape = shape(32, 1, 12, 12)
+alias data_shape = shape(32, 1, 28, 28)
 
 
 fn main() raises:
-    let conv_layer = Conv2D[
+    let conv_layer_one = Conv2D[
         in_channels=1,
         kernel_width=5,
         kernel_height=5,
         stride=1,
         padding=0,
+        bias_initializer="he_normal",
+    ]()
+    let max_pool_one = MaxPool2D[
+        kernel_width=2,
+        kernel_height=2,
+        stride=2,
+    ]()
+    let conv_layer_two = Conv2D[
+        in_channels=1,
+        kernel_width=5,
+        kernel_height=5,
+        stride=1,
+        padding=0,
+        bias_initializer="he_normal",
+    ]()
+    let max_pool_two = MaxPool2D[
+        kernel_width=2,
+        kernel_height=2,
+        stride=2,
+    ]()
+    let flatten = Reshape[shape(32, 16)]()
+    let dense_one = Dense[
+        in_neurons=16,
+        out_neurons=16,
+        activation="relu",
+        bias_initializer="he_normal",
+    ]()
+    let dropout = Dropout[dropout_rate=0.1,]()
+    let dense_two = Dense[
+        in_neurons=16,
+        out_neurons=10,
+        activation="relu",
         bias_initializer="he_normal",
     ]()
 
@@ -32,9 +66,16 @@ fn main() raises:
     let num_epochs = 20000
 
     let input = Tensor(data_shape).initialize["he_normal", 0, 1]().dynamic()
-    let true_vals = Tensor(shape(32, 1, 8, 8))
+    let true_vals = Tensor(shape(32, 10))
 
-    let x = conv_layer.forward(input)
+    var x = conv_layer_one.forward(input)
+    x = max_pool_one.forward(x)
+    x = conv_layer_two.forward(x)
+    x = max_pool_two.forward(x)
+    x = flatten.forward(x)
+    x = dense_one.forward(x)
+    x = dropout.forward(x)
+    x = dense_two.forward(x)
     let loss = x.compute_loss["mse"](true_vals)
 
     let initial_start = now()

@@ -5,8 +5,7 @@ from .operations import (
     Sum,
     Dropout,
 )
-from .matmul import MMul
-from .conv import Conv2D
+from .binary_operations import MMul, Conv2D, MaxPool2D
 from .arithmetic import (
     Sqrt,
     Abs,
@@ -123,4 +122,5 @@ fn load_kernels() -> Pointer[op_tuple]:
     k_add[linear_code, Linear.fw, Linear.bw](kernels)
     k_add[mish_code, Mish.fw, Mish.bw](kernels)
     k_add[conv_code, Conv2D.fw, Conv2D.bw](kernels)
+    k_add[maxpool_code, MaxPool2D.fw, MaxPool2D.bw](kernels)
     return kernels
