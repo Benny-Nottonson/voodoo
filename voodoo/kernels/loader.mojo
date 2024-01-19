@@ -5,7 +5,9 @@ from .operations import (
     Sum,
     Dropout,
 )
-from .binary_operations import MMul, Conv2D, MaxPool2D
+from .matmul import MMul
+from .maxpool import MaxPool1D, MaxPool2D
+from .conv import Conv1D, Conv2D
 from .arithmetic import (
     Sqrt,
     Abs,
@@ -77,7 +79,7 @@ fn k_add[
 
 @always_inline
 fn load_kernels() -> Pointer[op_tuple]:
-    let kernels = Pointer[op_tuple].alloc(90)
+    let kernels = Pointer[op_tuple].alloc(100)
     k_add[copy_code, Copy.fw, Copy.bw](kernels)
     k_add[reshape_code, Reshape.fw, Reshape.bw](kernels)
     k_add[transp_code, Transpose.fw, Transpose.bw](kernels)
@@ -121,6 +123,8 @@ fn load_kernels() -> Pointer[op_tuple]:
     k_add[h_sig_code, HardSigmoid.fw, HardSigmoid.bw](kernels)
     k_add[linear_code, Linear.fw, Linear.bw](kernels)
     k_add[mish_code, Mish.fw, Mish.bw](kernels)
-    k_add[conv_code, Conv2D.fw, Conv2D.bw](kernels)
-    k_add[maxpool_code, MaxPool2D.fw, MaxPool2D.bw](kernels)
+    k_add[conv1d_code, Conv1D.fw, Conv1D.bw](kernels)
+    k_add[conv2d_code, Conv2D.fw, Conv2D.bw](kernels)
+    k_add[maxpool1d_code, MaxPool1D.fw, MaxPool1D.bw](kernels)
+    k_add[maxpool2d_code, MaxPool2D.fw, MaxPool2D.bw](kernels)
     return kernels

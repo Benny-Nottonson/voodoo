@@ -684,6 +684,30 @@ struct Graph:
 
         return self.node(shape, False, False, True, mmul_code, other_params, a, b)
 
+    fn conv_1d(
+        self,
+        a: Pointer[Node],
+        b: Pointer[Node],
+        padding: Int,
+        stride: Int,
+    ) raises -> Pointer[Node]:
+        let batch_size = a.load().shape_ptr.load().load(0)
+        let channels = a.load().shape_ptr.load().load(1)
+        let input_width = a.load().shape_ptr.load().load(2)
+        let kernel_width = b.load().shape_ptr.load().load(1)
+
+        let shape = shape(
+            batch_size,
+            channels,
+            (input_width - kernel_width + 2 * padding) // stride + 1,
+        )
+
+        let other_params = Vector[Int]()
+        other_params.push_back(padding)
+        other_params.push_back(stride)
+
+        return self.node(shape, False, False, True, conv1d_code, other_params, a, b)
+
     fn conv_2d(
         self,
         a: Pointer[Node],
@@ -711,7 +735,29 @@ struct Graph:
         other_params.push_back(stride[0])
         other_params.push_back(stride[1])
 
-        return self.node(shape, False, False, True, conv_code, other_params, a, b)
+        return self.node(shape, False, False, True, conv2d_code, other_params, a, b)
+
+    fn maxpool_1d(
+        self,
+        a: Pointer[Node],
+        kernel_size: Int,
+        stride: Int,
+        padding: Int,
+    ) raises -> Pointer[Node]:
+        let other_params = Vector[Int]()
+        other_params.push_back(kernel_size)
+        other_params.push_back(stride)
+        other_params.push_back(padding)
+
+        let shape = Vector[Int]()
+        shape.push_back(a.load().shape_ptr.load().load(0))
+        shape.push_back(a.load().shape_ptr.load().load(1))
+        shape.push_back(
+            (a.load().shape_ptr.load().load(2) - kernel_size + 2 * padding) // stride
+            + 1
+        )
+
+        return self.node(shape, False, False, True, maxpool1d_code, other_params, a)
 
     fn maxpool_2d(
         self,
@@ -730,17 +776,15 @@ struct Graph:
         shape.push_back(a.load().shape_ptr.load().load(0))
         shape.push_back(a.load().shape_ptr.load().load(1))
         shape.push_back(
-            (a.load().shape_ptr.load().load(2) - kernel_size[0] + 2 * padding)
-            // stride
+            (a.load().shape_ptr.load().load(2) - kernel_size[0] + 2 * padding) // stride
             + 1
         )
         shape.push_back(
-            (a.load().shape_ptr.load().load(3) - kernel_size[1] + 2 * padding)
-            // stride
+            (a.load().shape_ptr.load().load(3) - kernel_size[1] + 2 * padding) // stride
             + 1
         )
 
-        return self.node(shape, False, False, True, maxpool_code, other_params, a)
+        return self.node(shape, False, False, True, maxpool2d_code, other_params, a)
 
     fn dropout(
         self, a: Pointer[Node], dropout_rate: Float32, noise_shape: DynamicVector[Int]

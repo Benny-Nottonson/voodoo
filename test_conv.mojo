@@ -67,7 +67,6 @@ fn main() raises:
 
     let input = Tensor(data_shape).initialize["he_normal", 0, 1]().dynamic()
     let true_vals = Tensor(shape(32, 10))
-
     var x = conv_layer_one.forward(input)
     x = max_pool_one.forward(x)
     x = conv_layer_two.forward(x)
