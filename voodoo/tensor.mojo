@@ -122,6 +122,12 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         self.node_ptr.load().load().initialize[initialization_function, val, val2]()
         return self
 
+    fn initialize(
+        self, data: DTypePointer[DType.float32]
+    ) raises -> Tensor[is_static, is_single]:
+        self.node_ptr.load().load().initialize(data)
+        return self
+
     fn fill(self, val: Float32) -> Self:
         self.node_ptr.load().load().fill(val)
         return self

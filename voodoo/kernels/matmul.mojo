@@ -6,6 +6,7 @@ from voodoo.utils import (
     recursive_broadcast_bw,
 )
 
+
 struct MMul:
     @parameter
     @staticmethod

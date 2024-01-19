@@ -31,7 +31,7 @@ from .binary_arithmetic import (
     Pow,
 )
 
-from .regression_losses import (
+from .losses import (
     MSE,
     MAE,
     MAPE,

@@ -10,16 +10,24 @@ from voodoo.utils import (
     clear,
 )
 from time.time import now
+from datasets import MNist
 
 
 fn nanoseconds_to_seconds(t: Int) -> Float64:
     return t / 1_000_000_000.0
 
 
-alias data_shape = shape(16, 1, 28, 28)
+alias batches = 4
+alias channels = 1
+alias width = 28
+alias height = 28
+
+alias data_shape = shape(batches, channels, width, height)
 
 
 fn main() raises:
+    let dataset = MNist()
+
     let conv_layer_one = Conv2D[
         in_channels=1,
         kernel_width=5,
@@ -62,11 +70,24 @@ fn main() raises:
     ]()
 
     var avg_loss: Float32 = 0.0
-    let every = 100
-    let num_epochs = 2000
+    let every = 36
+    let num_epochs = 360
 
-    let input = Tensor(data_shape).initialize["he_normal", 0, 1]().dynamic()
-    let true_vals = Tensor(shape(32, 10))
+    let true_vals = Tensor(shape(batches, 10)).initialize["zeros"]().dynamic()
+    let input = Tensor(shape(batches, channels, width, height)).initialize[
+        "zeros"
+    ]().dynamic()
+
+    for i in range(batches):
+        let image = dataset.images[i]
+        let label = dataset.labels[i]
+        true_vals[i * 10 + label] = 1.0
+        for j in range(width):
+            for k in range(height):
+                input[i * channels * width * height + j * width + k] = image[
+                    j * width + k
+                ]
+
     var x = conv_layer_one.forward(input)
     x = max_pool_one.forward(x)
     x = conv_layer_two.forward(x)
@@ -75,14 +96,22 @@ fn main() raises:
     x = dense_one.forward(x)
     x = dropout.forward(x)
     x = dense_two.forward(x)
-    let loss = x.compute_loss["mse"](true_vals)
+    let loss = x.compute_loss["msle"](true_vals)
 
     let initial_start = now()
     var epoch_start = now()
     let bar_accuracy = 20
+
     for epoch in range(1, num_epochs + 1):
-        for i in range(input.initialize["random_uniform", 0, 1]().capacity()):
-            true_vals[i] = math.sin(15.0 * input[i])
+        for i in range(batches):
+            let image = dataset.images[i + epoch * batches]
+            let label = dataset.labels[i + epoch * batches]
+            true_vals[i * 10 + label] = 1.0
+            for j in range(width):
+                for k in range(height):
+                    input[i * channels * width * height + j * width + k] = image[
+                        j * width + k
+                    ]
 
         avg_loss += loss.forward_static()[0]
         loss.backward()

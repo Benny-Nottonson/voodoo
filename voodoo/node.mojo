@@ -227,6 +227,9 @@ struct Node:
         for i in range(self.load_cap()):
             self.data.load(1).store(i, val)
 
+    fn initialize(self, data: DTypePointer[DType.float32]):
+        self.data.store(0, data)
+
     fn initialize[
         initialization_function: String, val: Float32 = 0, val2: Float32 = 0
     ](self):

@@ -178,8 +178,9 @@ struct Conv1D:
                             b.load_grad(channel * kernel_width + kernel_x)
                             + output_value * im2col_value,
                         )
-                        
+
         im2col.free()
+
 
 struct Conv2D:
     @staticmethod
@@ -207,7 +208,11 @@ struct Conv2D:
         let output_height = output_shape.load(3)
 
         let im2col = DTypePointer[DType.float32].alloc(
-            batches * output_width * output_height * kernel_width * kernel_height
+            batches
+            * output_width
+            * output_height
+            * kernel_width
+            * kernel_height
             * channels
         )
 
@@ -222,11 +227,20 @@ struct Conv2D:
 
                                 if input_x < 0 or input_x >= input_width:
                                     im2col.store(
-                                        batch * output_width * output_height
-                                        * kernel_width * kernel_height * channels
-                                        + output_y * output_width * kernel_width
-                                        * kernel_height * channels
-                                        + output_x * kernel_width * kernel_height
+                                        batch
+                                        * output_width
+                                        * output_height
+                                        * kernel_width
+                                        * kernel_height
+                                        * channels
+                                        + output_y
+                                        * output_width
+                                        * kernel_width
+                                        * kernel_height
+                                        * channels
+                                        + output_x
+                                        * kernel_width
+                                        * kernel_height
                                         * channels
                                         + kernel_y * kernel_width * channels
                                         + kernel_x * channels
@@ -235,11 +249,20 @@ struct Conv2D:
                                     )
                                 elif input_y < 0 or input_y >= input_height:
                                     im2col.store(
-                                        batch * output_width * output_height
-                                        * kernel_width * kernel_height * channels
-                                        + output_y * output_width * kernel_width
-                                        * kernel_height * channels
-                                        + output_x * kernel_width * kernel_height
+                                        batch
+                                        * output_width
+                                        * output_height
+                                        * kernel_width
+                                        * kernel_height
+                                        * channels
+                                        + output_y
+                                        * output_width
+                                        * kernel_width
+                                        * kernel_height
+                                        * channels
+                                        + output_x
+                                        * kernel_width
+                                        * kernel_height
                                         * channels
                                         + kernel_y * kernel_width * channels
                                         + kernel_x * channels
@@ -248,17 +271,28 @@ struct Conv2D:
                                     )
                                 else:
                                     im2col.store(
-                                        batch * output_width * output_height
-                                        * kernel_width * kernel_height * channels
-                                        + output_y * output_width * kernel_width
-                                        * kernel_height * channels
-                                        + output_x * kernel_width * kernel_height
+                                        batch
+                                        * output_width
+                                        * output_height
+                                        * kernel_width
+                                        * kernel_height
+                                        * channels
+                                        + output_y
+                                        * output_width
+                                        * kernel_width
+                                        * kernel_height
+                                        * channels
+                                        + output_x
+                                        * kernel_width
+                                        * kernel_height
                                         * channels
                                         + kernel_y * kernel_width * channels
                                         + kernel_x * channels
                                         + channel,
                                         a.load_data(
-                                            batch * input_width * input_height
+                                            batch
+                                            * input_width
+                                            * input_height
                                             * channels
                                             + input_y * input_width * channels
                                             + input_x * channels
@@ -286,12 +320,18 @@ struct Conv2D:
                                 )
 
                                 let im2col_value = im2col.load(
-                                    batch * output_width * output_height
-                                    * kernel_width * kernel_height * channels
-                                    + output_y * output_width * kernel_width
-                                    * kernel_height * channels
-                                    + output_x * kernel_width * kernel_height
+                                    batch
+                                    * output_width
+                                    * output_height
+                                    * kernel_width
+                                    * kernel_height
                                     * channels
+                                    + output_y
+                                    * output_width
+                                    * kernel_width
+                                    * kernel_height
+                                    * channels
+                                    + output_x * kernel_width * kernel_height * channels
                                     + kernel_y * kernel_width * channels
                                     + kernel_x * channels
                                     + channel
@@ -332,7 +372,11 @@ struct Conv2D:
         let output_height = output_shape.load(3)
 
         let im2col = DTypePointer[DType.float32].alloc(
-            batches * output_width * output_height * kernel_width * kernel_height
+            batches
+            * output_width
+            * output_height
+            * kernel_width
+            * kernel_height
             * channels
         )
 
@@ -347,11 +391,20 @@ struct Conv2D:
 
                                 if input_x < 0 or input_x >= input_width:
                                     im2col.store(
-                                        batch * output_width * output_height
-                                        * kernel_width * kernel_height * channels
-                                        + output_y * output_width * kernel_width
-                                        * kernel_height * channels
-                                        + output_x * kernel_width * kernel_height
+                                        batch
+                                        * output_width
+                                        * output_height
+                                        * kernel_width
+                                        * kernel_height
+                                        * channels
+                                        + output_y
+                                        * output_width
+                                        * kernel_width
+                                        * kernel_height
+                                        * channels
+                                        + output_x
+                                        * kernel_width
+                                        * kernel_height
                                         * channels
                                         + kernel_y * kernel_width * channels
                                         + kernel_x * channels
@@ -360,11 +413,20 @@ struct Conv2D:
                                     )
                                 elif input_y < 0 or input_y >= input_height:
                                     im2col.store(
-                                        batch * output_width * output_height
-                                        * kernel_width * kernel_height * channels
-                                        + output_y * output_width * kernel_width
-                                        * kernel_height * channels
-                                        + output_x * kernel_width * kernel_height
+                                        batch
+                                        * output_width
+                                        * output_height
+                                        * kernel_width
+                                        * kernel_height
+                                        * channels
+                                        + output_y
+                                        * output_width
+                                        * kernel_width
+                                        * kernel_height
+                                        * channels
+                                        + output_x
+                                        * kernel_width
+                                        * kernel_height
                                         * channels
                                         + kernel_y * kernel_width * channels
                                         + kernel_x * channels
@@ -373,17 +435,28 @@ struct Conv2D:
                                     )
                                 else:
                                     im2col.store(
-                                        batch * output_width * output_height
-                                        * kernel_width * kernel_height * channels
-                                        + output_y * output_width * kernel_width
-                                        * kernel_height * channels
-                                        + output_x * kernel_width * kernel_height
+                                        batch
+                                        * output_width
+                                        * output_height
+                                        * kernel_width
+                                        * kernel_height
+                                        * channels
+                                        + output_y
+                                        * output_width
+                                        * kernel_width
+                                        * kernel_height
+                                        * channels
+                                        + output_x
+                                        * kernel_width
+                                        * kernel_height
                                         * channels
                                         + kernel_y * kernel_width * channels
                                         + kernel_x * channels
                                         + channel,
                                         a.load_data(
-                                            batch * input_width * input_height
+                                            batch
+                                            * input_width
+                                            * input_height
                                             * channels
                                             + input_y * input_width * channels
                                             + input_x * channels
@@ -411,12 +484,18 @@ struct Conv2D:
                                 )
 
                                 let im2col_value = im2col.load(
-                                    batch * output_width * output_height
-                                    * kernel_width * kernel_height * channels
-                                    + output_y * output_width * kernel_width
-                                    * kernel_height * channels
-                                    + output_x * kernel_width * kernel_height
+                                    batch
+                                    * output_width
+                                    * output_height
+                                    * kernel_width
+                                    * kernel_height
                                     * channels
+                                    + output_y
+                                    * output_width
+                                    * kernel_width
+                                    * kernel_height
+                                    * channels
+                                    + output_x * kernel_width * kernel_height * channels
                                     + kernel_y * kernel_width * channels
                                     + kernel_x * channels
                                     + channel
@@ -425,14 +504,16 @@ struct Conv2D:
                                 a.store_grad(
                                     batch * input_width * input_height * channels
                                     + (output_y * stride_y + kernel_y - padding_y)
-                                    * input_width * channels
+                                    * input_width
+                                    * channels
                                     + (output_x * stride_x + kernel_x - padding_x)
                                     * channels
                                     + channel,
                                     a.load_grad(
                                         batch * input_width * input_height * channels
                                         + (output_y * stride_y + kernel_y - padding_y)
-                                        * input_width * channels
+                                        * input_width
+                                        * channels
                                         + (output_x * stride_x + kernel_x - padding_x)
                                         * channels
                                         + channel
