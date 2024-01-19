@@ -425,16 +425,14 @@ struct Conv2D:
                                 a.store_grad(
                                     batch * input_width * input_height * channels
                                     + (output_y * stride_y + kernel_y - padding_y)
-                                    * input_width
-                                    * channels
+                                    * input_width * channels
                                     + (output_x * stride_x + kernel_x - padding_x)
                                     * channels
                                     + channel,
                                     a.load_grad(
                                         batch * input_width * input_height * channels
                                         + (output_y * stride_y + kernel_y - padding_y)
-                                        * input_width
-                                        * channels
+                                        * input_width * channels
                                         + (output_x * stride_x + kernel_x - padding_x)
                                         * channels
                                         + channel
