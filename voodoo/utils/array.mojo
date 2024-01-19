@@ -38,10 +38,6 @@ struct Vector[type: AnyRegType]:
         self.data.load().store(self.len.load(), elem)
         self.len.store(self.len.load() + 1)
 
-    fn push_back_return(self, elem: type) -> type:
-        self.push_back(elem)
-        return self
-
     fn pop_back(self) -> type:
         self.len.store(self.len.load() - 1)
         let tmp = self.data.load().load(self.len.load())
@@ -55,6 +51,7 @@ struct Vector[type: AnyRegType]:
 
         return tmp
 
+    @always_inline
     fn load(self, idx: Int) -> type:
         return self.data.load().load(idx)
 
@@ -78,3 +75,9 @@ struct Vector[type: AnyRegType]:
         let new_vector = Vector[type](self.len.load())
         memcpy(new_vector.data.load(), self.data.load(), self.len.load())
         return new_vector
+
+    fn get_transposed(self) -> Self:
+        let new_shape = self.copy()
+        new_shape.store(new_shape.len.load() - 2, self.load(self.len.load() - 1))
+        new_shape.store(new_shape.len.load() - 1, self.load(self.len.load() - 2))
+        return new_shape

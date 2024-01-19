@@ -41,3 +41,7 @@ alias gelu_code = 78
 alias h_sig_code = 80
 alias linear_code = 82
 alias mish_code = 84
+alias conv1d_code = 86
+alias conv2d_code = 88
+alias maxpool1d_code = 90
+alias maxpool2d_code = 92

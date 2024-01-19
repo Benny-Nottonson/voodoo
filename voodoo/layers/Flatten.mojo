@@ -2,7 +2,7 @@ from voodoo import Tensor, shape
 from .BaseLayer import BaseLayer
 
 
-struct Flatten(BaseLayer):
+struct Flatten[](BaseLayer):
     fn __init__(
         inout self,
     ) raises:

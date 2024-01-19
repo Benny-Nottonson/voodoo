@@ -366,7 +366,6 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         let shape = Vector[Int]()
         let dims = self.node_ptr.load().load().shape_ptr.load().len.load()
         shape.push_back(self.node_ptr.load().load().shape_ptr.load().load(0))
-        shape.push_back(1)
         for i in range(1, dims):
             shape.store(
                 0, shape.load(0) * self.node_ptr.load().load().shape_ptr.load().load(i)
@@ -444,6 +443,50 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
             .activation_general[get_activation_code[operator_name](), arg1](
                 self.node_ptr.load()
             )
+        )
+        return new_tensor
+
+    fn conv_1d(
+        self, other: Tensor, padding: Int, stride: Int
+    ) raises -> Tensor[False, False]:
+        let new_tensor = self.load_tensor_for_binary_op(other)
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load()
+            .load()
+            .conv_1d(self.node_ptr.load(), other.node_ptr.load(), padding, stride)
+        )
+        return new_tensor
+
+    fn conv_2d(
+        self, other: Tensor, padding: StaticIntTuple[2], stride: StaticIntTuple[2]
+    ) raises -> Tensor[False, False]:
+        let new_tensor = self.load_tensor_for_binary_op(other)
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load()
+            .load()
+            .conv_2d(self.node_ptr.load(), other.node_ptr.load(), padding, stride)
+        )
+        return new_tensor
+
+    fn maxpool_1d(
+        self, kernel_size: Int, stride: Int, padding: Int
+    ) raises -> Tensor[False, False]:
+        let new_tensor = self.load_tensor_for_unary_op()
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load()
+            .load()
+            .maxpool_1d(self.node_ptr.load(), kernel_size, stride, padding)
+        )
+        return new_tensor
+
+    fn maxpool_2d(
+        self, kernel_size: StaticIntTuple[2], stride: Int, padding: Int
+    ) raises -> Tensor[False, False]:
+        let new_tensor = self.load_tensor_for_unary_op()
+        new_tensor.node_ptr.store(
+            new_tensor.graph_ptr.load()
+            .load()
+            .maxpool_2d(self.node_ptr.load(), kernel_size, stride, padding)
         )
         return new_tensor
 

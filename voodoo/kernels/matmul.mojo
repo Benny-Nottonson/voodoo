@@ -1,15 +1,10 @@
-from random import random_float64
-from algorithm import *
+from algorithm import vectorize
 from math import max
 from voodoo import Node
 from voodoo.utils import (
     recursive_broadcast,
     recursive_broadcast_bw,
 )
-from sys.intrinsics import PrefetchOptions
-
-alias prefetch_options = PrefetchOptions().for_read().high_locality().to_data_cache()
-
 
 struct MMul:
     @parameter
@@ -49,9 +44,10 @@ struct MMul:
         let offset_b = b_index * K * shape_b.load(b_dims - 1)
         let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
 
-        DTypePointer.prefetch[prefetch_options](a.data.load())
-        DTypePointer.prefetch[prefetch_options](b.data.load())
-        DTypePointer.prefetch[prefetch_options](c.data.load())
+        DTypePointer.prefetch[prefetch_read](a.data.load())
+        DTypePointer.prefetch[prefetch_read](b.data.load())
+        DTypePointer.prefetch[prefetch_read](c.data.load())
+        DTypePointer.prefetch[prefetch_write](c.data.load())
 
         for m in range(M):
             let _a_off = offset_a + m * K
@@ -97,9 +93,10 @@ struct MMul:
         let offset_b = b_index * K * shape_b.load(b_dims - 1)
         let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
 
-        DTypePointer.prefetch[prefetch_options](a.data.load(1))
-        DTypePointer.prefetch[prefetch_options](b.data.load(0))
-        DTypePointer.prefetch[prefetch_options](c.data.load(1))
+        DTypePointer.prefetch[prefetch_read](a.data.load(1))
+        DTypePointer.prefetch[prefetch_write](a.data.load(1))
+        DTypePointer.prefetch[prefetch_read](b.data.load(0))
+        DTypePointer.prefetch[prefetch_read](c.data.load(1))
 
         for m in range(M):
             let _a_off = offset_a + m * K
@@ -144,9 +141,10 @@ struct MMul:
         let offset_b = b_index * K * shape_b.load(b_dims - 1)
         let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
 
-        DTypePointer.prefetch[prefetch_options](a.data.load(0))
-        DTypePointer.prefetch[prefetch_options](b.data.load(1))
-        DTypePointer.prefetch[prefetch_options](c.data.load(1))
+        DTypePointer.prefetch[prefetch_read](a.data.load(0))
+        DTypePointer.prefetch[prefetch_read](b.data.load(1))
+        DTypePointer.prefetch[prefetch_write](b.data.load(1))
+        DTypePointer.prefetch[prefetch_read](c.data.load(1))
 
         for k in range(K):
             let _a_off = offset_a + k
