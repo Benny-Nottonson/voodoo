@@ -17,7 +17,7 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
     return t / 1_000_000_000.0
 
 
-alias batches = 4
+alias batches = 32
 alias channels = 1
 alias width = 28
 alias height = 28
@@ -54,7 +54,7 @@ fn main() raises:
         kernel_height=2,
         stride=2,
     ]()
-    let flatten = Reshape[shape(32, 16)]()
+    let flatten = Reshape[shape(batches, 16)]()
     let dense_one = Dense[
         in_neurons=16,
         out_neurons=16,
@@ -70,8 +70,8 @@ fn main() raises:
     ]()
 
     var avg_loss: Float32 = 0.0
-    let every = 36
-    let num_epochs = 360
+    let every = 5
+    let num_epochs = 40
 
     let true_vals = Tensor(shape(batches, 10)).initialize["zeros"]().dynamic()
     let input = Tensor(shape(batches, channels, width, height)).initialize[
@@ -96,7 +96,7 @@ fn main() raises:
     x = dense_one.forward(x)
     x = dropout.forward(x)
     x = dense_two.forward(x)
-    let loss = x.compute_loss["msle"](true_vals)
+    let loss = x.compute_loss["mape"](true_vals)
 
     let initial_start = now()
     var epoch_start = now()
