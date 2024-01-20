@@ -17,7 +17,7 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
     return t / 1_000_000_000.0
 
 
-alias batches = 32
+alias batches = 16
 alias channels = 1
 alias width = 28
 alias height = 28
@@ -71,7 +71,7 @@ fn main() raises:
 
     var avg_loss: Float32 = 0.0
     let every = 5
-    let num_epochs = 40
+    let num_epochs = 80
 
     let true_vals = Tensor(shape(batches, 10)).initialize["zeros"]().dynamic()
     let input = Tensor(shape(batches, channels, width, height)).initialize[

@@ -6,7 +6,7 @@ from voodoo.kernels import op_tuple, binary_op, unary_op, load_kernels
 from .node import Node
 from .utils import Vector, get_broadcasted_shape_for_ew_op, warn
 from .utils.shape import shape
-from .kernels.optimizers import *
+from .kernels.basic import SGD
 
 
 @register_passable("trivial")
@@ -649,10 +649,10 @@ struct Graph:
 
     fn optimizer_step[type: String, learning_rate: Float32](self) raises:
         if type == "sgd":
-            SGD.step[learning_rate](self.nodes)
+            SGD[learning_rate].step(self.nodes)
         else:
             warn("Invalid optimizer: " + type + " using sgd\n")
-            SGD.step[learning_rate](self.nodes)
+            SGD[learning_rate].step(self.nodes)
 
     fn copy(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
         return self.node(

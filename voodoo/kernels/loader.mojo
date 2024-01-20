@@ -8,7 +8,7 @@ from .operations import (
 from .matmul import MMul
 from .maxpool import MaxPool1D, MaxPool2D
 from .conv import Conv1D, Conv2D
-from .arithmetic import (
+from .basic import (
     Sqrt,
     Abs,
     Exp2,
@@ -22,23 +22,11 @@ from .arithmetic import (
     Atan,
     Sinh,
     Cosh,
-)
-from .binary_arithmetic import (
     Add,
     Mul,
     Sub,
     Div,
     Pow,
-)
-
-from .losses import (
-    MSE,
-    MAE,
-    MAPE,
-    MSLE,
-)
-
-from .activations import (
     Relu,
     Sigmoid,
     Softplus,
@@ -54,6 +42,10 @@ from .activations import (
     HardSigmoid,
     Linear,
     Mish,
+    MSE,
+    MAE,
+    MAPE,
+    MSLE,
 )
 
 
