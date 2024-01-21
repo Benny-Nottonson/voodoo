@@ -1,4 +1,4 @@
 profile.sh
 flamegraph.svg
 /temp
-/datasets/mnist/*.txt
+/datasets/mnist/*.csv

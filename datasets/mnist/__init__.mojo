@@ -2,8 +2,8 @@ from builtin.file import open
 from voodoo import Tensor, shape
 from voodoo.utils import info
 
-alias train_datapath = "./datasets/mnist/MNIST_train.txt"
-alias test_datapath = "./datasets/mnist/MNIST_test.txt"
+alias train_datapath = "./datasets/mnist/MNIST_train.csv"
+alias test_datapath = "./datasets/mnist/MNIST_test.csv"
 alias nelts = simdwidthof[DType.int8]()
 
 # Data from https://github.com/halimb/MNIST-txt
