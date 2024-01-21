@@ -1,7 +1,7 @@
 from random import random_float64
 from algorithm import vectorize
 from voodoo import Node
-from ..constants import DType_F32, nelts
+from ..constants import nelts
 from algorithm import vectorize
 
 
@@ -131,7 +131,8 @@ struct Dropout(Operation):
         fn vectorized_dropout[nelts: Int](i: Int):
             let rand = random_float64()
             node.store_data[nelts](
-                i, (rand < keep_prob).cast[DType_F32]() * parent1.load_data[nelts](i)
+                i,
+                (rand < keep_prob).cast[DType.float32]() * parent1.load_data[nelts](i),
             )
 
         vectorize[nelts, vectorized_dropout](node.load_cap())
@@ -147,7 +148,7 @@ struct Dropout(Operation):
             let previous = node.load_data[nelts](i)
             node.store_grad[nelts](
                 i,
-                (previous == 0.0).cast[DType_F32]()
+                (previous == 0.0).cast[DType.float32]()
                 * parent1.load_grad[nelts](i)
                 * scale,
             )

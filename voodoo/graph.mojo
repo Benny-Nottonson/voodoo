@@ -6,7 +6,20 @@ from voodoo.kernels import op_tuple, binary_op, unary_op, load_kernels
 from .node import Node
 from .utils import Vector, get_broadcasted_shape_for_ew_op, warn
 from .utils.shape import shape
-from .kernels.basic import SGD
+from .kernels.optimizers import SGD
+from .constants import memory_pool_size
+from .operator_codes import (
+    copy_code,
+    mmul_code,
+    conv1d_code,
+    conv2d_code,
+    maxpool1d_code,
+    maxpool2d_code,
+    dropout_code,
+    reshape_code,
+    transp_code,
+    sum_code,
+)
 
 
 @register_passable("trivial")

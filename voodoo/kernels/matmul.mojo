@@ -5,6 +5,7 @@ from voodoo.utils import (
     recursive_broadcast,
     recursive_broadcast_bw,
 )
+from ..constants import prefetch_read, prefetch_write, f32_max, nelts
 
 
 struct MMul:

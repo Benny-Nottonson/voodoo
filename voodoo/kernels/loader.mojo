@@ -8,7 +8,24 @@ from .operations import (
 from .matmul import MMul
 from .maxpool import MaxPool1D, MaxPool2D
 from .conv import Conv1D, Conv2D
-from .basic import (
+from .activations import (
+    Relu,
+    Sigmoid,
+    Softplus,
+    Softsign,
+    Tanh,
+    Selu,
+    Elu,
+    Exp,
+    LeakyRelu,
+    Relu6,
+    Silu,
+    Gelu,
+    HardSigmoid,
+    Linear,
+    Mish,
+)
+from .arithmetic import (
     Sqrt,
     Abs,
     Exp2,
@@ -27,26 +44,10 @@ from .basic import (
     Sub,
     Div,
     Pow,
-    Relu,
-    Sigmoid,
-    Softplus,
-    Softsign,
-    Tanh,
-    Selu,
-    Elu,
-    Exp,
-    LeakyRelu,
-    Relu6,
-    Silu,
-    Gelu,
-    HardSigmoid,
-    Linear,
-    Mish,
-    MSE,
-    MAE,
-    MAPE,
-    MSLE,
 )
+from .losses import MSE, MAE, MAPE, MSLE
+from ..operator_codes import *
+from ..constants import f32_max
 
 
 @always_inline

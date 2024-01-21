@@ -1,6 +1,7 @@
 from algorithm import vectorize
 from math import max
 from voodoo import Node
+from ..constants import prefetch_read, prefetch_write, f32_max, nelts
 
 
 struct MaxPool1D:

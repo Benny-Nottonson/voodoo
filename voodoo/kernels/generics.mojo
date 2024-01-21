@@ -7,28 +7,29 @@ from voodoo.utils import (
     recursive_broadcast,
     recursive_broadcast_bw,
 )
+from ..constants import nelts
 
 alias generic_activation_vectorized = fn[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
-] (SIMD[DType_F32, nelts]) -> SIMD[DType_F32, nelts]
+] (SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]
 
-alias generic_arithmetic_vectorized = fn[nelts: Int] (SIMD[DType_F32, nelts]) -> SIMD[
-    DType_F32, nelts
-]
+alias generic_arithmetic_vectorized = fn[nelts: Int] (
+    SIMD[DType.float32, nelts]
+) -> SIMD[DType.float32, nelts]
 
 alias generic_binary_arithmetic_vectorized = fn[nelts: Int] (
-    SIMD[DType_F32, nelts], SIMD[DType_F32, nelts]
-) -> SIMD[DType_F32, nelts]
+    SIMD[DType.float32, nelts], SIMD[DType.float32, nelts]
+) -> SIMD[DType.float32, nelts]
 
 alias generic_loss_vectorized_fw = generic_binary_arithmetic_vectorized
 
 alias generic_loss_vectorized_bw = fn[nelts: Int] (
-    SIMD[DType_F32, nelts], SIMD[DType_F32, nelts], Float32, Int
-) -> SIMD[DType_F32, nelts]
+    SIMD[DType.float32, nelts], SIMD[DType.float32, nelts], Float32, Int
+) -> SIMD[DType.float32, nelts]
 
 alias generic_optimizer_vectorized = fn[nelts: Int, learning_rate: Float32] (
-    SIMD[DType_F32, nelts]
-) -> SIMD[DType_F32, nelts]
+    SIMD[DType.float32, nelts]
+) -> SIMD[DType.float32, nelts]
 
 
 struct GenericActivation[
