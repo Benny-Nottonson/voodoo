@@ -8,6 +8,7 @@ alias nelts = simdwidthof[DType.int8]()
 
 # Data from https://github.com/halimb/MNIST-txt
 
+
 struct MNist:
     var train_labels: DTypePointer[DType.int8]
     var train_images: Pointer[DTypePointer[DType.int8]]
@@ -16,7 +17,7 @@ struct MNist:
 
     fn __init__(inout self) raises:
         info("Loading MNIST dataset...\n")
-        
+
         let train_data = open(train_datapath, "r").read().split("\n")
         let train_size = len(train_data)
 
@@ -28,7 +29,7 @@ struct MNist:
             self.train_labels[i] = atol(line[0])
             self.train_images[i] = DTypePointer[DType.int8].alloc(784)
             for j in range(1, len(line)):
-                self.train_images[i][j-1] = atol(line[j])
+                self.train_images[i][j - 1] = atol(line[j])
 
         let test_data = open(test_datapath, "r").read().split("\n")
         let test_size = len(test_data)
@@ -41,6 +42,6 @@ struct MNist:
             self.test_labels[i] = atol(line[0])
             self.test_images[i] = DTypePointer[DType.int8].alloc(784)
             for j in range(1, len(line)):
-                self.test_images[i][j-1] = atol(line[j])
+                self.test_images[i][j - 1] = atol(line[j])
 
         info("MNIST dataset loaded.\n")

@@ -172,7 +172,8 @@ struct GenericBinaryArithmetic[
             c_data.simd_store[nelts](
                 offset_c + i,
                 generic_func(
-                    a_data.simd_load[nelts](offset_a + i), b_data.simd_load[nelts](offset_b + i)
+                    a_data.simd_load[nelts](offset_a + i),
+                    b_data.simd_load[nelts](offset_b + i),
                 ),
             )
 
@@ -202,7 +203,6 @@ struct GenericBinaryArithmetic[
         DTypePointer[DType.float32].prefetch[prefetch_read](c_grad)
         DTypePointer[DType.float32].prefetch[prefetch_write](a_grad)
         DTypePointer[DType.float32].prefetch[prefetch_write](b_grad)
-
 
         @parameter
         @always_inline
@@ -265,9 +265,13 @@ struct GenericLoss[
         @parameter
         @always_inline
         fn vectorized_fw[nelts: Int](i: Int):
-            node.store_data(0, node.load_data(0) + fw_vec[nelts](
-                y_true.load_data[nelts](i), y_pred.load_data[nelts](i)
-            ).reduce_add())
+            node.store_data(
+                0,
+                node.load_data(0)
+                + fw_vec[nelts](
+                    y_true.load_data[nelts](i), y_pred.load_data[nelts](i)
+                ).reduce_add(),
+            )
 
         vectorize[nelts, vectorized_fw](cap)
         node.store_data(0, node.load_data(0) / cap / Float32(N))
