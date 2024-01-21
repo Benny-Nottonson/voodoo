@@ -55,15 +55,20 @@ fn recursive_broadcast[
     let a_shape = shape_a(depth, a, b)
     let b_shape = shape_b(depth, a, b)
     let c_shape = c.shape_ptr.load().load(depth)
+
+    let a_ishape = a_shape * a_index
+    let b_ishape = b_shape * b_index
+    let c_ishape = c_shape * c_index
+
     if a_shape != 1 and b_shape == 1:
         for s in range(a_shape):
             recursive_broadcast[kernel, base_case](
                 c,
                 a,
                 b,
-                a_shape * a_index + s,
-                b_shape * b_index,
-                c_shape * c_index + s,
+                a_ishape + s,
+                b_index,
+                c_ishape + s,
                 depth + 1,
             )
     elif a_shape == 1 and b_shape != 1:
@@ -72,9 +77,9 @@ fn recursive_broadcast[
                 c,
                 a,
                 b,
-                a_shape * a_index,
-                b_shape * b_index + s,
-                c_shape * c_index + s,
+                a_index,
+                b_ishape + s,
+                c_ishape + s,
                 depth + 1,
             )
     else:
@@ -83,9 +88,9 @@ fn recursive_broadcast[
                 c,
                 a,
                 b,
-                a_shape * a_index + s,
-                b_shape * b_index + s,
-                c_shape * c_index + s,
+                a_ishape + s,
+                b_ishape + s,
+                c_ishape + s,
                 depth + 1,
             )
 
@@ -111,15 +116,20 @@ fn recursive_broadcast_bw[
     let a_shape = shape_a(depth, a, b)
     let b_shape = shape_b(depth, a, b)
     let c_shape = c.shape_ptr.load().load(depth)
+
+    let a_ishape = a_shape * a_index
+    let b_ishape = b_shape * b_index
+    let c_ishape = c_shape * c_index
+
     if a_shape != 1 and b_shape == 1:
         for s in range(a_shape):
             recursive_broadcast_bw[kernel, base_case](
                 c,
                 a,
                 b,
-                a_shape * a_index + s,
-                b_shape * b_index,
-                c_shape * c_index + s,
+                a_ishape + s,
+                b_index,
+                c_ishape + s,
                 depth + 1,
             )
     elif a_shape == 1 and b_shape != 1:
@@ -128,9 +138,9 @@ fn recursive_broadcast_bw[
                 c,
                 a,
                 b,
-                a_shape * a_index,
-                b_shape * b_index + s,
-                c_shape * c_index + s,
+                a_index,
+                b_ishape + s,
+                c_ishape + s,
                 depth + 1,
             )
     else:
@@ -139,8 +149,8 @@ fn recursive_broadcast_bw[
                 c,
                 a,
                 b,
-                a_shape * a_index + s,
-                b_shape * b_index + s,
-                c_shape * c_index + s,
+                a_ishape + s,
+                b_ishape + s,
+                c_ishape + s,
                 depth + 1,
             )
