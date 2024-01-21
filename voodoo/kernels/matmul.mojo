@@ -46,10 +46,14 @@ struct MMul:
         let offset_b = b_index * K * shape_b.load(b_dims - 1)
         let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
 
-        DTypePointer.prefetch[prefetch_read](a.data.load())
-        DTypePointer.prefetch[prefetch_read](b.data.load())
-        DTypePointer.prefetch[prefetch_read](c.data.load())
-        DTypePointer.prefetch[prefetch_write](c.data.load())
+        let a_data = a.data.load(0)
+        let b_data = b.data.load(0)
+        let c_data = c.data.load(0)
+
+        DTypePointer.prefetch[prefetch_read](a_data)
+        DTypePointer.prefetch[prefetch_read](b_data)
+        DTypePointer.prefetch[prefetch_read](c_data)
+        DTypePointer.prefetch[prefetch_write](c_data)
 
         for m in range(M):
             let _a_off = offset_a + m * K
@@ -57,7 +61,7 @@ struct MMul:
 
             for k in range(K):
                 let a_off = _a_off + k
-                let a_scalar = a.load_data(a_off)
+                let a_scalar = a_data.simd_load[1](a_off)
                 let _b_off = offset_b + k * N
 
                 @parameter
@@ -68,9 +72,9 @@ struct MMul:
 
                     c.store_data[nelts](
                         c_off,
-                        b.load_data[nelts](b_off).fma(
+                        b_data.simd_load[nelts](b_off).fma(
                             a_scalar,
-                            c.load_data[nelts](c_off),
+                            c_data.simd_load[nelts](c_off),
                         ),
                     )
 
@@ -96,10 +100,14 @@ struct MMul:
         let offset_b = b_index * K * shape_b.load(b_dims - 1)
         let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
 
-        DTypePointer.prefetch[prefetch_read](a.data.load(1))
-        DTypePointer.prefetch[prefetch_write](a.data.load(1))
-        DTypePointer.prefetch[prefetch_read](b.data.load(0))
-        DTypePointer.prefetch[prefetch_read](c.data.load(1))
+        let a_grad = a.data.load(1)
+        let b_data = b.data.load(0)
+        let c_grad = c.data.load(1)
+
+        DTypePointer.prefetch[prefetch_read](a_grad)
+        DTypePointer.prefetch[prefetch_write](a_grad)
+        DTypePointer.prefetch[prefetch_read](b_data)
+        DTypePointer.prefetch[prefetch_read](c_grad)
 
         for m in range(M):
             let _a_off = offset_a + m * K
@@ -107,7 +115,7 @@ struct MMul:
 
             for n in range(N):
                 let c_offset = _c_off + n
-                let c_grad = c.load_grad(c_offset)
+                let c_grad = c_grad.simd_load[1](c_offset)
                 let _b_off = offset_b + n
 
                 @parameter
@@ -117,9 +125,9 @@ struct MMul:
 
                     a.store_grad[nelts](
                         a_off,
-                        b.load_data[nelts](_b_off + k * N).fma(
+                        b_data.simd_load[nelts](_b_off + k * N).fma(
                             c_grad,
-                            a.load_grad[nelts](a_off),
+                            a_grad.simd_load[nelts](a_off),
                         ),
                     )
 
@@ -145,17 +153,21 @@ struct MMul:
         let offset_b = b_index * K * shape_b.load(b_dims - 1)
         let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
 
-        DTypePointer.prefetch[prefetch_read](a.data.load(0))
-        DTypePointer.prefetch[prefetch_read](b.data.load(1))
-        DTypePointer.prefetch[prefetch_write](b.data.load(1))
-        DTypePointer.prefetch[prefetch_read](c.data.load(1))
+        let a_data = a.data.load(0)
+        let b_grad = b.data.load(1)
+        let c_grad = c.data.load(1)
+
+        DTypePointer.prefetch[prefetch_read](a_data)
+        DTypePointer.prefetch[prefetch_read](b_grad)
+        DTypePointer.prefetch[prefetch_write](b_grad)
+        DTypePointer.prefetch[prefetch_read](c_grad)
 
         for k in range(K):
             let _a_off = offset_a + k
             let _b_off = offset_b + k * N
 
             for m in range(M):
-                let a_data = a.load_data(_a_off + m * K)
+                let a_data = a_data.simd_load[1](_a_off + m * K)
                 let _c_off = offset_c + m * N
 
                 @parameter
@@ -165,9 +177,9 @@ struct MMul:
 
                     b.store_grad[nelts](
                         b_off,
-                        c.load_grad[nelts](_c_off + n).fma(
+                        c_grad.simd_load[nelts](_c_off + n).fma(
                             a_data,
-                            b.load_grad[nelts](b_off),
+                            b_grad.simd_load[nelts](b_off),
                         ),
                     )
 

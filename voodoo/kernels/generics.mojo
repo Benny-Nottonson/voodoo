@@ -7,7 +7,7 @@ from voodoo.utils import (
     recursive_broadcast,
     recursive_broadcast_bw,
 )
-from ..constants import nelts
+from ..constants import nelts, prefetch_read, prefetch_write
 
 alias generic_activation_vectorized = fn[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
@@ -41,26 +41,42 @@ struct GenericActivation[
 ]:
     @staticmethod
     fn fw(node: Node, parent1: Node):
+        let node_data = node.data.load(0)
+        let parent1_data = parent1.data.load(0)
+
+        DTypePointer[DType.float32].prefetch[prefetch_write](node_data)
+        DTypePointer[DType.float32].prefetch[prefetch_read](parent1_data)
+
         @parameter
         @always_inline
         fn vectorized_fw[nelts: Int](i: Int):
-            node.store_data[nelts](
+            node_data.simd_store[nelts](
                 i,
-                fw_vec[nelts, arg1, arg2, arg3](parent1.load_data[nelts](i)),
+                fw_vec[nelts, arg1, arg2, arg3](parent1_data.simd_load[nelts](i)),
             )
 
         vectorize[nelts, vectorized_fw](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
+        let node_data = node.data.load(0)
+        let node_grad = node.data.load(1)
+        let parent1_data = parent1.data.load(0)
+        let parent1_grad = parent1.data.load(1)
+
+        DTypePointer[DType.float32].prefetch[prefetch_read](parent1_grad)
+        DTypePointer[DType.float32].prefetch[prefetch_read](node_grad)
+        DTypePointer[DType.float32].prefetch[prefetch_read](parent1_data)
+        DTypePointer[DType.float32].prefetch[prefetch_write](parent1_grad)
+
         @parameter
         @always_inline
         fn vectorized_bw[nelts: Int](i: Int):
-            parent1.store_grad[nelts](
+            parent1_grad.simd_store[nelts](
                 i,
-                parent1.load_grad[nelts](i)
-                + node.load_grad[nelts](i)
-                * bw_vec[nelts, arg1, arg2, arg3](parent1.load_data[nelts](i)),
+                parent1_grad.simd_load[nelts](i)
+                + node_grad.simd_load[nelts](i)
+                * bw_vec[nelts, arg1, arg2, arg3](parent1_data.simd_load[nelts](i)),
             )
 
         vectorize[nelts, vectorized_bw](node.load_cap())
@@ -71,25 +87,40 @@ struct GenericArithmetic[
 ]:
     @staticmethod
     fn fw(node: Node, parent1: Node):
+        let node_data = node.data.load(0)
+        let parent1_data = parent1.data.load(0)
+
+        DTypePointer[DType.float32].prefetch[prefetch_write](node_data)
+        DTypePointer[DType.float32].prefetch[prefetch_read](parent1_data)
+
         @parameter
         fn vectorized_fw[nelts: Int](i: Int):
-            let x = parent1.load_data[nelts](i)
-            node.store_data[nelts](
+            node_data.simd_store[nelts](
                 i,
-                fw_vec[nelts](x),
+                fw_vec[nelts](parent1_data.simd_load[nelts](i)),
             )
 
         vectorize[nelts, vectorized_fw](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
+        let node_data = node.data.load(0)
+        let node_grad = node.data.load(1)
+        let parent1_data = parent1.data.load(0)
+        let parent1_grad = parent1.data.load(1)
+
+        DTypePointer[DType.float32].prefetch[prefetch_read](parent1_grad)
+        DTypePointer[DType.float32].prefetch[prefetch_read](node_grad)
+        DTypePointer[DType.float32].prefetch[prefetch_read](parent1_data)
+        DTypePointer[DType.float32].prefetch[prefetch_write](parent1_grad)
+
         @parameter
         fn vectorized_bw[nelts: Int](i: Int):
-            let x = parent1.load_data[nelts](i)
-            parent1.store_grad[nelts](
+            parent1_grad.simd_store[nelts](
                 i,
-                parent1.load_grad[nelts](i)
-                + node.load_grad[nelts](i) * bw_vec[nelts](x),
+                parent1_grad.simd_load[nelts](i)
+                + node_grad.simd_load[nelts](i)
+                * bw_vec[nelts](parent1_data.simd_load[nelts](i)),
             )
 
         vectorize[nelts, vectorized_bw](node.load_cap())
@@ -127,13 +158,21 @@ struct GenericBinaryArithmetic[
         let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
         let offset_c = c_index * c_rest
 
+        let a_data = a.data.load(0)
+        let b_data = b.data.load(0)
+        let c_data = c.data.load(0)
+
+        DTypePointer[DType.float32].prefetch[prefetch_read](a_data)
+        DTypePointer[DType.float32].prefetch[prefetch_read](b_data)
+        DTypePointer[DType.float32].prefetch[prefetch_write](c_data)
+
         @parameter
         @always_inline
         fn vectorized_fw[nelts: Int](i: Int):
-            c.store_data[nelts](
+            c_data.simd_store[nelts](
                 offset_c + i,
                 generic_func(
-                    a.load_data[nelts](offset_a + i), b.load_data[nelts](offset_b + i)
+                    a_data.simd_load[nelts](offset_a + i), b_data.simd_load[nelts](offset_b + i)
                 ),
             )
 
@@ -152,30 +191,43 @@ struct GenericBinaryArithmetic[
         let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
         let offset_c = c_index * c_rest
 
+        let a_data = a.data.load(0)
+        let b_data = b.data.load(0)
+        let a_grad = a.data.load(1)
+        let b_grad = b.data.load(1)
+        let c_grad = c.data.load(1)
+
+        DTypePointer[DType.float32].prefetch[prefetch_read](a_data)
+        DTypePointer[DType.float32].prefetch[prefetch_read](b_data)
+        DTypePointer[DType.float32].prefetch[prefetch_read](c_grad)
+        DTypePointer[DType.float32].prefetch[prefetch_write](a_grad)
+        DTypePointer[DType.float32].prefetch[prefetch_write](b_grad)
+
+
         @parameter
         @always_inline
         fn vectorized_bw_a[nelts: Int](i: Int):
-            a.store_grad[nelts](
+            a_grad.simd_store[nelts](
                 offset_a + i,
-                a.load_grad[nelts](offset_a + i)
+                a_grad.simd_load[nelts](offset_a + i)
                 + generic_func(
-                    a.load_data[nelts](offset_a + i),
-                    b.load_data[nelts](offset_b + i),
+                    a_data.simd_load[nelts](offset_a + i),
+                    b_data.simd_load[nelts](offset_b + i),
                 )
-                * c.load_grad[nelts](offset_c + i),
+                * c_grad.simd_load[nelts](offset_c + i),
             )
 
         @parameter
         @always_inline
         fn vectorized_bw_b[nelts: Int](i: Int):
-            b.store_grad[nelts](
+            b_grad.simd_store[nelts](
                 offset_b + i,
-                b.load_grad[nelts](offset_b + i)
+                b_grad.simd_load[nelts](offset_b + i)
                 + generic_func(
-                    a.load_data[nelts](offset_a + i),
-                    b.load_data[nelts](offset_b + i),
+                    a_data.simd_load[nelts](offset_a + i),
+                    b_data.simd_load[nelts](offset_b + i),
                 )
-                * c.load_grad[nelts](offset_c + i),
+                * c_grad.simd_load[nelts](offset_c + i),
             )
 
         @parameter
@@ -201,19 +253,24 @@ struct GenericLoss[
     fn fw(node: Node, y_pred: Node, y_true: Node):
         let num_dims = y_pred.shape_ptr.load().len.load()
         let N = y_pred.shape_ptr.load().load(num_dims - 1)
-        let cap = Float32(y_pred.load_cap())
+        let cap = y_pred.load_cap()
         var e: Float32 = 0.0
+
+        let y_pred_data = y_pred.data.load(0)
+        let y_true_data = y_true.data.load(0)
+
+        DTypePointer[DType.float32].prefetch[prefetch_read](y_pred_data)
+        DTypePointer[DType.float32].prefetch[prefetch_read](y_true_data)
 
         @parameter
         @always_inline
         fn vectorized_fw[nelts: Int](i: Int):
-            let error = fw_vec[nelts](
+            node.store_data(0, node.load_data(0) + fw_vec[nelts](
                 y_true.load_data[nelts](i), y_pred.load_data[nelts](i)
-            )
-            e += error.reduce_add()
+            ).reduce_add())
 
-        vectorize[nelts, vectorized_fw](cap.to_int())
-        node.store_data(0, e / cap / Float32(N))
+        vectorize[nelts, vectorized_fw](cap)
+        node.store_data(0, node.load_data(0) / cap / Float32(N))
 
     @staticmethod
     fn bw(node: Node, y_pred: Node, y_true: Node):
@@ -222,17 +279,27 @@ struct GenericLoss[
         let cap = y_pred.load_cap()
         let scalar = cap / Float32(N)
 
+        let y_pred_data = y_pred.data.load(0)
+        let y_pred_grad = y_pred.data.load(1)
+        let y_true_data = y_true.data.load(0)
+        let y_true_grad = y_true.data.load(1)
+
+        DTypePointer[DType.float32].prefetch[prefetch_read](y_pred_data)
+        DTypePointer[DType.float32].prefetch[prefetch_read](y_pred_grad)
+        DTypePointer[DType.float32].prefetch[prefetch_read](y_true_data)
+        DTypePointer[DType.float32].prefetch[prefetch_read](y_true_grad)
+
         @parameter
         @always_inline
         fn vectorized_mae_bw[nelts: Int](i: Int):
             let grad = bw_vec[nelts](
-                y_true.load_data[nelts](i), y_pred.load_data[nelts](i), cap, N
+                y_true_data.simd_load[nelts](i), y_pred_data.simd_load[nelts](i), cap, N
             ) / scalar
 
-            y_pred.store_grad[nelts](i, y_pred.load_grad[nelts](i) + grad)
-            y_true.store_grad[nelts](i, y_true.load_grad[nelts](i) - grad)
+            y_pred_grad.simd_store[nelts](i, y_pred_grad.simd_load[nelts](i) + grad)
+            y_true_grad.simd_store[nelts](i, y_true_grad.simd_load[nelts](i) - grad)
 
-        vectorize[nelts, vectorized_mae_bw](y_pred.load_cap())
+        vectorize[nelts, vectorized_mae_bw](cap)
 
 
 struct GenericOptimizer[fw_vec: generic_optimizer_vectorized]:
@@ -242,14 +309,20 @@ struct GenericOptimizer[fw_vec: generic_optimizer_vectorized]:
         for i in range(x.len.load()):
             let node = x.load(i).load()
             if node.requires_grad_ptr.load() and node.grad_computed_ptr.load():
+                let node_data = node.data.load(0)
+                let node_grad = node.data.load(1)
+
+                DTypePointer[DType.float32].prefetch[prefetch_read](node_data)
+                DTypePointer[DType.float32].prefetch[prefetch_read](node_grad)
+                DTypePointer[DType.float32].prefetch[prefetch_write](node_data)
 
                 @parameter
                 @always_inline
                 fn vectorized_update[nelts: Int](i: Int):
-                    node.store_data[nelts](
+                    node_data.simd_store[nelts](
                         i,
-                        node.load_data[nelts](i)
-                        - fw_vec[nelts, learning_rate](node.load_grad[nelts](i)),
+                        node_data.simd_load[nelts](i)
+                        - fw_vec[nelts, learning_rate](node_grad.simd_load[nelts](i)),
                     )
 
                 vectorize[nelts, vectorized_update](node.load_cap())
