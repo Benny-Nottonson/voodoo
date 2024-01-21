@@ -61,6 +61,7 @@ struct MMul:
                 let _b_off = offset_b + k * N
 
                 @parameter
+                @always_inline
                 fn dot_fw[nelts: Int](n: Int):
                     let b_off = _b_off + n
                     let c_off = _c_off + n
@@ -110,6 +111,7 @@ struct MMul:
                 let _b_off = offset_b + n
 
                 @parameter
+                @always_inline
                 fn dot_bw[nelts: Int](k: Int):
                     let a_off = _a_off + k
 
@@ -157,6 +159,7 @@ struct MMul:
                 let _c_off = offset_c + m * N
 
                 @parameter
+                @always_inline
                 fn dot_bw[nelts: Int](n: Int):
                     let b_off = _b_off + n
 

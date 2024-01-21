@@ -42,6 +42,7 @@ struct GenericActivation[
     @staticmethod
     fn fw(node: Node, parent1: Node):
         @parameter
+        @always_inline
         fn vectorized_fw[nelts: Int](i: Int):
             node.store_data[nelts](
                 i,
@@ -53,6 +54,7 @@ struct GenericActivation[
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
+        @always_inline
         fn vectorized_bw[nelts: Int](i: Int):
             parent1.store_grad[nelts](
                 i,
@@ -126,6 +128,7 @@ struct GenericBinaryArithmetic[
         let offset_c = c_index * c_rest
 
         @parameter
+        @always_inline
         fn vectorized_fw[nelts: Int](i: Int):
             c.store_data[nelts](
                 offset_c + i,
@@ -150,6 +153,7 @@ struct GenericBinaryArithmetic[
         let offset_c = c_index * c_rest
 
         @parameter
+        @always_inline
         fn vectorized_bw_a[nelts: Int](i: Int):
             a.store_grad[nelts](
                 offset_a + i,
@@ -162,6 +166,7 @@ struct GenericBinaryArithmetic[
             )
 
         @parameter
+        @always_inline
         fn vectorized_bw_b[nelts: Int](i: Int):
             b.store_grad[nelts](
                 offset_b + i,
@@ -200,6 +205,7 @@ struct GenericLoss[
         var e: Float32 = 0.0
 
         @parameter
+        @always_inline
         fn vectorized_fw[nelts: Int](i: Int):
             let error = fw_vec[nelts](
                 y_true.load_data[nelts](i), y_pred.load_data[nelts](i)
@@ -217,6 +223,7 @@ struct GenericLoss[
         let scalar = cap / Float32(N)
 
         @parameter
+        @always_inline
         fn vectorized_mae_bw[nelts: Int](i: Int):
             let grad = bw_vec[nelts](
                 y_true.load_data[nelts](i), y_pred.load_data[nelts](i), cap, N
@@ -237,6 +244,7 @@ struct GenericOptimizer[fw_vec: generic_optimizer_vectorized]:
             if node.requires_grad_ptr.load() and node.grad_computed_ptr.load():
 
                 @parameter
+                @always_inline
                 fn vectorized_update[nelts: Int](i: Int):
                     node.store_data[nelts](
                         i,
