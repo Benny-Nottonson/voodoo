@@ -8,6 +8,7 @@ struct Conv2D[
     kernel_height: Int,
     stride: Int,
     padding: Int,
+    activation: String = "none",
     use_bias: Bool = False,
     weight_initializer: String = "he_normal",
     bias_initializer: String = "zeros",
@@ -40,7 +41,7 @@ struct Conv2D[
             self.bias = Tensor(shape(0))
 
     fn forward(self, x: Tensor) raises -> Tensor[False, False]:
-        let res = x.conv_2d(self.W, self.padding, self.stride)
+        let res = x.conv_2d(self.W, self.padding, self.stride).compute_activation[self.activation]()
 
         if self.use_bias:
             return res + self.bias

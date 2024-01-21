@@ -207,98 +207,16 @@ struct Conv2D:
         let output_width = output_shape.load(2)
         let output_height = output_shape.load(3)
 
-        let im2col = DTypePointer[DType.float32].alloc(
-            batches
-            * output_width
-            * output_height
-            * kernel_width
-            * kernel_height
-            * channels
+        let im2col = im2col3D(
+            a.data.load(),
+            input_shape,
+            kernel_shape,
+            output_shape,
+            padding_x,
+            padding_y,
+            stride_x,
+            stride_y,
         )
-
-        for batch in range(batches):
-            for channel in range(channels):
-                for output_y in range(output_height):
-                    for output_x in range(output_width):
-                        for kernel_y in range(kernel_height):
-                            for kernel_x in range(kernel_width):
-                                let input_x = output_x * stride_x + kernel_x - padding_x
-                                let input_y = output_y * stride_y + kernel_y - padding_y
-
-                                if input_x < 0 or input_x >= input_width:
-                                    im2col.store(
-                                        batch
-                                        * output_width
-                                        * output_height
-                                        * kernel_width
-                                        * kernel_height
-                                        * channels
-                                        + output_y
-                                        * output_width
-                                        * kernel_width
-                                        * kernel_height
-                                        * channels
-                                        + output_x
-                                        * kernel_width
-                                        * kernel_height
-                                        * channels
-                                        + kernel_y * kernel_width * channels
-                                        + kernel_x * channels
-                                        + channel,
-                                        0.0,
-                                    )
-                                elif input_y < 0 or input_y >= input_height:
-                                    im2col.store(
-                                        batch
-                                        * output_width
-                                        * output_height
-                                        * kernel_width
-                                        * kernel_height
-                                        * channels
-                                        + output_y
-                                        * output_width
-                                        * kernel_width
-                                        * kernel_height
-                                        * channels
-                                        + output_x
-                                        * kernel_width
-                                        * kernel_height
-                                        * channels
-                                        + kernel_y * kernel_width * channels
-                                        + kernel_x * channels
-                                        + channel,
-                                        0.0,
-                                    )
-                                else:
-                                    im2col.store(
-                                        batch
-                                        * output_width
-                                        * output_height
-                                        * kernel_width
-                                        * kernel_height
-                                        * channels
-                                        + output_y
-                                        * output_width
-                                        * kernel_width
-                                        * kernel_height
-                                        * channels
-                                        + output_x
-                                        * kernel_width
-                                        * kernel_height
-                                        * channels
-                                        + kernel_y * kernel_width * channels
-                                        + kernel_x * channels
-                                        + channel,
-                                        a.load_data(
-                                            batch
-                                            * input_width
-                                            * input_height
-                                            * channels
-                                            + input_y * input_width * channels
-                                            + input_x * channels
-                                            + channel
-                                        ),
-                                    )
 
         for batch in range(batches):
             for output_y in range(output_height):
@@ -371,98 +289,16 @@ struct Conv2D:
         let output_width = output_shape.load(2)
         let output_height = output_shape.load(3)
 
-        let im2col = DTypePointer[DType.float32].alloc(
-            batches
-            * output_width
-            * output_height
-            * kernel_width
-            * kernel_height
-            * channels
+        let im2col = im2col3D(
+            a.data.load(),
+            input_shape,
+            kernel_shape,
+            output_shape,
+            padding_x,
+            padding_y,
+            stride_x,
+            stride_y,
         )
-
-        for batch in range(batches):
-            for channel in range(channels):
-                for output_y in range(output_height):
-                    for output_x in range(output_width):
-                        for kernel_y in range(kernel_height):
-                            for kernel_x in range(kernel_width):
-                                let input_x = output_x * stride_x + kernel_x - padding_x
-                                let input_y = output_y * stride_y + kernel_y - padding_y
-
-                                if input_x < 0 or input_x >= input_width:
-                                    im2col.store(
-                                        batch
-                                        * output_width
-                                        * output_height
-                                        * kernel_width
-                                        * kernel_height
-                                        * channels
-                                        + output_y
-                                        * output_width
-                                        * kernel_width
-                                        * kernel_height
-                                        * channels
-                                        + output_x
-                                        * kernel_width
-                                        * kernel_height
-                                        * channels
-                                        + kernel_y * kernel_width * channels
-                                        + kernel_x * channels
-                                        + channel,
-                                        0.0,
-                                    )
-                                elif input_y < 0 or input_y >= input_height:
-                                    im2col.store(
-                                        batch
-                                        * output_width
-                                        * output_height
-                                        * kernel_width
-                                        * kernel_height
-                                        * channels
-                                        + output_y
-                                        * output_width
-                                        * kernel_width
-                                        * kernel_height
-                                        * channels
-                                        + output_x
-                                        * kernel_width
-                                        * kernel_height
-                                        * channels
-                                        + kernel_y * kernel_width * channels
-                                        + kernel_x * channels
-                                        + channel,
-                                        0.0,
-                                    )
-                                else:
-                                    im2col.store(
-                                        batch
-                                        * output_width
-                                        * output_height
-                                        * kernel_width
-                                        * kernel_height
-                                        * channels
-                                        + output_y
-                                        * output_width
-                                        * kernel_width
-                                        * kernel_height
-                                        * channels
-                                        + output_x
-                                        * kernel_width
-                                        * kernel_height
-                                        * channels
-                                        + kernel_y * kernel_width * channels
-                                        + kernel_x * channels
-                                        + channel,
-                                        a.load_data(
-                                            batch
-                                            * input_width
-                                            * input_height
-                                            * channels
-                                            + input_y * input_width * channels
-                                            + input_x * channels
-                                            + channel
-                                        ),
-                                    )
 
         for batch in range(batches):
             for output_y in range(output_height):
@@ -540,3 +376,104 @@ struct Conv2D:
                                 )
 
         im2col.free()
+
+
+fn im2col3D(
+    input: DTypePointer[DType.float32],
+    input_shape: Vector[Int],
+    kernel_shape: Vector[Int],
+    output_shape: Vector[Int],
+    padding_x: Int,
+    padding_y: Int,
+    stride_x: Int,
+    stride_y: Int,
+) -> DTypePointer[DType.float32]:
+    let batches = input_shape.load(0)
+    let channels = input_shape.load(1)
+    let input_width = input_shape.load(2)
+    let input_height = input_shape.load(3)
+
+    let kernel_width = kernel_shape.load(1)
+    let kernel_height = kernel_shape.load(2)
+
+    let output_width = output_shape.load(2)
+    let output_height = output_shape.load(3)
+
+    let im2col = DTypePointer[DType.float32].alloc(
+        batches * output_width * output_height * kernel_width * kernel_height * channels
+    )
+
+    for batch in range(batches):
+        for channel in range(channels):
+            for output_y in range(output_height):
+                for output_x in range(output_width):
+                    for kernel_y in range(kernel_height):
+                        for kernel_x in range(kernel_width):
+                            let input_x = output_x * stride_x + kernel_x - padding_x
+                            let input_y = output_y * stride_y + kernel_y - padding_y
+
+                            if input_x < 0 or input_x >= input_width:
+                                im2col.store(
+                                    batch
+                                    * output_width
+                                    * output_height
+                                    * kernel_width
+                                    * kernel_height
+                                    * channels
+                                    + output_y
+                                    * output_width
+                                    * kernel_width
+                                    * kernel_height
+                                    * channels
+                                    + output_x * kernel_width * kernel_height * channels
+                                    + kernel_y * kernel_width * channels
+                                    + kernel_x * channels
+                                    + channel,
+                                    0.0,
+                                )
+                            elif input_y < 0 or input_y >= input_height:
+                                im2col.store(
+                                    batch
+                                    * output_width
+                                    * output_height
+                                    * kernel_width
+                                    * kernel_height
+                                    * channels
+                                    + output_y
+                                    * output_width
+                                    * kernel_width
+                                    * kernel_height
+                                    * channels
+                                    + output_x * kernel_width * kernel_height * channels
+                                    + kernel_y * kernel_width * channels
+                                    + kernel_x * channels
+                                    + channel,
+                                    0.0,
+                                )
+
+                            else:
+                                im2col.store(
+                                    batch
+                                    * output_width
+                                    * output_height
+                                    * kernel_width
+                                    * kernel_height
+                                    * channels
+                                    + output_y
+                                    * output_width
+                                    * kernel_width
+                                    * kernel_height
+                                    * channels
+                                    + output_x * kernel_width * kernel_height * channels
+                                    + kernel_y * kernel_width * channels
+                                    + kernel_x * channels
+                                    + channel,
+                                    input.load(
+                                        batch * input_width * input_height * channels
+                                        + input_y * input_width * channels
+                                        + input_x * channels
+                                        + channel
+                                    ),
+                                )
+
+    return im2col

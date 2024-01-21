@@ -7,7 +7,7 @@ struct Dense[
     out_neurons: Int,
     activation: String = "none",
     use_bias: Bool = True,
-    weight_initializer: String = "he_normal",
+    weight_initializer: String = "glorot_uniform",
     bias_initializer: String = "zeros",
     weight_mean: Float32 = 0.0,
     weight_std: Float32 = 0.05,
