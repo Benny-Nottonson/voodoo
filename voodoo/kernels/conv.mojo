@@ -1,4 +1,4 @@
-from algorithm import vectorize
+from algorithm import vectorize, tile
 from math import max
 from voodoo import Node
 from ..constants import nelts, prefetch_read, prefetch_write
@@ -390,8 +390,9 @@ fn im2col2D(
 
     for batch in range(batches):
         for channel in range(channels):
-            for output_x in range(output_width):
 
+            @parameter
+            fn workgroup_function[nelts: Int](output_x: Int):
                 @parameter
                 fn fw_vec[nelts: Int](kernel_x: Int):
                     let input_x = output_x * stride + kernel_x - padding
@@ -418,6 +419,8 @@ fn im2col2D(
                         )
 
                 vectorize[nelts, fw_vec](kernel_width)
+
+            tile[workgroup_function, VariadicList[Int](32, 16, 8, 4, 2, 1)](0, output_width)
 
     return im2col
 
@@ -452,79 +455,36 @@ fn im2col3D(
 
     for batch in range(batches):
         for channel in range(channels):
-            for output_y in range(output_height):
+            @parameter
+            fn workgroup_function[nelts: Int](output_y: Int):
                 for output_x in range(output_width):
+                    let base_index = batch * output_width * output_height * kernel_width * kernel_height * channels
+                                    + output_y * output_width * kernel_width * kernel_height * channels
+                                    + output_x * kernel_width * kernel_height * channels
+                                    + channel
                     for kernel_y in range(kernel_height):
+                        let input_y = output_y * stride_y + kernel_y - padding_y
+                        let y_index = base_index + kernel_y * kernel_width * channels
+                        if input_y < 0 or input_y >= input_height:
+                            @parameter
+                            fn fw_vec_zero[nelts: Int](kernel_x: Int):
+                                im2col.simd_store[nelts](y_index + kernel_x * channels, 0.0)
 
-                        @parameter
-                        fn fw_vec[nelts: Int](kernel_x: Int):
-                            let input_x = output_x * stride_x + kernel_x - padding_x
-                            let input_y = output_y * stride_y + kernel_y - padding_y
+                            vectorize[nelts, fw_vec_zero](kernel_width)
+                        else:
+                            @parameter
+                            fn fw_vec_one[nelts: Int](kernel_x: Int):
+                                let input_x = output_x * stride_x + kernel_x - padding_x
+                                if input_x < 0 or input_x >= input_width:
+                                    im2col.simd_store[nelts](y_index + kernel_x * channels, 0.0)
+                                else:
+                                    let input_index = batch * input_width * input_height * channels
+                                                    + input_y * input_width * channels
+                                                    + input_x * channels
+                                    im2col.simd_store[nelts](y_index + kernel_x * channels, input.simd_load[nelts](input_index))
 
-                            if input_x < 0 or input_x >= input_width:
-                                im2col.simd_store[nelts](
-                                    batch
-                                    * output_width
-                                    * output_height
-                                    * kernel_width
-                                    * kernel_height
-                                    * channels
-                                    + output_y
-                                    * output_width
-                                    * kernel_width
-                                    * kernel_height
-                                    * channels
-                                    + output_x * kernel_width * kernel_height * channels
-                                    + kernel_y * kernel_width * channels
-                                    + kernel_x * channels
-                                    + channel,
-                                    0.0,
-                                )
-                            elif input_y < 0 or input_y >= input_height:
-                                im2col.simd_store[nelts](
-                                    batch
-                                    * output_width
-                                    * output_height
-                                    * kernel_width
-                                    * kernel_height
-                                    * channels
-                                    + output_y
-                                    * output_width
-                                    * kernel_width
-                                    * kernel_height
-                                    * channels
-                                    + output_x * kernel_width * kernel_height * channels
-                                    + kernel_y * kernel_width * channels
-                                    + kernel_x * channels
-                                    + channel,
-                                    0.0,
-                                )
+                            vectorize[nelts, fw_vec_one](kernel_width)
 
-                            else:
-                                im2col.simd_store[nelts](
-                                    batch
-                                    * output_width
-                                    * output_height
-                                    * kernel_width
-                                    * kernel_height
-                                    * channels
-                                    + output_y
-                                    * output_width
-                                    * kernel_width
-                                    * kernel_height
-                                    * channels
-                                    + output_x * kernel_width * kernel_height * channels
-                                    + kernel_y * kernel_width * channels
-                                    + kernel_x * channels
-                                    + channel,
-                                    input.simd_load[nelts](
-                                        batch * input_width * input_height * channels
-                                        + input_y * input_width * channels
-                                        + input_x * channels
-                                        + channel
-                                    ),
-                                )
-
-                        vectorize[nelts, fw_vec](kernel_width)
+            tile[workgroup_function, VariadicList[Int](32, 16, 8, 4, 2, 1)](0, output_height)
 
     return im2col
