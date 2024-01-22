@@ -125,10 +125,10 @@ fn sigmoid_fw_vec[
 fn sigmoid_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
-    # f'(x) = e^-x / (1 + e^-x)^2
+    # f'(x) = e^x / (1 + e^x)^2
     # Best is 6 instructions (exp, div, fma, exp, mul, add)
-    let e_nx = (exp(-x))
-    return e_nx / (1.0 + e_nx) ** 2
+    let e_x = (exp(x))
+    return e_x / (1.0 + e_x) ** 2
 
 
 @parameter
