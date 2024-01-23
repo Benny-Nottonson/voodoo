@@ -3,6 +3,7 @@ from math import max
 from voodoo import Node
 from ..constants import nelts, prefetch_read, prefetch_write
 
+alias tile_sizes = VariadicList[Int](32, 16, 8, 4, 2, 1)
 
 struct Conv1D:
     @staticmethod
@@ -420,7 +421,7 @@ fn im2col2D(
 
                 vectorize_unroll[nelts, 1, fw_vec](kernel_width)
 
-            tile[workgroup_function, VariadicList[Int](32, 16, 8, 4, 2, 1)](0, output_width)
+            tile[workgroup_function, tile_sizes](0, output_width)
 
     return im2col
 
@@ -485,6 +486,6 @@ fn im2col3D(
 
                             vectorize_unroll[nelts, 1, fw_vec_one](kernel_width)
 
-            tile[workgroup_function, VariadicList[Int](32, 16, 8, 4, 2, 1)](0, output_height)
+            tile[workgroup_function, tile_sizes](0, output_height)
 
     return im2col

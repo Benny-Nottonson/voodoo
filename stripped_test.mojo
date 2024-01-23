@@ -32,6 +32,6 @@ fn main() raises:
         for i in range(input.initialize["random_uniform", 0, 1]().capacity()):
             true_vals[i] = math.sin(15.0 * input[i])
 
-        _=loss.forward_static()[0]
+        _ = loss.forward_static()[0]
         loss.backward()
         loss.optimize["sgd", 0.01]()

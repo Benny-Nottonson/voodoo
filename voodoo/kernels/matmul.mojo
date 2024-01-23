@@ -75,6 +75,7 @@ struct MMul:
                     dot_store(start_offset_c + N + n, start_offset_a + K)
                     dot_store(start_offset_c + 2 * N + n, start_offset_a + 2 * K)
                     dot_store(start_offset_c + 3 * N + n, start_offset_a + 3 * K)
+
                 vectorize_unroll[nelts, 1, dot_fw](N)
 
     @parameter
