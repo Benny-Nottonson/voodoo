@@ -8,15 +8,13 @@ alias data_shape = shape(32, 1)
 
 
 fn main() raises:
-    let input_layer = Dense[
-        in_neurons=1, out_neurons=64, activation="relu", bias_initializer="he_normal"
-    ]()
-    let dense_layer = Dense[
-        in_neurons=64, out_neurons=64, activation="relu", bias_initializer="he_normal"
-    ]()
-    let output_layer = Dense[
-        in_neurons=64, out_neurons=1, bias_initializer="he_normal"
-    ]()
+    let W1 = Tensor(shape(1, 64)).initialize["he_normal"]()
+    let W2 = Tensor(shape(64, 64)).initialize["he_normal"]()
+    let W3 = Tensor(shape(64, 1)).initialize["he_normal"]()
+
+    let b1 = Tensor(shape(64)).initialize["he_normal"]()
+    let b2 = Tensor(shape(64)).initialize["he_normal"]()
+    let b3 = Tensor(shape(1)).initialize["he_normal"]()
 
     let every = 2500
     let num_epochs = 50000
@@ -24,9 +22,9 @@ fn main() raises:
     let input = Tensor(data_shape).initialize["he_normal", 0, 1]().dynamic()
     let true_vals = Tensor(data_shape)
 
-    var x = input_layer.forward(input)
-    x = dense_layer.forward(x)
-    x = output_layer.forward(x)
+    var x = (input @ W1 + b1).compute_activation["relu"]()
+    x = (x @ W2 + b2).compute_activation["relu"]()
+    x = x @ W3 + b3
     let loss = x.compute_loss["mse"](true_vals)
 
     let bar_accuracy = 20
