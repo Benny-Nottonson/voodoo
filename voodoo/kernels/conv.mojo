@@ -1,4 +1,4 @@
-from algorithm import vectorize
+from algorithm import vectorize_unroll
 from math import max
 from voodoo import Node
 from ..constants import nelts, prefetch_read, prefetch_write
@@ -231,7 +231,7 @@ struct Conv2D:
                                     output_value + kernel_value * im2col_value,
                                 )
 
-                        vectorize[nelts, fw_vec](kernel_width)
+                        vectorize_unroll[nelts, 1, fw_vec](kernel_width)
 
         im2col.free()
 
@@ -417,7 +417,7 @@ fn im2col2D(
                             ),
                         )
 
-                vectorize[nelts, fw_vec](kernel_width)
+                vectorize_unroll[nelts, 1, fw_vec](kernel_width)
 
     return im2col
 
@@ -525,6 +525,6 @@ fn im2col3D(
                                     ),
                                 )
 
-                        vectorize[nelts, fw_vec](kernel_width)
+                        vectorize_unroll[nelts, 1, fw_vec](kernel_width)
 
     return im2col

@@ -1,8 +1,8 @@
 from random import random_float64
-from algorithm import vectorize
+from algorithm import vectorize_unroll
 from voodoo import Node
 from ..constants import nelts
-from algorithm import vectorize
+from algorithm import vectorize_unroll
 
 
 trait Operation:
@@ -22,7 +22,7 @@ struct Copy(Operation):
         fn vectorized_copy[nelts: Int](i: Int):
             node.store_data[nelts](i, parent1.load_data[nelts](i))
 
-        vectorize[nelts, vectorized_copy](node.load_cap())
+        vectorize_unroll[nelts, 1, vectorized_copy](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
@@ -30,7 +30,7 @@ struct Copy(Operation):
         fn vectorized_copy_bw[nelts: Int](i: Int):
             parent1.store_grad[nelts](i, parent1.load_grad[nelts](i))
 
-        vectorize[nelts, vectorized_copy_bw](node.load_cap())
+        vectorize_unroll[nelts, 1, vectorized_copy_bw](node.load_cap())
 
 
 struct Sum(Operation):
@@ -42,7 +42,7 @@ struct Sum(Operation):
         fn vectorized_sum[nelts: Int](i: Int):
             sum += parent1.load_data[nelts](i).reduce_add()
 
-        vectorize[nelts, vectorized_sum](parent1.load_cap())
+        vectorize_unroll[nelts, 1, vectorized_sum](parent1.load_cap())
         node.store_data(0, sum)
 
     @staticmethod
@@ -53,7 +53,7 @@ struct Sum(Operation):
                 i, parent1.load_grad[nelts](i) + node.load_grad(0)
             )
 
-        vectorize[nelts, vectorized_sum_bw](parent1.load_cap())
+        vectorize_unroll[nelts, 1, vectorized_sum_bw](parent1.load_cap())
 
 
 struct Reshape(Operation):
@@ -66,7 +66,7 @@ struct Reshape(Operation):
             fn vectorized_reshape[nelts: Int](i: Int):
                 node.store_data[nelts](i, parent1.load_data[nelts](i))
 
-            vectorize[nelts, vectorized_reshape](parent1.cap_ptr.load())
+            vectorize_unroll[nelts, 1, vectorized_reshape](parent1.cap_ptr.load())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
@@ -79,7 +79,7 @@ struct Reshape(Operation):
                     i, parent1.load_grad[nelts](i) + node.load_grad[nelts](i)
                 )
 
-            vectorize[nelts, vectorized_reshape](parent1.cap_ptr.load())
+            vectorize_unroll[nelts, 1, vectorized_reshape](parent1.cap_ptr.load())
 
 
 struct Transpose(Operation):
@@ -98,7 +98,7 @@ struct Transpose(Operation):
                         offset + j * M + i, parent1.load_data[nelts](offset + i * N + j)
                     )
 
-                vectorize[nelts, vectorized_transp](N)
+                vectorize_unroll[nelts, 1, vectorized_transp](N)
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
@@ -117,7 +117,7 @@ struct Transpose(Operation):
                         + node.load_grad[nelts](offset + i * N + j),
                     )
 
-                vectorize[nelts, vectorized_transp_bw](N)
+                vectorize_unroll[nelts, 1, vectorized_transp_bw](N)
 
 
 struct Dropout(Operation):
@@ -135,7 +135,7 @@ struct Dropout(Operation):
                 (rand < keep_prob).cast[DType.float32]() * parent1.load_data[nelts](i),
             )
 
-        vectorize[nelts, vectorized_dropout](node.load_cap())
+        vectorize_unroll[nelts, 1, vectorized_dropout](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
@@ -153,4 +153,4 @@ struct Dropout(Operation):
                 * scale,
             )
 
-        vectorize[nelts, vectorized_dropout_bw](node.load_cap())
+        vectorize_unroll[nelts, 1, vectorized_dropout_bw](node.load_cap())

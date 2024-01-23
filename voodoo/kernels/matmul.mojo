@@ -1,4 +1,4 @@
-from algorithm import vectorize
+from algorithm import vectorize_unroll, vectorize_unroll
 from math import max
 from voodoo import Node
 from voodoo.utils import (
@@ -61,7 +61,7 @@ struct MMul:
 
             for k in range(K):
                 let a_off = _a_off + k
-                let a_scalar = a_data.simd_load[1](a_off)
+                let a_scalar = a_data.load(a_off)
                 let _b_off = offset_b + k * N
 
                 @parameter
@@ -70,7 +70,7 @@ struct MMul:
                     let b_off = _b_off + n
                     let c_off = _c_off + n
 
-                    c.store_data[nelts](
+                    c_data.simd_store[nelts](
                         c_off,
                         b_data.simd_load[nelts](b_off).fma(
                             a_scalar,
@@ -78,7 +78,7 @@ struct MMul:
                         ),
                     )
 
-                vectorize[nelts, dot_fw](N)
+                vectorize_unroll[nelts, 1, dot_fw](N)
 
     @parameter
     @staticmethod
@@ -115,7 +115,7 @@ struct MMul:
 
             for n in range(N):
                 let c_offset = _c_off + n
-                let c_grad = c_grad.simd_load[1](c_offset)
+                let c_grad = c_grad.load(c_offset)
                 let _b_off = offset_b + n
 
                 @parameter
@@ -123,7 +123,7 @@ struct MMul:
                 fn dot_bw[nelts: Int](k: Int):
                     let a_off = _a_off + k
 
-                    a.store_grad[nelts](
+                    a_grad.simd_store[nelts](
                         a_off,
                         b_data.simd_load[nelts](_b_off + k * N).fma(
                             c_grad,
@@ -131,7 +131,7 @@ struct MMul:
                         ),
                     )
 
-                vectorize[nelts, dot_bw](K)
+                vectorize_unroll[nelts, 1, dot_bw](K)
 
     @parameter
     @staticmethod
@@ -167,7 +167,7 @@ struct MMul:
             let _b_off = offset_b + k * N
 
             for m in range(M):
-                let a_data = a_data.simd_load[1](_a_off + m * K)
+                let a_data = a_data.load(_a_off + m * K)
                 let _c_off = offset_c + m * N
 
                 @parameter
@@ -175,7 +175,7 @@ struct MMul:
                 fn dot_bw[nelts: Int](n: Int):
                     let b_off = _b_off + n
 
-                    b.store_grad[nelts](
+                    b_grad.simd_store[nelts](
                         b_off,
                         c_grad.simd_load[nelts](_c_off + n).fma(
                             a_data,
@@ -183,4 +183,4 @@ struct MMul:
                         ),
                     )
 
-                vectorize[nelts, dot_bw](N)
+                vectorize_unroll[nelts, 1, dot_bw](N)
