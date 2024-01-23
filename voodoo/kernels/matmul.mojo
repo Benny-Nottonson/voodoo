@@ -1,4 +1,4 @@
-from algorithm import vectorize_unroll, vectorize_unroll
+from algorithm import vectorize_unroll
 from math import max
 from voodoo import Node
 from voodoo.utils import (
@@ -31,20 +31,13 @@ struct MMul:
     fn kernel_mmul_fw(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let shape_a = a.shape_ptr.load()
-        let shape_b = b.shape_ptr.load()
-        let shape_c = c.shape_ptr.load()
+        let M = a.shape_ptr.load().load(a.num_dims_ptr.load() - 2)
+        let K = b.shape_ptr.load().load(b.num_dims_ptr.load() - 2)
+        let N = c.shape_ptr.load().load(c.num_dims_ptr.load() - 1)
 
-        let a_dims = a.num_dims_ptr.load()
-        let b_dims = b.num_dims_ptr.load()
-
-        let M = shape_a.load(a_dims - 2)
-        let K = shape_b.load(b_dims - 2)
-        let N = shape_c.load(b_dims - 1)
-
-        let offset_a = a_index * M * shape_a.load(a_dims - 1)
-        let offset_b = b_index * K * shape_b.load(b_dims - 1)
-        let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
+        let offset_a = a_index * M * a.shape_ptr.load().load(a.num_dims_ptr.load() - 1)
+        let offset_b = b_index * K * b.shape_ptr.load().load(b.num_dims_ptr.load() - 1)
+        let offset_c = c_index * N * c.shape_ptr.load().load(c.num_dims_ptr.load() - 1)
 
         let a_data = a.data.load(0)
         let b_data = b.data.load(0)
@@ -55,29 +48,33 @@ struct MMul:
         DTypePointer.prefetch[prefetch_read](c_data)
         DTypePointer.prefetch[prefetch_write](c_data)
 
-        for m in range(M):
-            let _a_off = offset_a + m * K
-            let _c_off = offset_c + m * N
-
+        for m in range(0, M, 4):
             for k in range(K):
-                let a_off = _a_off + k
-                let a_scalar = a_data.load(a_off)
-                let _b_off = offset_b + k * N
+                let b_off = offset_b + k * N
 
                 @parameter
                 @always_inline
                 fn dot_fw[nelts: Int](n: Int):
-                    let b_off = _b_off + n
-                    let c_off = _c_off + n
+                    let b_data_n = b_data.simd_load[nelts](b_off + n)
 
-                    c_data.simd_store[nelts](
-                        c_off,
-                        b_data.simd_load[nelts](b_off).fma(
-                            a_scalar,
-                            c_data.simd_load[nelts](c_off),
-                        ),
-                    )
+                    @parameter
+                    @always_inline
+                    fn dot_store(c_off_n: Int, a_off: Int):
+                        c_data.simd_store[nelts](
+                            c_off_n,
+                            b_data_n.fma(
+                                a_data.load(a_off + k),
+                                c_data.simd_load[nelts](c_off_n),
+                            ),
+                        )
 
+                    let start_offset_c = offset_c + m * N
+                    let start_offset_a = offset_a + m * K
+
+                    dot_store(start_offset_c + n, start_offset_a)
+                    dot_store(start_offset_c + N + n, start_offset_a + K)
+                    dot_store(start_offset_c + 2 * N + n, start_offset_a + 2 * K)
+                    dot_store(start_offset_c + 3 * N + n, start_offset_a + 3 * K)
                 vectorize_unroll[nelts, 1, dot_fw](N)
 
     @parameter
@@ -85,20 +82,13 @@ struct MMul:
     fn kernel_mmul_bw_a(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let shape_a = a.shape_ptr.load()
-        let shape_b = b.shape_ptr.load()
-        let shape_c = c.shape_ptr.load()
+        let M = a.shape_ptr.load().load(a.num_dims_ptr.load() - 2)
+        let K = b.shape_ptr.load().load(b.num_dims_ptr.load() - 2)
+        let N = c.shape_ptr.load().load(c.num_dims_ptr.load() - 1)
 
-        let a_dims = a.num_dims_ptr.load()
-        let b_dims = b.num_dims_ptr.load()
-
-        let M = shape_a.load(a_dims - 2)
-        let K = shape_b.load(b_dims - 2)
-        let N = shape_c.load(b_dims - 1)
-
-        let offset_a = a_index * M * shape_a.load(a_dims - 1)
-        let offset_b = b_index * K * shape_b.load(b_dims - 1)
-        let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
+        let offset_a = a_index * M * a.shape_ptr.load().load(a.num_dims_ptr.load() - 1)
+        let offset_b = b_index * K * b.shape_ptr.load().load(b.num_dims_ptr.load() - 1)
+        let offset_c = c_index * N * c.shape_ptr.load().load(c.num_dims_ptr.load() - 1)
 
         let a_grad = a.data.load(1)
         let b_data = b.data.load(0)
@@ -109,27 +99,30 @@ struct MMul:
         DTypePointer.prefetch[prefetch_read](b_data)
         DTypePointer.prefetch[prefetch_read](c_grad)
 
-        for m in range(M):
-            let _a_off = offset_a + m * K
-            let _c_off = offset_c + m * N
-
-            for n in range(N):
-                let c_offset = _c_off + n
-                let c_grad = c_grad.load(c_offset)
-                let _b_off = offset_b + n
+        for m in range(0, M, 2):
+            for n in range(0, N, 2):
+                let c_grad_0 = c_grad.load(offset_c + m * N + n)
+                let c_grad_1 = c_grad.load(offset_c + (m + 1) * N + n)
 
                 @parameter
                 @always_inline
                 fn dot_bw[nelts: Int](k: Int):
-                    let a_off = _a_off + k
+                    @parameter
+                    @always_inline
+                    fn dot_store(a_off: Int, b_off: Int, scalar: Float32):
+                        a_grad.simd_store[nelts](
+                            a_off,
+                            b_data.simd_load[nelts](b_off).fma(
+                                scalar,
+                                a_grad.simd_load[nelts](a_off),
+                            ),
+                        )
 
-                    a_grad.simd_store[nelts](
-                        a_off,
-                        b_data.simd_load[nelts](_b_off + k * N).fma(
-                            c_grad,
-                            a_grad.simd_load[nelts](a_off),
-                        ),
-                    )
+                    let start_offset_a = offset_a + m * K
+                    let start_offset_b = offset_b + k * N
+
+                    dot_store(start_offset_a + k, start_offset_b + n, c_grad_0)
+                    dot_store(start_offset_a + K + k, start_offset_b + n, c_grad_1)
 
                 vectorize_unroll[nelts, 1, dot_bw](K)
 
