@@ -20,23 +20,29 @@
 
 * [Example Usage](#example-usage)
 * [Built With](#built-with)
-* [Roadmap](#roadmap)
+* [Benchmarks](#benchmarks)
 * [Contributing](#contributing)
 * [License](#license)
 * [Authors](#authors)
 
 ## Example Usage
-![Voodoo Example](https://github.com/Benny-Nottonson/voodoo/assets/112336374/08d01776-f8c2-42c5-9e97-b8885dca5a95)
-
+<p align="center">
+  <img src="https://github.com/Benny-Nottonson/voodoo/assets/112336374/08d01776-f8c2-42c5-9e97-b8885dca5a95">
+</p>
 
 ## Built With
 
 * Compute Graph & Tensor partially derived from [Infermo](https://github.com/TilliFe/Infermo)
 * [Mojo](https://github.com/modularml/mojo)
 
-## Roadmap
+## Benchmarks
+### Tested to estimate sin(x) with 1,600,000 data points (50,000 epochs of 32)
 
-See the [open issues](https://github.com/Benny-Nottonson/voodoo/issues) for a list of proposed features (and known issues).
+| Project   | Average Time(s) | Average Loss(% * 100) |
+|----------|------------------|-----------------------|
+| Voodoo   | 3.250541113      | 0.004832965205       |
+| [Infermo](https://github.com/TilliFe/Infermo)  | 17.70960819      | 0.004756938394       |
+| [Dainemo](https://github.com/StijnWoestenborghs/dainemo)  | N/A               | N/A        |
 
 ## Contributing
 

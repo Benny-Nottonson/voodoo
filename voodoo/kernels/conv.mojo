@@ -1,4 +1,4 @@
-from algorithm import vectorize, tile
+from algorithm import vectorize_unroll, tile
 from math import max
 from voodoo import Node
 from ..constants import nelts, prefetch_read, prefetch_write
@@ -231,7 +231,7 @@ struct Conv2D:
                                     output_value + kernel_value * im2col_value,
                                 )
 
-                        vectorize[nelts, fw_vec](kernel_width)
+                        vectorize_unroll[nelts, 1, fw_vec](kernel_width)
 
         im2col.free()
 
@@ -418,7 +418,7 @@ fn im2col2D(
                             ),
                         )
 
-                vectorize[nelts, fw_vec](kernel_width)
+                vectorize_unroll[nelts, 1, fw_vec](kernel_width)
 
             tile[workgroup_function, VariadicList[Int](32, 16, 8, 4, 2, 1)](0, output_width)
 
@@ -470,7 +470,7 @@ fn im2col3D(
                             fn fw_vec_zero[nelts: Int](kernel_x: Int):
                                 im2col.simd_store[nelts](y_index + kernel_x * channels, 0.0)
 
-                            vectorize[nelts, fw_vec_zero](kernel_width)
+                            vectorize_unroll[nelts, 1, fw_vec_zero](kernel_width)
                         else:
                             @parameter
                             fn fw_vec_one[nelts: Int](kernel_x: Int):
@@ -483,7 +483,7 @@ fn im2col3D(
                                                     + input_x * channels
                                     im2col.simd_store[nelts](y_index + kernel_x * channels, input.simd_load[nelts](input_index))
 
-                            vectorize[nelts, fw_vec_one](kernel_width)
+                            vectorize_unroll[nelts, 1, fw_vec_one](kernel_width)
 
             tile[workgroup_function, VariadicList[Int](32, 16, 8, 4, 2, 1)](0, output_height)
 
