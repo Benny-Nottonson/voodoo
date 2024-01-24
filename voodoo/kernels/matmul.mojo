@@ -1,5 +1,5 @@
 from algorithm import vectorize_unroll
-from math import max
+from math import max, min
 from voodoo import Node
 from voodoo.utils import (
     recursive_broadcast,
@@ -49,34 +49,35 @@ struct MMul:
         DTypePointer.prefetch[prefetch_write](c_data)
 
         for m in range(0, M, 4):
-            for k in range(K):
-                let b_off = offset_b + k * N
-
-                @parameter
-                @always_inline
-                fn dot_fw[nelts: Int](n: Int):
-                    let b_data_n = b_data.simd_load[nelts](b_off + n)
+            for kb in range(0, K, nelts):
+                for k in range(kb, min(kb + nelts, K)):
+                    let b_off = offset_b + k * N
 
                     @parameter
                     @always_inline
-                    fn dot_store(c_off_n: Int, a_off: Int):
-                        c_data.simd_store[nelts](
-                            c_off_n,
-                            b_data_n.fma(
-                                a_data.load(a_off + k),
-                                c_data.simd_load[nelts](c_off_n),
-                            ),
-                        )
+                    fn dot_fw[nelts: Int](n: Int):
+                        let b_data_n = b_data.simd_load[nelts](b_off + n)
 
-                    let start_offset_c = offset_c + m * N
-                    let start_offset_a = offset_a + m * K
+                        @parameter
+                        @always_inline
+                        fn dot_store(c_off_n: Int, a_off: Int):
+                            c_data.simd_store[nelts](
+                                c_off_n,
+                                b_data_n.fma(
+                                    a_data.load(a_off + k),
+                                    c_data.simd_load[nelts](c_off_n),
+                                ),
+                            )
 
-                    dot_store(start_offset_c + n, start_offset_a)
-                    dot_store(start_offset_c + N + n, start_offset_a + K)
-                    dot_store(start_offset_c + 2 * N + n, start_offset_a + 2 * K)
-                    dot_store(start_offset_c + 3 * N + n, start_offset_a + 3 * K)
+                        let start_offset_c = offset_c + m * N
+                        let start_offset_a = offset_a + m * K
 
-                vectorize_unroll[nelts, 1, dot_fw](N)
+                        dot_store(start_offset_c + n, start_offset_a)
+                        dot_store(start_offset_c + N + n, start_offset_a + K)
+                        dot_store(start_offset_c + 2 * N + n, start_offset_a + 2 * K)
+                        dot_store(start_offset_c + 3 * N + n, start_offset_a + 3 * K)
+
+                    vectorize_unroll[nelts, 1, dot_fw](N)
 
     @parameter
     @staticmethod
@@ -101,31 +102,32 @@ struct MMul:
         DTypePointer.prefetch[prefetch_read](c_grad)
 
         for m in range(0, M, 2):
-            for n in range(0, N, 2):
-                let c_grad_0 = c_grad.load(offset_c + m * N + n)
-                let c_grad_1 = c_grad.load(offset_c + (m + 1) * N + n)
+            for nb in range(0, N, nelts):
+                for n in range(nb, min(nb + nelts, N), 2):
+                    let c_grad_0 = c_grad.load(offset_c + m * N + n)
+                    let c_grad_1 = c_grad.load(offset_c + (m + 1) * N + n)
 
-                @parameter
-                @always_inline
-                fn dot_bw[nelts: Int](k: Int):
                     @parameter
                     @always_inline
-                    fn dot_store(a_off: Int, b_off: Int, scalar: Float32):
-                        a_grad.simd_store[nelts](
-                            a_off,
-                            b_data.simd_load[nelts](b_off).fma(
-                                scalar,
-                                a_grad.simd_load[nelts](a_off),
-                            ),
-                        )
+                    fn dot_bw[nelts: Int](k: Int):
+                        @parameter
+                        @always_inline
+                        fn dot_store(a_off: Int, b_off: Int, scalar: Float32):
+                            a_grad.simd_store[nelts](
+                                a_off,
+                                b_data.simd_load[nelts](b_off).fma(
+                                    scalar,
+                                    a_grad.simd_load[nelts](a_off),
+                                ),
+                            )
 
-                    let start_offset_a = offset_a + m * K
-                    let start_offset_b = offset_b + k * N
+                        let start_offset_a = offset_a + m * K
+                        let start_offset_b = offset_b + k * N
 
-                    dot_store(start_offset_a + k, start_offset_b + n, c_grad_0)
-                    dot_store(start_offset_a + K + k, start_offset_b + n, c_grad_1)
+                        dot_store(start_offset_a + k, start_offset_b + n, c_grad_0)
+                        dot_store(start_offset_a + K + k, start_offset_b + n, c_grad_1)
 
-                vectorize_unroll[nelts, 1, dot_bw](K)
+                    vectorize_unroll[nelts, 1, dot_bw](K)
 
     @parameter
     @staticmethod
@@ -155,7 +157,6 @@ struct MMul:
         DTypePointer.prefetch[prefetch_read](b_grad)
         DTypePointer.prefetch[prefetch_write](b_grad)
         DTypePointer.prefetch[prefetch_read](c_grad)
-
         for k in range(K):
             let _a_off = offset_a + k
             let _b_off = offset_b + k * N
@@ -169,7 +170,7 @@ struct MMul:
                 fn dot_bw[nelts: Int](n: Int):
                     let b_off = _b_off + n
 
-                    b_grad.simd_store[nelts](
+                    b.store_grad[nelts](
                         b_off,
                         c_grad.simd_load[nelts](_c_off + n).fma(
                             a_data,
