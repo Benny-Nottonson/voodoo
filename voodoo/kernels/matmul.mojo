@@ -1,4 +1,4 @@
-from algorithm import vectorize_unroll
+from algorithm import vectorize
 from math import max, min
 from voodoo import Node
 from voodoo.utils import (
@@ -77,7 +77,7 @@ struct MMul:
                         dot_store(start_offset_c + 2 * N + n, start_offset_a + 2 * K)
                         dot_store(start_offset_c + 3 * N + n, start_offset_a + 3 * K)
 
-                    vectorize_unroll[nelts, 1, dot_fw](N)
+                    vectorize[nelts, dot_fw](N)
 
     @parameter
     @staticmethod
@@ -127,7 +127,7 @@ struct MMul:
                         dot_store(start_offset_a + k, start_offset_b + n, c_grad_0)
                         dot_store(start_offset_a + K + k, start_offset_b + n, c_grad_1)
 
-                    vectorize_unroll[nelts, 1, dot_bw](K)
+                    vectorize[nelts, dot_bw](K)
 
     @parameter
     @staticmethod
@@ -178,4 +178,4 @@ struct MMul:
                         ),
                     )
 
-                vectorize_unroll[nelts, 1, dot_bw](N)
+                vectorize[nelts, dot_bw](N)

@@ -1,4 +1,4 @@
-from algorithm import vectorize_unroll
+from algorithm import vectorize
 from math import max
 from voodoo import Node
 from ..constants import prefetch_read, prefetch_write, f32_max, nelts
@@ -42,7 +42,7 @@ struct MaxPool1D:
                             let value = a.load_data[nelts](batch_offset + input_index)
                             max_value = max(max_value, value.reduce_max())
 
-                    vectorize_unroll[nelts, 1, fw_vec](kernel_width)
+                    vectorize[nelts, fw_vec](kernel_width)
                     c.store_data(
                         output_batch_offset + output_channel_offset + output_pos,
                         max_value,
@@ -90,7 +90,7 @@ struct MaxPool1D:
                             let grad_value = (value == max_value).select(grad, 0)
                             a.store_grad[nelts](batch_offset + input_index, grad_value)
 
-                    vectorize_unroll[nelts, 1, bw_vec](kernel_width)
+                    vectorize[nelts, bw_vec](kernel_width)
 
                     let grad = c.load_grad(output_index)
                     a.store_grad(batch_offset + input_pos, grad.reduce_add())
@@ -146,7 +146,7 @@ struct MaxPool2D:
                                     )
                                     max_value = max(max_value, value.reduce_max())
 
-                            vectorize_unroll[nelts, 1, fw_vec](kernel_width)
+                            vectorize[nelts, fw_vec](kernel_width)
                         c.store_data(
                             output_batch_offset
                             + output_channel_offset
@@ -218,7 +218,7 @@ struct MaxPool2D:
                                         batch_offset + input_index, grad_value
                                     )
 
-                            vectorize_unroll[nelts, 1, bw_vec](kernel_width)
+                            vectorize[nelts, bw_vec](kernel_width)
 
                         let grad = c.load_grad(output_index)
                         a.store_grad(

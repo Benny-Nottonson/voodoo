@@ -1,4 +1,4 @@
-from algorithm import vectorize_unroll, tile
+from algorithm import vectorize, tile
 from math import max
 from voodoo import Node
 from ..constants import nelts, prefetch_read, prefetch_write
@@ -233,7 +233,7 @@ struct Conv2D:
                                     output_value + kernel_value * im2col_value,
                                 )
 
-                        vectorize_unroll[nelts, 1, fw_vec](kernel_width)
+                        vectorize[nelts, fw_vec](kernel_width)
 
         im2col.free()
 
@@ -420,7 +420,7 @@ fn im2col2D(
                             ),
                         )
 
-                vectorize_unroll[nelts, 1, fw_vec](kernel_width)
+                vectorize[nelts, fw_vec](kernel_width)
 
             tile[workgroup_function, tile_sizes](0, output_width)
 
@@ -473,7 +473,7 @@ fn im2col3D(
                                     y_index + kernel_x * channels, 0.0
                                 )
 
-                            vectorize_unroll[nelts, 1, fw_vec_zero](kernel_width)
+                            vectorize[nelts, fw_vec_zero](kernel_width)
                         else:
 
                             @parameter
@@ -490,7 +490,7 @@ fn im2col3D(
                                         input.simd_load[nelts](input_index),
                                     )
 
-                            vectorize_unroll[nelts, 1, fw_vec_one](kernel_width)
+                            vectorize[nelts, fw_vec_one](kernel_width)
 
             tile[workgroup_function, tile_sizes](0, output_height)
 

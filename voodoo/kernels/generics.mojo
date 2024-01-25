@@ -1,4 +1,4 @@
-from algorithm import vectorize_unroll
+from algorithm import vectorize
 from voodoo.utils import (
     shape_a,
     shape_b,
@@ -55,7 +55,7 @@ struct GenericActivation[
                 fw_vec[nelts, arg1, arg2, arg3](parent1_data.simd_load[nelts](i)),
             )
 
-        vectorize_unroll[nelts, 1, vectorized_fw](node.load_cap())
+        vectorize[nelts, vectorized_fw](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
@@ -79,7 +79,7 @@ struct GenericActivation[
                 * bw_vec[nelts, arg1, arg2, arg3](parent1_data.simd_load[nelts](i)),
             )
 
-        vectorize_unroll[nelts, 1, vectorized_bw](node.load_cap())
+        vectorize[nelts, vectorized_bw](node.load_cap())
 
 
 struct GenericArithmetic[
@@ -100,7 +100,7 @@ struct GenericArithmetic[
                 fw_vec[nelts](parent1_data.simd_load[nelts](i)),
             )
 
-        vectorize_unroll[nelts, 1, vectorized_fw](node.load_cap())
+        vectorize[nelts, vectorized_fw](node.load_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
@@ -123,7 +123,7 @@ struct GenericArithmetic[
                 * bw_vec[nelts](parent1_data.simd_load[nelts](i)),
             )
 
-        vectorize_unroll[nelts, 1, vectorized_bw](node.load_cap())
+        vectorize[nelts, vectorized_bw](node.load_cap())
 
 
 struct GenericBinaryArithmetic[
@@ -177,7 +177,7 @@ struct GenericBinaryArithmetic[
                 ),
             )
 
-        vectorize_unroll[nelts, 1, vectorized_fw](c_rest)
+        vectorize[nelts, vectorized_fw](c_rest)
 
     @parameter
     @staticmethod
@@ -232,9 +232,9 @@ struct GenericBinaryArithmetic[
 
         @parameter
         if is_a:
-            vectorize_unroll[nelts, 1, vectorized_bw_a](c_rest)
+            vectorize[nelts, vectorized_bw_a](c_rest)
         else:
-            vectorize_unroll[nelts, 1, vectorized_bw_b](c_rest)
+            vectorize[nelts, vectorized_bw_b](c_rest)
 
     @parameter
     @always_inline
@@ -273,7 +273,7 @@ struct GenericLoss[
                 ).reduce_add(),
             )
 
-        vectorize_unroll[nelts, 1, vectorized_fw](cap)
+        vectorize[nelts, vectorized_fw](cap)
         node.store_data(0, node.load_data(0) / cap / Float32(N))
 
     @staticmethod
@@ -303,7 +303,7 @@ struct GenericLoss[
             y_pred_grad.simd_store[nelts](i, y_pred_grad.simd_load[nelts](i) + grad)
             y_true_grad.simd_store[nelts](i, y_true_grad.simd_load[nelts](i) - grad)
 
-        vectorize_unroll[nelts, 1, vectorized_mae_bw](cap)
+        vectorize[nelts, vectorized_mae_bw](cap)
 
 
 struct GenericOptimizer[fw_vec: generic_optimizer_vectorized]:
@@ -329,4 +329,4 @@ struct GenericOptimizer[fw_vec: generic_optimizer_vectorized]:
                         - fw_vec[nelts, learning_rate](node_grad.simd_load[nelts](i)),
                     )
 
-                vectorize_unroll[nelts, 1, vectorized_update](node.load_cap())
+                vectorize[nelts, vectorized_update](node.load_cap())
