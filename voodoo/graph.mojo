@@ -1,6 +1,6 @@
 from memory import memset_zero
 from math import log, log2, exp, exp2, ceil, round
-from algorithm import vectorize_unroll, unswitch
+from algorithm import vectorize, unswitch
 
 from voodoo.kernels import op_tuple, binary_op, unary_op, load_kernels
 from .node import Node

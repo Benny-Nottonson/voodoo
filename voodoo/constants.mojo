@@ -1,7 +1,6 @@
 from sys.param_env import env_get_int
 from math.limit import inf
 from sys.intrinsics import PrefetchOptions
-from autotune import autotune, search
 
 alias memory_pool_size = 2500
 alias workers = env_get_int["WORKERS", 0]()
