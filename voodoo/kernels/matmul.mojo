@@ -31,13 +31,15 @@ struct MMul:
     fn kernel_mmul_fw(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let M = a.shape_ptr.load().load(a.num_dims_ptr.load() - 2)
-        let K = b.shape_ptr.load().load(b.num_dims_ptr.load() - 2)
-        let N = c.shape_ptr.load().load(c.num_dims_ptr.load() - 1)
+        let shape_info = load_shapes_and_dims(a, b, c, a_index, b_index, c_index)
 
-        let offset_a = a_index * M * a.shape_ptr.load().load(a.num_dims_ptr.load() - 1)
-        let offset_b = b_index * K * b.shape_ptr.load().load(b.num_dims_ptr.load() - 1)
-        let offset_c = c_index * N * c.shape_ptr.load().load(c.num_dims_ptr.load() - 1)
+        let M = shape_info[0]
+        let K = shape_info[1]
+        let N = shape_info[2]
+
+        let offset_a = shape_info[3]
+        let offset_b = shape_info[4]
+        let offset_c = shape_info[5]
 
         let a_data = a.data.load(0)
         let b_data = b.data.load(0)
@@ -84,13 +86,15 @@ struct MMul:
     fn kernel_mmul_bw_a(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let M = a.shape_ptr.load().load(a.num_dims_ptr.load() - 2)
-        let K = b.shape_ptr.load().load(b.num_dims_ptr.load() - 2)
-        let N = c.shape_ptr.load().load(c.num_dims_ptr.load() - 1)
+        let shape_info = load_shapes_and_dims(a, b, c, a_index, b_index, c_index)
 
-        let offset_a = a_index * M * a.shape_ptr.load().load(a.num_dims_ptr.load() - 1)
-        let offset_b = b_index * K * b.shape_ptr.load().load(b.num_dims_ptr.load() - 1)
-        let offset_c = c_index * N * c.shape_ptr.load().load(c.num_dims_ptr.load() - 1)
+        let M = shape_info[0]
+        let K = shape_info[1]
+        let N = shape_info[2]
+
+        let offset_a = shape_info[3]
+        let offset_b = shape_info[4]
+        let offset_c = shape_info[5]
 
         let a_grad = a.data.load(1)
         let b_data = b.data.load(0)
@@ -134,20 +138,15 @@ struct MMul:
     fn kernel_mmul_bw_b(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let shape_a = a.shape_ptr.load()
-        let shape_b = b.shape_ptr.load()
-        let shape_c = c.shape_ptr.load()
+        let shape_info = load_shapes_and_dims(a, b, c, a_index, b_index, c_index)
 
-        let a_dims = a.num_dims_ptr.load()
-        let b_dims = b.num_dims_ptr.load()
+        let M = shape_info[0]
+        let K = shape_info[1]
+        let N = shape_info[2]
 
-        let M = shape_a.load(a_dims - 2)
-        let K = shape_b.load(b_dims - 2)
-        let N = shape_c.load(b_dims - 1)
-
-        let offset_a = a_index * M * shape_a.load(a_dims - 1)
-        let offset_b = b_index * K * shape_b.load(b_dims - 1)
-        let offset_c = c_index * N * shape_c.load(c.num_dims_ptr.load() - 1)
+        let offset_a = shape_info[3]
+        let offset_b = shape_info[4]
+        let offset_c = shape_info[5]
 
         let a_data = a.data.load(0)
         let b_grad = b.data.load(1)
@@ -157,6 +156,7 @@ struct MMul:
         DTypePointer.prefetch[prefetch_read](b_grad)
         DTypePointer.prefetch[prefetch_write](b_grad)
         DTypePointer.prefetch[prefetch_read](c_grad)
+
         for k in range(K):
             let _a_off = offset_a + k
             let _b_off = offset_b + k * N
@@ -179,3 +179,27 @@ struct MMul:
                     )
 
                 vectorize[nelts, dot_bw](N)
+
+
+@parameter
+@always_inline
+fn load_shapes_and_dims(
+    a: Node, b: Node, c: Node, a_index: Int, b_index: Int, c_index: Int
+) -> StaticIntTuple[6]:
+    let a_shape = a.shape_ptr.load()
+    let b_shape = b.shape_ptr.load()
+    let c_shape = c.shape_ptr.load()
+
+    let a_dims = a.num_dims_ptr.load()
+    let b_dims = b.num_dims_ptr.load()
+    let c_dims = c.num_dims_ptr.load()
+
+    let M = a_shape.load(a_dims - 2)
+    let K = b_shape.load(b_dims - 2)
+    let N = c_shape.load(c_dims - 1)
+
+    let offset_a = a_index * M * a_shape.load(a_dims - 1)
+    let offset_b = b_index * K * b_shape.load(b_dims - 1)
+    let offset_c = c_index * N * N
+
+    return StaticIntTuple[6](M, K, N, offset_a, offset_b, offset_c)
