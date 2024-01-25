@@ -179,6 +179,12 @@ struct Node:
     fn store_computed(self, value: Bool):
         self.computed_ptr.store(value)
 
+    fn is_zero(self) -> Bool:
+        for i in range(self.load_cap()):
+            if self.load_data(i) != 0.0:
+                return False
+        return True
+
     @always_inline
     fn load_data(self, idx: Int) -> Float32:
         return self.data.load().load(idx)
