@@ -78,7 +78,6 @@ struct Mish[]:
     alias bw = GenericActivation[mish_fw_vec, mish_bw_vec, 0.0, 0.0, 0.0].bw
 
 
-@parameter
 @always_inline
 fn relu_fw_vec[
     nelts: Int,
@@ -94,7 +93,6 @@ fn relu_fw_vec[
     return (x > threshold).select(x, negative_slope * x).min(max_value)
 
 
-@parameter
 @always_inline
 fn relu_bw_vec[
     nelts: Int,
@@ -110,7 +108,6 @@ fn relu_bw_vec[
     return (x < max_value).select((x > threshold).select(1.0, negative_slope), 0.0)
 
 
-@parameter
 @always_inline
 fn sigmoid_fw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
@@ -120,7 +117,6 @@ fn sigmoid_fw_vec[
     return 1.0 / (1.0 + exp(-x))
 
 
-@parameter
 @always_inline
 fn sigmoid_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
@@ -131,7 +127,6 @@ fn sigmoid_bw_vec[
     return e_x / (1.0 + e_x) ** 2
 
 
-@parameter
 @always_inline
 fn softplus_fw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
@@ -141,7 +136,6 @@ fn softplus_fw_vec[
     return log(1.0 + exp(x))
 
 
-@parameter
 @always_inline
 fn softplus_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
@@ -152,7 +146,6 @@ fn softplus_bw_vec[
     return e_x / (1.0 + e_x)
 
 
-@parameter
 @always_inline
 fn softsign_fw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
@@ -162,7 +155,6 @@ fn softsign_fw_vec[
     return x / (1.0 + abs(x))
 
 
-@parameter
 @always_inline
 fn softsign_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
@@ -173,7 +165,6 @@ fn softsign_bw_vec[
     return 1.0 / abs(x).fma(2.0, x.fma(x, 1.0))
 
 
-@parameter
 @always_inline
 fn tanh_fw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
@@ -183,7 +174,6 @@ fn tanh_fw_vec[
     return tanh(x)
 
 
-@parameter
 @always_inline
 fn tanh_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
@@ -193,7 +183,6 @@ fn tanh_bw_vec[
     return 1.0 / cosh(x) ** 2
 
 
-@parameter
 @always_inline
 fn selu_fw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
@@ -203,7 +192,6 @@ fn selu_fw_vec[
     return (x > 0.0).select(1.05070098 * x, exp(x).fma(1.75809932607, -1.75809932607))
 
 
-@parameter
 @always_inline
 fn selu_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
@@ -213,7 +201,6 @@ fn selu_bw_vec[
     return (x > 0.0).select(1.05070098, 1.75809932607 * exp(x))
 
 
-@parameter
 @always_inline
 fn elu_fw_vec[
     nelts: Int,
@@ -229,7 +216,6 @@ fn elu_fw_vec[
     return (x > 0.0).select(x, alpha * (exp(x) - 1.0))
 
 
-@parameter
 @always_inline
 fn elu_bw_vec[
     nelts: Int,
@@ -245,7 +231,6 @@ fn elu_bw_vec[
     return (x > 0.0).select(1.0, alpha * exp(x))
 
 
-@parameter
 @always_inline
 fn exp_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
@@ -255,7 +240,6 @@ fn exp_vec[
     return exp(x)
 
 
-@parameter
 @always_inline
 fn silu_fw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
@@ -265,7 +249,6 @@ fn silu_fw_vec[
     return x / (1.0 + exp(-x))
 
 
-@parameter
 @always_inline
 fn silu_bw_vec[
     nelts: Int, arg1: Float32, arg2: Float32, arg3: Float32
@@ -276,7 +259,6 @@ fn silu_bw_vec[
     return (e_x.fma(x, e_x) + exp(2.0 * x)) / (e_x + 1.0) ** 2
 
 
-@parameter
 @always_inline
 fn gelu_fw_vec[
     nelts: Int,
@@ -295,7 +277,6 @@ fn gelu_fw_vec[
     return tanh(x.fma(0.7978845608028654, 0.03567740813 * x**3)).fma(x_05, x_05)
 
 
-@parameter
 @always_inline
 fn gelu_bw_vec[
     nelts: Int,
@@ -318,7 +299,6 @@ fn gelu_bw_vec[
     )
 
 
-@parameter
 @always_inline
 fn hsig_fw_vec[
     nelts: Int,
@@ -331,7 +311,6 @@ fn hsig_fw_vec[
     return (x > 2.5).select(1.0, (x > -2.5).select(x.fma(0.2, 0.5), 0.0))
 
 
-@parameter
 @always_inline
 fn hsig_bw_vec[
     nelts: Int,
@@ -344,7 +323,6 @@ fn hsig_bw_vec[
     return ((x > -2.5) & (x < 2.5)).cast[DType.float32]() * 0.2
 
 
-@parameter
 @always_inline
 fn linear_fw_vec[
     nelts: Int,
@@ -357,7 +335,6 @@ fn linear_fw_vec[
     return x
 
 
-@parameter
 @always_inline
 fn linear_bw_vec[
     nelts: Int,
@@ -370,7 +347,6 @@ fn linear_bw_vec[
     return 1.0
 
 
-@parameter
 @always_inline
 fn mish_fw_vec[
     nelts: Int,
@@ -383,7 +359,6 @@ fn mish_fw_vec[
     return x * tanh(log(1.0 + exp(x)))
 
 
-@parameter
 @always_inline
 fn mish_bw_vec[
     nelts: Int,

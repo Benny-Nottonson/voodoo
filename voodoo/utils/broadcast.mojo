@@ -37,8 +37,8 @@ fn strides_b(depth: Int, a: Node, b: Node) -> Int:
 fn recursive_broadcast[
     kernel: fn (
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
-    ) -> None,
-    base_case: fn (depth: Int, a: Node, b: Node) -> Bool,
+    ) capturing -> None,
+    base_case: fn (depth: Int, a: Node, b: Node) capturing -> Bool,
 ](
     c: Node,
     a: Node,
@@ -98,8 +98,8 @@ fn recursive_broadcast[
 fn recursive_broadcast_bw[
     kernel: fn (
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
-    ) -> None,
-    base_case: fn (depth: Int, a: Node, b: Node) -> Bool,
+    ) capturing -> None,
+    base_case: fn (depth: Int, a: Node, b: Node) capturing -> Bool,
 ](
     c: Node,
     a: Node,

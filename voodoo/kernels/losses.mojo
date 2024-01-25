@@ -23,7 +23,6 @@ struct MSLE[]:
     alias bw = GenericLoss[msle_error, msle_grad].bw
 
 
-@parameter
 @always_inline
 fn mse_error[
     nelts: Int
@@ -34,7 +33,6 @@ fn mse_error[
     return (y_pred - y_true) ** 2.0
 
 
-@parameter
 @always_inline
 fn mse_grad[
     nelts: Int
@@ -48,7 +46,6 @@ fn mse_grad[
     return -2.0 * (y_pred - y_true)
 
 
-@parameter
 @always_inline
 fn mae_error[
     nelts: Int
@@ -59,7 +56,6 @@ fn mae_error[
     return abs(y_pred - y_true)
 
 
-@parameter
 @always_inline
 fn mae_grad[
     nelts: Int
@@ -73,7 +69,6 @@ fn mae_grad[
     return (y_pred > y_true).select(Float32(-1.0), 1.0)
 
 
-@parameter
 @always_inline
 fn mape_error[
     nelts: Int
@@ -84,7 +79,6 @@ fn mape_error[
     return abs(y_pred - y_true) / (y_true + epsilon)
 
 
-@parameter
 @always_inline
 fn mape_grad[
     nelts: Int
@@ -98,7 +92,6 @@ fn mape_grad[
     return (y_pred > y_true).cast[DType.float32]() * Float32(-2.0) + Float32(1.0)
 
 
-@parameter
 @always_inline
 fn msle_error[
     nelts: Int
@@ -113,7 +106,6 @@ fn msle_error[
     )
 
 
-@parameter
 @always_inline
 fn msle_grad[
     nelts: Int

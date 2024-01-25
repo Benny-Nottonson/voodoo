@@ -34,7 +34,7 @@ fn main() raises:
     let input = Tensor(data_shape).initialize["he_normal", 0, 1]().dynamic()
     let true_vals = Tensor(data_shape)
 
-    var x = (input @ W1 + b1).compute_activation["relu"]()
+    var x = (input @ W1 + b1).compute_activation["sigmoid"]()
     x = (x @ W2 + b2).compute_activation["relu"]()
     x = x @ W3 + b3
     let loss = x.compute_loss["mse"](true_vals)
@@ -72,4 +72,4 @@ fn main() raises:
 
     print_no_newline("Total Time: ")
     info(String(nanoseconds_to_seconds(now() - initial_start)) + "s\n\n")
-    sys.external_call["exit", NoneType]()
+    external_call["exit", NoneType]()
