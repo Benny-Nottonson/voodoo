@@ -268,9 +268,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load()
             .load()
-            .arithmetic_general[sub_code](
-                self.node_ptr.load(), other.node_ptr.load()
-            )
+            .arithmetic_general[sub_code](self.node_ptr.load(), other.node_ptr.load())
         )
         return new_tensor.node_ptr.load().load().is_zero()
 
