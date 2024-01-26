@@ -5,7 +5,7 @@ from voodoo.utils import (
     recursive_broadcast,
     recursive_broadcast_bw,
 )
-from ..constants import prefetch_read, prefetch_write, f32_max, nelts
+from ..constants import PREFETCH_READ, PREFETCH_WRITE, F32_MAX, NELTS
 
 
 struct MMul:
@@ -45,29 +45,29 @@ struct MMul:
         let b_data = b.data.load(0)
         let c_data = c.data.load(0)
 
-        DTypePointer.prefetch[prefetch_read](a_data)
-        DTypePointer.prefetch[prefetch_read](b_data)
-        DTypePointer.prefetch[prefetch_read](c_data)
-        DTypePointer.prefetch[prefetch_write](c_data)
+        DTypePointer.prefetch[PREFETCH_READ](a_data)
+        DTypePointer.prefetch[PREFETCH_READ](b_data)
+        DTypePointer.prefetch[PREFETCH_READ](c_data)
+        DTypePointer.prefetch[PREFETCH_WRITE](c_data)
 
         for m in range(0, M, 4):
-            for kb in range(0, K, nelts):
-                for k in range(kb, min(kb + nelts, K)):
+            for kb in range(0, K, NELTS):
+                for k in range(kb, min(kb + NELTS, K)):
                     let b_off = offset_b + k * N
 
                     @parameter
                     @always_inline
-                    fn dot_fw[nelts: Int](n: Int):
-                        let b_data_n = b_data.simd_load[nelts](b_off + n)
+                    fn dot_fw[NELTS: Int](n: Int):
+                        let b_data_n = b_data.simd_load[NELTS](b_off + n)
 
                         @parameter
                         @always_inline
                         fn dot_store(c_off_n: Int, a_off: Int):
-                            c_data.simd_store[nelts](
+                            c_data.simd_store[NELTS](
                                 c_off_n,
                                 b_data_n.fma(
                                     a_data.load(a_off + k),
-                                    c_data.simd_load[nelts](c_off_n),
+                                    c_data.simd_load[NELTS](c_off_n),
                                 ),
                             )
 
@@ -79,7 +79,7 @@ struct MMul:
                         dot_store(start_offset_c + 2 * N + n, start_offset_a + 2 * K)
                         dot_store(start_offset_c + 3 * N + n, start_offset_a + 3 * K)
 
-                    vectorize[nelts, dot_fw](N)
+                    vectorize[NELTS, dot_fw](N)
 
     @parameter
     @staticmethod
@@ -100,28 +100,28 @@ struct MMul:
         let b_data = b.data.load(0)
         let c_grad = c.data.load(1)
 
-        DTypePointer.prefetch[prefetch_read](a_grad)
-        DTypePointer.prefetch[prefetch_write](a_grad)
-        DTypePointer.prefetch[prefetch_read](b_data)
-        DTypePointer.prefetch[prefetch_read](c_grad)
+        DTypePointer.prefetch[PREFETCH_READ](a_grad)
+        DTypePointer.prefetch[PREFETCH_WRITE](a_grad)
+        DTypePointer.prefetch[PREFETCH_READ](b_data)
+        DTypePointer.prefetch[PREFETCH_READ](c_grad)
 
         for m in range(0, M, 2):
-            for nb in range(0, N, nelts):
-                for n in range(nb, min(nb + nelts, N), 2):
+            for nb in range(0, N, NELTS):
+                for n in range(nb, min(nb + NELTS, N), 2):
                     let c_grad_0 = c_grad.load(offset_c + m * N + n)
                     let c_grad_1 = c_grad.load(offset_c + (m + 1) * N + n)
 
                     @parameter
                     @always_inline
-                    fn dot_bw[nelts: Int](k: Int):
+                    fn dot_bw[NELTS: Int](k: Int):
                         @parameter
                         @always_inline
                         fn dot_store(a_off: Int, b_off: Int, scalar: Float32):
-                            a_grad.simd_store[nelts](
+                            a_grad.simd_store[NELTS](
                                 a_off,
-                                b_data.simd_load[nelts](b_off).fma(
+                                b_data.simd_load[NELTS](b_off).fma(
                                     scalar,
-                                    a_grad.simd_load[nelts](a_off),
+                                    a_grad.simd_load[NELTS](a_off),
                                 ),
                             )
 
@@ -131,7 +131,7 @@ struct MMul:
                         dot_store(start_offset_a + k, start_offset_b + n, c_grad_0)
                         dot_store(start_offset_a + K + k, start_offset_b + n, c_grad_1)
 
-                    vectorize[nelts, dot_bw](K)
+                    vectorize[NELTS, dot_bw](K)
 
     @parameter
     @staticmethod
@@ -152,10 +152,10 @@ struct MMul:
         let b_grad = b.data.load(1)
         let c_grad = c.data.load(1)
 
-        DTypePointer.prefetch[prefetch_read](a_data)
-        DTypePointer.prefetch[prefetch_read](b_grad)
-        DTypePointer.prefetch[prefetch_write](b_grad)
-        DTypePointer.prefetch[prefetch_read](c_grad)
+        DTypePointer.prefetch[PREFETCH_READ](a_data)
+        DTypePointer.prefetch[PREFETCH_READ](b_grad)
+        DTypePointer.prefetch[PREFETCH_WRITE](b_grad)
+        DTypePointer.prefetch[PREFETCH_READ](c_grad)
 
         for k in range(K):
             let _a_off = offset_a + k
@@ -167,18 +167,18 @@ struct MMul:
 
                 @parameter
                 @always_inline
-                fn dot_bw[nelts: Int](n: Int):
+                fn dot_bw[NELTS: Int](n: Int):
                     let b_off = _b_off + n
 
-                    b.store_grad[nelts](
+                    b.store_grad[NELTS](
                         b_off,
-                        c_grad.simd_load[nelts](_c_off + n).fma(
+                        c_grad.simd_load[NELTS](_c_off + n).fma(
                             a_data,
-                            b_grad.simd_load[nelts](b_off),
+                            b_grad.simd_load[NELTS](b_off),
                         ),
                     )
 
-                vectorize[nelts, dot_bw](N)
+                vectorize[NELTS, dot_bw](N)
 
 
 @parameter

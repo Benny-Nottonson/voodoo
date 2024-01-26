@@ -4,7 +4,7 @@ from voodoo.utils import info
 
 alias train_datapath = "./datasets/mnist/MNIST_train.csv"
 alias test_datapath = "./datasets/mnist/MNIST_test.csv"
-alias nelts = simdwidthof[DType.int8]()
+alias NELTS = simdwidthof[DType.int8]()
 
 # Data from https://github.com/halimb/MNIST-txt
 

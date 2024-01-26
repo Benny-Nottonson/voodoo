@@ -47,32 +47,32 @@ from .arithmetic import (
 )
 from .losses import MSE, MAE, MAPE, MSLE
 from ..operator_codes import *
-from ..constants import f32_max
+from ..constants import F32_MAX, UNARY_OP, BINARY_OP, OP_TUPLE, NU, NB
 
 
 @always_inline
 fn k_add[
     code: Int,
-    u_fw: unary_op,
-    u_bw: unary_op,
-](kernel: Pointer[op_tuple]):
-    kernel.store(code, op_tuple(u_fw, _b))
-    kernel.store(code + 1, op_tuple(u_bw, _b))
+    u_fw: UNARY_OP,
+    u_bw: UNARY_OP,
+](kernel: Pointer[OP_TUPLE]):
+    kernel.store(code, OP_TUPLE(u_fw, NB))
+    kernel.store(code + 1, OP_TUPLE(u_bw, NB))
 
 
 @always_inline
 fn k_add[
     code: Int,
-    b_fw: binary_op,
-    b_bw: binary_op,
-](kernel: Pointer[op_tuple]):
-    kernel.store(code, op_tuple(_u, b_fw))
-    kernel.store(code + 1, op_tuple(_u, b_bw))
+    b_fw: BINARY_OP,
+    bN_Bw: BINARY_OP,
+](kernel: Pointer[OP_TUPLE]):
+    kernel.store(code, OP_TUPLE(NU, b_fw))
+    kernel.store(code + 1, OP_TUPLE(NU, bN_Bw))
 
 
 @always_inline
-fn load_kernels() -> Pointer[op_tuple]:
-    let kernels = Pointer[op_tuple].alloc(100)
+fn load_kernels() -> Pointer[OP_TUPLE]:
+    let kernels = Pointer[OP_TUPLE].alloc(100)
     k_add[copy_code, Copy.fw, Copy.bw](kernels)
     k_add[reshape_code, Reshape.fw, Reshape.bw](kernels)
     k_add[transp_code, Transpose.fw, Transpose.bw](kernels)
@@ -101,7 +101,7 @@ fn load_kernels() -> Pointer[op_tuple]:
     k_add[mae_code, MAE.fw, MAE.bw](kernels)
     k_add[mape_code, MAPE.fw, MAPE.bw](kernels)
     k_add[msle_code, MSLE.fw, MSLE.bw](kernels)
-    k_add[relu_code, Relu[0.0, f32_max, 0.0].fw, Relu[0.0, f32_max, 0.0].bw](kernels)
+    k_add[relu_code, Relu[0.0, F32_MAX, 0.0].fw, Relu[0.0, F32_MAX, 0.0].bw](kernels)
     k_add[sigmoid_code, Sigmoid.fw, Sigmoid.bw](kernels)
     k_add[softplus_code, Softplus.fw, Softplus.bw](kernels)
     k_add[softsign_code, Softsign.fw, Softsign.bw](kernels)

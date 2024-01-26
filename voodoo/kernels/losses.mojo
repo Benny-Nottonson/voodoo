@@ -1,6 +1,6 @@
 from .generics import GenericLoss
 from math import log, abs
-from ..constants import epsilon
+from ..constants import EPSILON
 
 
 struct MSE[]:
@@ -25,9 +25,9 @@ struct MSLE[]:
 
 @always_inline
 fn mse_error[
-    nelts: Int
-](y_pred: SIMD[DType.float32, nelts], y_true: SIMD[DType.float32, nelts]) -> SIMD[
-    DType.float32, nelts
+    NELTS: Int
+](y_pred: SIMD[DType.float32, NELTS], y_true: SIMD[DType.float32, NELTS]) -> SIMD[
+    DType.float32, NELTS
 ]:
     # f(x, y) = (x - y)^2
     return (y_pred - y_true) ** 2.0
@@ -35,22 +35,22 @@ fn mse_error[
 
 @always_inline
 fn mse_grad[
-    nelts: Int
+    NELTS: Int
 ](
-    y_pred: SIMD[DType.float32, nelts],
-    y_true: SIMD[DType.float32, nelts],
+    y_pred: SIMD[DType.float32, NELTS],
+    y_true: SIMD[DType.float32, NELTS],
     cap: Float32,
     N: Int,
-) -> SIMD[DType.float32, nelts]:
+) -> SIMD[DType.float32, NELTS]:
     # f'(x, y) with respect to y = -2(x - y)
     return -2.0 * (y_pred - y_true)
 
 
 @always_inline
 fn mae_error[
-    nelts: Int
-](y_pred: SIMD[DType.float32, nelts], y_true: SIMD[DType.float32, nelts]) -> SIMD[
-    DType.float32, nelts
+    NELTS: Int
+](y_pred: SIMD[DType.float32, NELTS], y_true: SIMD[DType.float32, NELTS]) -> SIMD[
+    DType.float32, NELTS
 ]:
     # f(x, y) = |x - y|
     return abs(y_pred - y_true)
@@ -58,45 +58,45 @@ fn mae_error[
 
 @always_inline
 fn mae_grad[
-    nelts: Int
+    NELTS: Int
 ](
-    y_pred: SIMD[DType.float32, nelts],
-    y_true: SIMD[DType.float32, nelts],
+    y_pred: SIMD[DType.float32, NELTS],
+    y_true: SIMD[DType.float32, NELTS],
     cap: Float32,
     N: Int,
-) -> SIMD[DType.float32, nelts]:
+) -> SIMD[DType.float32, NELTS]:
     # f'(x, y) with respect to y = -1 if x > y else 1
     return (y_pred > y_true).select(Float32(-1.0), 1.0)
 
 
 @always_inline
 fn mape_error[
-    nelts: Int
-](y_pred: SIMD[DType.float32, nelts], y_true: SIMD[DType.float32, nelts]) -> SIMD[
-    DType.float32, nelts
+    NELTS: Int
+](y_pred: SIMD[DType.float32, NELTS], y_true: SIMD[DType.float32, NELTS]) -> SIMD[
+    DType.float32, NELTS
 ]:
     # f(x, y) = |x - y| / y
-    return abs(y_pred - y_true) / (y_true + epsilon)
+    return abs(y_pred - y_true) / (y_true + EPSILON)
 
 
 @always_inline
 fn mape_grad[
-    nelts: Int
+    NELTS: Int
 ](
-    y_pred: SIMD[DType.float32, nelts],
-    y_true: SIMD[DType.float32, nelts],
+    y_pred: SIMD[DType.float32, NELTS],
+    y_true: SIMD[DType.float32, NELTS],
     cap: Float32,
     N: Int,
-) -> SIMD[DType.float32, nelts]:
+) -> SIMD[DType.float32, NELTS]:
     # f'(x, y) with respect to y = -1 if x > y else 1
     return (y_pred > y_true).cast[DType.float32]() * Float32(-2.0) + Float32(1.0)
 
 
 @always_inline
 fn msle_error[
-    nelts: Int
-](y_pred: SIMD[DType.float32, nelts], y_true: SIMD[DType.float32, nelts]) -> SIMD[
-    DType.float32, nelts
+    NELTS: Int
+](y_pred: SIMD[DType.float32, NELTS], y_true: SIMD[DType.float32, NELTS]) -> SIMD[
+    DType.float32, NELTS
 ]:
     # f(x, y) = (log(x + 1) - log(y + 1))^2
     let y_pred_clipped = (y_pred > 0.0).cast[DType.float32]() * y_pred
@@ -108,13 +108,13 @@ fn msle_error[
 
 @always_inline
 fn msle_grad[
-    nelts: Int
+    NELTS: Int
 ](
-    y_pred: SIMD[DType.float32, nelts],
-    y_true: SIMD[DType.float32, nelts],
+    y_pred: SIMD[DType.float32, NELTS],
+    y_true: SIMD[DType.float32, NELTS],
     cap: Float32,
     N: Int,
-) -> SIMD[DType.float32, nelts]:
+) -> SIMD[DType.float32, NELTS]:
     # f'(x, y) with respect to y = -2(log(x + 1) - log(y + 1)) / (y + 1)
     let y_pred_clipped = (y_pred > 0.0).cast[DType.float32]() * y_pred
     let y_true_clipped = (y_true > 0.0).cast[DType.float32]() * y_true

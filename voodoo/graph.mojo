@@ -2,12 +2,12 @@ from memory import memset_zero
 from math import log, log2, exp, exp2, ceil, round
 from algorithm import vectorize, unswitch
 
-from voodoo.kernels import op_tuple, binary_op, unary_op, load_kernels
+from voodoo.kernels import load_kernels
 from .node import Node
 from .utils import Vector, get_broadcasted_shape_for_ew_op, warn
 from .utils.shape import shape
 from .kernels.optimizers import SGD
-from .constants import memory_pool_size
+from .constants import MEMORY_POOL_SIZE, OP_TUPLE, BINARY_OP, UNARY_OP
 from .operator_codes import (
     copy_code,
     mmul_code,
@@ -30,7 +30,7 @@ struct Graph:
     var free_node_ids: Pointer[Vector[Int]]
     var free_data_ids: Pointer[Vector[Int]]
     var last_node_id: Pointer[Int]
-    var kernels: Pointer[op_tuple]
+    var kernels: Pointer[OP_TUPLE]
     var forward_order: Pointer[Vector[Int]]
     var grad_nodes_order: Pointer[Vector[Int]]
 
@@ -41,10 +41,10 @@ struct Graph:
         let memory_pool = Pointer[Vector[DTypePointer[DType.float32]]].alloc(1)
         memory_pool.store(Vector[DTypePointer[DType.float32]]())
 
-        let memory_pool_manager = Pointer[Vector[Int]].alloc(memory_pool_size)
+        let memory_pool_manager = Pointer[Vector[Int]].alloc(MEMORY_POOL_SIZE)
 
         @unroll
-        for i in range(memory_pool_size):
+        for i in range(MEMORY_POOL_SIZE):
             memory_pool_manager.store(i, Vector[Int]())
 
         let free_node_ids = Pointer[Vector[Int]].alloc(1)
@@ -79,7 +79,7 @@ struct Graph:
 
     fn print_memory_pool_manager(self) raises:
         @unroll
-        for i in range(memory_pool_size):
+        for i in range(MEMORY_POOL_SIZE):
             let ceiled_cap = exp2(Float32(i)).to_int()
             print_no_newline("    cap:", ceiled_cap)
             print_no_newline(" - data_ids: [")
@@ -432,7 +432,7 @@ struct Graph:
         self.memory_pool.free()
 
         @unroll
-        for i in range(memory_pool_size):
+        for i in range(MEMORY_POOL_SIZE):
             self.memory_pool_manager.load(i).free()
         self.memory_pool_manager.free()
         self.free_node_ids.load().free()
@@ -458,7 +458,7 @@ struct Graph:
                 keep_forward_order,
             )
             self.get_free_data_ptr(node_ptr)
-            self.kernels.load(operator_id).get[0, unary_op]()(node, parent1_ptr.load())
+            self.kernels.load(operator_id).get[0, UNARY_OP]()(node, parent1_ptr.load())
             self.release_data(parent1_ptr)
         else:
             let parent1_ptr = self.forward_recursive(
@@ -470,7 +470,7 @@ struct Graph:
                 keep_forward_order,
             )
             self.get_free_data_ptr(node_ptr)
-            self.kernels.load(operator_id).get[1, binary_op]()(
+            self.kernels.load(operator_id).get[1, BINARY_OP]()(
                 node, parent1_ptr.load(), parent2_ptr.load()
             )
 
@@ -525,7 +525,7 @@ struct Graph:
             )
             self.get_free_data_ptr(node_ptr, True)
 
-            self.kernels.load(operator_id).get[0, unary_op]()(node, parent1_ptr.load())
+            self.kernels.load(operator_id).get[0, UNARY_OP]()(node, parent1_ptr.load())
         else:
             let parent1_ptr = self.forward_recursive_graph_slice(
                 self.nodes.load().load(node.parents_ptr.load().load(0))
@@ -535,7 +535,7 @@ struct Graph:
             )
 
             self.get_free_data_ptr(node_ptr, True)
-            self.kernels.load(operator_id).get[1, binary_op]()(
+            self.kernels.load(operator_id).get[1, BINARY_OP]()(
                 node, parent1_ptr.load(), parent2_ptr.load()
             )
 
@@ -565,7 +565,7 @@ struct Graph:
 
                 parent1_ptr.load().grad_computed_ptr.store(True)
 
-                self.kernels.load(grad_operator_id).get[0, unary_op]()(
+                self.kernels.load(grad_operator_id).get[0, UNARY_OP]()(
                     child_ptr.load(), parent1_ptr.load()
                 )
 
@@ -588,7 +588,7 @@ struct Graph:
                 parent1_ptr.load().grad_computed_ptr.store(True)
                 parent2_ptr.load().grad_computed_ptr.store(True)
 
-                self.kernels.load(grad_operator_id).get[1, binary_op]()(
+                self.kernels.load(grad_operator_id).get[1, BINARY_OP]()(
                     child_ptr.load(), parent1_ptr.load(), parent2_ptr.load()
                 )
 

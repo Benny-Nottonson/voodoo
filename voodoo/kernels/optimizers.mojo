@@ -7,6 +7,6 @@ struct SGD[learning_rate: Float32]:
 
 @always_inline
 fn sgd_step[
-    nelts: Int, learning_rate: Float32
-](grad: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+    NELTS: Int, learning_rate: Float32
+](grad: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return grad * learning_rate

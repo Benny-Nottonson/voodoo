@@ -1,7 +1,7 @@
 from .node import Node
 from .graph import Graph
 from .utils import Vector
-from .constants import memory_pool_size
+from .constants import MEMORY_POOL_SIZE
 from .operator_codes import (
     add_code,
     sub_code,
@@ -178,7 +178,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         graph.memory_pool.free()
 
         @unroll
-        for i in range(memory_pool_size):
+        for i in range(MEMORY_POOL_SIZE):
             graph.memory_pool_manager.load(i).free()
 
         graph.memory_pool_manager.free()
@@ -542,7 +542,7 @@ fn fuse_graphs(
             other_graph.memory_pool.load().load(i)
         )
 
-    for i in range(memory_pool_size):
+    for i in range(MEMORY_POOL_SIZE):
         for j in range(other_graph.memory_pool_manager.load(i).len.load()):
             graph_ptr.load().load().memory_pool_manager.load(i).push_back(
                 other_graph.memory_pool_manager.load(i).load(j) + memory_pool_len
@@ -565,7 +565,7 @@ fn fuse_graphs(
         other_graph.memory_pool.free()
 
         @unroll
-        for i in range(memory_pool_size):
+        for i in range(MEMORY_POOL_SIZE):
             other_graph.memory_pool_manager.load(i).free()
         other_graph.memory_pool_manager.free()
         other_graph.free_node_ids.load().free()

@@ -1,7 +1,7 @@
 from algorithm import vectorize, tile
 from math import max
 from voodoo import Node
-from ..constants import nelts, prefetch_read, prefetch_write
+from ..constants import NELTS, PREFETCH_READ, PREFETCH_WRITE
 
 alias tile_sizes = VariadicList[Int](32, 16, 8, 4, 2, 1)
 
@@ -181,10 +181,10 @@ struct Conv2D:
         let b_data = b.data.load(0)
         let c_data = c.data.load(0)
 
-        DTypePointer[DType.float32].prefetch[prefetch_read](a_data)
-        DTypePointer[DType.float32].prefetch[prefetch_read](b_data)
-        DTypePointer[DType.float32].prefetch[prefetch_read](c_data)
-        DTypePointer[DType.float32].prefetch[prefetch_read](im2col)
+        DTypePointer[DType.float32].prefetch[PREFETCH_READ](a_data)
+        DTypePointer[DType.float32].prefetch[PREFETCH_READ](b_data)
+        DTypePointer[DType.float32].prefetch[PREFETCH_READ](c_data)
+        DTypePointer[DType.float32].prefetch[PREFETCH_READ](im2col)
 
         for batch in range(batches):
             for output_y in range(output_height):
@@ -192,22 +192,22 @@ struct Conv2D:
                     for kernel_y in range(kernel_height):
 
                         @parameter
-                        fn fw_vec[nelts: Int](kernel_x: Int):
+                        fn fw_vec[NELTS: Int](kernel_x: Int):
                             for channel in range(channels):
-                                let kernel_value = b_data.simd_load[nelts](
+                                let kernel_value = b_data.simd_load[NELTS](
                                     channel * kernel_width * kernel_height
                                     + kernel_y * kernel_width
                                     + kernel_x
                                 )
 
-                                let output_value = c_data.simd_load[nelts](
+                                let output_value = c_data.simd_load[NELTS](
                                     batch * output_width * output_height * channels
                                     + output_y * output_width * channels
                                     + output_x * channels
                                     + channel
                                 )
 
-                                let im2col_value = im2col.simd_load[nelts](
+                                let im2col_value = im2col.simd_load[NELTS](
                                     batch
                                     * output_width
                                     * output_height
@@ -225,7 +225,7 @@ struct Conv2D:
                                     + channel
                                 )
 
-                                c_data.simd_store[nelts](
+                                c_data.simd_store[NELTS](
                                     batch * output_width * output_height * channels
                                     + output_y * output_width * channels
                                     + output_x * channels
@@ -233,7 +233,7 @@ struct Conv2D:
                                     output_value + kernel_value * im2col_value,
                                 )
 
-                        vectorize[nelts, fw_vec](kernel_width)
+                        vectorize[NELTS, fw_vec](kernel_width)
 
         im2col.free()
 
@@ -278,14 +278,14 @@ struct Conv2D:
         let b_grad = b.data.load(1)
         let c_grad = c.data.load(1)
 
-        DTypePointer[DType.float32].prefetch[prefetch_read](b_data)
-        DTypePointer[DType.float32].prefetch[prefetch_read](c_data)
-        DTypePointer[DType.float32].prefetch[prefetch_read](im2col)
-        DTypePointer[DType.float32].prefetch[prefetch_read](a_grad)
-        DTypePointer[DType.float32].prefetch[prefetch_read](b_grad)
-        DTypePointer[DType.float32].prefetch[prefetch_read](c_grad)
-        DTypePointer[DType.float32].prefetch[prefetch_write](a_grad)
-        DTypePointer[DType.float32].prefetch[prefetch_write](b_grad)
+        DTypePointer[DType.float32].prefetch[PREFETCH_READ](b_data)
+        DTypePointer[DType.float32].prefetch[PREFETCH_READ](c_data)
+        DTypePointer[DType.float32].prefetch[PREFETCH_READ](im2col)
+        DTypePointer[DType.float32].prefetch[PREFETCH_READ](a_grad)
+        DTypePointer[DType.float32].prefetch[PREFETCH_READ](b_grad)
+        DTypePointer[DType.float32].prefetch[PREFETCH_READ](c_grad)
+        DTypePointer[DType.float32].prefetch[PREFETCH_WRITE](a_grad)
+        DTypePointer[DType.float32].prefetch[PREFETCH_WRITE](b_grad)
 
         for batch in range(batches):
             for output_y in range(output_height):
@@ -293,22 +293,22 @@ struct Conv2D:
                     for kernel_y in range(kernel_height):
 
                         @parameter
-                        fn bw_vec[nelts: Int](kernel_x: Int):
+                        fn bw_vec[NELTS: Int](kernel_x: Int):
                             for channel in range(channels):
-                                let kernel_value = b_data.simd_load[nelts](
+                                let kernel_value = b_data.simd_load[NELTS](
                                     channel * kernel_width * kernel_height
                                     + kernel_y * kernel_width
                                     + kernel_x
                                 )
 
-                                let output_value = c_data.simd_load[nelts](
+                                let output_value = c_data.simd_load[NELTS](
                                     batch * output_width * output_height * channels
                                     + output_y * output_width * channels
                                     + output_x * channels
                                     + channel
                                 )
 
-                                let im2col_value = im2col.simd_load[nelts](
+                                let im2col_value = im2col.simd_load[NELTS](
                                     batch
                                     * output_width
                                     * output_height
@@ -326,7 +326,7 @@ struct Conv2D:
                                     + channel
                                 )
 
-                                a_grad.simd_store[nelts](
+                                a_grad.simd_store[NELTS](
                                     batch * input_width * input_height * channels
                                     + (output_y * stride_y + kernel_y - padding_y)
                                     * input_width
@@ -334,7 +334,7 @@ struct Conv2D:
                                     + (output_x * stride_x + kernel_x - padding_x)
                                     * channels
                                     + channel,
-                                    a_grad.simd_load[nelts](
+                                    a_grad.simd_load[NELTS](
                                         batch * input_width * input_height * channels
                                         + (output_y * stride_y + kernel_y - padding_y)
                                         * input_width
@@ -344,7 +344,7 @@ struct Conv2D:
                                         + channel
                                     )
                                     + kernel_value
-                                    * c_grad.simd_load[nelts](
+                                    * c_grad.simd_load[NELTS](
                                         batch * output_width * output_height * channels
                                         + output_y * output_width * channels
                                         + output_x * channels
@@ -352,11 +352,11 @@ struct Conv2D:
                                     ),
                                 )
 
-                                b_grad.simd_store[nelts](
+                                b_grad.simd_store[NELTS](
                                     channel * kernel_width * kernel_height
                                     + kernel_y * kernel_width
                                     + kernel_x,
-                                    b_grad.simd_load[nelts](
+                                    b_grad.simd_load[NELTS](
                                         channel * kernel_width * kernel_height
                                         + kernel_y * kernel_width
                                         + kernel_x
@@ -387,20 +387,20 @@ fn im2col2D(
         batches * output_width * kernel_width * channels
     )
 
-    DTypePointer[DType.float32].prefetch[prefetch_read](input)
-    DTypePointer[DType.float32].prefetch[prefetch_write](im2col)
+    DTypePointer[DType.float32].prefetch[PREFETCH_READ](input)
+    DTypePointer[DType.float32].prefetch[PREFETCH_WRITE](im2col)
 
     for batch in range(batches):
         for channel in range(channels):
 
             @parameter
-            fn workgroup_function[nelts: Int](output_x: Int):
+            fn workgroup_function[NELTS: Int](output_x: Int):
                 @parameter
-                fn fw_vec[nelts: Int](kernel_x: Int):
+                fn fw_vec[NELTS: Int](kernel_x: Int):
                     let input_x = output_x * stride + kernel_x - padding
 
                     if input_x < 0 or input_x >= input_width:
-                        im2col.simd_store[nelts](
+                        im2col.simd_store[NELTS](
                             batch * output_width * kernel_width * channels
                             + output_x * kernel_width * channels
                             + kernel_x * channels
@@ -408,19 +408,19 @@ fn im2col2D(
                             0.0,
                         )
                     else:
-                        im2col.simd_store[nelts](
+                        im2col.simd_store[NELTS](
                             batch * output_width * kernel_width * channels
                             + output_x * kernel_width * channels
                             + kernel_x * channels
                             + channel,
-                            input.simd_load[nelts](
+                            input.simd_load[NELTS](
                                 batch * input_width * channels
                                 + input_x * channels
                                 + channel
                             ),
                         )
 
-                vectorize[nelts, fw_vec](kernel_width)
+                vectorize[NELTS, fw_vec](kernel_width)
 
             tile[workgroup_function, tile_sizes](0, output_width)
 
@@ -452,14 +452,14 @@ fn im2col3D(
         batches * output_width * output_height * kernel_width * kernel_height * channels
     )
 
-    DTypePointer[DType.float32].prefetch[prefetch_read](input)
-    DTypePointer[DType.float32].prefetch[prefetch_write](im2col)
+    DTypePointer[DType.float32].prefetch[PREFETCH_READ](input)
+    DTypePointer[DType.float32].prefetch[PREFETCH_WRITE](im2col)
 
     for batch in range(batches):
         for channel in range(channels):
 
             @parameter
-            fn workgroup_function[nelts: Int](output_y: Int):
+            fn workgroup_function[NELTS: Int](output_y: Int):
                 for output_x in range(output_width):
                     let base_index = batch * output_width * output_height * kernel_width * kernel_height * channels + output_y * output_width * kernel_width * kernel_height * channels + output_x * kernel_width * kernel_height * channels + channel
                     for kernel_y in range(kernel_height):
@@ -468,29 +468,29 @@ fn im2col3D(
                         if input_y < 0 or input_y >= input_height:
 
                             @parameter
-                            fn fw_vec_zero[nelts: Int](kernel_x: Int):
-                                im2col.simd_store[nelts](
+                            fn fw_vec_zero[NELTS: Int](kernel_x: Int):
+                                im2col.simd_store[NELTS](
                                     y_index + kernel_x * channels, 0.0
                                 )
 
-                            vectorize[nelts, fw_vec_zero](kernel_width)
+                            vectorize[NELTS, fw_vec_zero](kernel_width)
                         else:
 
                             @parameter
-                            fn fw_vec_one[nelts: Int](kernel_x: Int):
+                            fn fw_vec_one[NELTS: Int](kernel_x: Int):
                                 let input_x = output_x * stride_x + kernel_x - padding_x
                                 if input_x < 0 or input_x >= input_width:
-                                    im2col.simd_store[nelts](
+                                    im2col.simd_store[NELTS](
                                         y_index + kernel_x * channels, 0.0
                                     )
                                 else:
                                     let input_index = batch * input_width * input_height * channels + input_y * input_width * channels + input_x * channels
-                                    im2col.simd_store[nelts](
+                                    im2col.simd_store[NELTS](
                                         y_index + kernel_x * channels,
-                                        input.simd_load[nelts](input_index),
+                                        input.simd_load[NELTS](input_index),
                                     )
 
-                            vectorize[nelts, fw_vec_one](kernel_width)
+                            vectorize[NELTS, fw_vec_one](kernel_width)
 
             tile[workgroup_function, tile_sizes](0, output_height)
 

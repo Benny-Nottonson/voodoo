@@ -93,140 +93,140 @@ struct Pow[]:
 
 
 @always_inline
-fn sqrt_fw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn sqrt_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return sqrt(x)
 
 
 @always_inline
-fn sqrt_bw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn sqrt_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return 0.5 / sqrt(x)
 
 
 @always_inline
-fn abs_fw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn abs_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return (x > 0).select(x, -x)
 
 
 @always_inline
-fn abs_bw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn abs_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return (x > 0).select(Float32(1.0), Float32(-1.0))
 
 
 @always_inline
-fn exp2_fw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn exp2_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return exp2(x)
 
 
 @always_inline
-fn exp2_bw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn exp2_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return x * 0.69314718056
 
 
 @always_inline
-fn log2_fw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn log2_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return log2(x)
 
 
 @always_inline
-fn log2_bw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn log2_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return 1.0 / (x * 0.69314718056)
 
 
 @always_inline
-fn log_fw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn log_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return log(x)
 
 
 @always_inline
-fn log_bw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn log_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return 1.0 / x
 
 
 @always_inline
-fn sin_fw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn sin_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return sin(x)
 
 
 @always_inline
-fn sin_bw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn sin_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return cos(x)
 
 
 @always_inline
-fn cos_fw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn cos_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return cos(x)
 
 
 @always_inline
-fn cos_bw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn cos_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return -sin(x)
 
 
 @always_inline
-fn tan_fw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn tan_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return tan(x)
 
 
 @always_inline
-fn tan_bw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn tan_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return 1.0 / (cos(x) ** 2)
 
 
 @always_inline
-fn asin_fw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn asin_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return asin(x)
 
 
 @always_inline
-fn asin_bw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn asin_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return 1.0 / sqrt(1.0 - x**2)
 
 
 @always_inline
-fn acos_fw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn acos_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return acos(x)
 
 
 @always_inline
-fn acos_bw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn acos_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return -1.0 / sqrt(1.0 - x**2)
 
 
 @always_inline
-fn atan_fw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn atan_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return atan(x)
 
 
 @always_inline
-fn atan_bw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn atan_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return 1.0 / (1.0 + x**2)
 
 
 @always_inline
-fn sinh_fw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn sinh_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return sinh(x)
 
 
 @always_inline
-fn sinh_bw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn sinh_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return cosh(x)
 
 
 @always_inline
-fn cosh_fw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn cosh_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return cosh(x)
 
 
 @always_inline
-fn cosh_bw_vec[nelts: Int](x: SIMD[DType.float32, nelts]) -> SIMD[DType.float32, nelts]:
+fn cosh_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return sinh(x)
 
 
 @always_inline
 fn add_fw[
-    nelts: Int
-](a: SIMD[DType.float32, nelts], b: SIMD[DType.float32, nelts]) -> SIMD[
-    DType.float32, nelts
+    NELTS: Int
+](a: SIMD[DType.float32, NELTS], b: SIMD[DType.float32, NELTS]) -> SIMD[
+    DType.float32, NELTS
 ]:
     # f(x, y) = x + y
     return a + b
@@ -234,12 +234,12 @@ fn add_fw[
 
 @always_inline
 fn add_bw[
-    nelts: Int
+    NELTS: Int
 ](
-    a: SIMD[DType.float32, nelts],
-    b: SIMD[DType.float32, nelts],
+    a: SIMD[DType.float32, NELTS],
+    b: SIMD[DType.float32, NELTS],
 ) -> SIMD[
-    DType.float32, nelts
+    DType.float32, NELTS
 ]:
     # f'(x, y) = 1
     return 1
@@ -247,9 +247,9 @@ fn add_bw[
 
 @always_inline
 fn sub_fw[
-    nelts: Int
-](a: SIMD[DType.float32, nelts], b: SIMD[DType.float32, nelts]) -> SIMD[
-    DType.float32, nelts
+    NELTS: Int
+](a: SIMD[DType.float32, NELTS], b: SIMD[DType.float32, NELTS]) -> SIMD[
+    DType.float32, NELTS
 ]:
     # f(x, y) = x - y
     return a - b
@@ -257,12 +257,12 @@ fn sub_fw[
 
 @always_inline
 fn sub_bw_a[
-    nelts: Int
+    NELTS: Int
 ](
-    a: SIMD[DType.float32, nelts],
-    b: SIMD[DType.float32, nelts],
+    a: SIMD[DType.float32, NELTS],
+    b: SIMD[DType.float32, NELTS],
 ) -> SIMD[
-    DType.float32, nelts
+    DType.float32, NELTS
 ]:
     # f'(x, y) with respect to x = 1
     return 1
@@ -270,12 +270,12 @@ fn sub_bw_a[
 
 @always_inline
 fn sub_bw_b[
-    nelts: Int
+    NELTS: Int
 ](
-    a: SIMD[DType.float32, nelts],
-    b: SIMD[DType.float32, nelts],
+    a: SIMD[DType.float32, NELTS],
+    b: SIMD[DType.float32, NELTS],
 ) -> SIMD[
-    DType.float32, nelts
+    DType.float32, NELTS
 ]:
     # f'(x, y) with respect to y = -1
     return -1
@@ -283,9 +283,9 @@ fn sub_bw_b[
 
 @always_inline
 fn mul_fw[
-    nelts: Int
-](a: SIMD[DType.float32, nelts], b: SIMD[DType.float32, nelts]) -> SIMD[
-    DType.float32, nelts
+    NELTS: Int
+](a: SIMD[DType.float32, NELTS], b: SIMD[DType.float32, NELTS]) -> SIMD[
+    DType.float32, NELTS
 ]:
     # f(x, y) = x * y
     return a * b
@@ -293,12 +293,12 @@ fn mul_fw[
 
 @always_inline
 fn mul_bw_a[
-    nelts: Int
+    NELTS: Int
 ](
-    a: SIMD[DType.float32, nelts],
-    b: SIMD[DType.float32, nelts],
+    a: SIMD[DType.float32, NELTS],
+    b: SIMD[DType.float32, NELTS],
 ) -> SIMD[
-    DType.float32, nelts
+    DType.float32, NELTS
 ]:
     # f'(x, y) with respect to x = y
     return b
@@ -306,12 +306,12 @@ fn mul_bw_a[
 
 @always_inline
 fn mul_bw_b[
-    nelts: Int
+    NELTS: Int
 ](
-    a: SIMD[DType.float32, nelts],
-    b: SIMD[DType.float32, nelts],
+    a: SIMD[DType.float32, NELTS],
+    b: SIMD[DType.float32, NELTS],
 ) -> SIMD[
-    DType.float32, nelts
+    DType.float32, NELTS
 ]:
     # f'(x, y) with respect to y = x
     return a
@@ -319,9 +319,9 @@ fn mul_bw_b[
 
 @always_inline
 fn div_fw[
-    nelts: Int
-](a: SIMD[DType.float32, nelts], b: SIMD[DType.float32, nelts]) -> SIMD[
-    DType.float32, nelts
+    NELTS: Int
+](a: SIMD[DType.float32, NELTS], b: SIMD[DType.float32, NELTS]) -> SIMD[
+    DType.float32, NELTS
 ]:
     # f(x, y) = x / y
     return a / b
@@ -329,12 +329,12 @@ fn div_fw[
 
 @always_inline
 fn div_bw_a[
-    nelts: Int
+    NELTS: Int
 ](
-    a: SIMD[DType.float32, nelts],
-    b: SIMD[DType.float32, nelts],
+    a: SIMD[DType.float32, NELTS],
+    b: SIMD[DType.float32, NELTS],
 ) -> SIMD[
-    DType.float32, nelts
+    DType.float32, NELTS
 ]:
     # f'(x, y) with respect to x = 1/y
     return 1 / b
@@ -342,12 +342,12 @@ fn div_bw_a[
 
 @always_inline
 fn div_bw_b[
-    nelts: Int
+    NELTS: Int
 ](
-    a: SIMD[DType.float32, nelts],
-    b: SIMD[DType.float32, nelts],
+    a: SIMD[DType.float32, NELTS],
+    b: SIMD[DType.float32, NELTS],
 ) -> SIMD[
-    DType.float32, nelts
+    DType.float32, NELTS
 ]:
     # f'(x, y) with respect to y = -x/y^2
     return -a / (b * b)
@@ -355,9 +355,9 @@ fn div_bw_b[
 
 @always_inline
 fn pow_fw[
-    nelts: Int
-](a: SIMD[DType.float32, nelts], b: SIMD[DType.float32, nelts]) -> SIMD[
-    DType.float32, nelts
+    NELTS: Int
+](a: SIMD[DType.float32, NELTS], b: SIMD[DType.float32, NELTS]) -> SIMD[
+    DType.float32, NELTS
 ]:
     # f(x, y) = x^y
     return a**b
@@ -365,12 +365,12 @@ fn pow_fw[
 
 @always_inline
 fn pow_bw_a[
-    nelts: Int
+    NELTS: Int
 ](
-    a: SIMD[DType.float32, nelts],
-    b: SIMD[DType.float32, nelts],
+    a: SIMD[DType.float32, NELTS],
+    b: SIMD[DType.float32, NELTS],
 ) -> SIMD[
-    DType.float32, nelts
+    DType.float32, NELTS
 ]:
     # f'(x, y) with respect to x = y * x^(y-1)
     return b * (a ** (b - 1.0))
@@ -378,12 +378,12 @@ fn pow_bw_a[
 
 @always_inline
 fn pow_bw_b[
-    nelts: Int
+    NELTS: Int
 ](
-    a: SIMD[DType.float32, nelts],
-    b: SIMD[DType.float32, nelts],
+    a: SIMD[DType.float32, NELTS],
+    b: SIMD[DType.float32, NELTS],
 ) -> SIMD[
-    DType.float32, nelts
+    DType.float32, NELTS
 ]:
     # f'(x, y) with respect to y = x^y * log(x)
     return (a**b) * log(a)
