@@ -23,7 +23,7 @@ from .operator_codes import (
 @register_passable("trivial")
 struct Graph:
     var nodes: Vector[Pointer[Node]]
-    var memory_pool: Pointer[Vector[DTypePointer[DType.float32]]]
+    var memory_pool: Vector[DTypePointer[DType.float32]]
     var memory_pool_manager: Pointer[Vector[Int]]
     var free_node_ids: Pointer[Vector[Int]]
     var free_data_ids: Pointer[Vector[Int]]
@@ -35,8 +35,7 @@ struct Graph:
     fn __init__() -> Self:
         let nodes = Vector[Pointer[Node]]()
 
-        let memory_pool = Pointer[Vector[DTypePointer[DType.float32]]].alloc(1)
-        memory_pool.store(Vector[DTypePointer[DType.float32]]())
+        let memory_pool = Vector[DTypePointer[DType.float32]]()
 
         let memory_pool_manager = Pointer[Vector[Int]].alloc(MEMORY_POOL_SIZE)
 
@@ -115,7 +114,7 @@ struct Graph:
     fn get_free_data_id(self) raises -> Int:
         if self.free_data_ids.load().len.load() > 0:
             return self.free_data_ids.load().pop_back()
-        return self.memory_pool.load().len.load()
+        return self.memory_pool.len.load()
 
     fn load_ceiled_cap(self, cap: Int) raises -> Int:
         return exp2(ceil(log2(Float32(cap)))).to_int()
@@ -227,7 +226,7 @@ struct Graph:
             ):
                 loaded_node.data_id.store(parent.load().data_id.load())
                 loaded_node.data.store(
-                    0, self.memory_pool.load().load(loaded_node.data_id.load())
+                    0, self.memory_pool.load(loaded_node.data_id.load())
                 )
                 idx = i
                 break
@@ -248,7 +247,7 @@ struct Graph:
                 let ceiled_cap = self.load_ceiled_cap(loaded_node.cap)
 
                 loaded_node.data.store(
-                    0, self.memory_pool.load().load(loaded_node.data_id.load())
+                    0, self.memory_pool.load(loaded_node.data_id.load())
                 )
                 memset_zero(loaded_node.data.load(0), ceiled_cap)
             else:
@@ -256,13 +255,13 @@ struct Graph:
                 loaded_node.data_id.store(data_id)
                 let ceiled_cap = self.load_ceiled_cap(loaded_node.cap + 1)
                 let new_data_ptr = DTypePointer[DType.float32].alloc(ceiled_cap)
-                if data_id == self.memory_pool.load().len.load():
-                    self.memory_pool.load().push_back(new_data_ptr)
+                if data_id == self.memory_pool.len.load():
+                    self.memory_pool.push_back(new_data_ptr)
                 else:
-                    self.memory_pool.load().data.load().store(data_id, new_data_ptr)
+                    self.memory_pool.data.load().store(data_id, new_data_ptr)
 
                 loaded_node.data.store(
-                    0, self.memory_pool.load().load(loaded_node.data_id.load())
+                    0, self.memory_pool.load(loaded_node.data_id.load())
                 )
                 memset_zero(loaded_node.data.load(0), ceiled_cap)
 
@@ -278,7 +277,7 @@ struct Graph:
             let ceiled_cap = self.load_ceiled_cap(loaded_node.cap)
 
             loaded_node.data.store(
-                1, self.memory_pool.load().load(loaded_node.grad_id.load())
+                1, self.memory_pool.load(loaded_node.grad_id.load())
             )
             memset_zero(loaded_node.data.load(1), ceiled_cap)
         else:
@@ -286,13 +285,13 @@ struct Graph:
             loaded_node.grad_id.store(grad_id)
             let ceiled_cap = self.load_ceiled_cap(loaded_node.cap)
             let new_grad_ptr = DTypePointer[DType.float32].alloc(ceiled_cap)
-            if grad_id == self.memory_pool.load().len.load():
-                self.memory_pool.load().push_back(new_grad_ptr)
+            if grad_id == self.memory_pool.len.load():
+                self.memory_pool.push_back(new_grad_ptr)
             else:
-                self.memory_pool.load().data.load().store(grad_id, new_grad_ptr)
+                self.memory_pool.data.load().store(grad_id, new_grad_ptr)
 
             loaded_node.data.store(
-                1, self.memory_pool.load().load(loaded_node.grad_id.load())
+                1, self.memory_pool.load(loaded_node.grad_id.load())
             )
             memset_zero(loaded_node.data.load(1), ceiled_cap)
 
@@ -336,7 +335,7 @@ struct Graph:
         node.grad_computed_ptr.store(False)
 
     fn clear_cache(self, reset_static_nodes: Bool = False) raises:
-        let memory_pool = self.memory_pool.load()
+        let memory_pool = self.memory_pool
         if self.last_node_id.load() != -1:
             let node_ptr = self.nodes.load(self.last_node_id.load())
             self.release_data_forced(node_ptr)
@@ -417,7 +416,7 @@ struct Graph:
 
         self.nodes.free()
         self.nodes.free()
-        self.memory_pool.load().free()
+        self.memory_pool.free()
         self.memory_pool.free()
 
         @unroll

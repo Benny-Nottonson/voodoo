@@ -174,7 +174,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     fn free(self) raises:
         let graph = self.graph_ptr.load().load()
         graph.nodes.free()
-        graph.memory_pool.load().free()
+        graph.memory_pool.free()
         graph.memory_pool.free()
 
         @unroll
@@ -518,7 +518,7 @@ fn fuse_graphs(
     remove_other: Bool = False,
 ) raises:
     let num_nodes = graph_ptr.load().load().nodes.len.load()
-    let memory_pool_len = graph_ptr.load().load().memory_pool.load().len.load()
+    let memory_pool_len = graph_ptr.load().load().memory_pool.len.load()
     let other_graph = other_graph_ptr.load().load()
 
     for i in range(other_graph.nodes.len.load()):
@@ -535,9 +535,9 @@ fn fuse_graphs(
         node_ptr.load().data_id.store(node_ptr.load().data_id.load() + memory_pool_len)
         graph_ptr.load().load().nodes.push_back(node_ptr)
 
-    for i in range(other_graph.memory_pool.load().len.load()):
-        graph_ptr.load().load().memory_pool.load().push_back(
-            other_graph.memory_pool.load().load(i)
+    for i in range(other_graph.memory_pool.len.load()):
+        graph_ptr.load().load().memory_pool.push_back(
+            other_graph.memory_pool.load(i)
         )
 
     for i in range(MEMORY_POOL_SIZE):
@@ -559,7 +559,7 @@ fn fuse_graphs(
     if remove_other:
         other_graph.nodes.free()
         other_graph.nodes.free()
-        other_graph.memory_pool.load().free()
+        other_graph.memory_pool.free()
         other_graph.memory_pool.free()
 
         @unroll
