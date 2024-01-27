@@ -55,11 +55,11 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
 
     fn load_tensor_for_binary_op(self, other: Tensor) raises -> Tensor[False, False]:
         let self_static_or_single = (
-            self.node_ptr.load().load().is_static_ptr.load()
+            self.node_ptr.load().load().is_static
             or self.node_ptr.load().load().is_single_ptr.load()
         )
         let other_static_or_single = (
-            other.node_ptr.load().load().is_static_ptr.load()
+            other.node_ptr.load().load().is_static
             or other.node_ptr.load().load().is_single_ptr.load()
         )
 
@@ -94,7 +94,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
 
     fn load_tensor_for_unary_op(self) raises -> Tensor[False, False]:
         let self_static_or_single = (
-            self.node_ptr.load().load().is_static_ptr.load()
+            self.node_ptr.load().load().is_static
             or self.node_ptr.load().load().is_single_ptr.load()
         )
 
@@ -151,18 +151,19 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     fn requires_grad(self) raises -> Self:
         var node_ptr = self.node_ptr.load().load()
         node_ptr.requires_grad = True
-        node_ptr.is_static_ptr.store(True)
+        node_ptr.is_static = True
         node_ptr.computed_ptr.store(True)
         return self
 
     fn static(self) raises -> Self:
         _ = self.forward()
-        self.node_ptr.load().load().is_static_ptr.store(True)
+        var mutable_node = self.node_ptr.load().load()
+        mutable_node.is_static = True
         return self
 
     fn dynamic(self) raises -> Self:
-        let node_ptr = self.node_ptr.load().load()
-        node_ptr.is_static_ptr.store(False)
+        var node_ptr = self.node_ptr.load().load()
+        node_ptr.is_static = False
         node_ptr.is_single_ptr.store(True)
         _ = self.forward()
         return self
@@ -390,9 +391,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         let dims = self.node_ptr.load().load().shape.len.load()
         shape.push_back(self.node_ptr.load().load().shape.load(0))
         for i in range(1, dims):
-            shape.store(
-                0, shape.load(0) * self.node_ptr.load().load().shape.load(i)
-            )
+            shape.store(0, shape.load(0) * self.node_ptr.load().load().shape.load(i))
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load().load().reshape(self.node_ptr.load(), shape)
         )

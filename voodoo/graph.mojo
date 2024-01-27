@@ -148,12 +148,13 @@ struct Graph:
         for i in range(len(parent_ptrs)):
             node.add_parent(parent_ptrs[i].load().load_id())
             parent_ptrs[i].load().add_child(node.load_id())
-            parent_ptrs[i].load().incr_dependencies()
+            var mutable_parent = parent_ptrs[i].load()
+            mutable_parent.incr_dependencies()
 
         self.get_free_data_ptr(node_ptr)
 
         for i in range(len(parent_ptrs)):
-            if parent_ptrs[i].load().dependencies_ptr.load() == 0:
+            if parent_ptrs[i].load().dependencies == 0:
                 _ = self.forward_recursive(parent_ptrs[i])
 
         let node_id = node_ptr.load().load_id()
@@ -189,12 +190,13 @@ struct Graph:
         for i in range(len(parent_ptrs)):
             node.add_parent(parent_ptrs[i].load().load_id())
             parent_ptrs[i].load().add_child(node.load_id())
-            parent_ptrs[i].load().incr_dependencies()
+            var mutable_parent = parent_ptrs[i].load()
+            mutable_parent.incr_dependencies()
 
         self.get_free_data_ptr(node_ptr)
 
         for i in range(len(parent_ptrs)):
-            if parent_ptrs[i].load().dependencies_ptr.load() == 0:
+            if parent_ptrs[i].load().dependencies == 0:
                 _ = self.forward_recursive(parent_ptrs[i])
 
         let node_id = node_ptr.load().load_id()
@@ -203,7 +205,7 @@ struct Graph:
         else:
             self.nodes.load().push_back(node_ptr)
 
-        return node_ptr 
+        return node_ptr
 
     fn get_free_data_ptr(self, node: Pointer[Node], unique: Bool = False) raises:
         if node.load().data_id.load() != -1:
@@ -216,9 +218,9 @@ struct Graph:
             if (
                 self.load_ceiled_cap(parent.load().cap)
                 == self.load_ceiled_cap(node.load().cap)
-                and parent.load().dependencies_ptr.load() == 1
-                and not parent.load().is_static_ptr.load()
-                and not node.load().is_static_ptr.load()
+                and parent.load().dependencies == 1
+                and not parent.load().is_static
+                and not node.load().is_static
                 and not parent.load().checkpoint
                 and not node.load().checkpoint
                 and not unique
@@ -237,7 +239,8 @@ struct Graph:
                 continue
             else:
                 let parent = self.nodes.load().load(node.load().load_parent_id(i))
-                parent.load().decr_dependencies()
+                var mutable_parent = parent.load()
+                mutable_parent.decr_dependencies()
 
         if idx == -1:
             let index = self.get_index(node.load().cap)
@@ -295,37 +298,37 @@ struct Graph:
             memset_zero(node.load().data.load(1), ceiled_cap)
 
     fn release_data(self, node_ptr: Pointer[Node]) raises:
-        let node = node_ptr.load()
+        var node = node_ptr.load()
         if (
-            node.is_static_ptr.load()
+            node.is_static
             or node.checkpoint
             or node.is_single_ptr.load()
             or node.data_id.load() == -1
         ):
             return
 
-        if node.dependencies_ptr.load() == 0:
+        if node.dependencies == 0:
             let index = self.get_index(node.cap)
             let data_id = node.data_id.load()
             self.memory_pool_manager.load(index).push_back(data_id)
             node.data_id.store(-1)
-            node.dependencies_ptr.store(node.children.len.load())
+            node.dependencies = node.children.len.load()
             node.computed_ptr.store(False)
 
     fn release_data_forced(self, node_ptr: Pointer[Node]) raises:
-        let node = node_ptr.load()
-        if node.is_static_ptr.load() or node.data_id.load() == -1:
+        var node = node_ptr.load()
+        if node.is_static or node.data_id.load() == -1:
             return
         let index = self.get_index(node.cap)
         let data_id = node.data_id.load()
         self.memory_pool_manager.load(index).push_back(data_id)
         node.data_id.store(-1)
         node.computed_ptr.store(False)
-        node.dependencies_ptr.store(node.children.len.load())
+        node.dependencies = node.children.len.load()
 
     fn release_grad_forced(self, node_ptr: Pointer[Node]) raises:
         let node = node_ptr.load()
-        if node.is_static_ptr.load() or node.grad_id.load() == -1:
+        if node.is_static or node.grad_id.load() == -1:
             return
         let index = self.get_index(node.cap)
         let grad_id = node.grad_id.load()
@@ -365,7 +368,7 @@ struct Graph:
             if node == Pointer[Node].get_null():
                 continue
 
-            if node.load().is_static_ptr.load():
+            if node.load().is_static:
                 if node.load().data_id.load() != -1:
                     deletable_data.store(node.load().data_id.load(), False)
                 if node.load().grad_id.load() != -1:
@@ -384,7 +387,7 @@ struct Graph:
             if node_ptr == Pointer[Node].get_null():
                 continue
 
-            let node = node_ptr.load()
+            var node = node_ptr.load()
 
             if not node.load_is_static():
                 self.free_node_ids.load().push_back(node.load_id())
@@ -395,8 +398,6 @@ struct Graph:
                 node.data.free()
                 node.parents.free()
                 node.children.free()
-                node.dependencies_ptr.free()
-                node.is_static_ptr.free()
                 node.computed_ptr.free()
                 node.grad_computed_ptr.free()
                 node.shape.free()
@@ -406,7 +407,7 @@ struct Graph:
             else:
                 node.children.clear()
                 node.parents.clear()
-                node.dependencies_ptr.store(0)
+                node.dependencies = 0
                 node.id_ptr.store(0)
                 node.data_id.store(0)
                 node.grad_id.store(0)
@@ -487,13 +488,12 @@ struct Graph:
             if node.load().is_single_ptr.load():
                 continue
 
-            if not node.load().is_static_ptr.load():
+            if not node.load().is_static:
                 node.load().computed_ptr.store(False)
                 node.load().grad_id.store(-1)
                 node.load().data_id.store(-1)
-            node.load().dependencies_ptr.store(
-                node.load().children.len.load()
-            )
+            var mutable_node = node.load()
+            mutable_node.dependencies = node.load().children.len.load()
 
         _ = self.forward_recursive(node_ptr)
 
@@ -604,10 +604,7 @@ struct Graph:
                 let par = self.nodes.load().load(parId)
                 if not par.load().tmp_visited:
                     backward.push_back(parId)
-            if (
-                curr.load().requires_grad
-                or curr.load().checkpoint
-            ):
+            if curr.load().requires_grad or curr.load().checkpoint:
                 self.grad_nodes_order.load().push_back(currId)
             var node = self.nodes.load().load(currId).load()
             node.tmp_visited = True
@@ -628,7 +625,7 @@ struct Graph:
             ):
                 continue
 
-            if not node.load().is_static_ptr.load():
+            if not node.load().is_static:
                 node.load().grad_id.store(-1)
                 if not node.load().checkpoint:
                     node.load().computed_ptr.store(False)
@@ -676,9 +673,7 @@ struct Graph:
         let b_dims = b_loaded.num_dims
         shape[len(shape) - 2] = a_loaded.shape.copy().load(a_dims - 2)
         shape[len(shape) - 1] = b_loaded.shape.copy().load(b_dims - 1)
-        if a_loaded.shape.load(a_dims - 1) != b_loaded.shape.load(
-            b_dims - 2
-        ):
+        if a_loaded.shape.load(a_dims - 1) != b_loaded.shape.load(b_dims - 2):
             raise "Shapes don't fit for matrix multiplication. Got shapes: " + str(
                 a_loaded.shape.load(a_dims - 1)
             ) + " " + str(b_loaded.shape.load(b_dims - 2))
@@ -756,8 +751,7 @@ struct Graph:
         shape.push_back(a.load().shape.load(0))
         shape.push_back(a.load().shape.load(1))
         shape.push_back(
-            (a.load().shape.load(2) - kernel_size + 2 * padding) // stride
-            + 1
+            (a.load().shape.load(2) - kernel_size + 2 * padding) // stride + 1
         )
 
         return self.node(shape, False, False, True, maxpool1d_code, other_params, a)
@@ -779,12 +773,10 @@ struct Graph:
         shape.push_back(a.load().shape.load(0))
         shape.push_back(a.load().shape.load(1))
         shape.push_back(
-            (a.load().shape.load(2) - kernel_size[0] + 2 * padding) // stride
-            + 1
+            (a.load().shape.load(2) - kernel_size[0] + 2 * padding) // stride + 1
         )
         shape.push_back(
-            (a.load().shape.load(3) - kernel_size[1] + 2 * padding) // stride
-            + 1
+            (a.load().shape.load(3) - kernel_size[1] + 2 * padding) // stride + 1
         )
 
         return self.node(shape, False, False, True, maxpool2d_code, other_params, a)

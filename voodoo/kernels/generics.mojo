@@ -159,7 +159,7 @@ struct GenericBinaryArithmetic[
         let offset_c = c_index * c_rest
 
         let a_data = a.data.load(0)
-        let b_data = b.data.load(0) 
+        let b_data = b.data.load(0)
         let c_data = c.data.load(0)
 
         DTypePointer[DType.float32].prefetch[PREFETCH_READ](a_data)

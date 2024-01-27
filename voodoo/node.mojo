@@ -10,20 +10,20 @@ from memory.buffer import Buffer
 struct Node:
     var id_ptr: Pointer[Int]
     var data_id: Pointer[Int]
-    var grad_id: Pointer[Int]
+    var grad_id: Pointer[Int]  # Needs to be a pointer?
     var data: Pointer[DTypePointer[DType.float32]]
     var parents: Vector[Int]
     var children: Vector[Int]
-    var dependencies_ptr: Pointer[Int]
-    var is_static_ptr: Pointer[Bool]
-    var computed_ptr: Pointer[Bool]
-    var grad_computed_ptr: Pointer[Bool] # Needs to be a pointer?
+    var dependencies: Int
+    var is_static: Bool
+    var computed_ptr: Pointer[Bool]  # Needs to be a pointer?
+    var grad_computed_ptr: Pointer[Bool]  # Needs to be a pointer?
     var operator_id: Int
     var grad_operator_id: Int
     var requires_grad: Bool
     var tmp_visited: Bool
     var checkpoint: Bool
-    var is_single_ptr: Pointer[Bool] # Needs to be pointer?
+    var is_single_ptr: Pointer[Bool]  # Needs to be pointer?
     var cap: Int
     var num_dims: Int
     var shape: Vector[Int]
@@ -48,11 +48,7 @@ struct Node:
 
         let children = Vector[Int]()
 
-        let dependencies_ptr = Pointer[Int].alloc(1)
-        dependencies_ptr.store(0)
-
-        let is_static_ptr = Pointer[Bool].alloc(1)
-        is_static_ptr.store(is_static)
+        let dependencies = 0
 
         let computed_ptr = Pointer[Bool].alloc(1)
         computed_ptr.store(is_static)
@@ -96,8 +92,8 @@ struct Node:
             data: data,
             parents: parents,
             children: children,
-            dependencies_ptr: dependencies_ptr,
-            is_static_ptr: is_static_ptr,
+            dependencies: dependencies,
+            is_static: is_static,
             computed_ptr: computed_ptr,
             grad_computed_ptr: grad_computed_ptr,
             operator_id: operator_id,
@@ -120,13 +116,13 @@ struct Node:
         return self.id_ptr.load()
 
     fn load_dependencies(self) -> Int:
-        return self.dependencies_ptr.load()
+        return self.dependencies
 
-    fn incr_dependencies(self):
-        self.dependencies_ptr.store(self.dependencies_ptr.load() + 1)
+    fn incr_dependencies(inout self):
+        self.dependencies += 1
 
-    fn decr_dependencies(self):
-        self.dependencies_ptr.store(self.dependencies_ptr.load() - 1)
+    fn decr_dependencies(inout self):
+        self.dependencies -= 1
 
     fn load_cap(self) -> Int:
         return self.cap
@@ -150,7 +146,7 @@ struct Node:
         return self.children.len.load()
 
     fn load_is_static(self) -> Bool:
-        return self.is_static_ptr.load()
+        return self.is_static
 
     fn load_computed(self) -> Bool:
         return self.computed_ptr.load()
@@ -287,21 +283,14 @@ struct Node:
         rand(u2, self.cap)
         for i in range(self.cap):
             let z = sqrt(-2.0 * log(u1.load(i))) * cos(2.0 * pi * u2.load(i))
-            let sigma = sqrt(
-                2.0
-                / Float32(
-                    self.shape.load(self.shape.len.load() - 1)
-                )
-            )
+            let sigma = sqrt(2.0 / Float32(self.shape.load(self.shape.len.load() - 1)))
             self.store_data(i, z * sigma)
 
     fn identity(self):
         let num_dims = self.num_dims
         let row: Int = self.shape.load(num_dims - 2)
         let cols: Int = self.shape.load(num_dims - 1)
-        let col_strides: Int = (
-            self.strides.load(0) * self.shape.load(0)
-        ) // cols
+        let col_strides: Int = (self.strides.load(0) * self.shape.load(0)) // cols
         for i in range(col_strides):
             for j in range(cols):
                 if i == j:
@@ -360,9 +349,7 @@ struct Node:
         let num_dims = self.num_dims
         let row: Int = self.shape.load(num_dims - 2)
         let cols: Int = self.shape.load(num_dims - 1)
-        let col_strides: Int = (
-            self.strides.load(0) * self.shape.load(0)
-        ) // cols
+        let col_strides: Int = (self.strides.load(0) * self.shape.load(0)) // cols
         let tmp = DTypePointer[DType.float32](col_strides)
         for i in range(col_strides):
             for j in range(cols):
@@ -393,9 +380,7 @@ struct Node:
         let num_dims = self.num_dims
         let row: Int = self.shape.load(num_dims - 2)
         let cols: Int = self.shape.load(num_dims - 1)
-        let col_strides: Int = (
-            self.strides.load(0) * self.shape.load(0)
-        ) // cols
+        let col_strides: Int = (self.strides.load(0) * self.shape.load(0)) // cols
         print(" ")
         var times = 1
         if self.grad_computed_ptr.load() and self.grad_id.load() != -1:
