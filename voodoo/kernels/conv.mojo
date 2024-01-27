@@ -9,14 +9,14 @@ alias tile_sizes = VariadicList[Int](32, 16, 8, 4, 2, 1)
 struct Conv1D:
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
-        let params = c.other_params_ptr.load()
+        let params = c.other_params
 
         let padding_x = params.load(0)
         let stride_x = params.load(1)
 
-        let input_shape = a.shape_ptr.load()
-        let kernel_shape = b.shape_ptr.load()
-        let output_shape = c.shape_ptr.load()
+        let input_shape = a.shape
+        let kernel_shape = b.shape
+        let output_shape = c.shape
 
         let batches = input_shape.load(0)
         let channels = input_shape.load(1)
@@ -67,14 +67,14 @@ struct Conv1D:
 
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
-        let params = c.other_params_ptr.load()
+        let params = c.other_params
 
         let padding_x = params.load(0)
         let stride_x = params.load(1)
 
-        let input_shape = a.shape_ptr.load()
-        let kernel_shape = b.shape_ptr.load()
-        let output_shape = c.shape_ptr.load()
+        let input_shape = a.shape
+        let kernel_shape = b.shape
+        let output_shape = c.shape
 
         let batches = input_shape.load(0)
         let channels = input_shape.load(1)
@@ -144,16 +144,16 @@ struct Conv1D:
 struct Conv2D:
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
-        let params = c.other_params_ptr.load()
+        let params = c.other_params
 
         let padding_x = params.load(0)
         let padding_y = params.load(1)
         let stride_x = params.load(2)
         let stride_y = params.load(3)
 
-        let input_shape = a.shape_ptr.load()
-        let kernel_shape = b.shape_ptr.load()
-        let output_shape = c.shape_ptr.load()
+        let input_shape = a.shape
+        let kernel_shape = b.shape
+        let output_shape = c.shape
 
         let batches = input_shape.load(0)
         let channels = input_shape.load(1)
@@ -239,16 +239,16 @@ struct Conv2D:
 
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
-        let params = c.other_params_ptr.load()
+        let params = c.other_params
 
         let padding_x = params.load(0)
         let padding_y = params.load(1)
         let stride_x = params.load(2)
         let stride_y = params.load(3)
 
-        let input_shape = a.shape_ptr.load()
-        let kernel_shape = b.shape_ptr.load()
-        let output_shape = c.shape_ptr.load()
+        let input_shape = a.shape
+        let kernel_shape = b.shape
+        let output_shape = c.shape
 
         let batches = input_shape.load(0)
         let channels = input_shape.load(1)

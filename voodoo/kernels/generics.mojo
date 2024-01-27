@@ -155,11 +155,11 @@ struct GenericBinaryArithmetic[
     ) -> None:
         let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
         let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
+        let c_rest = c.shape.load(depth) * c.strides.load(depth)
         let offset_c = c_index * c_rest
 
         let a_data = a.data.load(0)
-        let b_data = b.data.load(0)
+        let b_data = b.data.load(0) 
         let c_data = c.data.load(0)
 
         DTypePointer[DType.float32].prefetch[PREFETCH_READ](a_data)
@@ -189,7 +189,7 @@ struct GenericBinaryArithmetic[
     ) -> None:
         let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
         let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-        let c_rest = c.shape_ptr.load().load(depth) * c.strides_ptr.load().load(depth)
+        let c_rest = c.shape.load(depth) * c.strides.load(depth)
         let offset_c = c_index * c_rest
 
         let a_data = a.data.load(0)
@@ -251,8 +251,8 @@ struct GenericLoss[
 ]:
     @staticmethod
     fn fw(node: Node, y_pred: Node, y_true: Node):
-        let num_dims = y_pred.shape_ptr.load().len.load()
-        let N = y_pred.shape_ptr.load().load(num_dims - 1)
+        let num_dims = y_pred.shape.len.load()
+        let N = y_pred.shape.load(num_dims - 1)
         let cap = y_pred.load_cap()
         var e: Float32 = 0.0
 
@@ -278,8 +278,8 @@ struct GenericLoss[
 
     @staticmethod
     fn bw(node: Node, y_pred: Node, y_true: Node):
-        let num_dims = y_pred.shape_ptr.load().len.load()
-        let N = y_pred.shape_ptr.load().load(num_dims - 1)
+        let num_dims = y_pred.shape.len.load()
+        let N = y_pred.shape.load(num_dims - 1)
         let cap = y_pred.load_cap()
         let scalar = cap / Float32(N)
 

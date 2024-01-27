@@ -7,14 +7,14 @@ from ..constants import PREFETCH_READ, PREFETCH_WRITE, F32_MAX, NELTS
 struct MaxPool1D:
     @staticmethod
     fn fw(c: Node, a: Node):
-        let params = c.other_params_ptr.load()
+        let params = c.other_params
 
         let kernel_width = params.load(0)
         let stride = params.load(1)
         let padding = params.load(2)
 
-        let input_shape = a.shape_ptr.load()
-        let output_shape = c.shape_ptr.load()
+        let input_shape = a.shape
+        let output_shape = c.shape
 
         let batches = input_shape.load(0)
         let channels = input_shape.load(1)
@@ -50,14 +50,14 @@ struct MaxPool1D:
 
     @staticmethod
     fn bw(c: Node, a: Node):
-        let params = c.other_params_ptr.load()
+        let params = c.other_params
 
         let kernel_width = params.load(0)
         let stride = params.load(1)
         let padding = params.load(2)
 
-        let input_shape = a.shape_ptr.load()
-        let output_shape = c.shape_ptr.load()
+        let input_shape = a.shape
+        let output_shape = c.shape
 
         let batches = input_shape.load(0)
         let channels = input_shape.load(1)
@@ -99,15 +99,15 @@ struct MaxPool1D:
 struct MaxPool2D:
     @staticmethod
     fn fw(c: Node, a: Node):
-        let params = c.other_params_ptr.load()
+        let params = c.other_params
 
         let kernel_width = params.load(0)
         let kernel_height = params.load(1)
         let stride = params.load(2)
         let padding = params.load(3)
 
-        let input_shape = a.shape_ptr.load()
-        let output_shape = c.shape_ptr.load()
+        let input_shape = a.shape
+        let output_shape = c.shape
 
         let batches = input_shape.load(0)
         let channels = input_shape.load(1)
@@ -157,15 +157,15 @@ struct MaxPool2D:
 
     @staticmethod
     fn bw(c: Node, a: Node):
-        let params = c.other_params_ptr.load()
+        let params = c.other_params
 
         let kernel_width = params.load(0)
         let kernel_height = params.load(1)
         let stride = params.load(2)
         let padding = params.load(3)
 
-        let input_shape = a.shape_ptr.load()
-        let output_shape = c.shape_ptr.load()
+        let input_shape = a.shape
+        let output_shape = c.shape
 
         let batches = input_shape.load(0)
         let channels = input_shape.load(1)

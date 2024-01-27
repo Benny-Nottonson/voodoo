@@ -19,12 +19,12 @@ fn get_broadcasted_shape_for_ew_op(
     let diff = parent1.load().num_dims_ptr.load() - parent2.load().num_dims_ptr.load()
     for i in range(new_num_dims):
         if diff > 0 and i < abs(diff):
-            shape.push_back(parent1.load().shape_ptr.load().load(i))
+            shape.push_back(parent1.load().shape.load(i))
         elif diff < 0 and i < abs(diff):
-            shape.push_back(parent2.load().shape_ptr.load().load(i))
+            shape.push_back(parent2.load().shape.load(i))
         else:
             if diff > 0:
-                shape.push_back(parent1.load().shape_ptr.load().load(i))
+                shape.push_back(parent1.load().shape.load(i))
             else:
-                shape.push_back(parent2.load().shape_ptr.load().load(i))
+                shape.push_back(parent2.load().shape.load(i))
     return shape

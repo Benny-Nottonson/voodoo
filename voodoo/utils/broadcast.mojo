@@ -7,7 +7,7 @@ fn shape_a(depth: Int, a: Node, b: Node) -> Int:
     let diff = max(b.num_dims_ptr.load() - a.num_dims_ptr.load(), 0)
     if depth < diff:
         return 1
-    return a.shape_ptr.load().load(depth - diff)
+    return a.shape.load(depth - diff)
 
 
 @always_inline
@@ -15,23 +15,23 @@ fn shape_b(depth: Int, a: Node, b: Node) -> Int:
     let diff = max(a.num_dims_ptr.load() - b.num_dims_ptr.load(), 0)
     if depth < diff:
         return 1
-    return b.shape_ptr.load().load(depth - diff)
+    return b.shape.load(depth - diff)
 
 
 @always_inline
 fn strides_a(depth: Int, a: Node, b: Node) -> Int:
     let diff = max(b.num_dims_ptr.load() - a.num_dims_ptr.load(), 0)
     if depth < diff:
-        return a.strides_ptr.load().load(0)
-    return a.strides_ptr.load().load(depth - diff)
+        return a.strides.load(0)
+    return a.strides.load(depth - diff)
 
 
 @always_inline
 fn strides_b(depth: Int, a: Node, b: Node) -> Int:
     let diff = max(a.num_dims_ptr.load() - b.num_dims_ptr.load(), 0)
     if depth < diff:
-        return b.strides_ptr.load().load(0)
-    return b.strides_ptr.load().load(depth - diff)
+        return b.strides.load(0)
+    return b.strides.load(depth - diff)
 
 
 fn recursive_broadcast[
@@ -54,7 +54,7 @@ fn recursive_broadcast[
 
     let a_shape = shape_a(depth, a, b)
     let b_shape = shape_b(depth, a, b)
-    let c_shape = c.shape_ptr.load().load(depth)
+    let c_shape = c.shape.load(depth)
 
     let a_ishape = a_shape * a_index
     let b_ishape = b_shape * b_index
@@ -115,7 +115,7 @@ fn recursive_broadcast_bw[
 
     let a_shape = shape_a(depth, a, b)
     let b_shape = shape_b(depth, a, b)
-    let c_shape = c.shape_ptr.load().load(depth)
+    let c_shape = c.shape.load(depth)
 
     let a_ishape = a_shape * a_index
     let b_ishape = b_shape * b_index

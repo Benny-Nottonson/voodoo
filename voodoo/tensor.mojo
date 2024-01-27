@@ -64,7 +64,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         )
 
         let new_tensor = Tensor[False, False](
-            shape=self.node_ptr.load().load().shape_ptr.load().copy(),
+            shape=self.node_ptr.load().load().shape.copy(),
         )
 
         if self_static_or_single:
@@ -99,7 +99,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         )
 
         let new_tensor = Tensor[False, False](
-            shape=self.node_ptr.load().load().shape_ptr.load().copy(),
+            shape=self.node_ptr.load().load().shape.copy(),
         )
 
         if self_static_or_single:
@@ -230,7 +230,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         self.node_ptr.load().load().data.load().store(idx, val)
 
     fn capacity(self) raises -> Int:
-        return self.node_ptr.load().load().cap_ptr.load()
+        return self.node_ptr.load().load().cap
 
     fn copy(self) raises -> Tensor[False, False]:
         let new_tensor = self.load_tensor_for_unary_op()
@@ -334,7 +334,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
 
     fn _prep_scalar_tensor(self, number: Float32) raises -> Tensor[False, True]:
         let new_tensor = Tensor[False, True](
-            shape=self.node_ptr.load().load().shape_ptr.load().copy(),
+            shape=self.node_ptr.load().load().shape.copy(),
         ).fill(number)
         new_tensor.node_ptr.load().load().computed_ptr.store(True)
         return new_tensor
@@ -368,7 +368,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
 
     fn __rpow__(self, number: Float32) raises -> Tensor[False, False]:
         let other = Tensor[False, False](
-            self.node_ptr.load().load().shape_ptr.load().copy(),
+            self.node_ptr.load().load().shape.copy(),
         ).fill(number)
         other.node_ptr.load().load().is_single_ptr.store(True)
         other.node_ptr.load().load().computed_ptr.store(True)
@@ -387,11 +387,11 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     fn flatten(self) raises -> Tensor[False, False]:
         let new_tensor = self.load_tensor_for_unary_op()
         let shape = Vector[Int]()
-        let dims = self.node_ptr.load().load().shape_ptr.load().len.load()
-        shape.push_back(self.node_ptr.load().load().shape_ptr.load().load(0))
+        let dims = self.node_ptr.load().load().shape.len.load()
+        shape.push_back(self.node_ptr.load().load().shape.load(0))
         for i in range(1, dims):
             shape.store(
-                0, shape.load(0) * self.node_ptr.load().load().shape_ptr.load().load(i)
+                0, shape.load(0) * self.node_ptr.load().load().shape.load(i)
             )
         new_tensor.node_ptr.store(
             new_tensor.graph_ptr.load().load().reshape(self.node_ptr.load(), shape)
@@ -526,13 +526,13 @@ fn fuse_graphs(
     for i in range(other_graph.nodes.load().len.load()):
         let node_ptr = other_graph.nodes.load().load(i)
         node_ptr.load().id_ptr.store(node_ptr.load().id_ptr.load() + num_nodes)
-        for j in range(node_ptr.load().children_ptr.load().len.load()):
-            node_ptr.load().children_ptr.load().store(
-                j, node_ptr.load().children_ptr.load().load(j) + num_nodes
+        for j in range(node_ptr.load().children.len.load()):
+            node_ptr.load().children.store(
+                j, node_ptr.load().children.load(j) + num_nodes
             )
-        for j in range(node_ptr.load().parents_ptr.load().len.load()):
-            node_ptr.load().parents_ptr.load().store(
-                j, node_ptr.load().parents_ptr.load().load(j) + num_nodes
+        for j in range(node_ptr.load().parents.len.load()):
+            node_ptr.load().parents.store(
+                j, node_ptr.load().parents.load(j) + num_nodes
             )
         node_ptr.load().data_id.store(node_ptr.load().data_id.load() + memory_pool_len)
         graph_ptr.load().load().nodes.load().push_back(node_ptr)

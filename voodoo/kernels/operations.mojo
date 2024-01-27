@@ -59,19 +59,19 @@ struct Sum(Operation):
 struct Reshape(Operation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
-        for s in range(node.cap_ptr.load() // parent1.cap_ptr.load()):
-            let offset = s * parent1.cap_ptr.load()
+        for s in range(node.cap // parent1.cap):
+            let offset = s * parent1.cap
 
             @parameter
             fn vectorized_reshape[NELTS: Int](i: Int):
                 node.store_data[NELTS](i, parent1.load_data[NELTS](i))
 
-            vectorize[NELTS, vectorized_reshape](parent1.cap_ptr.load())
+            vectorize[NELTS, vectorized_reshape](parent1.cap)
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
-        for s in range(node.cap_ptr.load() // parent1.cap_ptr.load()):
-            let offset = s * parent1.cap_ptr.load()
+        for s in range(node.cap // parent1.cap):
+            let offset = s * parent1.cap
 
             @parameter
             fn vectorized_reshape[NELTS: Int](i: Int):
@@ -79,16 +79,16 @@ struct Reshape(Operation):
                     i, parent1.load_grad[NELTS](i) + node.load_grad[NELTS](i)
                 )
 
-            vectorize[NELTS, vectorized_reshape](parent1.cap_ptr.load())
+            vectorize[NELTS, vectorized_reshape](parent1.cap)
 
 
 struct Transpose(Operation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         let num_dims = parent1.num_dims_ptr.load()
-        let M = parent1.shape_ptr.load().load(num_dims - 2)
-        let N = parent1.shape_ptr.load().load(num_dims - 1)
-        for s in range(node.cap_ptr.load() // (M * N)):
+        let M = parent1.shape.load(num_dims - 2)
+        let N = parent1.shape.load(num_dims - 1)
+        for s in range(node.cap // (M * N)):
             let offset = s * M * N
             for i in range(M):
 
@@ -103,9 +103,9 @@ struct Transpose(Operation):
     @staticmethod
     fn bw(node: Node, parent1: Node):
         let num_dims = parent1.num_dims_ptr.load()
-        let M = parent1.shape_ptr.load().load(num_dims - 2)
-        let N = parent1.shape_ptr.load().load(num_dims - 1)
-        for s in range(node.cap_ptr.load() // (M * N)):
+        let M = parent1.shape.load(num_dims - 2)
+        let N = parent1.shape.load(num_dims - 1)
+        for s in range(node.cap // (M * N)):
             let offset = s * M * N
             for i in range(M):
 
@@ -123,7 +123,7 @@ struct Transpose(Operation):
 struct Dropout(Operation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
-        let params = node.other_params_ptr.load()
+        let params = node.other_params
         let keep_prob = 1 - params.load(0) / 1000000.0
         let scale = 1.0 / keep_prob
 
@@ -139,7 +139,7 @@ struct Dropout(Operation):
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
-        let params = node.other_params_ptr.load()
+        let params = node.other_params
         let keep_prob = 1 - params.load(0) / 1000000.0
         let scale = 1.0 / keep_prob
 

@@ -186,9 +186,9 @@ struct MMul:
 fn load_shapes_and_dims(
     a: Node, b: Node, c: Node, a_index: Int, b_index: Int, c_index: Int
 ) -> StaticIntTuple[6]:
-    let a_shape = a.shape_ptr.load()
-    let b_shape = b.shape_ptr.load()
-    let c_shape = c.shape_ptr.load()
+    let a_shape = a.shape
+    let b_shape = b.shape
+    let c_shape = c.shape
 
     let a_dims = a.num_dims_ptr.load()
     let b_dims = b.num_dims_ptr.load()
