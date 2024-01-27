@@ -251,7 +251,7 @@ struct Graph:
                 if data_id == self.memory_pool.len.load():
                     self.memory_pool.push_back(new_data_ptr)
                 else:
-                    self.memory_pool.data.load().store(data_id, new_data_ptr)
+                    self.memory_pool.data.store(data_id, new_data_ptr)
 
                 loaded_node.data.store(
                     0, self.memory_pool.load(loaded_node.data_id.load())
@@ -281,7 +281,7 @@ struct Graph:
             if grad_id == self.memory_pool.len.load():
                 self.memory_pool.push_back(new_grad_ptr)
             else:
-                self.memory_pool.data.load().store(grad_id, new_grad_ptr)
+                self.memory_pool.data.store(grad_id, new_grad_ptr)
 
             loaded_node.data.store(
                 1, self.memory_pool.load(loaded_node.grad_id.load())
