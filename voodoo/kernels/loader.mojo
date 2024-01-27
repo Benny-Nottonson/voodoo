@@ -70,7 +70,6 @@ fn k_add[
     kernel.store(code + 1, OP_TUPLE(NU, bN_Bw))
 
 
-@always_inline
 fn load_kernels() -> Pointer[OP_TUPLE]:
     let kernels = Pointer[OP_TUPLE].alloc(100)
     k_add[copy_code, Copy.fw, Copy.bw](kernels)

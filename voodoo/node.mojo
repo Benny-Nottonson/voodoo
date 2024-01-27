@@ -112,55 +112,55 @@ struct Node:
     @always_inline
     fn store_id(self, id: Int):
         self.id_ptr.store(id)
-    
+
     @always_inline
     fn load_id(self) -> Int:
         return self.id_ptr.load()
-    
+
     @always_inline
     fn incr_dependencies(inout self):
         self.dependencies += 1
-    
+
     @always_inline
     fn decr_dependencies(inout self):
         self.dependencies -= 1
-    
+
     @always_inline
     fn add_parent(self, node_id: Int):
         self.parents.push_back(node_id)
-    
+
     @always_inline
     fn add_child(self, node_id: Int):
         let vec = self.children.push_back(node_id)
-    
+
     @always_inline
     fn load_parent_id(self, idx: Int) -> Int:
         return self.parents.load(idx)
-    
+
     @always_inline
     fn load_child_id(self, idx: Int) -> Int:
         return self.children.load(idx)
-    
+
     @always_inline
     fn load_num_parents(self) -> Int:
         return self.parents.len.load()
-    
+
     @always_inline
     fn load_num_children(self) -> Int:
         return self.children.len.load()
-    
+
     @always_inline
     fn load_is_static(self) -> Bool:
         return self.is_static
-    
+
     @always_inline
     fn load_computed(self) -> Bool:
         return self.computed_ptr.load()
-    
+
     @always_inline
     fn store_computed(self, value: Bool):
         self.computed_ptr.store(value)
-    
+
     @always_inline
     fn is_zero(self) -> Bool:
         for i in range(self.cap):
@@ -183,12 +183,12 @@ struct Node:
     @always_inline
     fn store_data[NELTS: Int = 1](self, idx: Int, val: SIMD[DType.float32, NELTS]):
         self.data.load().simd_store[NELTS](idx, val)
-    
+
     @always_inline
     fn fill(self, val: Float32):
         for i in range(self.cap):
             self.data.load().store(i, val)
-    
+
     @always_inline
     fn fill_incr(self):
         for i in range(self.cap):
@@ -209,17 +209,17 @@ struct Node:
     @always_inline
     fn store_grad[NELTS: Int = 1](self, idx: Int, val: SIMD[DType.float32, NELTS]):
         self.data.load(1).simd_store[NELTS](idx, val)
-    
+
     @always_inline
     fn grad_fill_incr(self):
         for i in range(self.cap):
             self.data.load(1).store(i, Float32(i))
-    
+
     @always_inline
     fn fill_grad(self, val: Float32):
         for i in range(self.cap):
             self.data.load(1).store(i, val)
-    
+
     @always_inline
     fn initialize(self, data: DTypePointer[DType.float32]):
         self.data.store(0, data)
@@ -227,6 +227,7 @@ struct Node:
     fn initialize[
         initialization_function: String, val: Float32 = 0, val2: Float32 = 0
     ](self):
+        @parameter
         if initialization_function == "glorot_normal":
             self.glorot_normal()
         elif initialization_function == "glorot_uniform":
@@ -272,14 +273,14 @@ struct Node:
         self.random_normal(scale, 0.0)
 
     fn glorot_uniform(self):
-        let fan_in = self.shape.load(self.shape.len.load() - 2)
-        let fan_out = self.shape.load(self.shape.len.load() - 1)
-        let scale = sqrt(6.0 / Float32(fan_in + fan_out))
+        let fan_in: Float32 = self.shape.load(self.shape.len.load() - 2)
+        let fan_out: Float32 = self.shape.load(self.shape.len.load() - 1)
+        let scale = sqrt(6.0 / (fan_in + fan_out))
         self.random_uniform(-scale, scale)
 
     fn he_normal(self):
-        let fan_in = self.shape.load(self.shape.len.load() - 2)
-        let scale = sqrt(2.0 / Float32(fan_in))
+        let fan_in: Float32 = self.shape.load(self.shape.len.load() - 2)
+        let scale = sqrt(2.0 / fan_in)
         self.random_normal(scale, 0.0)
 
     fn he_uniform(self):

@@ -181,7 +181,6 @@ struct MMul:
                 vectorize[NELTS, dot_bw](N)
 
 
-@parameter
 @always_inline
 fn load_shapes_and_dims(
     a: Node, b: Node, c: Node, a_index: Int, b_index: Int, c_index: Int
