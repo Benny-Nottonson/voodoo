@@ -149,8 +149,8 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         return self
 
     fn requires_grad(self) raises -> Self:
-        let node_ptr = self.node_ptr.load().load()
-        node_ptr.requires_grad_ptr.store(True)
+        var node_ptr = self.node_ptr.load().load()
+        node_ptr.requires_grad = True
         node_ptr.is_static_ptr.store(True)
         node_ptr.computed_ptr.store(True)
         return self

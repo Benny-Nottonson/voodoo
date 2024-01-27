@@ -312,7 +312,7 @@ struct GenericOptimizer[fw_vec: generic_optimizer_vectorized]:
         let x = x_ptr.load()
         for i in range(x.len.load()):
             let node = x.load(i).load()
-            if node.requires_grad_ptr.load() and node.grad_computed_ptr.load():
+            if node.requires_grad and node.grad_computed_ptr.load():
                 let node_data = node.data.load(0)
                 let node_grad = node.data.load(1)
 

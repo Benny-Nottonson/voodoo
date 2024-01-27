@@ -13,7 +13,7 @@ struct MMul:
     @staticmethod
     @always_inline
     fn base_case_depth(depth: Int, a: Node, b: Node) -> Bool:
-        return depth == max(a.num_dims_ptr.load(), b.num_dims_ptr.load()) - 2
+        return depth == max(a.num_dims, b.num_dims) - 2
 
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
@@ -190,9 +190,9 @@ fn load_shapes_and_dims(
     let b_shape = b.shape
     let c_shape = c.shape
 
-    let a_dims = a.num_dims_ptr.load()
-    let b_dims = b.num_dims_ptr.load()
-    let c_dims = c.num_dims_ptr.load()
+    let a_dims = a.num_dims
+    let b_dims = b.num_dims
+    let c_dims = c.num_dims
 
     let M = a_shape.load(a_dims - 2)
     let K = b_shape.load(b_dims - 2)

@@ -137,10 +137,10 @@ struct Graph:
         *parent_ptrs: Pointer[Node],
     ) raises -> Pointer[Node]:
         var node = Node(self.get_free_node_id(), shape, is_static)
-        node.operator_id_ptr.store(operator_id)
-        node.checkpoint_ptr.store(checkpoint)
+        node.operator_id = operator_id
+        node.checkpoint = checkpoint
         node.is_single_ptr.store(is_single)
-        node.grad_operator_id_ptr.store(operator_id + 1)
+        node.grad_operator_id = operator_id + 1
         node.other_params = other_params.copy()
         let node_ptr = Pointer[Node].alloc(1)
         node_ptr.store(node)
@@ -178,10 +178,10 @@ struct Graph:
         for i in range(len(shape)):
             _shape.push_back(shape[i])
         var node = Node(self.get_free_node_id(), _shape, is_static)
-        node.checkpoint_ptr.store(checkpoint)
+        node.checkpoint = checkpoint
         node.is_single_ptr.store(is_single)
-        node.operator_id_ptr.store(operator_id)
-        node.grad_operator_id_ptr.store(operator_id + 1)
+        node.operator_id = operator_id
+        node.grad_operator_id = operator_id + 1
         node.other_params = other_params.copy()
         let node_ptr = Pointer[Node].alloc(1)
         node_ptr.store(node)
@@ -203,7 +203,7 @@ struct Graph:
         else:
             self.nodes.load().push_back(node_ptr)
 
-        return node_ptr
+        return node_ptr 
 
     fn get_free_data_ptr(self, node: Pointer[Node], unique: Bool = False) raises:
         if node.load().data_id.load() != -1:
@@ -219,8 +219,8 @@ struct Graph:
                 and parent.load().dependencies_ptr.load() == 1
                 and not parent.load().is_static_ptr.load()
                 and not node.load().is_static_ptr.load()
-                and not parent.load().checkpoint_ptr.load()
-                and not node.load().checkpoint_ptr.load()
+                and not parent.load().checkpoint
+                and not node.load().checkpoint
                 and not unique
                 and not parent.load().is_single_ptr.load()
                 and not node.load().is_single_ptr.load()
@@ -298,7 +298,7 @@ struct Graph:
         let node = node_ptr.load()
         if (
             node.is_static_ptr.load()
-            or node.checkpoint_ptr.load()
+            or node.checkpoint
             or node.is_single_ptr.load()
             or node.data_id.load() == -1
         ):
@@ -399,12 +399,6 @@ struct Graph:
                 node.is_static_ptr.free()
                 node.computed_ptr.free()
                 node.grad_computed_ptr.free()
-                node.operator_id_ptr.free()
-                node.grad_operator_id_ptr.free()
-                node.requires_grad_ptr.free()
-                node.tmp_visited_ptr.free()
-                node.checkpoint_ptr.free()
-                node.num_dims_ptr.free()
                 node.shape.free()
                 node.strides.free()
                 node.other_params.free()
@@ -445,7 +439,7 @@ struct Graph:
         if node.load_computed():
             return node_ptr
 
-        let operator_id = node.operator_id_ptr.load()
+        let operator_id = node.operator_id
         if node.load_num_parents() == 1:
             let parent1_ptr = self.forward_recursive(
                 self.nodes.load().load(node.load_parent_id(0)),
@@ -512,7 +506,7 @@ struct Graph:
         if node.computed_ptr.load():
             return node_ptr
 
-        let operator_id = node.operator_id_ptr.load()
+        let operator_id = node.operator_id
         if node.load_num_parents() == 1:
             let parent1_ptr = self.forward_recursive_graph_slice(
                 self.nodes.load().load(node.parents.load(0))
@@ -547,7 +541,7 @@ struct Graph:
             let child_ptr = self.nodes.load().load(child_id)
             _ = self.backward_recursive(child_ptr)
 
-            let grad_operator_id = child_ptr.load().grad_operator_id_ptr.load()
+            let grad_operator_id = child_ptr.load().grad_operator_id
             if child_ptr.load().parents.len.load() == 1:
                 let parent1_ptr = self.nodes.load().load(
                     child_ptr.load().load_parent_id(0)
@@ -595,7 +589,8 @@ struct Graph:
     fn find_grad_nodes_order(self, node_ptr: Pointer[Node]) raises:
         self.grad_nodes_order.store(Vector[Int]())
         for i in range(self.nodes.load().len.load()):
-            self.nodes.load().load(i).load().tmp_visited_ptr.store(False)
+            var node = self.nodes.load().load(i).load()
+            node.tmp_visited = False
         self.grad_nodes_order.load().clear()
 
         var backward = DynamicVector[Int]()
@@ -607,14 +602,15 @@ struct Graph:
             for i in range(curr.load().parents.len.load()):
                 let parId = curr.load().parents.load(i)
                 let par = self.nodes.load().load(parId)
-                if not par.load().tmp_visited_ptr.load():
+                if not par.load().tmp_visited:
                     backward.push_back(parId)
             if (
-                curr.load().requires_grad_ptr.load()
-                or curr.load().checkpoint_ptr.load()
+                curr.load().requires_grad
+                or curr.load().checkpoint
             ):
                 self.grad_nodes_order.load().push_back(currId)
-            self.nodes.load().load(currId).load().tmp_visited_ptr.store(True)
+            var node = self.nodes.load().load(currId).load()
+            node.tmp_visited = True
             it += 1
 
     fn backward(self, node_ptr: Pointer[Node]) raises:
@@ -634,7 +630,7 @@ struct Graph:
 
             if not node.load().is_static_ptr.load():
                 node.load().grad_id.store(-1)
-                if not node.load().checkpoint_ptr.load():
+                if not node.load().checkpoint:
                     node.load().computed_ptr.store(False)
                     node.load().data_id.store(-1)
             else:
@@ -676,8 +672,8 @@ struct Graph:
         var shape = get_broadcasted_shape_for_ew_op(a, b)
         let a_loaded = a.load()
         let b_loaded = b.load()
-        let a_dims = a_loaded.num_dims_ptr.load()
-        let b_dims = b_loaded.num_dims_ptr.load()
+        let a_dims = a_loaded.num_dims
+        let b_dims = b_loaded.num_dims
         shape[len(shape) - 2] = a_loaded.shape.copy().load(a_dims - 2)
         shape[len(shape) - 1] = b_loaded.shape.copy().load(b_dims - 1)
         if a_loaded.shape.load(a_dims - 1) != b_loaded.shape.load(

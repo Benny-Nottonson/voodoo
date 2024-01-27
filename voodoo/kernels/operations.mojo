@@ -85,7 +85,7 @@ struct Reshape(Operation):
 struct Transpose(Operation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
-        let num_dims = parent1.num_dims_ptr.load()
+        let num_dims = parent1.num_dims
         let M = parent1.shape.load(num_dims - 2)
         let N = parent1.shape.load(num_dims - 1)
         for s in range(node.cap // (M * N)):
@@ -102,7 +102,7 @@ struct Transpose(Operation):
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
-        let num_dims = parent1.num_dims_ptr.load()
+        let num_dims = parent1.num_dims
         let M = parent1.shape.load(num_dims - 2)
         let N = parent1.shape.load(num_dims - 1)
         for s in range(node.cap // (M * N)):

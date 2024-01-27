@@ -13,10 +13,10 @@ fn get_broadcasted_shape_for_ew_op(
     parent1: Pointer[Node], parent2: Pointer[Node]
 ) -> DynamicVector[Int]:
     let new_num_dims = max(
-        parent1.load().num_dims_ptr.load(), parent2.load().num_dims_ptr.load()
+        parent1.load().num_dims, parent2.load().num_dims
     )
     var shape = DynamicVector[Int]()
-    let diff = parent1.load().num_dims_ptr.load() - parent2.load().num_dims_ptr.load()
+    let diff = parent1.load().num_dims - parent2.load().num_dims
     for i in range(new_num_dims):
         if diff > 0 and i < abs(diff):
             shape.push_back(parent1.load().shape.load(i))

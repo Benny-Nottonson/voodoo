@@ -17,15 +17,15 @@ struct Node:
     var dependencies_ptr: Pointer[Int]
     var is_static_ptr: Pointer[Bool]
     var computed_ptr: Pointer[Bool]
-    var grad_computed_ptr: Pointer[Bool]
-    var operator_id_ptr: Pointer[Int]
-    var grad_operator_id_ptr: Pointer[Int]
-    var requires_grad_ptr: Pointer[Bool]
-    var tmp_visited_ptr: Pointer[Bool]
-    var checkpoint_ptr: Pointer[Bool]
-    var is_single_ptr: Pointer[Bool]
+    var grad_computed_ptr: Pointer[Bool] # Needs to be a pointer?
+    var operator_id: Int
+    var grad_operator_id: Int
+    var requires_grad: Bool
+    var tmp_visited: Bool
+    var checkpoint: Bool
+    var is_single_ptr: Pointer[Bool] # Needs to be pointer?
     var cap: Int
-    var num_dims_ptr: Pointer[Int]
+    var num_dims: Int
     var shape: Vector[Int]
     var strides: Vector[Int]
     var other_params: Vector[Int]
@@ -60,38 +60,31 @@ struct Node:
         let grad_computed_ptr = Pointer[Bool].alloc(1)
         grad_computed_ptr.store(False)
 
-        let requires_grad_ptr = Pointer[Bool].alloc(1)
-        requires_grad_ptr.store(is_static)
+        let requires_grad = is_static
 
-        let operator_id_ptr = Pointer[Int].alloc(1)
-        operator_id_ptr.store(-1)
+        let operator_id = -1
 
-        let grad_operator_id_ptr = Pointer[Int].alloc(1)
-        grad_operator_id_ptr.store(-1)
+        let grad_operator_id = -1
 
-        let tmp_visited_ptr = Pointer[Bool].alloc(1)
-        tmp_visited_ptr.store(False)
+        let tmp_visited = False
 
-        let checkpoint_ptr = Pointer[Bool].alloc(1)
-        checkpoint_ptr.store(False)
+        let checkpoint = False
 
         let is_single_ptr = Pointer[Bool].alloc(1)
         is_single_ptr.store(False)
 
-        let _num_dims = shape.len.load()
-        let num_dims_ptr = Pointer[Int].alloc(1)
-        num_dims_ptr.store(_num_dims)
+        let num_dims = shape.len.load()
 
         var cap = shape.load(0)
-        for i in range(1, _num_dims):
+        for i in range(1, num_dims):
             cap *= shape.load(i)
 
-        let strides = Vector[Int](_num_dims)
-        strides.store(_num_dims - 1, 1)
-        for i in range(_num_dims - 1):
+        let strides = Vector[Int](num_dims)
+        strides.store(num_dims - 1, 1)
+        for i in range(num_dims - 1):
             strides.store(
-                _num_dims - i - 2,
-                strides.load(_num_dims - i - 1) * shape.load(_num_dims - i - 1),
+                num_dims - i - 2,
+                strides.load(num_dims - i - 1) * shape.load(num_dims - i - 1),
             )
 
         let other_params = Vector[Int]()
@@ -107,14 +100,14 @@ struct Node:
             is_static_ptr: is_static_ptr,
             computed_ptr: computed_ptr,
             grad_computed_ptr: grad_computed_ptr,
-            operator_id_ptr: operator_id_ptr,
-            grad_operator_id_ptr: grad_operator_id_ptr,
-            requires_grad_ptr: requires_grad_ptr,
-            tmp_visited_ptr: tmp_visited_ptr,
-            checkpoint_ptr: checkpoint_ptr,
+            operator_id: operator_id,
+            grad_operator_id: grad_operator_id,
+            requires_grad: requires_grad,
+            tmp_visited: tmp_visited,
+            checkpoint: checkpoint,
             is_single_ptr: is_single_ptr,
             cap: cap,
-            num_dims_ptr: num_dims_ptr,
+            num_dims: num_dims,
             shape: shape,
             strides: strides,
             other_params: other_params,
@@ -303,7 +296,7 @@ struct Node:
             self.store_data(i, z * sigma)
 
     fn identity(self):
-        let num_dims = self.num_dims_ptr.load()
+        let num_dims = self.num_dims
         let row: Int = self.shape.load(num_dims - 2)
         let cols: Int = self.shape.load(num_dims - 1)
         let col_strides: Int = (
@@ -364,7 +357,7 @@ struct Node:
         self.fill(0.0)
 
     fn orthoganal(self, gain: Float32 = 1.0):
-        let num_dims = self.num_dims_ptr.load()
+        let num_dims = self.num_dims
         let row: Int = self.shape.load(num_dims - 2)
         let cols: Int = self.shape.load(num_dims - 1)
         let col_strides: Int = (
@@ -397,7 +390,7 @@ struct Node:
                 self.store_data(i * cols + j, tmp.load(i * cols + j))
 
     fn print(self, accuracy: Int = 6):
-        let num_dims = self.num_dims_ptr.load()
+        let num_dims = self.num_dims
         let row: Int = self.shape.load(num_dims - 2)
         let cols: Int = self.shape.load(num_dims - 1)
         let col_strides: Int = (
