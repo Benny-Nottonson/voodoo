@@ -1,7 +1,5 @@
 from memory import memset_zero
-from math import log, log2, exp, exp2, ceil, round
-from algorithm import vectorize, unswitch
-
+from math import log2, exp2, ceil, round
 from voodoo.kernels import load_kernels
 from .node import Node
 from .utils import Vector, get_broadcasted_shape_for_ew_op, warn
