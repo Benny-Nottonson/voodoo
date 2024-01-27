@@ -24,11 +24,11 @@ from .operator_codes import (
 struct Graph:
     var nodes: Vector[Pointer[Node]]
     var memory_pool: Vector[DTypePointer[DType.float32]]
-    var memory_pool_manager: Pointer[Vector[Int]] # Needs to be a pointer
+    var memory_pool_manager: Pointer[Vector[Int]]  # Needs to be a pointer
     var free_node_ids: Vector[Int]
     var free_data_ids: Vector[Int]
-    var last_node_id: Pointer[Int] # Needs to be a pointer
-    var kernels: Pointer[OP_TUPLE] # Needs to be a pointer
+    var last_node_id: Pointer[Int]  # Needs to be a pointer
+    var kernels: Pointer[OP_TUPLE]  # Needs to be a pointer
     var forward_order: Vector[Int]
     var grad_nodes_order: Vector[Int]
 
@@ -97,9 +97,7 @@ struct Graph:
     fn get_free_node_id_no_pop(self) raises -> Int:
         var fid: Int = 0
         if self.free_node_ids.len.load() > 0:
-            fid = self.free_node_ids.load(
-                self.free_node_ids.len.load() - 1
-            )
+            fid = self.free_node_ids.load(self.free_node_ids.len.load() - 1)
         else:
             fid = self.nodes.len.load()
         return fid
@@ -269,9 +267,7 @@ struct Graph:
             loaded_node.grad_id.store(grad_id)
             let ceiled_cap = self.load_ceiled_cap(loaded_node.cap)
 
-            loaded_node.data.store(
-                1, self.memory_pool.load(loaded_node.grad_id.load())
-            )
+            loaded_node.data.store(1, self.memory_pool.load(loaded_node.grad_id.load()))
             memset_zero(loaded_node.data.load(1), ceiled_cap)
         else:
             let grad_id = self.get_free_data_id()
@@ -283,9 +279,7 @@ struct Graph:
             else:
                 self.memory_pool.data.store(grad_id, new_grad_ptr)
 
-            loaded_node.data.store(
-                1, self.memory_pool.load(loaded_node.grad_id.load())
-            )
+            loaded_node.data.store(1, self.memory_pool.load(loaded_node.grad_id.load()))
             memset_zero(loaded_node.data.load(1), ceiled_cap)
 
     fn release_data(self, node_ptr: Pointer[Node]) raises:

@@ -48,8 +48,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
 
     fn load_tensor_for_binary_op(self, other: Tensor) raises -> Tensor[False, False]:
         let self_static_or_single = (
-            self.node_ptr.load().is_static
-            or self.node_ptr.load().is_single_ptr.load()
+            self.node_ptr.load().is_static or self.node_ptr.load().is_single_ptr.load()
         )
         let other_static_or_single = (
             other.node_ptr.load().is_static
@@ -81,8 +80,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
 
     fn load_tensor_for_unary_op(self) raises -> Tensor[False, False]:
         let self_static_or_single = (
-            self.node_ptr.load().is_static
-            or self.node_ptr.load().is_single_ptr.load()
+            self.node_ptr.load().is_static or self.node_ptr.load().is_single_ptr.load()
         )
 
         var new_tensor = Tensor[False, False](
@@ -183,10 +181,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         self.node_ptr.free()
 
     fn forward(self, keep_forward_order: Bool = False) raises -> Self:
-        _ = (
-            self.graph
-            .forward(self.node_ptr, keep_forward_order)
-        )
+        _ = self.graph.forward(self.node_ptr, keep_forward_order)
         return self
 
     fn forward_static(self) raises -> Self:
@@ -221,19 +216,25 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         dropout_rate: Float32, noise_shape: DynamicVector[Int]
     ](self) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr = new_tensor.graph.dropout(self.node_ptr, dropout_rate, noise_shape)
+        new_tensor.node_ptr = new_tensor.graph.dropout(
+            self.node_ptr, dropout_rate, noise_shape
+        )
         return new_tensor
 
     fn _magic_arithmetic_generic[
         operation_code: Int
     ](self, other: Tensor) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr = new_tensor.graph.arithmetic_general[operation_code](self.node_ptr, other.node_ptr)
+        new_tensor.node_ptr = new_tensor.graph.arithmetic_general[operation_code](
+            self.node_ptr, other.node_ptr
+        )
         return new_tensor
 
     fn __eq__(self, other: Tensor) raises -> Bool:
         var new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr = new_tensor.graph.arithmetic_general[sub_code](self.node_ptr, other.node_ptr)
+        new_tensor.node_ptr = new_tensor.graph.arithmetic_general[sub_code](
+            self.node_ptr, other.node_ptr
+        )
         return new_tensor.node_ptr.load().is_zero()
 
     fn __add__(self, other: Tensor) raises -> Tensor[False, False]:
@@ -350,7 +351,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         for i in range(1, dims):
             shape.store(0, shape.load(0) * self.node_ptr.load().shape.load(i))
         new_tensor.node_ptr = new_tensor.graph.reshape(self.node_ptr, shape)
-        
+
         return new_tensor
 
     fn transp(self) raises -> Tensor[False, False]:
@@ -365,63 +366,81 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
 
     fn compute_function[operator_id: Int](self) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr = new_tensor.graph.function_general[operator_id](self.node_ptr)
+        new_tensor.node_ptr = new_tensor.graph.function_general[operator_id](
+            self.node_ptr
+        )
         return new_tensor
 
     fn compute_loss[
         operator_id: Int
     ](self, other: Tensor) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr = new_tensor.graph.loss_general[operator_id](self.node_ptr, other.node_ptr)
+        new_tensor.node_ptr = new_tensor.graph.loss_general[operator_id](
+            self.node_ptr, other.node_ptr
+        )
         return new_tensor
 
     fn compute_loss[
         operator_name: String
     ](self, other: Tensor) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr = new_tensor.graph.loss_general[get_loss_code[operator_name]()](self.node_ptr, other.node_ptr)
+        new_tensor.node_ptr = new_tensor.graph.loss_general[
+            get_loss_code[operator_name]()
+        ](self.node_ptr, other.node_ptr)
         return new_tensor
 
     fn compute_activation[
         operator_id: Int, arg1: Float32 = 0.0
     ](self) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr = new_tensor.graph.activation_general[operator_id, arg1](self.node_ptr)
+        new_tensor.node_ptr = new_tensor.graph.activation_general[operator_id, arg1](
+            self.node_ptr
+        )
         return new_tensor
 
     fn compute_activation[
         operator_name: String, arg1: Float32 = 0.0
     ](self) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr = new_tensor.graph.activation_general[get_activation_code[operator_name](), arg1](self.node_ptr)
+        new_tensor.node_ptr = new_tensor.graph.activation_general[
+            get_activation_code[operator_name](), arg1
+        ](self.node_ptr)
         return new_tensor
 
     fn conv_1d(
         self, other: Tensor, padding: Int, stride: Int
     ) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr = new_tensor.graph.conv_1d(self.node_ptr, other.node_ptr, padding, stride)
+        new_tensor.node_ptr = new_tensor.graph.conv_1d(
+            self.node_ptr, other.node_ptr, padding, stride
+        )
         return new_tensor
 
     fn conv_2d(
         self, other: Tensor, padding: StaticIntTuple[2], stride: StaticIntTuple[2]
     ) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_binary_op(other)
-        new_tensor.node_ptr = new_tensor.graph.conv_2d(self.node_ptr, other.node_ptr, padding, stride)
+        new_tensor.node_ptr = new_tensor.graph.conv_2d(
+            self.node_ptr, other.node_ptr, padding, stride
+        )
         return new_tensor
 
     fn maxpool_1d(
         self, kernel_size: Int, stride: Int, padding: Int
     ) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr = new_tensor.graph.maxpool_1d(self.node_ptr, kernel_size, stride, padding)
+        new_tensor.node_ptr = new_tensor.graph.maxpool_1d(
+            self.node_ptr, kernel_size, stride, padding
+        )
         return new_tensor
 
     fn maxpool_2d(
         self, kernel_size: StaticIntTuple[2], stride: Int, padding: Int
     ) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
-        new_tensor.node_ptr = new_tensor.graph.maxpool_2d(self.node_ptr, kernel_size, stride, padding)
+        new_tensor.node_ptr = new_tensor.graph.maxpool_2d(
+            self.node_ptr, kernel_size, stride, padding
+        )
         return new_tensor
 
 
@@ -449,9 +468,7 @@ fn fuse_graphs(
         graph_ptr.nodes.push_back(node_ptr)
 
     for i in range(other_graph.memory_pool.len.load()):
-        graph_ptr.memory_pool.push_back(
-            other_graph.memory_pool.load(i)
-        )
+        graph_ptr.memory_pool.push_back(other_graph.memory_pool.load(i))
 
     for i in range(MEMORY_POOL_SIZE):
         for j in range(other_graph.memory_pool_manager.load(i).len.load()):
@@ -460,9 +477,7 @@ fn fuse_graphs(
             )
 
     for i in range(graph_ptr.free_node_ids.len.load()):
-        graph_ptr.free_node_ids.push_back(
-            other_graph.free_node_ids.load(i) + num_nodes
-        )
+        graph_ptr.free_node_ids.push_back(other_graph.free_node_ids.load(i) + num_nodes)
 
     for i in range(graph_ptr.free_data_ids.len.load()):
         graph_ptr.free_data_ids.push_back(
