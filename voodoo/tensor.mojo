@@ -39,8 +39,8 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         graph_p.store(graph)
         self.graph_ptr.store(graph_p)
         try:
-            let node_p = graph.node(
-                shape, is_static, is_single, False, -1, other_params
+            let node_p = graph.node[False](
+                shape, is_static, is_single, -1, other_params
             )
             self.node_ptr.store(node_p)
         except:

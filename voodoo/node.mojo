@@ -30,7 +30,7 @@ struct Node:
     var strides: Vector[Int]
     var other_params: Vector[Int]
 
-    fn __init__(id: Int, shape: Vector[Int], is_static: Bool = True) -> Self:
+    fn __init__(id: Int, shape: Vector[Int], is_static: Bool = True, other_params: Vector[Int] = Vector[Int]()) -> Self:
         let id_ptr = Pointer[Int].alloc(1)
         id_ptr.store(id)
 
@@ -82,8 +82,6 @@ struct Node:
                 num_dims - i - 2,
                 strides.load(num_dims - i - 1) * shape.load(num_dims - i - 1),
             )
-
-        let other_params = Vector[Int]()
 
         return Node {
             id_ptr: id_ptr,

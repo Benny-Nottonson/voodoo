@@ -126,22 +126,22 @@ struct Graph:
     fn get_index(self, cap: Int) raises -> Int:
         return ceil(log2(Float32(cap))).to_int()
 
-    fn node(
+    fn node[
+        checkpoint: Bool
+    ](
         self,
         shape: Vector[Int],
         is_static: Bool,
         is_single: Bool,
-        checkpoint: Bool,
         operator_id: Int,
         other_params: Vector[Int],
         *parent_ptrs: Pointer[Node],
     ) raises -> Pointer[Node]:
-        var node = Node(self.get_free_node_id(), shape, is_static)
-        node.operator_id = operator_id
+        var node = Node(self.get_free_node_id(), shape, is_static, other_params.copy())
         node.checkpoint = checkpoint
+        node.operator_id = operator_id
         node.is_single_ptr.store(is_single)
         node.grad_operator_id = operator_id + 1
-        node.other_params = other_params.copy()
         let node_ptr = Pointer[Node].alloc(1)
         node_ptr.store(node)
 
@@ -165,12 +165,13 @@ struct Graph:
 
         return node_ptr
 
-    fn node(
+    fn node[
+        checkpoint: Bool
+    ](
         self,
         shape: DynamicVector[Int],
         is_static: Bool,
         is_single: Bool,
-        checkpoint: Bool,
         operator_id: Int,
         other_params: Vector[Int],
         *parent_ptrs: Pointer[Node],
@@ -178,12 +179,11 @@ struct Graph:
         let _shape = Vector[Int]()
         for i in range(len(shape)):
             _shape.push_back(shape[i])
-        var node = Node(self.get_free_node_id(), _shape, is_static)
+        var node = Node(self.get_free_node_id(), _shape, is_static, other_params.copy())
         node.checkpoint = checkpoint
         node.is_single_ptr.store(is_single)
         node.operator_id = operator_id
         node.grad_operator_id = operator_id + 1
-        node.other_params = other_params.copy()
         let node_ptr = Pointer[Node].alloc(1)
         node_ptr.store(node)
 
@@ -655,10 +655,9 @@ struct Graph:
             SGD[learning_rate].step(self.nodes)
 
     fn copy(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        return self.node(
+        return self.node[False](
             parent1_ptr.load().shape.copy(),
             True,
-            False,
             False,
             copy_code,
             Vector[Int](),
@@ -680,7 +679,7 @@ struct Graph:
 
         let other_params = Vector[Int]()
 
-        return self.node(shape, False, False, True, mmul_code, other_params, a, b)
+        return self.node[True](shape, False, False, mmul_code, other_params, a, b)
 
     fn conv_1d(
         self,
@@ -704,7 +703,7 @@ struct Graph:
         other_params.push_back(padding)
         other_params.push_back(stride)
 
-        return self.node(shape, False, False, True, conv1d_code, other_params, a, b)
+        return self.node[True](shape, False, False, conv1d_code, other_params, a, b)
 
     fn conv_2d(
         self,
@@ -733,7 +732,7 @@ struct Graph:
         other_params.push_back(stride[0])
         other_params.push_back(stride[1])
 
-        return self.node(shape, False, False, True, conv2d_code, other_params, a, b)
+        return self.node[True](shape, False, False, conv2d_code, other_params, a, b)
 
     fn maxpool_1d(
         self,
@@ -754,7 +753,7 @@ struct Graph:
             (a.load().shape.load(2) - kernel_size + 2 * padding) // stride + 1
         )
 
-        return self.node(shape, False, False, True, maxpool1d_code, other_params, a)
+        return self.node[True](shape, False, False, maxpool1d_code, other_params, a)
 
     fn maxpool_2d(
         self,
@@ -779,14 +778,13 @@ struct Graph:
             (a.load().shape.load(3) - kernel_size[1] + 2 * padding) // stride + 1
         )
 
-        return self.node(shape, False, False, True, maxpool2d_code, other_params, a)
+        return self.node[True](shape, False, False, maxpool2d_code, other_params, a)
 
     fn dropout(
         self, a: Pointer[Node], dropout_rate: Float32, noise_shape: DynamicVector[Int]
     ) raises -> Pointer[Node]:
-        return self.node(
+        return self.node[False](
             a.load().shape.copy(),
-            False,
             False,
             False,
             dropout_code,
@@ -797,14 +795,13 @@ struct Graph:
     fn reshape(
         self, parent1_ptr: Pointer[Node], shape: Vector[Int]
     ) raises -> Pointer[Node]:
-        return self.node(
-            shape, False, False, False, reshape_code, Vector[Int](), parent1_ptr
+        return self.node[False](
+            shape, False, False, reshape_code, Vector[Int](), parent1_ptr
         )
 
     fn transp(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        return self.node(
+        return self.node[False](
             parent1_ptr.load().shape.copy().get_transposed(),
-            False,
             False,
             False,
             transp_code,
@@ -813,16 +810,15 @@ struct Graph:
         )
 
     fn sum(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        return self.node(
-            shape(1), False, False, False, sum_code, Vector[Int](), parent1_ptr
+        return self.node[False](
+            shape(1), False, False, sum_code, Vector[Int](), parent1_ptr
         )
 
     fn function_general[
         operator_id: Int
     ](self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
-        return self.node(
+        return self.node[False](
             parent1_ptr.load().shape.copy(),
-            False,
             False,
             False,
             operator_id,
@@ -833,9 +829,8 @@ struct Graph:
     fn arithmetic_general[
         operator_id: Int
     ](self, a: Pointer[Node], b: Pointer[Node]) raises -> Pointer[Node]:
-        return self.node(
+        return self.node[False](
             get_broadcasted_shape_for_ew_op(a, b),
-            False,
             False,
             False,
             operator_id,
@@ -850,9 +845,8 @@ struct Graph:
     ](self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
         let other_params = Vector[Int]()
         other_params.push_back(round(arg1 * 1000000.0).to_int())
-        return self.node(
+        return self.node[False](
             parent1_ptr.load().shape.copy(),
-            False,
             False,
             False,
             operator_id,
@@ -865,9 +859,8 @@ struct Graph:
     ](self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]) raises -> Pointer[
         Node
     ]:
-        return self.node(
+        return self.node[False](
             shape(1),
-            False,
             False,
             False,
             operator_id,
