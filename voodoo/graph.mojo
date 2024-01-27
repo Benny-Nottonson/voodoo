@@ -24,13 +24,13 @@ from .operator_codes import (
 struct Graph:
     var nodes: Vector[Pointer[Node]]
     var memory_pool: Vector[DTypePointer[DType.float32]]
-    var memory_pool_manager: Pointer[Vector[Int]]
+    var memory_pool_manager: Pointer[Vector[Int]] # Needs to be a pointer
     var free_node_ids: Vector[Int]
     var free_data_ids: Vector[Int]
-    var last_node_id: Pointer[Int]
-    var kernels: Pointer[OP_TUPLE]
-    var forward_order: Pointer[Vector[Int]]
-    var grad_nodes_order: Pointer[Vector[Int]]
+    var last_node_id: Pointer[Int] # Needs to be a pointer
+    var kernels: Pointer[OP_TUPLE] # Needs to be a pointer
+    var forward_order: Vector[Int]
+    var grad_nodes_order: Vector[Int]
 
     fn __init__() -> Self:
         let nodes = Vector[Pointer[Node]]()
@@ -50,14 +50,9 @@ struct Graph:
         let last_node_id = Pointer[Int].alloc(1)
         last_node_id.store(-1)
 
-        let forward_order = Pointer[Vector[Int]].alloc(1)
-        forward_order.store(Vector[Int]())
+        let forward_order = Vector[Int]()
 
-        let grad_nodes_order = Pointer[Vector[Int]].alloc(1)
-        grad_nodes_order.store(Vector[Int]())
-
-        let backward_order = Pointer[Vector[Int]].alloc(1)
-        backward_order.store(Vector[Int]())
+        let grad_nodes_order = Vector[Int]()
 
         return Graph {
             nodes: nodes,
@@ -426,7 +421,6 @@ struct Graph:
         self.free_data_ids.free()
         self.last_node_id.free()
         self.kernels.free()
-        self.forward_order.load().free()
         self.forward_order.free()
 
     fn forward_recursive(
@@ -463,7 +457,7 @@ struct Graph:
             self.release_data(parent2_ptr)
 
         if keep_forward_order:
-            self.forward_order.load().push_back(node.load_id())
+            self.forward_order.push_back(node.load_id())
 
         node.computed_ptr.store(True)
 
@@ -576,11 +570,11 @@ struct Graph:
         return node_ptr
 
     fn find_grad_nodes_order(self, node_ptr: Pointer[Node]) raises:
-        self.grad_nodes_order.store(Vector[Int]())
+        self.grad_nodes_order.clear()
         for i in range(self.nodes.len.load()):
             var node = self.nodes.load(i).load()
             node.tmp_visited = False
-        self.grad_nodes_order.load().clear()
+        self.grad_nodes_order.clear()
 
         var backward = DynamicVector[Int]()
         backward.push_back(node_ptr.load().load_id())
@@ -594,7 +588,7 @@ struct Graph:
                 if not par.load().tmp_visited:
                     backward.push_back(parId)
             if curr.load().requires_grad or curr.load().checkpoint:
-                self.grad_nodes_order.load().push_back(currId)
+                self.grad_nodes_order.push_back(currId)
             var node = self.nodes.load(currId).load()
             node.tmp_visited = True
             it += 1
@@ -627,8 +621,8 @@ struct Graph:
         let node = node_ptr.load()
         node.fill_grad(1.0)
         node.grad_computed_ptr.store(True)
-        for i in range(self.grad_nodes_order.load().len.load()):
-            let curr_node_ptr = self.nodes.load(self.grad_nodes_order.load().load(i))
+        for i in range(self.grad_nodes_order.len.load()):
+            let curr_node_ptr = self.nodes.load(self.grad_nodes_order.load(i))
             _ = self.backward_recursive(curr_node_ptr)
 
     fn optimizer_step[type: String, learning_rate: Float32](self) raises:

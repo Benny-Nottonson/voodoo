@@ -188,7 +188,6 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         graph.free_data_ids.free()
         graph.last_node_id.free()
         graph.kernels.free()
-        graph.forward_order.load().free()
         graph.forward_order.free()
 
         self.graph_ptr.load().free()
@@ -572,5 +571,4 @@ fn fuse_graphs(
         other_graph.free_data_ids.free()
         other_graph.last_node_id.free()
         other_graph.kernels.free()
-        other_graph.forward_order.load().free()
         other_graph.forward_order.free()
