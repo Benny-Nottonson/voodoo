@@ -109,53 +109,61 @@ struct Node:
             other_params: other_params,
         }
 
+    @always_inline
     fn store_id(self, id: Int):
         self.id_ptr.store(id)
-
+    
+    @always_inline
     fn load_id(self) -> Int:
         return self.id_ptr.load()
-
-    fn load_dependencies(self) -> Int:
-        return self.dependencies
-
+    
+    @always_inline
     fn incr_dependencies(inout self):
         self.dependencies += 1
-
+    
+    @always_inline
     fn decr_dependencies(inout self):
         self.dependencies -= 1
-
-    fn load_cap(self) -> Int:
-        return self.cap
-
+    
+    @always_inline
     fn add_parent(self, node_id: Int):
         self.parents.push_back(node_id)
-
+    
+    @always_inline
     fn add_child(self, node_id: Int):
         let vec = self.children.push_back(node_id)
-
+    
+    @always_inline
     fn load_parent_id(self, idx: Int) -> Int:
         return self.parents.load(idx)
-
+    
+    @always_inline
     fn load_child_id(self, idx: Int) -> Int:
         return self.children.load(idx)
-
+    
+    @always_inline
     fn load_num_parents(self) -> Int:
         return self.parents.len.load()
-
+    
+    @always_inline
     fn load_num_children(self) -> Int:
         return self.children.len.load()
-
+    
+    @always_inline
     fn load_is_static(self) -> Bool:
         return self.is_static
-
+    
+    @always_inline
     fn load_computed(self) -> Bool:
         return self.computed_ptr.load()
-
+    
+    @always_inline
     fn store_computed(self, value: Bool):
         self.computed_ptr.store(value)
-
+    
+    @always_inline
     fn is_zero(self) -> Bool:
-        for i in range(self.load_cap()):
+        for i in range(self.cap):
             if self.load_data(i) != 0.0:
                 return False
         return True
@@ -175,13 +183,15 @@ struct Node:
     @always_inline
     fn store_data[NELTS: Int = 1](self, idx: Int, val: SIMD[DType.float32, NELTS]):
         self.data.load().simd_store[NELTS](idx, val)
-
+    
+    @always_inline
     fn fill(self, val: Float32):
-        for i in range(self.load_cap()):
+        for i in range(self.cap):
             self.data.load().store(i, val)
-
+    
+    @always_inline
     fn fill_incr(self):
-        for i in range(self.load_cap()):
+        for i in range(self.cap):
             self.data.load(0).store(i, Float32(i))
 
     @always_inline
@@ -199,15 +209,18 @@ struct Node:
     @always_inline
     fn store_grad[NELTS: Int = 1](self, idx: Int, val: SIMD[DType.float32, NELTS]):
         self.data.load(1).simd_store[NELTS](idx, val)
-
+    
+    @always_inline
     fn grad_fill_incr(self):
-        for i in range(self.load_cap()):
+        for i in range(self.cap):
             self.data.load(1).store(i, Float32(i))
-
+    
+    @always_inline
     fn fill_grad(self, val: Float32):
-        for i in range(self.load_cap()):
+        for i in range(self.cap):
             self.data.load(1).store(i, val)
-
+    
+    @always_inline
     fn initialize(self, data: DTypePointer[DType.float32]):
         self.data.store(0, data)
 

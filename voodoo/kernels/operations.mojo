@@ -22,7 +22,7 @@ struct Copy(Operation):
         fn vectorized_copy[NELTS: Int](i: Int):
             node.store_data[NELTS](i, parent1.load_data[NELTS](i))
 
-        vectorize[NELTS, vectorized_copy](node.load_cap())
+        vectorize[NELTS, vectorized_copy](node.cap)
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
@@ -30,7 +30,7 @@ struct Copy(Operation):
         fn vectorized_copy_bw[NELTS: Int](i: Int):
             parent1.store_grad[NELTS](i, parent1.load_grad[NELTS](i))
 
-        vectorize[NELTS, vectorized_copy_bw](node.load_cap())
+        vectorize[NELTS, vectorized_copy_bw](node.cap)
 
 
 struct Sum(Operation):
@@ -42,7 +42,7 @@ struct Sum(Operation):
         fn vectorized_sum[NELTS: Int](i: Int):
             sum += parent1.load_data[NELTS](i).reduce_add()
 
-        vectorize[NELTS, vectorized_sum](parent1.load_cap())
+        vectorize[NELTS, vectorized_sum](parent1.cap)
         node.store_data(0, sum)
 
     @staticmethod
@@ -53,7 +53,7 @@ struct Sum(Operation):
                 i, parent1.load_grad[NELTS](i) + node.load_grad(0)
             )
 
-        vectorize[NELTS, vectorized_sum_bw](parent1.load_cap())
+        vectorize[NELTS, vectorized_sum_bw](parent1.cap)
 
 
 struct Reshape(Operation):
@@ -135,7 +135,7 @@ struct Dropout(Operation):
                 (rand < keep_prob).cast[DType.float32]() * parent1.load_data[NELTS](i),
             )
 
-        vectorize[NELTS, vectorized_dropout](node.load_cap())
+        vectorize[NELTS, vectorized_dropout](node.cap)
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
@@ -153,4 +153,4 @@ struct Dropout(Operation):
                 * scale,
             )
 
-        vectorize[NELTS, vectorized_dropout_bw](node.load_cap())
+        vectorize[NELTS, vectorized_dropout_bw](node.cap)

@@ -102,14 +102,17 @@ struct Graph:
             fid = self.nodes.len.load()
         return fid
 
+    @always_inline
     fn get_free_data_id(self) raises -> Int:
         if self.free_data_ids.len.load() > 0:
             return self.free_data_ids.pop_back()
         return self.memory_pool.len.load()
 
+    @always_inline
     fn load_ceiled_cap(self, cap: Int) raises -> Int:
         return exp2(ceil(log2(Float32(cap)))).to_int()
 
+    @always_inline
     fn get_index(self, cap: Int) raises -> Int:
         return ceil(log2(Float32(cap))).to_int()
 
@@ -409,6 +412,7 @@ struct Graph:
         @unroll
         for i in range(MEMORY_POOL_SIZE):
             self.memory_pool_manager.load(i).free()
+
         self.memory_pool_manager.free()
         self.free_node_ids.free()
         self.free_node_ids.free()
@@ -626,6 +630,7 @@ struct Graph:
             warn("Invalid optimizer: " + type + " using sgd\n")
             SGD[learning_rate].step(self.nodes)
 
+    @always_inline
     fn copy(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
         return self.node[False](
             parent1_ptr.load().shape.copy(),
@@ -636,6 +641,7 @@ struct Graph:
             parent1_ptr,
         )
 
+    @always_inline
     fn mmul(self, a: Pointer[Node], b: Pointer[Node]) raises -> Pointer[Node]:
         var shape = get_broadcasted_shape_for_ew_op(a, b)
         let a_loaded = a.load()
@@ -653,6 +659,7 @@ struct Graph:
 
         return self.node[True](shape, False, False, mmul_code, other_params, a, b)
 
+    @always_inline
     fn conv_1d(
         self,
         a: Pointer[Node],
@@ -677,6 +684,7 @@ struct Graph:
 
         return self.node[True](shape, False, False, conv1d_code, other_params, a, b)
 
+    @always_inline
     fn conv_2d(
         self,
         a: Pointer[Node],
@@ -706,6 +714,7 @@ struct Graph:
 
         return self.node[True](shape, False, False, conv2d_code, other_params, a, b)
 
+    @always_inline
     fn maxpool_1d(
         self,
         a: Pointer[Node],
@@ -727,6 +736,7 @@ struct Graph:
 
         return self.node[True](shape, False, False, maxpool1d_code, other_params, a)
 
+    @always_inline
     fn maxpool_2d(
         self,
         a: Pointer[Node],
@@ -752,6 +762,7 @@ struct Graph:
 
         return self.node[True](shape, False, False, maxpool2d_code, other_params, a)
 
+    @always_inline
     fn dropout(
         self, a: Pointer[Node], dropout_rate: Float32, noise_shape: DynamicVector[Int]
     ) raises -> Pointer[Node]:
@@ -764,6 +775,7 @@ struct Graph:
             a,
         )
 
+    @always_inline
     fn reshape(
         self, parent1_ptr: Pointer[Node], shape: Vector[Int]
     ) raises -> Pointer[Node]:
@@ -771,6 +783,7 @@ struct Graph:
             shape, False, False, reshape_code, Vector[Int](), parent1_ptr
         )
 
+    @always_inline
     fn transp(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
         return self.node[False](
             parent1_ptr.load().shape.copy().get_transposed(),
@@ -781,11 +794,13 @@ struct Graph:
             parent1_ptr,
         )
 
+    @always_inline
     fn sum(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
         return self.node[False](
             shape(1), False, False, sum_code, Vector[Int](), parent1_ptr
         )
 
+    @always_inline
     fn function_general[
         operator_id: Int
     ](self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
@@ -798,6 +813,7 @@ struct Graph:
             parent1_ptr,
         )
 
+    @always_inline
     fn arithmetic_general[
         operator_id: Int
     ](self, a: Pointer[Node], b: Pointer[Node]) raises -> Pointer[Node]:
@@ -811,6 +827,7 @@ struct Graph:
             b,
         )
 
+    @always_inline
     fn activation_general[
         operator_id: Int,
         arg1: Float32 = 0.0,
@@ -826,6 +843,7 @@ struct Graph:
             parent1_ptr,
         )
 
+    @always_inline
     fn loss_general[
         operator_id: Int
     ](self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]) raises -> Pointer[

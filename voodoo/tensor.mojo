@@ -455,7 +455,7 @@ fn fuse_graphs(
 
     for i in range(other_graph.nodes.len.load()):
         let node_ptr = other_graph.nodes.load(i)
-        node_ptr.load().id_ptr.store(node_ptr.load().id_ptr.load() + num_nodes)
+        node_ptr.load().store_id(node_ptr.load().load_id() + num_nodes)
         for j in range(node_ptr.load().children.len.load()):
             node_ptr.load().children.store(
                 j, node_ptr.load().children.load(j) + num_nodes

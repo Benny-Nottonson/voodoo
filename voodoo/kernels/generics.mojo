@@ -55,7 +55,7 @@ struct GenericActivation[
                 fw_vec[NELTS, arg1, arg2, arg3](parent1_data.simd_load[NELTS](i)),
             )
 
-        vectorize[NELTS, vectorized_fw](node.load_cap())
+        vectorize[NELTS, vectorized_fw](node.cap)
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
@@ -79,7 +79,7 @@ struct GenericActivation[
                 * bw_vec[NELTS, arg1, arg2, arg3](parent1_data.simd_load[NELTS](i)),
             )
 
-        vectorize[NELTS, vectorized_bw](node.load_cap())
+        vectorize[NELTS, vectorized_bw](node.cap)
 
 
 struct GenericArithmetic[
@@ -100,7 +100,7 @@ struct GenericArithmetic[
                 fw_vec[NELTS](parent1_data.simd_load[NELTS](i)),
             )
 
-        vectorize[NELTS, vectorized_fw](node.load_cap())
+        vectorize[NELTS, vectorized_fw](node.cap)
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
@@ -123,7 +123,7 @@ struct GenericArithmetic[
                 * bw_vec[NELTS](parent1_data.simd_load[NELTS](i)),
             )
 
-        vectorize[NELTS, vectorized_bw](node.load_cap())
+        vectorize[NELTS, vectorized_bw](node.cap)
 
 
 struct GenericBinaryArithmetic[
@@ -253,7 +253,7 @@ struct GenericLoss[
     fn fw(node: Node, y_pred: Node, y_true: Node):
         let num_dims = y_pred.shape.len.load()
         let N = y_pred.shape.load(num_dims - 1)
-        let cap = y_pred.load_cap()
+        let cap = y_pred.cap
         var e: Float32 = 0.0
 
         let y_pred_data = y_pred.data.load(0)
@@ -280,7 +280,7 @@ struct GenericLoss[
     fn bw(node: Node, y_pred: Node, y_true: Node):
         let num_dims = y_pred.shape.len.load()
         let N = y_pred.shape.load(num_dims - 1)
-        let cap = y_pred.load_cap()
+        let cap = y_pred.cap
         let scalar = cap / Float32(N)
 
         let y_pred_data = y_pred.data.load(0)
@@ -328,4 +328,4 @@ struct GenericOptimizer[fw_vec: generic_optimizer_vectorized]:
                         - fw_vec[NELTS, learning_rate](node_grad.simd_load[NELTS](i)),
                     )
 
-                vectorize[NELTS, vectorized_update](node.load_cap())
+                vectorize[NELTS, vectorized_update](node.cap)
