@@ -26,7 +26,7 @@ struct Graph:
     var memory_pool: Vector[DTypePointer[DType.float32]]
     var memory_pool_manager: Pointer[Vector[Int]]
     var free_node_ids: Vector[Int]
-    var free_data_ids: Pointer[Vector[Int]]
+    var free_data_ids: Vector[Int]
     var last_node_id: Pointer[Int]
     var kernels: Pointer[OP_TUPLE]
     var forward_order: Pointer[Vector[Int]]
@@ -45,8 +45,7 @@ struct Graph:
 
         let free_node_ids = Vector[Int]()
 
-        let free_data_ids = Pointer[Vector[Int]].alloc(1)
-        free_data_ids.store(Vector[Int]())
+        let free_data_ids = Vector[Int]()
 
         let last_node_id = Pointer[Int].alloc(1)
         last_node_id.store(-1)
@@ -111,8 +110,8 @@ struct Graph:
         return fid
 
     fn get_free_data_id(self) raises -> Int:
-        if self.free_data_ids.load().len.load() > 0:
-            return self.free_data_ids.load().pop_back()
+        if self.free_data_ids.len.load() > 0:
+            return self.free_data_ids.pop_back()
         return self.memory_pool.len.load()
 
     fn load_ceiled_cap(self, cap: Int) raises -> Int:
@@ -424,7 +423,6 @@ struct Graph:
         self.memory_pool_manager.free()
         self.free_node_ids.free()
         self.free_node_ids.free()
-        self.free_data_ids.load().free()
         self.free_data_ids.free()
         self.last_node_id.free()
         self.kernels.free()

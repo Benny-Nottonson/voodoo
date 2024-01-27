@@ -184,7 +184,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         graph.memory_pool_manager.free()
         graph.free_node_ids.free()
         graph.free_node_ids.free()
-        graph.free_data_ids.load().free()
+        graph.free_data_ids.free()
         graph.free_data_ids.free()
         graph.last_node_id.free()
         graph.kernels.free()
@@ -551,9 +551,9 @@ fn fuse_graphs(
             other_graph.free_node_ids.load(i) + num_nodes
         )
 
-    for i in range(graph_ptr.load().load().free_data_ids.load().len.load()):
-        graph_ptr.load().load().free_data_ids.load().push_back(
-            other_graph.free_data_ids.load().load(i) + memory_pool_len
+    for i in range(graph_ptr.load().load().free_data_ids.len.load()):
+        graph_ptr.load().load().free_data_ids.push_back(
+            other_graph.free_data_ids.load(i) + memory_pool_len
         )
 
     if remove_other:
@@ -568,7 +568,7 @@ fn fuse_graphs(
         other_graph.memory_pool_manager.free()
         other_graph.free_node_ids.free()
         other_graph.free_node_ids.free()
-        other_graph.free_data_ids.load().free()
+        other_graph.free_data_ids.free()
         other_graph.free_data_ids.free()
         other_graph.last_node_id.free()
         other_graph.kernels.free()
