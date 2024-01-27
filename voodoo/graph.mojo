@@ -25,7 +25,7 @@ struct Graph:
     var nodes: Vector[Pointer[Node]]
     var memory_pool: Vector[DTypePointer[DType.float32]]
     var memory_pool_manager: Pointer[Vector[Int]]
-    var free_node_ids: Pointer[Vector[Int]]
+    var free_node_ids: Vector[Int]
     var free_data_ids: Pointer[Vector[Int]]
     var last_node_id: Pointer[Int]
     var kernels: Pointer[OP_TUPLE]
@@ -43,8 +43,7 @@ struct Graph:
         for i in range(MEMORY_POOL_SIZE):
             memory_pool_manager.store(i, Vector[Int]())
 
-        let free_node_ids = Pointer[Vector[Int]].alloc(1)
-        free_node_ids.store(Vector[Int]())
+        let free_node_ids = Vector[Int]()
 
         let free_data_ids = Pointer[Vector[Int]].alloc(1)
         free_data_ids.store(Vector[Int]())
@@ -95,17 +94,17 @@ struct Graph:
 
     fn get_free_node_id(self) raises -> Int:
         var fid: Int = 0
-        if self.free_node_ids.load().len.load() > 0:
-            fid = self.free_node_ids.load().pop_back()
+        if self.free_node_ids.len.load() > 0:
+            fid = self.free_node_ids.pop_back()
         else:
             fid = self.nodes.len.load()
         return fid
 
     fn get_free_node_id_no_pop(self) raises -> Int:
         var fid: Int = 0
-        if self.free_node_ids.load().len.load() > 0:
-            fid = self.free_node_ids.load().load(
-                self.free_node_ids.load().len.load() - 1
+        if self.free_node_ids.len.load() > 0:
+            fid = self.free_node_ids.load(
+                self.free_node_ids.len.load() - 1
             )
         else:
             fid = self.nodes.len.load()
@@ -389,7 +388,7 @@ struct Graph:
             var node = node_ptr.load()
 
             if not node.load_is_static():
-                self.free_node_ids.load().push_back(node.load_id())
+                self.free_node_ids.push_back(node.load_id())
 
                 node.id_ptr.free()
                 node.data_id.free()
@@ -423,7 +422,7 @@ struct Graph:
         for i in range(MEMORY_POOL_SIZE):
             self.memory_pool_manager.load(i).free()
         self.memory_pool_manager.free()
-        self.free_node_ids.load().free()
+        self.free_node_ids.free()
         self.free_node_ids.free()
         self.free_data_ids.load().free()
         self.free_data_ids.free()
