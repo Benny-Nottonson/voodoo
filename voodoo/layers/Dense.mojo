@@ -38,7 +38,11 @@ struct Dense[
 
     @always_inline
     fn forward(self, x: Tensor) raises -> Tensor[False, False]:
-        let computed = x @ self.W + (self.bias * Float32(self.use_bias))
+        var computed = x @ self.W
+
+        @parameter
+        if self.use_bias:
+            computed = computed + self.bias
 
         @parameter
         if self.activation != "none":

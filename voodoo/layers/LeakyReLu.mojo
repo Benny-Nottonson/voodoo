@@ -38,6 +38,10 @@ struct LeakyReLu[
 
     @always_inline
     fn forward(self, x: Tensor) raises -> Tensor[False, False]:
-        return (x @ self.W + (self.bias * Float32(self.use_bias))).compute_activation[
-            "lrelu", self.alpha
-        ]()
+        var computed = x @ self.W
+
+        @parameter
+        if self.use_bias:
+            computed = computed + self.bias
+
+        return (computed).compute_activation["lrelu", self.alpha]()

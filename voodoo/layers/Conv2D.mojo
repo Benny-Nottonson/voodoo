@@ -45,6 +45,7 @@ struct Conv2D[
             self.activation
         ]()
 
+        @parameter
         if self.use_bias:
             return res + self.bias
 
