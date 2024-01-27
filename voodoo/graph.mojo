@@ -208,94 +208,96 @@ struct Graph:
         return node_ptr
 
     fn get_free_data_ptr(self, node: Pointer[Node], unique: Bool = False) raises:
-        if node.load().data_id.load() != -1:
+        let loaded_node = node.load()
+        if loaded_node.data_id.load() != -1:
             return
 
         var idx = -1
-        for i in range(node.load().parents.len.load()):
-            let ind = node.load().parents.load(i)
-            let parent = self.nodes.load().load(node.load().load_parent_id(i))
+        for i in range(loaded_node.parents.len.load()):
+            let ind = loaded_node.parents.load(i)
+            let parent = self.nodes.load().load(loaded_node.load_parent_id(i))
             if (
                 self.load_ceiled_cap(parent.load().cap)
-                == self.load_ceiled_cap(node.load().cap)
+                == self.load_ceiled_cap(loaded_node.cap)
                 and parent.load().dependencies == 1
                 and not parent.load().is_static
-                and not node.load().is_static
+                and not loaded_node.is_static
                 and not parent.load().checkpoint
-                and not node.load().checkpoint
+                and not loaded_node.checkpoint
                 and not unique
                 and not parent.load().is_single_ptr.load()
-                and not node.load().is_single_ptr.load()
+                and not loaded_node.is_single_ptr.load()
             ):
-                node.load().data_id.store(parent.load().data_id.load())
-                node.load().data.store(
-                    0, self.memory_pool.load().load(node.load().data_id.load())
+                loaded_node.data_id.store(parent.load().data_id.load())
+                loaded_node.data.store(
+                    0, self.memory_pool.load().load(loaded_node.data_id.load())
                 )
                 idx = i
                 break
 
-        for i in range(node.load().parents.len.load()):
+        for i in range(loaded_node.parents.len.load()):
             if i == idx:
                 continue
             else:
-                let parent = self.nodes.load().load(node.load().load_parent_id(i))
+                let parent = self.nodes.load().load(loaded_node.load_parent_id(i))
                 var mutable_parent = parent.load()
                 mutable_parent.decr_dependencies()
 
         if idx == -1:
-            let index = self.get_index(node.load().cap)
+            let index = self.get_index(loaded_node.cap)
             if self.memory_pool_manager.load(index).len.load() > 0:
                 let data_id = self.memory_pool_manager.load(index).pop_back()
-                node.load().data_id.store(data_id)
-                let ceiled_cap = self.load_ceiled_cap(node.load().cap)
+                loaded_node.data_id.store(data_id)
+                let ceiled_cap = self.load_ceiled_cap(loaded_node.cap)
 
-                node.load().data.store(
-                    0, self.memory_pool.load().load(node.load().data_id.load())
+                loaded_node.data.store(
+                    0, self.memory_pool.load().load(loaded_node.data_id.load())
                 )
-                memset_zero(node.load().data.load(0), ceiled_cap)
+                memset_zero(loaded_node.data.load(0), ceiled_cap)
             else:
                 let data_id = self.get_free_data_id()
-                node.load().data_id.store(data_id)
-                let ceiled_cap = self.load_ceiled_cap(node.load().cap + 1)
+                loaded_node.data_id.store(data_id)
+                let ceiled_cap = self.load_ceiled_cap(loaded_node.cap + 1)
                 let new_data_ptr = DTypePointer[DType.float32].alloc(ceiled_cap)
                 if data_id == self.memory_pool.load().len.load():
                     self.memory_pool.load().push_back(new_data_ptr)
                 else:
                     self.memory_pool.load().data.load().store(data_id, new_data_ptr)
 
-                node.load().data.store(
-                    0, self.memory_pool.load().load(node.load().data_id.load())
+                loaded_node.data.store(
+                    0, self.memory_pool.load().load(loaded_node.data_id.load())
                 )
-                memset_zero(node.load().data.load(0), ceiled_cap)
+                memset_zero(loaded_node.data.load(0), ceiled_cap)
 
     fn get_free_grad_ptr(self, node: Pointer[Node]) raises:
-        if node.load().grad_id.load() != -1:
+        let loaded_node = node.load()
+        if loaded_node.grad_id.load() != -1:
             return
 
-        let index = self.get_index(node.load().cap)
+        let index = self.get_index(loaded_node.cap)
         if self.memory_pool_manager.load(index).len.load() > 0:
             let grad_id = self.memory_pool_manager.load(index).pop_back()
-            node.load().grad_id.store(grad_id)
-            let ceiled_cap = self.load_ceiled_cap(node.load().cap)
+            loaded_node.grad_id.store(grad_id)
+            let ceiled_cap = self.load_ceiled_cap(loaded_node.cap)
 
-            node.load().data.store(
-                1, self.memory_pool.load().load(node.load().grad_id.load())
+            loaded_node.data.store(
+                1, self.memory_pool.load().load(loaded_node.grad_id.load())
             )
-            memset_zero(node.load().data.load(1), ceiled_cap)
+            memset_zero(loaded_node.data.load(1), ceiled_cap)
         else:
             let grad_id = self.get_free_data_id()
-            node.load().grad_id.store(grad_id)
-            let ceiled_cap = self.load_ceiled_cap(node.load().cap)
+            loaded_node.grad_id.store(grad_id)
+            let ceiled_cap = self.load_ceiled_cap(loaded_node.cap)
             let new_grad_ptr = DTypePointer[DType.float32].alloc(ceiled_cap)
             if grad_id == self.memory_pool.load().len.load():
                 self.memory_pool.load().push_back(new_grad_ptr)
             else:
                 self.memory_pool.load().data.load().store(grad_id, new_grad_ptr)
 
-            node.load().data.store(
-                1, self.memory_pool.load().load(node.load().grad_id.load())
+            loaded_node.data.store(
+                1, self.memory_pool.load().load(loaded_node.grad_id.load())
             )
-            memset_zero(node.load().data.load(1), ceiled_cap)
+            memset_zero(loaded_node.data.load(1), ceiled_cap)
 
     fn release_data(self, node_ptr: Pointer[Node]) raises:
         var node = node_ptr.load()
@@ -367,12 +369,13 @@ struct Graph:
             let node = self.nodes.load().load(i)
             if node == Pointer[Node].get_null():
                 continue
+            let loaded_node = node.load()
 
-            if node.load().is_static:
-                if node.load().data_id.load() != -1:
-                    deletable_data.store(node.load().data_id.load(), False)
-                if node.load().grad_id.load() != -1:
-                    deletable_data.store(node.load().grad_id.load(), False)
+            if loaded_node.is_static:
+                if loaded_node.data_id.load() != -1:
+                    deletable_data.store(loaded_node.data_id.load(), False)
+                if loaded_node.grad_id.load() != -1:
+                    deletable_data.store(loaded_node.grad_id.load(), False)
 
         for i in range(deletable_data.len.load()):
             if (
@@ -484,16 +487,15 @@ struct Graph:
         self.release_data_forced(node_ptr)
 
         for i in range(self.nodes.load().len.load()):
-            let node = self.nodes.load().load(i)
-            if node.load().is_single_ptr.load():
+            var node = self.nodes.load().load(i).load()
+            if node.is_single_ptr.load():
                 continue
 
-            if not node.load().is_static:
-                node.load().computed_ptr.store(False)
-                node.load().grad_id.store(-1)
-                node.load().data_id.store(-1)
-            var mutable_node = node.load()
-            mutable_node.dependencies = node.load().children.len.load()
+            if not node.is_static:
+                node.computed_ptr.store(False)
+                node.grad_id.store(-1)
+                node.data_id.store(-1)
+            node.dependencies = node.children.len.load()
 
         _ = self.forward_recursive(node_ptr)
 
@@ -616,25 +618,22 @@ struct Graph:
         self.last_node_id.store(node_ptr.load().load_id())
 
         for i in range(self.nodes.load().len.load()):
-            let node = self.nodes.load().load(i)
-            node.load().grad_computed_ptr.store(False)
+            let node = self.nodes.load().load(i).load()
+            node.grad_computed_ptr.store(False)
 
-            if (
-                node.load().is_single_ptr.load()
-                or node.load().load_id() == self.last_node_id.load()
-            ):
+            if node.is_single_ptr.load() or node.load_id() == self.last_node_id.load():
                 continue
 
-            if not node.load().is_static:
-                node.load().grad_id.store(-1)
-                if not node.load().checkpoint:
-                    node.load().computed_ptr.store(False)
-                    node.load().data_id.store(-1)
+            if not node.is_static:
+                node.grad_id.store(-1)
+                if not node.checkpoint:
+                    node.computed_ptr.store(False)
+                    node.data_id.store(-1)
             else:
-                if node.load().grad_id.load() != -1:
+                if node.grad_id.load() != -1:
                     memset_zero(
-                        node.load().data.load(1),
-                        self.load_ceiled_cap(node.load().cap),
+                        node.data.load(1),
+                        self.load_ceiled_cap(node.cap),
                     )
 
         self.get_free_grad_ptr(node_ptr)

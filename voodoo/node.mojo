@@ -8,29 +8,34 @@ from memory.buffer import Buffer
 
 @register_passable("trivial")
 struct Node:
-    var id_ptr: Pointer[Int]
-    var data_id: Pointer[Int]
-    var grad_id: Pointer[Int]  # Needs to be a pointer?
-    var data: Pointer[DTypePointer[DType.float32]]
+    var id_ptr: Pointer[Int]  # Needs to be a pointer
+    var data_id: Pointer[Int]  # Needs to be a pointer
+    var grad_id: Pointer[Int]  # Needs to be a pointer
+    var data: Pointer[DTypePointer[DType.float32]]  # Needs to be a pointer
     var parents: Vector[Int]
     var children: Vector[Int]
     var dependencies: Int
     var is_static: Bool
-    var computed_ptr: Pointer[Bool]  # Needs to be a pointer?
-    var grad_computed_ptr: Pointer[Bool]  # Needs to be a pointer?
+    var computed_ptr: Pointer[Bool]  # Needs to be a pointer
+    var grad_computed_ptr: Pointer[Bool]  # Needs to be a pointer
     var operator_id: Int
     var grad_operator_id: Int
     var requires_grad: Bool
     var tmp_visited: Bool
     var checkpoint: Bool
-    var is_single_ptr: Pointer[Bool]  # Needs to be pointer?
+    var is_single_ptr: Pointer[Bool]  # Needs to be pointer
     var cap: Int
     var num_dims: Int
     var shape: Vector[Int]
     var strides: Vector[Int]
     var other_params: Vector[Int]
 
-    fn __init__(id: Int, shape: Vector[Int], is_static: Bool = True, other_params: Vector[Int] = Vector[Int]()) -> Self:
+    fn __init__(
+        id: Int,
+        shape: Vector[Int],
+        is_static: Bool = True,
+        other_params: Vector[Int] = Vector[Int](),
+    ) -> Self:
         let id_ptr = Pointer[Int].alloc(1)
         id_ptr.store(id)
 
