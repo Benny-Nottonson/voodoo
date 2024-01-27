@@ -25,7 +25,6 @@ struct Vector[type: AnyRegType]:
 
     fn push_back(self, elem: type):
         if self.len.load() == self.cap.load():
-            let old_data = self.data.load()
             let new_cap = 2 * self.cap.load()
             let new_data = Pointer[type].alloc(new_cap)
             memset_zero(new_data, new_cap)
@@ -39,7 +38,6 @@ struct Vector[type: AnyRegType]:
         let tmp = self.data.load(self.len.load())
 
         if self.len.load() <= self.cap.load() // 4 and self.cap.load() > 32:
-            let old_data = self.data.load()
             let new_data = Pointer[type].alloc(self.cap.load() // 2)
             memcpy(new_data, self.data, self.cap.load() // 2)
             self.cap.store(self.cap.load() // 2)
