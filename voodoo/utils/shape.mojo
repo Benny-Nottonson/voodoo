@@ -1,6 +1,7 @@
 from voodoo import Node
 from math import max, abs
 
+
 @always_inline
 fn shape(*shapes: Int) -> DynamicVector[Int]:
     var shape = DynamicVector[Int]()
