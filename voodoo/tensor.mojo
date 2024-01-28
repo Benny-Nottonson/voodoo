@@ -484,14 +484,14 @@ fn fuse_graphs(
     let other_graph = other_graph_ptr
 
     for i in range(other_graph.nodes.len.load()):
-        let node_ptr = other_graph.nodes.load(i)
-        node_ptr.store_id(node_ptr.load_id() + num_nodes)
-        for j in range(node_ptr.children.len.load()):
-            node_ptr.children.store(j, node_ptr.children.load(j) + num_nodes)
-        for j in range(node_ptr.parents.len.load()):
-            node_ptr.parents.store(j, node_ptr.parents.load(j) + num_nodes)
-        node_ptr.data_id.store(node_ptr.data_id.load() + memory_pool_len)
-        graph_ptr.nodes.push_back(node_ptr)
+        let node = other_graph.nodes.load(i)
+        node.store_id(node.load_id() + num_nodes)
+        for j in range(node.children.len.load()):
+            node.children.store(j, node.children.load(j) + num_nodes)
+        for j in range(node.parents.len.load()):
+            node.parents.store(j, node.parents.load(j) + num_nodes)
+        node.data_id.store(node.data_id.load() + memory_pool_len)
+        graph_ptr.nodes.push_back(node)
 
     for i in range(other_graph.memory_pool.len.load()):
         graph_ptr.memory_pool.push_back(other_graph.memory_pool.load(i))
