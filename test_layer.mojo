@@ -30,13 +30,14 @@ fn main() raises:
     let every = 1000
     let num_epochs = 20000
 
-    let input = Tensor(data_shape).initialize["he_normal", 0, 1]().dynamic()
+    var input = Tensor(data_shape).initialize["he_normal", 0, 1]()
+    input = input.dynamic()
     let true_vals = Tensor(data_shape)
 
     var x = input_layer.forward(input)
     x = dense_layer.forward(x)
     x = output_layer.forward(x)
-    let loss = x.compute_loss["mse"](true_vals)
+    var loss = x.compute_loss["mse"](true_vals)
 
     let initial_start = now()
     var epoch_start = now()

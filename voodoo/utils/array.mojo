@@ -1,4 +1,5 @@
 from memory import memset_zero, memcpy
+from math import max
 from ..constants import NELTS
 
 
@@ -9,16 +10,13 @@ struct Vector[type: AnyRegType]:
     var cap: Pointer[Int]
 
     fn __init__(_len: Int = 0) -> Self:
-        var _cap = _len
-        if _len < 8:
-            _cap = 8
+        let _cap = max(_len, 8)
+
         let data = Pointer[type].alloc(_cap)
-        memset_zero(data, _cap)
-
         let cap = Pointer[Int].alloc(1)
-        cap.store(_cap)
-
         let len = Pointer[Int].alloc(1)
+        memset_zero(data, _cap)
+        cap.store(_cap)
         len.store(_len)
 
         return Vector[type] {data: data, len: len, cap: cap}
@@ -75,13 +73,15 @@ struct Vector[type: AnyRegType]:
 
     @always_inline
     fn copy(self) -> Self:
-        let new_vector = Vector[type](self.len.load())
-        memcpy(new_vector.data, self.data, self.len.load())
+        let len = self.len.load()
+        let new_vector = Vector[type](len)
+        memcpy(new_vector.data, self.data, len)
         return new_vector
 
     @always_inline
     fn get_transposed(self) -> Self:
         let new_shape = self.copy()
-        new_shape.store(new_shape.len.load() - 2, self.load(self.len.load() - 1))
-        new_shape.store(new_shape.len.load() - 1, self.load(self.len.load() - 2))
+        let len = self.len.load()
+        new_shape.store(len - 2, self.load(len - 1))
+        new_shape.store(len - 1, self.load(len - 2))
         return new_shape

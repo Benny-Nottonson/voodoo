@@ -390,6 +390,22 @@ struct Node:
             for j in range(cols):
                 self.store_data(i * cols + j, tmp.load(i * cols + j))
 
+    fn free(inout self):
+        self.id_ptr.free()
+        self.data_id.free()
+        self.grad_id.free()
+        self.data[0].free()
+        self.data[1].free()
+        self.data.free()
+        self.parents.free()
+        self.children.free()
+        self.computed_ptr.free()
+        self.grad_computed_ptr.free()
+        self.is_single_ptr.free()
+        self.shape.free()
+        self.strides.free()
+        self.other_params.free()
+
     fn print(self, accuracy: Int = 6):
         let num_dims = self.num_dims
         let row: Int = self.shape.load(num_dims - 2)

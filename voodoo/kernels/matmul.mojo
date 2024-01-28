@@ -9,7 +9,6 @@ from ..constants import PREFETCH_READ, PREFETCH_WRITE, F32_MAX, NELTS
 
 
 struct MMul:
-    @parameter
     @staticmethod
     @always_inline
     fn base_case_depth(depth: Int, a: Node, b: Node) -> Bool:
@@ -26,20 +25,17 @@ struct MMul:
         if not b.is_single_ptr.load():
             recursive_broadcast_bw[Self.kernel_mmul_bw_b, Self.base_case_depth](c, a, b)
 
-    @parameter
     @staticmethod
     fn kernel_mmul_fw(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let shape_info = load_shapes_and_dims(a, b, c, a_index, b_index, c_index)
+        let M = a.shape.load(a.num_dims - 2)
+        let K = b.shape.load(b.num_dims - 2)
+        let N = c.shape.load(c.num_dims - 1)
 
-        let M = shape_info[0]
-        let K = shape_info[1]
-        let N = shape_info[2]
-
-        let offset_a = shape_info[3]
-        let offset_b = shape_info[4]
-        let offset_c = shape_info[5]
+        let offset_a = a_index * M * a.shape.load(a.num_dims - 1)
+        let offset_b = b_index * K * b.shape.load(b.num_dims - 1)
+        let offset_c = c_index * N * N
 
         let a_data = a.data.load(0)
         let b_data = b.data.load(0)
@@ -51,6 +47,8 @@ struct MMul:
         DTypePointer.prefetch[PREFETCH_WRITE](c_data)
 
         for m in range(0, M, 4):
+            let start_offset_c = offset_c + m * N
+            let start_offset_a = offset_a + m * K
             for kb in range(0, K, NELTS):
                 for k in range(kb, min(kb + NELTS, K)):
                     let b_off = offset_b + k * N
@@ -71,9 +69,6 @@ struct MMul:
                                 ),
                             )
 
-                        let start_offset_c = offset_c + m * N
-                        let start_offset_a = offset_a + m * K
-
                         dot_store(start_offset_c + n, start_offset_a)
                         dot_store(start_offset_c + N + n, start_offset_a + K)
                         dot_store(start_offset_c + 2 * N + n, start_offset_a + 2 * K)
@@ -81,20 +76,17 @@ struct MMul:
 
                     vectorize[NELTS, dot_fw](N)
 
-    @parameter
     @staticmethod
     fn kernel_mmul_bw_a(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let shape_info = load_shapes_and_dims(a, b, c, a_index, b_index, c_index)
+        let M = a.shape.load(a.num_dims - 2)
+        let K = b.shape.load(b.num_dims - 2)
+        let N = c.shape.load(c.num_dims - 1)
 
-        let M = shape_info[0]
-        let K = shape_info[1]
-        let N = shape_info[2]
-
-        let offset_a = shape_info[3]
-        let offset_b = shape_info[4]
-        let offset_c = shape_info[5]
+        let offset_a = a_index * M * a.shape.load(a.num_dims - 1)
+        let offset_b = b_index * K * b.shape.load(b.num_dims - 1)
+        let offset_c = c_index * N * N
 
         let a_grad = a.data.load(1)
         let b_data = b.data.load(0)
@@ -105,11 +97,15 @@ struct MMul:
         DTypePointer.prefetch[PREFETCH_READ](b_data)
         DTypePointer.prefetch[PREFETCH_READ](c_grad)
 
+        
         for m in range(0, M, 2):
+            let _offset_c = offset_c + m * N
+            let _offset_c_1 = offset_c + (m + 1) * N
+            let start_offset_a = offset_a + m * K
             for nb in range(0, N, NELTS):
                 for n in range(nb, min(nb + NELTS, N), 2):
-                    let c_grad_0 = c_grad.load(offset_c + m * N + n)
-                    let c_grad_1 = c_grad.load(offset_c + (m + 1) * N + n)
+                    let c_grad_0 = c_grad.load(_offset_c + n)
+                    let c_grad_1 = c_grad.load(_offset_c_1 + n)
 
                     @parameter
                     @always_inline
@@ -125,7 +121,6 @@ struct MMul:
                                 ),
                             )
 
-                        let start_offset_a = offset_a + m * K
                         let start_offset_b = offset_b + k * N
 
                         dot_store(start_offset_a + k, start_offset_b + n, c_grad_0)
@@ -133,20 +128,17 @@ struct MMul:
 
                     vectorize[NELTS, dot_bw](K)
 
-    @parameter
     @staticmethod
     fn kernel_mmul_bw_b(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let shape_info = load_shapes_and_dims(a, b, c, a_index, b_index, c_index)
+        let M = a.shape.load(a.num_dims - 2)
+        let K = b.shape.load(b.num_dims - 2)
+        let N = c.shape.load(c.num_dims - 1)
 
-        let M = shape_info[0]
-        let K = shape_info[1]
-        let N = shape_info[2]
-
-        let offset_a = shape_info[3]
-        let offset_b = shape_info[4]
-        let offset_c = shape_info[5]
+        let offset_a = a_index * M * a.shape.load(a.num_dims - 1)
+        let offset_b = b_index * K * b.shape.load(b.num_dims - 1)
+        let offset_c = c_index * N * N
 
         let a_data = a.data.load(0)
         let b_grad = b.data.load(1)
@@ -179,26 +171,3 @@ struct MMul:
                     )
 
                 vectorize[NELTS, dot_bw](N)
-
-
-@always_inline
-fn load_shapes_and_dims(
-    a: Node, b: Node, c: Node, a_index: Int, b_index: Int, c_index: Int
-) -> StaticIntTuple[6]:
-    let a_shape = a.shape
-    let b_shape = b.shape
-    let c_shape = c.shape
-
-    let a_dims = a.num_dims
-    let b_dims = b.num_dims
-    let c_dims = c.num_dims
-
-    let M = a_shape.load(a_dims - 2)
-    let K = b_shape.load(b_dims - 2)
-    let N = c_shape.load(c_dims - 1)
-
-    let offset_a = a_index * M * a_shape.load(a_dims - 1)
-    let offset_b = b_index * K * b_shape.load(b_dims - 1)
-    let offset_c = c_index * N * N
-
-    return StaticIntTuple[6](M, K, N, offset_a, offset_b, offset_c)
