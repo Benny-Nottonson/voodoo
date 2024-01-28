@@ -46,8 +46,7 @@ fn main() raises:
         for i in range(input.initialize["random_uniform", 0, 1]().capacity()):
             true_vals[i] = math.sin(15.0 * input[i])
 
-        let computed_loss = loss.forward_static()
-        avg_loss += computed_loss[0]
+        avg_loss += loss.forward_static()[0]
         loss.backward()
         loss.optimize["sgd", 0.01]()
 
