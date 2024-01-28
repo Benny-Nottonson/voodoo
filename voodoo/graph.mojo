@@ -125,35 +125,33 @@ struct Graph:
         is_single: Bool,
         operator_id: Int,
         other_params: Vector[Int],
-        *parent_ptrs: Pointer[Node],
-    ) raises -> Pointer[Node]:
+        *parent_ptrs: Node,
+    ) raises -> Node:
         var node = Node(self.get_free_node_id(), shape, is_static, other_params.copy())
         node.checkpoint = checkpoint
         node.operator_id = operator_id
         node.is_single_ptr.store(is_single)
         node.grad_operator_id = operator_id + 1
-        let node_ptr = Pointer[Node].alloc(1)
-        node_ptr.store(node)
 
         for i in range(len(parent_ptrs)):
-            node.add_parent(parent_ptrs[i].load().load_id())
-            parent_ptrs[i].load().add_child(node.load_id())
-            var mutable_parent = parent_ptrs[i].load()
+            node.add_parent(parent_ptrs[i].load_id())
+            var mutable_parent = parent_ptrs[i]
+            mutable_parent.add_child(node.load_id())
             mutable_parent.incr_dependencies()
 
         self.get_free_data_ptr(node)
 
         for i in range(len(parent_ptrs)):
-            if parent_ptrs[i].load().dependencies == 0:
-                _ = self.forward_recursive(parent_ptrs[i].load())
+            if parent_ptrs[i].dependencies == 0:
+                _ = self.forward_recursive(parent_ptrs[i])
 
-        let node_id = node_ptr.load().load_id()
+        let node_id = node.load_id()
         if node_id < self.nodes.len.load():
             self.nodes.store(node_id, node)
         else:
             self.nodes.push_back(node)
 
-        return node_ptr
+        return node
 
     fn node[
         checkpoint: Bool
@@ -164,8 +162,8 @@ struct Graph:
         is_single: Bool,
         operator_id: Int,
         other_params: Vector[Int],
-        *parent_ptrs: Pointer[Node],
-    ) raises -> Pointer[Node]:
+        *parent_ptrs: Node,
+    ) raises -> Node:
         let _shape = Vector[Int]()
         for i in range(len(shape)):
             _shape.push_back(shape[i])
@@ -174,28 +172,26 @@ struct Graph:
         node.is_single_ptr.store(is_single)
         node.operator_id = operator_id
         node.grad_operator_id = operator_id + 1
-        let node_ptr = Pointer[Node].alloc(1)
-        node_ptr.store(node)
 
         for i in range(len(parent_ptrs)):
-            node.add_parent(parent_ptrs[i].load().load_id())
-            parent_ptrs[i].load().add_child(node.load_id())
-            var mutable_parent = parent_ptrs[i].load()
+            node.add_parent(parent_ptrs[i].load_id())
+            var mutable_parent = parent_ptrs[i]
+            mutable_parent.add_child(node.load_id())
             mutable_parent.incr_dependencies()
 
         self.get_free_data_ptr(node)
 
         for i in range(len(parent_ptrs)):
-            if parent_ptrs[i].load().dependencies == 0:
-                _ = self.forward_recursive(parent_ptrs[i].load())
+            if parent_ptrs[i].dependencies == 0:
+                _ = self.forward_recursive(parent_ptrs[i])
 
-        let node_id = node_ptr.load().load_id()
+        let node_id = node.load_id()
         if node_id < self.nodes.len.load():
             self.nodes.store(node_id, node)
         else:
             self.nodes.push_back(node)
 
-        return node_ptr
+        return node
 
     fn get_free_data_ptr(self, node: Node, unique: Bool = False) raises:
         if node.data_id.load() != -1:
@@ -598,29 +594,27 @@ struct Graph:
             SGD[learning_rate].step(self.nodes)
 
     @always_inline
-    fn copy(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
+    fn copy(self, parent1: Node) raises -> Node:
         return self.node[False](
-            parent1_ptr.load().shape.copy(),
+            parent1.shape.copy(),
             True,
             False,
             copy_code,
             Vector[Int](),
-            parent1_ptr,
+            parent1,
         )
 
     @always_inline
-    fn mmul(self, a: Pointer[Node], b: Pointer[Node]) raises -> Pointer[Node]:
-        var shape = get_broadcasted_shape_for_ew_op(a.load(), b.load())
-        let a_loaded = a.load()
-        let b_loaded = b.load()
-        let a_dims = a_loaded.num_dims
-        let b_dims = b_loaded.num_dims
-        shape[len(shape) - 2] = a_loaded.shape.copy().load(a_dims - 2)
-        shape[len(shape) - 1] = b_loaded.shape.copy().load(b_dims - 1)
-        if a_loaded.shape.load(a_dims - 1) != b_loaded.shape.load(b_dims - 2):
+    fn mmul(self, a: Node, b: Node) raises -> Node:
+        var shape = get_broadcasted_shape_for_ew_op(a, b)
+        let a_dims = a.num_dims
+        let b_dims = b.num_dims
+        shape[len(shape) - 2] = a.shape.copy().load(a_dims - 2)
+        shape[len(shape) - 1] = b.shape.copy().load(b_dims - 1)
+        if a.shape.load(a_dims - 1) != b.shape.load(b_dims - 2):
             raise "Shapes don't fit for matrix multiplication. Got shapes: " + str(
-                a_loaded.shape.load(a_dims - 1)
-            ) + " " + str(b_loaded.shape.load(b_dims - 2))
+                a.shape.load(a_dims - 1)
+            ) + " " + str(b.shape.load(b_dims - 2))
 
         let other_params = Vector[Int]()
 
@@ -629,15 +623,15 @@ struct Graph:
     @always_inline
     fn conv_1d(
         self,
-        a: Pointer[Node],
-        b: Pointer[Node],
+        a: Node,
+        b: Node,
         padding: Int,
         stride: Int,
-    ) raises -> Pointer[Node]:
-        let batch_size = a.load().shape.load(0)
-        let channels = a.load().shape.load(1)
-        let input_width = a.load().shape.load(2)
-        let kernel_width = b.load().shape.load(1)
+    ) raises -> Node:
+        let batch_size = a.shape.load(0)
+        let channels = a.shape.load(1)
+        let input_width = a.shape.load(2)
+        let kernel_width = b.shape.load(1)
 
         let shape = shape(
             batch_size,
@@ -654,17 +648,17 @@ struct Graph:
     @always_inline
     fn conv_2d(
         self,
-        a: Pointer[Node],
-        b: Pointer[Node],
+        a: Node,
+        b: Node,
         padding: StaticIntTuple[2],
         stride: StaticIntTuple[2],
-    ) raises -> Pointer[Node]:
-        let batch_size = a.load().shape.load(0)
-        let channels = a.load().shape.load(1)
-        let input_width = a.load().shape.load(2)
-        let input_height = a.load().shape.load(3)
-        let kernel_width = b.load().shape.load(1)
-        let kernel_height = b.load().shape.load(2)
+    ) raises -> Node:
+        let batch_size = a.shape.load(0)
+        let channels = a.shape.load(1)
+        let input_width = a.shape.load(2)
+        let input_height = a.shape.load(3)
+        let kernel_width = b.shape.load(1)
+        let kernel_height = b.shape.load(2)
 
         let shape = shape(
             batch_size,
@@ -684,21 +678,21 @@ struct Graph:
     @always_inline
     fn maxpool_1d(
         self,
-        a: Pointer[Node],
+        a: Node,
         kernel_size: Int,
         stride: Int,
         padding: Int,
-    ) raises -> Pointer[Node]:
+    ) raises -> Node:
         let other_params = Vector[Int]()
         other_params.push_back(kernel_size)
         other_params.push_back(stride)
         other_params.push_back(padding)
 
         let shape = Vector[Int]()
-        shape.push_back(a.load().shape.load(0))
-        shape.push_back(a.load().shape.load(1))
+        shape.push_back(a.shape.load(0))
+        shape.push_back(a.shape.load(1))
         shape.push_back(
-            (a.load().shape.load(2) - kernel_size + 2 * padding) // stride + 1
+            (a.shape.load(2) - kernel_size + 2 * padding) // stride + 1
         )
 
         return self.node[True](shape, False, False, maxpool1d_code, other_params, a)
@@ -706,11 +700,11 @@ struct Graph:
     @always_inline
     fn maxpool_2d(
         self,
-        a: Pointer[Node],
+        a: Node,
         kernel_size: StaticIntTuple[2],
         stride: Int,
         padding: Int,
-    ) raises -> Pointer[Node]:
+    ) raises -> Node:
         let other_params = Vector[Int]()
         other_params.push_back(kernel_size[0])
         other_params.push_back(kernel_size[1])
@@ -718,23 +712,23 @@ struct Graph:
         other_params.push_back(padding)
 
         let shape = Vector[Int]()
-        shape.push_back(a.load().shape.load(0))
-        shape.push_back(a.load().shape.load(1))
+        shape.push_back(a.shape.load(0))
+        shape.push_back(a.shape.load(1))
         shape.push_back(
-            (a.load().shape.load(2) - kernel_size[0] + 2 * padding) // stride + 1
+            (a.shape.load(2) - kernel_size[0] + 2 * padding) // stride + 1
         )
         shape.push_back(
-            (a.load().shape.load(3) - kernel_size[1] + 2 * padding) // stride + 1
+            (a.shape.load(3) - kernel_size[1] + 2 * padding) // stride + 1
         )
 
         return self.node[True](shape, False, False, maxpool2d_code, other_params, a)
 
     @always_inline
     fn dropout(
-        self, a: Pointer[Node], dropout_rate: Float32, noise_shape: DynamicVector[Int]
-    ) raises -> Pointer[Node]:
+        self, a: Node, dropout_rate: Float32, noise_shape: DynamicVector[Int]
+    ) raises -> Node:
         return self.node[False](
-            a.load().shape.copy(),
+            a.shape.copy(),
             False,
             False,
             dropout_code,
@@ -744,48 +738,48 @@ struct Graph:
 
     @always_inline
     fn reshape(
-        self, parent1_ptr: Pointer[Node], shape: Vector[Int]
-    ) raises -> Pointer[Node]:
+        self, parent1: Node, shape: Vector[Int]
+    ) raises -> Node:
         return self.node[False](
-            shape, False, False, reshape_code, Vector[Int](), parent1_ptr
+            shape, False, False, reshape_code, Vector[Int](), parent1
         )
 
     @always_inline
-    fn transp(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
+    fn transp(self, parent1: Node) raises -> Node:
         return self.node[False](
-            parent1_ptr.load().shape.copy().get_transposed(),
+            parent1.shape.copy().get_transposed(),
             False,
             False,
             transp_code,
             Vector[Int](),
-            parent1_ptr,
+            parent1,
         )
 
     @always_inline
-    fn sum(self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
+    fn sum(self, parent1: Node) raises -> Node:
         return self.node[False](
-            shape(1), False, False, sum_code, Vector[Int](), parent1_ptr
+            shape(1), False, False, sum_code, Vector[Int](), parent1
         )
 
     @always_inline
     fn function_general[
         operator_id: Int
-    ](self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
+    ](self, parent1: Node) raises -> Node:
         return self.node[False](
-            parent1_ptr.load().shape.copy(),
+            parent1.shape.copy(),
             False,
             False,
             operator_id,
             Vector[Int](),
-            parent1_ptr,
+            parent1,
         )
 
     @always_inline
     fn arithmetic_general[
         operator_id: Int
-    ](self, a: Pointer[Node], b: Pointer[Node]) raises -> Pointer[Node]:
+    ](self, a: Node, b: Node) raises -> Node:
         return self.node[False](
-            get_broadcasted_shape_for_ew_op(a.load(), b.load()),
+            get_broadcasted_shape_for_ew_op(a, b),
             False,
             False,
             operator_id,
@@ -798,30 +792,28 @@ struct Graph:
     fn activation_general[
         operator_id: Int,
         arg1: Float32 = 0.0,
-    ](self, parent1_ptr: Pointer[Node]) raises -> Pointer[Node]:
+    ](self, parent1: Node) raises -> Node:
         let other_params = Vector[Int]()
         other_params.push_back(round(arg1 * 1000000.0).to_int())
         return self.node[False](
-            parent1_ptr.load().shape.copy(),
+            parent1.shape.copy(),
             False,
             False,
             operator_id,
             other_params,
-            parent1_ptr,
+            parent1,
         )
 
     @always_inline
     fn loss_general[
         operator_id: Int
-    ](self, parent1_ptr: Pointer[Node], parent2_ptr: Pointer[Node]) raises -> Pointer[
-        Node
-    ]:
+    ](self, parent1: Node, parent2: Node) raises -> Node:
         return self.node[False](
             shape(1),
             False,
             False,
             operator_id,
             Vector[Int](),
-            parent1_ptr,
-            parent2_ptr,
+            parent1,
+            parent2,
         )
