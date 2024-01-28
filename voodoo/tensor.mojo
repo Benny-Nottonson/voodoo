@@ -35,9 +35,9 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         self.node_ptr = Pointer[Node].alloc(1)
 
         try:
-            self.node_ptr.store(self.graph.node[False](
-                shape, is_static, is_single, -1, other_params
-            ))
+            self.node_ptr.store(
+                self.graph.node[False](shape, is_static, is_single, -1, other_params)
+            )
         except:
             self.node_ptr.free()
             print("Error: Tensor initialization failed")
@@ -240,9 +240,9 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     ](self) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
         let new_ptr = Pointer[Node].alloc(1)
-        new_ptr.store(new_tensor.graph.dropout(
-            self.node_ptr.load(), dropout_rate, noise_shape
-        ))
+        new_ptr.store(
+            new_tensor.graph.dropout(self.node_ptr.load(), dropout_rate, noise_shape)
+        )
         new_tensor.node_ptr = new_ptr
         return new_tensor
 
@@ -252,9 +252,11 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     ](self, other: Tensor) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_binary_op(other)
         let new_ptr = Pointer[Node].alloc(1)
-        new_ptr.store(new_tensor.graph.arithmetic_general[operation_code](
-            self.node_ptr.load(), other.node_ptr.load()
-        ))
+        new_ptr.store(
+            new_tensor.graph.arithmetic_general[operation_code](
+                self.node_ptr.load(), other.node_ptr.load()
+            )
+        )
         new_tensor.node_ptr = new_ptr
         return new_tensor
 
@@ -262,9 +264,11 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     fn __eq__(self, other: Tensor) raises -> Bool:
         var new_tensor = self.load_tensor_for_binary_op(other)
         let new_ptr = Pointer[Node].alloc(1)
-        new_ptr.store(new_tensor.graph.arithmetic_general[add_code](
-            self.node_ptr.load(), other.node_ptr.load()
-        ))
+        new_ptr.store(
+            new_tensor.graph.arithmetic_general[add_code](
+                self.node_ptr.load(), other.node_ptr.load()
+            )
+        )
         new_tensor.node_ptr = new_ptr
         return new_tensor.node_ptr.load().is_zero()
 
@@ -292,9 +296,9 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     fn __matmul__(self, other: Tensor) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_binary_op(other)
         let new_ptr = Pointer[Node].alloc(1)
-        new_ptr.store(new_tensor.graph.mmul(
-            self.node_ptr.load(), other.node_ptr.load()
-        ))
+        new_ptr.store(
+            new_tensor.graph.mmul(self.node_ptr.load(), other.node_ptr.load())
+        )
         new_tensor.node_ptr = new_ptr
         return new_tensor
 
@@ -444,9 +448,9 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     fn compute_function[operator_id: Int](self) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
         let new_ptr = Pointer[Node].alloc(1)
-        new_ptr.store(new_tensor.graph.function_general[operator_id](
-            self.node_ptr.load()
-        ))
+        new_ptr.store(
+            new_tensor.graph.function_general[operator_id](self.node_ptr.load())
+        )
         new_tensor.node_ptr = new_ptr
         return new_tensor
 
@@ -456,9 +460,11 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     ](self, other: Tensor) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_binary_op(other)
         let new_ptr = Pointer[Node].alloc(1)
-        new_ptr.store(new_tensor.graph.loss_general[operator_id](
-            self.node_ptr.load(), other.node_ptr.load()
-        ))
+        new_ptr.store(
+            new_tensor.graph.loss_general[operator_id](
+                self.node_ptr.load(), other.node_ptr.load()
+            )
+        )
         new_tensor.node_ptr = new_ptr
         return new_tensor
 
@@ -468,9 +474,11 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     ](self, other: Tensor) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_binary_op(other)
         let new_ptr = Pointer[Node].alloc(1)
-        new_ptr.store(new_tensor.graph.loss_general[
-            get_loss_code[operator_name]()
-        ](self.node_ptr.load(), other.node_ptr.load()))
+        new_ptr.store(
+            new_tensor.graph.loss_general[get_loss_code[operator_name]()](
+                self.node_ptr.load(), other.node_ptr.load()
+            )
+        )
         new_tensor.node_ptr = new_ptr
         return new_tensor
 
@@ -480,9 +488,9 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     ](self) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
         let new_ptr = Pointer[Node].alloc(1)
-        new_ptr.store(new_tensor.graph.activation_general[operator_id, arg1](
-            self.node_ptr.load()
-        ))
+        new_ptr.store(
+            new_tensor.graph.activation_general[operator_id, arg1](self.node_ptr.load())
+        )
         new_tensor.node_ptr = new_ptr
         return new_tensor
 
@@ -492,9 +500,11 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     ](self) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
         let new_ptr = Pointer[Node].alloc(1)
-        new_ptr.store(new_tensor.graph.activation_general[
-            get_activation_code[operator_name](), arg1
-        ](self.node_ptr.load()))
+        new_ptr.store(
+            new_tensor.graph.activation_general[
+                get_activation_code[operator_name](), arg1
+            ](self.node_ptr.load())
+        )
         new_tensor.node_ptr = new_ptr
         return new_tensor
 
@@ -504,9 +514,11 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     ) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_binary_op(other)
         let new_ptr = Pointer[Node].alloc(1)
-        new_ptr.store(new_tensor.graph.conv_1d(
-            self.node_ptr.load(), other.node_ptr.load(), padding, stride
-        ))
+        new_ptr.store(
+            new_tensor.graph.conv_1d(
+                self.node_ptr.load(), other.node_ptr.load(), padding, stride
+            )
+        )
         new_tensor.node_ptr = new_ptr
         return new_tensor
 
@@ -516,9 +528,11 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     ) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_binary_op(other)
         let new_ptr = Pointer[Node].alloc(1)
-        new_ptr.store(new_tensor.graph.conv_2d(
-            self.node_ptr.load(), other.node_ptr.load(), padding, stride
-        ))
+        new_ptr.store(
+            new_tensor.graph.conv_2d(
+                self.node_ptr.load(), other.node_ptr.load(), padding, stride
+            )
+        )
         new_tensor.node_ptr = new_ptr
         return new_tensor
 
@@ -528,9 +542,11 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     ) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
         let new_ptr = Pointer[Node].alloc(1)
-        new_ptr.store(new_tensor.graph.maxpool_1d(
-            self.node_ptr.load(), kernel_size, stride, padding
-        ))
+        new_ptr.store(
+            new_tensor.graph.maxpool_1d(
+                self.node_ptr.load(), kernel_size, stride, padding
+            )
+        )
         new_tensor.node_ptr = new_ptr
         return new_tensor
 
@@ -540,9 +556,11 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     ) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
         let new_ptr = Pointer[Node].alloc(1)
-        new_ptr.store(new_tensor.graph.maxpool_2d(
-            self.node_ptr.load(), kernel_size, stride, padding
-        ))
+        new_ptr.store(
+            new_tensor.graph.maxpool_2d(
+                self.node_ptr.load(), kernel_size, stride, padding
+            )
+        )
         new_tensor.node_ptr = new_ptr
         return new_tensor
 
@@ -560,13 +578,9 @@ fn fuse_graphs(
         let node_ptr = other_graph.nodes.load(i)
         node_ptr.store_id(node_ptr.load_id() + num_nodes)
         for j in range(node_ptr.children.len.load()):
-            node_ptr.children.store(
-                j, node_ptr.children.load(j) + num_nodes
-            )
+            node_ptr.children.store(j, node_ptr.children.load(j) + num_nodes)
         for j in range(node_ptr.parents.len.load()):
-            node_ptr.parents.store(
-                j, node_ptr.parents.load(j) + num_nodes
-            )
+            node_ptr.parents.store(j, node_ptr.parents.load(j) + num_nodes)
         node_ptr.data_id.store(node_ptr.data_id.load() + memory_pool_len)
         graph_ptr.nodes.push_back(node_ptr)
 

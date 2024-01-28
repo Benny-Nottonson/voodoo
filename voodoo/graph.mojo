@@ -125,7 +125,7 @@ struct Graph:
         is_single: Bool,
         operator_id: Int,
         other_params: Vector[Int],
-        *parent_ptrs: Node,
+        *parents: Node,
     ) raises -> Node:
         var node = Node(self.get_free_node_id(), shape, is_static, other_params.copy())
         node.checkpoint = checkpoint
@@ -133,17 +133,17 @@ struct Graph:
         node.is_single_ptr.store(is_single)
         node.grad_operator_id = operator_id + 1
 
-        for i in range(len(parent_ptrs)):
-            node.add_parent(parent_ptrs[i].load_id())
-            var mutable_parent = parent_ptrs[i]
+        for i in range(len(parents)):
+            node.add_parent(parents[i].load_id())
+            var mutable_parent = parents[i]
             mutable_parent.add_child(node.load_id())
             mutable_parent.incr_dependencies()
 
-        self.get_free_data_ptr(node)
+        self.get_free_data(node)
 
-        for i in range(len(parent_ptrs)):
-            if parent_ptrs[i].dependencies == 0:
-                _ = self.forward_recursive(parent_ptrs[i])
+        for i in range(len(parents)):
+            if parents[i].dependencies == 0:
+                _ = self.forward_recursive(parents[i])
 
         let node_id = node.load_id()
         if node_id < self.nodes.len.load():
@@ -162,7 +162,7 @@ struct Graph:
         is_single: Bool,
         operator_id: Int,
         other_params: Vector[Int],
-        *parent_ptrs: Node,
+        *parents: Node,
     ) raises -> Node:
         let _shape = Vector[Int]()
         for i in range(len(shape)):
@@ -173,17 +173,17 @@ struct Graph:
         node.operator_id = operator_id
         node.grad_operator_id = operator_id + 1
 
-        for i in range(len(parent_ptrs)):
-            node.add_parent(parent_ptrs[i].load_id())
-            var mutable_parent = parent_ptrs[i]
+        for i in range(len(parents)):
+            node.add_parent(parents[i].load_id())
+            var mutable_parent = parents[i]
             mutable_parent.add_child(node.load_id())
             mutable_parent.incr_dependencies()
 
-        self.get_free_data_ptr(node)
+        self.get_free_data(node)
 
-        for i in range(len(parent_ptrs)):
-            if parent_ptrs[i].dependencies == 0:
-                _ = self.forward_recursive(parent_ptrs[i])
+        for i in range(len(parents)):
+            if parents[i].dependencies == 0:
+                _ = self.forward_recursive(parents[i])
 
         let node_id = node.load_id()
         if node_id < self.nodes.len.load():
@@ -193,7 +193,7 @@ struct Graph:
 
         return node
 
-    fn get_free_data_ptr(self, node: Node, unique: Bool = False) raises:
+    fn get_free_data(self, node: Node, unique: Bool = False) raises:
         if node.data_id.load() != -1:
             return
 
@@ -246,7 +246,7 @@ struct Graph:
                 node.data.store(0, self.memory_pool.load(node.data_id.load()))
                 memset_zero(node.data.load(0), ceiled_cap)
 
-    fn get_free_grad_ptr(self, node: Node) raises:
+    fn get_free_grad(self, node: Node) raises:
         if node.grad_id.load() != -1:
             return
 
@@ -409,7 +409,7 @@ struct Graph:
                 self.nodes.load(node.load_parent_id(0)),
                 keep_forward_order,
             )
-            self.get_free_data_ptr(node)
+            self.get_free_data(node)
             self.kernels.load(operator_id).get[0, UNARY_OP]()(node, parent1)
             self.release_data(parent1)
         else:
@@ -421,7 +421,7 @@ struct Graph:
                 self.nodes.load(node.load_parent_id(1)),
                 keep_forward_order,
             )
-            self.get_free_data_ptr(node)
+            self.get_free_data(node)
             self.kernels.load(operator_id).get[1, BINARY_OP]()(node, parent1, parent2)
 
             self.release_data(parent1)
@@ -466,7 +466,7 @@ struct Graph:
             var parent1 = self.forward_recursive_graph_slice(
                 self.nodes.load(node.parents.load(0))
             )
-            self.get_free_data_ptr(node, True)
+            self.get_free_data(node, True)
 
             self.kernels.load(operator_id).get[0, UNARY_OP]()(node, parent1)
         else:
@@ -477,7 +477,7 @@ struct Graph:
                 self.nodes.load(node.parents.load(1))
             )
 
-            self.get_free_data_ptr(node, True)
+            self.get_free_data(node, True)
             self.kernels.load(operator_id).get[1, BINARY_OP]()(node, parent1, parent2)
 
         node.computed_ptr.store(True)
@@ -499,7 +499,7 @@ struct Graph:
                 _ = self.forward_recursive_graph_slice(parent1)
 
                 if parent1.grad_id.load() == -1:
-                    self.get_free_grad_ptr(parent1)
+                    self.get_free_grad(parent1)
 
                 parent1.grad_computed_ptr.store(True)
 
@@ -513,9 +513,9 @@ struct Graph:
                 _ = self.forward_recursive_graph_slice(parent2)
 
                 if parent1.grad_id.load() == -1:
-                    self.get_free_grad_ptr(parent1)
+                    self.get_free_grad(parent1)
                 if parent2.grad_id.load() == -1:
-                    self.get_free_grad_ptr(parent2)
+                    self.get_free_grad(parent2)
 
                 parent1.grad_computed_ptr.store(True)
                 parent2.grad_computed_ptr.store(True)
@@ -578,12 +578,12 @@ struct Graph:
                         self.load_ceiled_cap(node.cap),
                     )
 
-        self.get_free_grad_ptr(node)
+        self.get_free_grad(node)
         node.fill_grad(1.0)
         node.grad_computed_ptr.store(True)
         for i in range(self.grad_nodes_order.len.load()):
-            let curr_node_ptr = self.nodes.load(self.grad_nodes_order.load(i))
-            _ = self.backward_recursive(curr_node_ptr)
+            let curr_node = self.nodes.load(self.grad_nodes_order.load(i))
+            _ = self.backward_recursive(curr_node)
 
     fn optimizer_step[type: String, learning_rate: Float32](self) raises:
         if type == "sgd":
@@ -690,9 +690,7 @@ struct Graph:
         let shape = Vector[Int]()
         shape.push_back(a.shape.load(0))
         shape.push_back(a.shape.load(1))
-        shape.push_back(
-            (a.shape.load(2) - kernel_size + 2 * padding) // stride + 1
-        )
+        shape.push_back((a.shape.load(2) - kernel_size + 2 * padding) // stride + 1)
 
         return self.node[True](shape, False, False, maxpool1d_code, other_params, a)
 
@@ -713,12 +711,8 @@ struct Graph:
         let shape = Vector[Int]()
         shape.push_back(a.shape.load(0))
         shape.push_back(a.shape.load(1))
-        shape.push_back(
-            (a.shape.load(2) - kernel_size[0] + 2 * padding) // stride + 1
-        )
-        shape.push_back(
-            (a.shape.load(3) - kernel_size[1] + 2 * padding) // stride + 1
-        )
+        shape.push_back((a.shape.load(2) - kernel_size[0] + 2 * padding) // stride + 1)
+        shape.push_back((a.shape.load(3) - kernel_size[1] + 2 * padding) // stride + 1)
 
         return self.node[True](shape, False, False, maxpool2d_code, other_params, a)
 
@@ -736,9 +730,7 @@ struct Graph:
         )
 
     @always_inline
-    fn reshape(
-        self, parent1: Node, shape: Vector[Int]
-    ) raises -> Node:
+    fn reshape(self, parent1: Node, shape: Vector[Int]) raises -> Node:
         return self.node[False](
             shape, False, False, reshape_code, Vector[Int](), parent1
         )
@@ -761,9 +753,7 @@ struct Graph:
         )
 
     @always_inline
-    fn function_general[
-        operator_id: Int
-    ](self, parent1: Node) raises -> Node:
+    fn function_general[operator_id: Int](self, parent1: Node) raises -> Node:
         return self.node[False](
             parent1.shape.copy(),
             False,
@@ -774,9 +764,7 @@ struct Graph:
         )
 
     @always_inline
-    fn arithmetic_general[
-        operator_id: Int
-    ](self, a: Node, b: Node) raises -> Node:
+    fn arithmetic_general[operator_id: Int](self, a: Node, b: Node) raises -> Node:
         return self.node[False](
             get_broadcasted_shape_for_ew_op(a, b),
             False,
