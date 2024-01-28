@@ -34,7 +34,7 @@ struct Dense[
         else:
             self.bias = Tensor(shape(out_neurons))
 
-    @always_inline
+    @always_inline("nodebug")
     fn forward(self, x: Tensor) raises -> Tensor[False, False]:
         var computed = x @ self.W
 

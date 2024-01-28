@@ -10,7 +10,7 @@ from ..constants import PREFETCH_READ, PREFETCH_WRITE, F32_MAX, NELTS
 
 struct MMul:
     @staticmethod
-    @always_inline
+    @always_inline("nodebug")
     fn base_case_depth(depth: Int, a: Node, b: Node) -> Bool:
         return depth == max(a.num_dims, b.num_dims) - 2
 
@@ -54,12 +54,12 @@ struct MMul:
                     let b_off = offset_b + k * N
 
                     @parameter
-                    @always_inline
+                    @always_inline("nodebug")
                     fn dot_fw[NELTS: Int](n: Int):
                         let b_data_n = b_data.simd_load[NELTS](b_off + n)
 
                         @parameter
-                        @always_inline
+                        @always_inline("nodebug")
                         fn dot_store(c_off_n: Int, a_off: Int):
                             c_data.simd_store[NELTS](
                                 c_off_n,
@@ -97,7 +97,6 @@ struct MMul:
         DTypePointer.prefetch[PREFETCH_READ](b_data)
         DTypePointer.prefetch[PREFETCH_READ](c_grad)
 
-        
         for m in range(0, M, 2):
             let _offset_c = offset_c + m * N
             let _offset_c_1 = offset_c + (m + 1) * N
@@ -108,10 +107,10 @@ struct MMul:
                     let c_grad_1 = c_grad.load(_offset_c_1 + n)
 
                     @parameter
-                    @always_inline
+                    @always_inline("nodebug")
                     fn dot_bw[NELTS: Int](k: Int):
                         @parameter
-                        @always_inline
+                        @always_inline("nodebug")
                         fn dot_store(a_off: Int, b_off: Int, scalar: Float32):
                             a_grad.simd_store[NELTS](
                                 a_off,
@@ -158,7 +157,7 @@ struct MMul:
                 let _c_off = offset_c + m * N
 
                 @parameter
-                @always_inline
+                @always_inline("nodebug")
                 fn dot_bw[NELTS: Int](n: Int):
                     let b_off = _b_off + n
 

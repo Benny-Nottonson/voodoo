@@ -11,6 +11,6 @@ struct Dropout[
     ) raises:
         ...
 
-    @always_inline
+    @always_inline("nodebug")
     fn forward(self, x: Tensor) raises -> Tensor[False, False]:
         return x.dropout[dropout_rate, noise_shape]()

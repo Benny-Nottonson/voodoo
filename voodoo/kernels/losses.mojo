@@ -23,7 +23,7 @@ struct MSLE[]:
     alias bw = GenericLoss[msle_error, msle_grad].bw
 
 
-@always_inline
+@always_inline("nodebug")
 fn mse_error[
     NELTS: Int
 ](y_pred: SIMD[DType.float32, NELTS], y_true: SIMD[DType.float32, NELTS]) -> SIMD[
@@ -33,7 +33,7 @@ fn mse_error[
     return (y_pred - y_true) ** 2.0
 
 
-@always_inline
+@always_inline("nodebug")
 fn mse_grad[
     NELTS: Int
 ](
@@ -46,7 +46,7 @@ fn mse_grad[
     return -2.0 * (y_pred - y_true)
 
 
-@always_inline
+@always_inline("nodebug")
 fn mae_error[
     NELTS: Int
 ](y_pred: SIMD[DType.float32, NELTS], y_true: SIMD[DType.float32, NELTS]) -> SIMD[
@@ -56,7 +56,7 @@ fn mae_error[
     return abs(y_pred - y_true)
 
 
-@always_inline
+@always_inline("nodebug")
 fn mae_grad[
     NELTS: Int
 ](
@@ -69,7 +69,7 @@ fn mae_grad[
     return (y_pred > y_true).select(Float32(-1.0), 1.0)
 
 
-@always_inline
+@always_inline("nodebug")
 fn mape_error[
     NELTS: Int
 ](y_pred: SIMD[DType.float32, NELTS], y_true: SIMD[DType.float32, NELTS]) -> SIMD[
@@ -79,7 +79,7 @@ fn mape_error[
     return abs(y_pred - y_true) / (y_true + EPSILON)
 
 
-@always_inline
+@always_inline("nodebug")
 fn mape_grad[
     NELTS: Int
 ](
@@ -92,7 +92,7 @@ fn mape_grad[
     return (y_pred > y_true).cast[DType.float32]() * Float32(-2.0) + Float32(1.0)
 
 
-@always_inline
+@always_inline("nodebug")
 fn msle_error[
     NELTS: Int
 ](y_pred: SIMD[DType.float32, NELTS], y_true: SIMD[DType.float32, NELTS]) -> SIMD[
@@ -106,7 +106,7 @@ fn msle_error[
     )
 
 
-@always_inline
+@always_inline("nodebug")
 fn msle_grad[
     NELTS: Int
 ](

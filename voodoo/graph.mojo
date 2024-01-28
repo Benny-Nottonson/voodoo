@@ -102,17 +102,17 @@ struct Graph:
             fid = self.nodes.len.load()
         return fid
 
-    @always_inline
+    @always_inline("nodebug")
     fn get_free_data_id(self) raises -> Int:
         if self.free_data_ids.len.load() > 0:
             return self.free_data_ids.pop_back()
         return self.memory_pool.len.load()
 
-    @always_inline
+    @always_inline("nodebug")
     fn load_ceiled_cap(self, cap: Int) raises -> Int:
         return exp2(ceil(log2(Float32(cap)))).to_int()
 
-    @always_inline
+    @always_inline("nodebug")
     fn get_index(self, cap: Int) raises -> Int:
         return ceil(log2(Float32(cap))).to_int()
 
@@ -610,7 +610,7 @@ struct Graph:
             warn("Invalid optimizer: " + type + " using sgd\n")
             SGD[learning_rate].step(self.nodes)
 
-    @always_inline
+    @always_inline("nodebug")
     fn copy(self, parent1: Node) raises -> Node:
         return self.node[False](
             parent1.shape.copy(),
@@ -621,7 +621,7 @@ struct Graph:
             parent1,
         )
 
-    @always_inline
+    @always_inline("nodebug")
     fn mmul(self, a: Node, b: Node) raises -> Node:
         var shape = get_broadcasted_shape_for_ew_op(a, b)
         let a_dims = a.num_dims
@@ -637,7 +637,7 @@ struct Graph:
 
         return self.node[True](shape, False, False, mmul_code, other_params, a, b)
 
-    @always_inline
+    @always_inline("nodebug")
     fn conv_1d(
         self,
         a: Node,
@@ -662,7 +662,7 @@ struct Graph:
 
         return self.node[True](shape, False, False, conv1d_code, other_params, a, b)
 
-    @always_inline
+    @always_inline("nodebug")
     fn conv_2d(
         self,
         a: Node,
@@ -692,7 +692,7 @@ struct Graph:
 
         return self.node[True](shape, False, False, conv2d_code, other_params, a, b)
 
-    @always_inline
+    @always_inline("nodebug")
     fn maxpool_1d(
         self,
         a: Node,
@@ -712,7 +712,7 @@ struct Graph:
 
         return self.node[True](shape, False, False, maxpool1d_code, other_params, a)
 
-    @always_inline
+    @always_inline("nodebug")
     fn maxpool_2d(
         self,
         a: Node,
@@ -734,7 +734,7 @@ struct Graph:
 
         return self.node[True](shape, False, False, maxpool2d_code, other_params, a)
 
-    @always_inline
+    @always_inline("nodebug")
     fn dropout(
         self, a: Node, dropout_rate: Float32, noise_shape: DynamicVector[Int]
     ) raises -> Node:
@@ -747,13 +747,13 @@ struct Graph:
             a,
         )
 
-    @always_inline
+    @always_inline("nodebug")
     fn reshape(self, parent1: Node, shape: Vector[Int]) raises -> Node:
         return self.node[False](
             shape, False, False, reshape_code, Vector[Int](), parent1
         )
 
-    @always_inline
+    @always_inline("nodebug")
     fn transp(self, parent1: Node) raises -> Node:
         return self.node[False](
             parent1.shape.copy().get_transposed(),
@@ -764,13 +764,13 @@ struct Graph:
             parent1,
         )
 
-    @always_inline
+    @always_inline("nodebug")
     fn sum(self, parent1: Node) raises -> Node:
         return self.node[False](
             shape(1), False, False, sum_code, Vector[Int](), parent1
         )
 
-    @always_inline
+    @always_inline("nodebug")
     fn function_general[operator_id: Int](self, parent1: Node) raises -> Node:
         return self.node[False](
             parent1.shape.copy(),
@@ -781,7 +781,7 @@ struct Graph:
             parent1,
         )
 
-    @always_inline
+    @always_inline("nodebug")
     fn arithmetic_general[operator_id: Int](self, a: Node, b: Node) raises -> Node:
         return self.node[False](
             get_broadcasted_shape_for_ew_op(a, b),
@@ -793,7 +793,7 @@ struct Graph:
             b,
         )
 
-    @always_inline
+    @always_inline("nodebug")
     fn activation_general[
         operator_id: Int,
         arg1: Float32 = 0.0,
@@ -809,7 +809,7 @@ struct Graph:
             parent1,
         )
 
-    @always_inline
+    @always_inline("nodebug")
     fn loss_general[
         operator_id: Int
     ](self, parent1: Node, parent2: Node) raises -> Node:

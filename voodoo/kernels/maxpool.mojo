@@ -36,7 +36,7 @@ struct MaxPool1D:
                     var max_value = -F32_MAX
 
                     @parameter
-                    @always_inline
+                    @always_inline("nodebug")
                     fn fw_vec[NELTS: Int](kernel_pos: Int):
                         let input_index = channel_offset + input_pos + kernel_pos
                         if input_index >= 0 and input_index < input_width:
@@ -83,7 +83,7 @@ struct MaxPool1D:
                     let max_value = c.load_data(output_index)
 
                     @parameter
-                    @always_inline
+                    @always_inline("nodebug")
                     fn bw_vec[NELTS: Int](kernel_pos: Int):
                         let input_index = channel_offset + input_pos + kernel_pos
                         if input_index >= 0 and input_index < input_width:
@@ -137,7 +137,7 @@ struct MaxPool2D:
                         for kernel_y in range(kernel_height):
 
                             @parameter
-                            @always_inline
+                            @always_inline("nodebug")
                             fn fw_vec[NELTS: Int](kernel_x: Int):
                                 let input_index = channel_offset + input_y + kernel_y * input_width + input_x + kernel_x
                                 if (
@@ -204,7 +204,7 @@ struct MaxPool2D:
                         for kernel_y in range(kernel_height):
 
                             @parameter
-                            @always_inline
+                            @always_inline("nodebug")
                             fn bw_vec[NELTS: Int](kernel_x: Int):
                                 let input_index = channel_offset + input_y + kernel_y * input_width + input_x + kernel_x
                                 if (

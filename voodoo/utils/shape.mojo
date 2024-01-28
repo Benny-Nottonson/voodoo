@@ -2,7 +2,7 @@ from voodoo import Node
 from math import max
 
 
-@always_inline
+@always_inline("nodebug")
 fn shape(*shapes: Int) -> DynamicVector[Int]:
     var shape = DynamicVector[Int]()
     for i in range(len(shapes)):

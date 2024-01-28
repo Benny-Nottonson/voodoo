@@ -21,27 +21,27 @@ struct Vector[type: AnyRegType]:
 
         return Vector[type] {data: data, len: len, cap: cap}
 
-    @always_inline
+    @always_inline("nodebug")
     fn size_up(self, new_cap: Int):
         let new_data = Pointer[type].alloc(new_cap)
         memset_zero(new_data, new_cap)
         memcpy(new_data, self.data, self.cap.load())
         self.cap.store(new_cap)
 
-    @always_inline
+    @always_inline("nodebug")
     fn push_back(self, elem: type):
         if self.len.load() == self.cap.load():
             self.size_up(2 * self.cap.load())
         self.data.store(self.len.load(), elem)
         self.len.store(self.len.load() + 1)
 
-    @always_inline
+    @always_inline("nodebug")
     fn size_down(self, new_cap: Int):
         let new_data = Pointer[type].alloc(new_cap)
         memcpy(new_data, self.data, new_cap)
         self.cap.store(new_cap)
 
-    @always_inline
+    @always_inline("nodebug")
     fn pop_back(self) -> type:
         self.len.store(self.len.load() - 1)
         let tmp = self.data.load(self.len.load())
@@ -51,34 +51,34 @@ struct Vector[type: AnyRegType]:
 
         return tmp
 
-    @always_inline
+    @always_inline("nodebug")
     fn load(self, idx: Int) -> type:
         return self.data.load(idx)
 
-    @always_inline
+    @always_inline("nodebug")
     fn store(self, idx: Int, value: type):
         self.data.store(idx, value)
 
-    @always_inline
+    @always_inline("nodebug")
     fn free(self):
         self.data.free()
         self.len.free()
         self.cap.free()
 
-    @always_inline
+    @always_inline("nodebug")
     fn clear(self):
         memset_zero(self.data, self.cap.load())
         self.len.store(0)
         self.cap.store(8)
 
-    @always_inline
+    @always_inline("nodebug")
     fn copy(self) -> Self:
         let len = self.len.load()
         let new_vector = Vector[type](len)
         memcpy(new_vector.data, self.data, len)
         return new_vector
 
-    @always_inline
+    @always_inline("nodebug")
     fn get_transposed(self) -> Self:
         let new_shape = self.copy()
         let len = self.len.load()

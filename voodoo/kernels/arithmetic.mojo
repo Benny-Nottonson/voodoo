@@ -92,137 +92,137 @@ struct Pow[]:
     alias bw = GenericBinaryArithmetic[pow_fw, pow_bw_a, pow_bw_b].bw
 
 
-@always_inline
+@always_inline("nodebug")
 fn sqrt_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return sqrt(x)
 
 
-@always_inline
+@always_inline("nodebug")
 fn sqrt_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return 0.5 / sqrt(x)
 
 
-@always_inline
+@always_inline("nodebug")
 fn abs_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return (x > 0).select(x, -x)
 
 
-@always_inline
+@always_inline("nodebug")
 fn abs_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return (x > 0).select(Float32(1.0), Float32(-1.0))
 
 
-@always_inline
+@always_inline("nodebug")
 fn exp2_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return exp2(x)
 
 
-@always_inline
+@always_inline("nodebug")
 fn exp2_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return x * 0.69314718056
 
 
-@always_inline
+@always_inline("nodebug")
 fn log2_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return log2(x)
 
 
-@always_inline
+@always_inline("nodebug")
 fn log2_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return 1.0 / (x * 0.69314718056)
 
 
-@always_inline
+@always_inline("nodebug")
 fn log_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return log(x)
 
 
-@always_inline
+@always_inline("nodebug")
 fn log_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return 1.0 / x
 
 
-@always_inline
+@always_inline("nodebug")
 fn sin_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return sin(x)
 
 
-@always_inline
+@always_inline("nodebug")
 fn sin_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return cos(x)
 
 
-@always_inline
+@always_inline("nodebug")
 fn cos_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return cos(x)
 
 
-@always_inline
+@always_inline("nodebug")
 fn cos_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return -sin(x)
 
 
-@always_inline
+@always_inline("nodebug")
 fn tan_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return tan(x)
 
 
-@always_inline
+@always_inline("nodebug")
 fn tan_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return 1.0 / (cos(x) ** 2)
 
 
-@always_inline
+@always_inline("nodebug")
 fn asin_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return asin(x)
 
 
-@always_inline
+@always_inline("nodebug")
 fn asin_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return 1.0 / sqrt(1.0 - x**2)
 
 
-@always_inline
+@always_inline("nodebug")
 fn acos_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return acos(x)
 
 
-@always_inline
+@always_inline("nodebug")
 fn acos_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return -1.0 / sqrt(1.0 - x**2)
 
 
-@always_inline
+@always_inline("nodebug")
 fn atan_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return atan(x)
 
 
-@always_inline
+@always_inline("nodebug")
 fn atan_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return 1.0 / (1.0 + x**2)
 
 
-@always_inline
+@always_inline("nodebug")
 fn sinh_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return sinh(x)
 
 
-@always_inline
+@always_inline("nodebug")
 fn sinh_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return cosh(x)
 
 
-@always_inline
+@always_inline("nodebug")
 fn cosh_fw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return cosh(x)
 
 
-@always_inline
+@always_inline("nodebug")
 fn cosh_bw_vec[NELTS: Int](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     return sinh(x)
 
 
-@always_inline
+@always_inline("nodebug")
 fn add_fw[
     NELTS: Int
 ](a: SIMD[DType.float32, NELTS], b: SIMD[DType.float32, NELTS]) -> SIMD[
@@ -232,7 +232,7 @@ fn add_fw[
     return a + b
 
 
-@always_inline
+@always_inline("nodebug")
 fn add_bw[
     NELTS: Int
 ](
@@ -245,7 +245,7 @@ fn add_bw[
     return 1
 
 
-@always_inline
+@always_inline("nodebug")
 fn sub_fw[
     NELTS: Int
 ](a: SIMD[DType.float32, NELTS], b: SIMD[DType.float32, NELTS]) -> SIMD[
@@ -255,7 +255,7 @@ fn sub_fw[
     return a - b
 
 
-@always_inline
+@always_inline("nodebug")
 fn sub_bw_a[
     NELTS: Int
 ](
@@ -268,7 +268,7 @@ fn sub_bw_a[
     return 1
 
 
-@always_inline
+@always_inline("nodebug")
 fn sub_bw_b[
     NELTS: Int
 ](
@@ -281,7 +281,7 @@ fn sub_bw_b[
     return -1
 
 
-@always_inline
+@always_inline("nodebug")
 fn mul_fw[
     NELTS: Int
 ](a: SIMD[DType.float32, NELTS], b: SIMD[DType.float32, NELTS]) -> SIMD[
@@ -291,7 +291,7 @@ fn mul_fw[
     return a * b
 
 
-@always_inline
+@always_inline("nodebug")
 fn mul_bw_a[
     NELTS: Int
 ](
@@ -304,7 +304,7 @@ fn mul_bw_a[
     return b
 
 
-@always_inline
+@always_inline("nodebug")
 fn mul_bw_b[
     NELTS: Int
 ](
@@ -317,7 +317,7 @@ fn mul_bw_b[
     return a
 
 
-@always_inline
+@always_inline("nodebug")
 fn div_fw[
     NELTS: Int
 ](a: SIMD[DType.float32, NELTS], b: SIMD[DType.float32, NELTS]) -> SIMD[
@@ -327,7 +327,7 @@ fn div_fw[
     return a / b
 
 
-@always_inline
+@always_inline("nodebug")
 fn div_bw_a[
     NELTS: Int
 ](
@@ -340,7 +340,7 @@ fn div_bw_a[
     return 1 / b
 
 
-@always_inline
+@always_inline("nodebug")
 fn div_bw_b[
     NELTS: Int
 ](
@@ -353,7 +353,7 @@ fn div_bw_b[
     return -a / (b * b)
 
 
-@always_inline
+@always_inline("nodebug")
 fn pow_fw[
     NELTS: Int
 ](a: SIMD[DType.float32, NELTS], b: SIMD[DType.float32, NELTS]) -> SIMD[
@@ -363,7 +363,7 @@ fn pow_fw[
     return a**b
 
 
-@always_inline
+@always_inline("nodebug")
 fn pow_bw_a[
     NELTS: Int
 ](
@@ -376,7 +376,7 @@ fn pow_bw_a[
     return b * (a ** (b - 1.0))
 
 
-@always_inline
+@always_inline("nodebug")
 fn pow_bw_b[
     NELTS: Int
 ](

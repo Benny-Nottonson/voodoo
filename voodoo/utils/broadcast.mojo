@@ -2,25 +2,25 @@ from math import max
 from voodoo import Node
 
 
-@always_inline
+@always_inline("nodebug")
 fn shape_a(depth: Int, a: Node, b: Node) -> Int:
     let diff = max(b.num_dims - a.num_dims, 0)
     return a.shape.load(depth - diff) if depth >= diff else 1
 
 
-@always_inline
+@always_inline("nodebug")
 fn shape_b(depth: Int, a: Node, b: Node) -> Int:
     let diff = max(a.num_dims - b.num_dims, 0)
     return b.shape.load(depth - diff) if depth >= diff else 1
 
 
-@always_inline
+@always_inline("nodebug")
 fn strides_a(depth: Int, a: Node, b: Node) -> Int:
     let diff = max(b.num_dims - a.num_dims, 0)
     return a.strides.load(depth - diff) if depth >= diff else a.strides.load(0)
 
 
-@always_inline
+@always_inline("nodebug")
 fn strides_b(depth: Int, a: Node, b: Node) -> Int:
     let diff = max(a.num_dims - b.num_dims, 0)
     return b.strides.load(depth - diff) if depth >= diff else b.strides.load(0)

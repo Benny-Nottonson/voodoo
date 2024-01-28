@@ -10,6 +10,6 @@ struct Reshape[new_shape: DynamicVector[Int]](BaseLayer):
         for i in range(len(new_shape)):
             self._new_shape.store(i, new_shape[i])
 
-    @always_inline
+    @always_inline("nodebug")
     fn forward(self, x: Tensor) raises -> Tensor[False, False]:
         return x.reshape(self._new_shape)
