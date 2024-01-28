@@ -192,12 +192,14 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
 
     @always_inline
     fn forward(self, keep_forward_order: Bool = False) raises -> Self:
-        _ = self.graph.forward(self.node_ptr, keep_forward_order)
+        var node_ptr = self.node_ptr.load()
+        _ = self.graph.forward(node_ptr, keep_forward_order)
         return self
 
     @always_inline
     fn forward_static(self) raises -> Self:
-        _ = self.graph.forward_static(self.node_ptr)
+        var node_ptr = self.node_ptr.load()
+        _ = self.graph.forward_static(node_ptr)
         return self
 
     @always_inline
@@ -519,16 +521,16 @@ fn fuse_graphs(
 
     for i in range(other_graph.nodes.len.load()):
         let node_ptr = other_graph.nodes.load(i)
-        node_ptr.load().store_id(node_ptr.load().load_id() + num_nodes)
-        for j in range(node_ptr.load().children.len.load()):
-            node_ptr.load().children.store(
-                j, node_ptr.load().children.load(j) + num_nodes
+        node_ptr.store_id(node_ptr.load_id() + num_nodes)
+        for j in range(node_ptr.children.len.load()):
+            node_ptr.children.store(
+                j, node_ptr.children.load(j) + num_nodes
             )
-        for j in range(node_ptr.load().parents.len.load()):
-            node_ptr.load().parents.store(
-                j, node_ptr.load().parents.load(j) + num_nodes
+        for j in range(node_ptr.parents.len.load()):
+            node_ptr.parents.store(
+                j, node_ptr.parents.load(j) + num_nodes
             )
-        node_ptr.load().data_id.store(node_ptr.load().data_id.load() + memory_pool_len)
+        node_ptr.data_id.store(node_ptr.data_id.load() + memory_pool_len)
         graph_ptr.nodes.push_back(node_ptr)
 
     for i in range(other_graph.memory_pool.len.load()):

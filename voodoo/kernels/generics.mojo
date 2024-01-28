@@ -308,9 +308,9 @@ struct GenericLoss[
 
 struct GenericOptimizer[fw_vec: generic_optimizer_vectorized]:
     @staticmethod
-    fn step[learning_rate: Float32](x: Vector[Pointer[Node, 0]]) raises:
+    fn step[learning_rate: Float32](x: Vector[Node]) raises:
         for i in range(x.len.load()):
-            let node = x.load(i).load()
+            let node = x.load(i)
             if node.requires_grad and node.grad_computed_ptr.load():
                 let node_data = node.data.load(0)
                 let node_grad = node.data.load(1)
