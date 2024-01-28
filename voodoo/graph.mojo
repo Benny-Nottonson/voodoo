@@ -530,7 +530,7 @@ struct Graph:
 
         return node
 
-    fn find_grad_nodes_order(self, node_ptr: Pointer[Node]) raises:
+    fn find_grad_nodes_order(self, node: Node) raises:
         self.grad_nodes_order.clear()
         for i in range(self.nodes.len.load()):
             var node = self.nodes.load(i)
@@ -538,7 +538,7 @@ struct Graph:
         self.grad_nodes_order.clear()
 
         var backward = DynamicVector[Int]()
-        backward.push_back(node_ptr.load().load_id())
+        backward.push_back(node.load_id())
         var it = 0
         while it < len(backward):
             let currId = backward[it]
@@ -554,10 +554,10 @@ struct Graph:
             node.tmp_visited = True
             it += 1
 
-    fn backward(self, node_ptr: Pointer[Node]) raises:
-        self.find_grad_nodes_order(node_ptr)
+    fn backward(self, node: Node) raises:
+        self.find_grad_nodes_order(node)
 
-        self.last_node_id.store(node_ptr.load().load_id())
+        self.last_node_id.store(node.load_id())
 
         for i in range(self.nodes.len.load()):
             let node = self.nodes.load(i)
@@ -578,8 +578,7 @@ struct Graph:
                         self.load_ceiled_cap(node.cap),
                     )
 
-        self.get_free_grad_ptr(node_ptr.load())
-        let node = node_ptr.load()
+        self.get_free_grad_ptr(node)
         node.fill_grad(1.0)
         node.grad_computed_ptr.store(True)
         for i in range(self.grad_nodes_order.len.load()):

@@ -206,7 +206,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     fn backward(self) raises:
         if not self.node_ptr.load().computed_ptr.load():
             _ = self.forward()
-        self.graph.backward(self.node_ptr)
+        self.graph.backward(self.node_ptr.load())
 
     @always_inline
     fn optimize[type: String = "sgd", lr: Float32 = 0.001](self) raises:
