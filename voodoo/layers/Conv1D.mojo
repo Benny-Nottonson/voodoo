@@ -22,19 +22,17 @@ struct Conv1D[
     fn __init__(
         inout self,
     ) raises:
-        self.W = (
-            Tensor(shape(in_channels, kernel_width))
-            .initialize[weight_initializer, weight_mean, weight_std]()
-            .requires_grad()
-        )
+        self.W = Tensor(shape(in_channels, kernel_width)).initialize[
+            weight_initializer, weight_mean, weight_std
+        ]()
+        self.W = self.W.requires_grad()
 
         @parameter
         if self.use_bias:
-            self.bias = (
-                Tensor(shape(in_channels, 1, 1))
-                .initialize[bias_initializer, bias_mean, bias_std]()
-                .requires_grad()
-            )
+            self.bias = Tensor(shape(in_channels, 1, 1)).initialize[
+                bias_initializer, bias_mean, bias_std
+            ]()
+            self.bias = self.bias.requires_grad()
         else:
             self.bias = Tensor(shape(0))
 
