@@ -9,7 +9,6 @@ from ..constants import PREFETCH_READ, PREFETCH_WRITE, F32_MAX, NELTS
 
 
 struct MMul:
-    @parameter
     @staticmethod
     @always_inline
     fn base_case_depth(depth: Int, a: Node, b: Node) -> Bool:
@@ -26,7 +25,6 @@ struct MMul:
         if not b.is_single_ptr.load():
             recursive_broadcast_bw[Self.kernel_mmul_bw_b, Self.base_case_depth](c, a, b)
 
-    @parameter
     @staticmethod
     fn kernel_mmul_fw(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
@@ -50,13 +48,7 @@ struct MMul:
 
         for m in range(0, M, 4):
             let start_offset_c = offset_c + m * N
-            let start_offset_c_2 = start_offset_c + N
-            let start_offset_c_3 = start_offset_c_2 + N
-            let start_offset_c_4 = start_offset_c_3 + N
             let start_offset_a = offset_a + m * K
-            let start_offset_a_2 = start_offset_a + K
-            let start_offset_a_3 = start_offset_a_2 + K
-            let start_offset_a_4 = start_offset_a_3 + K
             for kb in range(0, K, NELTS):
                 for k in range(kb, min(kb + NELTS, K)):
                     let b_off = offset_b + k * N
@@ -78,13 +70,12 @@ struct MMul:
                             )
 
                         dot_store(start_offset_c + n, start_offset_a)
-                        dot_store(start_offset_c_2 + n, start_offset_a_2)
-                        dot_store(start_offset_c_3 + n, start_offset_a_3)
-                        dot_store(start_offset_c_4 + n, start_offset_a_4)
+                        dot_store(start_offset_c + N + n, start_offset_a + K)
+                        dot_store(start_offset_c + 2 * N + n, start_offset_a + 2 * K)
+                        dot_store(start_offset_c + 3 * N + n, start_offset_a + 3 * K)
 
                     vectorize[NELTS, dot_fw](N)
 
-    @parameter
     @staticmethod
     fn kernel_mmul_bw_a(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
@@ -106,11 +97,11 @@ struct MMul:
         DTypePointer.prefetch[PREFETCH_READ](b_data)
         DTypePointer.prefetch[PREFETCH_READ](c_grad)
 
+        
         for m in range(0, M, 2):
             let _offset_c = offset_c + m * N
             let _offset_c_1 = offset_c + (m + 1) * N
             let start_offset_a = offset_a + m * K
-            let start_offset_a_2 = start_offset_a + K
             for nb in range(0, N, NELTS):
                 for n in range(nb, min(nb + NELTS, N), 2):
                     let c_grad_0 = c_grad.load(_offset_c + n)
@@ -130,14 +121,13 @@ struct MMul:
                                 ),
                             )
 
-                        let start_offset_b = offset_b + k * N + n
+                        let start_offset_b = offset_b + k * N
 
-                        dot_store(start_offset_a + k, start_offset_b, c_grad_0)
-                        dot_store(start_offset_a_2 + k, start_offset_b, c_grad_1)
+                        dot_store(start_offset_a + k, start_offset_b + n, c_grad_0)
+                        dot_store(start_offset_a + K + k, start_offset_b + n, c_grad_1)
 
                     vectorize[NELTS, dot_bw](K)
 
-    @parameter
     @staticmethod
     fn kernel_mmul_bw_b(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int

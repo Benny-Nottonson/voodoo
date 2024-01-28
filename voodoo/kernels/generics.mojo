@@ -146,7 +146,6 @@ struct GenericBinaryArithmetic[
                 c, a, b
             )
 
-    @parameter
     @staticmethod
     fn kernel_fw[
         generic_func: generic_binary_arithmetic_vectorized
@@ -179,7 +178,6 @@ struct GenericBinaryArithmetic[
 
         vectorize[NELTS, vectorized_fw](c_rest)
 
-    @parameter
     @staticmethod
     fn kernel_bw[
         generic_func: generic_binary_arithmetic_vectorized,
@@ -236,7 +234,6 @@ struct GenericBinaryArithmetic[
         else:
             vectorize[NELTS, vectorized_bw_b](c_rest)
 
-    @parameter
     @always_inline
     @staticmethod
     fn base_case(depth: Int, a: Node, b: Node) -> Bool:
