@@ -29,12 +29,9 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         inout self,
         shape: Vector[Int],
     ) raises:
-        let other_params = Vector[Int]()
-
         self.graph = Graph()
-
         self.node = self.graph.node[False](
-            shape, is_static, is_single, -1, other_params
+            shape, is_static, is_single, -1, Vector[Int]()
         )
 
     fn __copyinit__(inout self, other: Self):
@@ -155,24 +152,10 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     fn store(self, idx: Int, val: Float32):
         self.node.data.load().store(idx, val)
 
-    fn free(self) raises:
-        let graph = self.graph
-        graph.nodes.free()
-        graph.memory_pool.free()
-        graph.memory_pool.free()
-
-        @unroll
-        for i in range(MEMORY_POOL_SIZE):
-            graph.memory_pool_manager.load(i).free()
-
-        graph.memory_pool_manager.free()
-        graph.free_node_ids.free()
-        graph.free_node_ids.free()
-        graph.free_data_ids.free()
-        graph.free_data_ids.free()
-        graph.last_node_id.free()
-        graph.kernels.free()
-        graph.forward_order.free()
+    @always_inline
+    fn free(inout self) raises:
+        self.graph.free()
+        self.node.free()
 
     @always_inline
     fn clear(self, reset_static_nodes: Bool = False) raises:

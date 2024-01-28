@@ -379,10 +379,7 @@ struct Graph:
 
     fn clear(self, reset_static_nodes: Bool = False) raises:
         self.clear_cache(reset_static_nodes)
-
         self.nodes.free()
-        self.nodes.free()
-        self.memory_pool.free()
         self.memory_pool.free()
 
         @unroll
@@ -391,11 +388,32 @@ struct Graph:
 
         self.memory_pool_manager.free()
         self.free_node_ids.free()
+        self.free_data_ids.free()
+        self.last_node_id.free()
+        self.kernels.free()
+        self.forward_order.free()
+
+    fn free(inout self):
+        for i in range(self.nodes.len.load()):
+            var node = self.nodes.load(i)
+            node.free()
+        self.nodes.free()
+
+        for i in range(self.memory_pool.len.load()):
+            self.memory_pool.load(i).free()
+        self.memory_pool.free()
+
+        @unroll
+        for i in range(MEMORY_POOL_SIZE):
+            self.memory_pool_manager.load(i).free()
+
+        self.memory_pool_manager.free()
         self.free_node_ids.free()
         self.free_data_ids.free()
         self.last_node_id.free()
         self.kernels.free()
         self.forward_order.free()
+        self.grad_nodes_order.free()
 
     fn forward_recursive(
         self, node: Node, keep_forward_order: Bool = False
