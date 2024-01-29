@@ -121,6 +121,7 @@ struct Node:
         for i in range(self.cap):
             self.data.load().store(i, val)
 
+    # Use math.iota here https://github.com/rd4com/mojo-learning/blob/main/tutorials/simd.md
     @always_inline("nodebug")
     fn fill_incr(self):
         for i in range(self.cap):

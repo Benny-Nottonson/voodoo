@@ -147,7 +147,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         self.node.data.load().store(idx, val)
 
     @always_inline("nodebug")
-    fn free(owned self) raises:
+    fn free(owned self):
         self.graph.free()
         self.node.free()
 
