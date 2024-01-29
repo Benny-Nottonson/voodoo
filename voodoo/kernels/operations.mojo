@@ -141,7 +141,7 @@ struct Dropout(Operation):
             let rand = random_float64()
             node.data.load().simd_store[NELTS](
                 i,
-                (rand < keep_prob).cast[DType.float32]()
+                (rand < keep_prob).select[DType.float32](1.0, 0.0)
                 * parent1.data.load().simd_load[NELTS](i),
             )
 
@@ -158,9 +158,9 @@ struct Dropout(Operation):
             let previous = node.data.load().simd_load[NELTS](i)
             node.data.load(1).simd_store[NELTS](
                 i,
-                (previous == 0.0).cast[DType.float32]()
-                * parent1.data.load(1).simd_load[NELTS](i)
-                * scale,
+                (previous == 0.0).select[DType.float32](
+                    parent1.data.load(1).simd_load[NELTS](i) * scale, 0.0
+                ),
             )
 
         vectorize[NELTS, vectorized_dropout_bw](node.cap)

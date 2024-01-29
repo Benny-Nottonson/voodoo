@@ -104,7 +104,7 @@ fn relu_bw_vec[
     # Best is 4 instructions (compare, select, compare, select), 2 max == F32_MAX and slope == 0
     @parameter
     if negative_slope == 0.0 and max_value == F32_MAX:
-        return (x > threshold).cast[DType.float32]()
+        return (x > threshold).select[DType.float32](1.0, 0.0)
     return (x < max_value).select((x > threshold).select(1.0, negative_slope), 0.0)
 
 
@@ -320,7 +320,7 @@ fn hsig_bw_vec[
 ](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     # f'(x) = x > -2.5 ? x < 2.5 ? 0.2 : 0 : 0
     # Best is 5 instructions (compare, and, compare, cast, mul)
-    return ((x > -2.5) & (x < 2.5)).cast[DType.float32]() * 0.2
+    return ((x > -2.5) & (x < 2.5)).select[DType.float32](0.2, 0.0)
 
 
 @always_inline("nodebug")

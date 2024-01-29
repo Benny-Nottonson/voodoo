@@ -89,7 +89,7 @@ fn mape_grad[
     N: Int,
 ) -> SIMD[DType.float32, NELTS]:
     # f'(x, y) with respect to y = -1 if x > y else 1
-    return (y_pred > y_true).cast[DType.float32]() * Float32(-2.0) + Float32(1.0)
+    return (y_pred > y_true).select[DType.float32](-1.0, 1.0)
 
 
 @always_inline("nodebug")
@@ -99,8 +99,8 @@ fn msle_error[
     DType.float32, NELTS
 ]:
     # f(x, y) = (log(x + 1) - log(y + 1))^2
-    let y_pred_clipped = (y_pred > 0.0).cast[DType.float32]() * y_pred
-    let y_true_clipped = (y_true > 0.0).cast[DType.float32]() * y_true
+    let y_pred_clipped = (y_pred > 0.0).select[DType.float32](y_pred, 0.0)
+    let y_true_clipped = (y_true > 0.0).select[DType.float32](y_true, 0.0)
     return (log(y_pred_clipped + Float32(1.0)) - log(y_true_clipped + Float32(1.0))) * (
         log(y_pred_clipped + Float32(1.0)) - log(y_true_clipped + Float32(1.0))
     )
@@ -116,8 +116,8 @@ fn msle_grad[
     N: Int,
 ) -> SIMD[DType.float32, NELTS]:
     # f'(x, y) with respect to y = -2(log(x + 1) - log(y + 1)) / (y + 1)
-    let y_pred_clipped = (y_pred > 0.0).cast[DType.float32]() * y_pred
-    let y_true_clipped = (y_true > 0.0).cast[DType.float32]() * y_true
+    let y_pred_clipped = (y_pred > 0.0).select[DType.float32](y_pred, 0.0)
+    let y_true_clipped = (y_true > 0.0).select[DType.float32](y_true, 0.0)
     return (
         -Float32(2.0)
         * (log(y_pred_clipped + Float32(1.0)) - log(y_true_clipped + Float32(1.0)))
