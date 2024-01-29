@@ -1,4 +1,4 @@
-from math import sin, cos, sqrt, log
+from math import sin, cos, sqrt, log, iota
 from random import rand, seed
 from .utils import Vector, warn
 
@@ -119,22 +119,20 @@ struct Node:
     @always_inline("nodebug")
     fn fill(self, val: Float32):
         for i in range(self.cap):
-            self.data.load().store(i, val)
+            self.data.load(0).store(i, val)
 
     @always_inline("nodebug")
     fn fill_incr(self):
-        for i in range(self.cap):
-            self.data.load(0).store(i, Float32(i))
-
-    @always_inline("nodebug")
-    fn grad_fill_incr(self):
-        for i in range(self.cap):
-            self.data.load(1).store(i, Float32(i))
+        iota(self.data.load(0), self.cap)
 
     @always_inline("nodebug")
     fn fill_grad(self, val: Float32):
         for i in range(self.cap):
             self.data.load(1).store(i, val)
+
+    @always_inline("nodebug")
+    fn grad_fill_incr(self):
+        iota(self.data.load(1), self.cap)
 
     fn initialize[
         initialization_function: String, val: Float32 = 0, val2: Float32 = 0

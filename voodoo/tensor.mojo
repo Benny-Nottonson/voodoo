@@ -58,10 +58,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
             new_tensor.graph = self.graph
             fuse_graphs(new_tensor.graph, other.graph)
         else:
-            let self_nodes_len = self.graph.nodes.len.load()
-            let other_nodes_len = other.graph.nodes.len.load()
-
-            if self_nodes_len >= other_nodes_len:
+            if self.graph.nodes.len.load() >= other.graph.nodes.len.load():
                 new_tensor.graph = self.graph
                 fuse_graphs(new_tensor.graph, other.graph, True)
             else:
@@ -81,8 +78,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
 
         if self_static_or_single:
             fuse_graphs(new_tensor.graph, self.graph)
-
-        elif not self_static_or_single:
+        else:
             new_tensor.graph = self.graph
 
         return new_tensor
@@ -92,14 +88,6 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
             _ = self.forward()
         self.node.print(accuracy)
 
-    fn print_memory_pool_manager(self) raises:
-        self.graph.print_memory_pool_manager()
-
-    fn print_graph(self) raises:
-        if not self.node.computed_ptr.load():
-            _ = self.forward()
-        self.graph.print()
-
     @always_inline("nodebug")
     fn initialize[
         initialization_function: String, val: Float32 = 0, val2: Float32 = 0
@@ -108,17 +96,17 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         return self
 
     @always_inline("nodebug")
-    fn fill(self, val: Float32) -> Self:
+    fn fill(owned self, val: Float32) -> Self:
         self.node.fill(val)
         return self
 
     @always_inline("nodebug")
-    fn fill_incr(self) raises -> Self:
+    fn fill_incr(owned self) raises -> Self:
         self.node.fill_incr()
         return self
 
     @always_inline("nodebug")
-    fn grad_fill_incr(self) raises -> Self:
+    fn grad_fill_incr(owned self) raises -> Self:
         self.node.grad_fill_incr()
         return self
 
@@ -156,7 +144,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         self.graph.clear(reset_static_nodes)
 
     @always_inline("nodebug")
-    fn forward(self, keep_forward_order: Bool = False) raises -> Self:
+    fn forward(owned self, keep_forward_order: Bool = False) raises -> Self:
         _ = self.graph.forward(self.node, keep_forward_order)
         return self
 
@@ -184,10 +172,6 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     @always_inline("nodebug")
     fn __setitem__(self, idx: Int, val: Float32) raises:
         self.node.data.load().store(idx, val)
-
-    @always_inline("nodebug")
-    fn capacity(self) raises -> Int:
-        return self.node.cap
 
     @always_inline("nodebug")
     fn copy(self) raises -> Tensor[False, False]:
@@ -347,10 +331,6 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         other.node.is_single_ptr.store(True)
         other.node.computed_ptr.store(True)
         return other.__pow__(self)
-
-    @always_inline("nodebug")
-    fn __len__(self) raises -> Int:
-        return self.capacity()
 
     @always_inline("nodebug")
     fn reshape(self, shape: Vector[Int]) raises -> Tensor[False, False]:
