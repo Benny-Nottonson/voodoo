@@ -20,7 +20,7 @@ struct Copy(Operation):
     fn fw(node: Node, parent1: Node):
         @parameter
         fn vectorized_copy[NELTS: Int](i: Int):
-            node.store_data[NELTS](i, parent1.load_data[NELTS](i))
+            node.data.load().simd_store[NELTS](i, parent1.data.load().simd_load[NELTS](i))
 
         vectorize[NELTS, vectorized_copy](node.cap)
 
@@ -28,7 +28,7 @@ struct Copy(Operation):
     fn bw(node: Node, parent1: Node):
         @parameter
         fn vectorized_copy_bw[NELTS: Int](i: Int):
-            parent1.store_grad[NELTS](i, parent1.load_grad[NELTS](i))
+            parent1.data.load(1).simd_store[NELTS](i, parent1.data.load(1).simd_load[NELTS](i))
 
         vectorize[NELTS, vectorized_copy_bw](node.cap)
 
@@ -40,17 +40,17 @@ struct Sum(Operation):
 
         @parameter
         fn vectorized_sum[NELTS: Int](i: Int):
-            sum += parent1.load_data[NELTS](i).reduce_add()
+            sum += parent1.data.load().simd_load[NELTS](i).reduce_add()
 
         vectorize[NELTS, vectorized_sum](parent1.cap)
-        node.store_data(0, sum)
+        node.data.load().store(0, sum)
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
         fn vectorized_sum_bw[NELTS: Int](i: Int):
-            parent1.store_grad[NELTS](
-                i, parent1.load_grad[NELTS](i) + node.load_grad(0)
+            parent1.data.load(1).simd_store[NELTS](
+                i, parent1.data.load(1).simd_load[NELTS](i) + node.data.load(1).load(0)
             )
 
         vectorize[NELTS, vectorized_sum_bw](parent1.cap)
@@ -64,7 +64,7 @@ struct Reshape(Operation):
 
             @parameter
             fn vectorized_reshape[NELTS: Int](i: Int):
-                node.store_data[NELTS](i, parent1.load_data[NELTS](i))
+                node.data.load().simd_store[NELTS](i, parent1.data.load().simd_load[NELTS](i))
 
             vectorize[NELTS, vectorized_reshape](parent1.cap)
 
@@ -75,8 +75,8 @@ struct Reshape(Operation):
 
             @parameter
             fn vectorized_reshape[NELTS: Int](i: Int):
-                parent1.store_grad[NELTS](
-                    i, parent1.load_grad[NELTS](i) + node.load_grad[NELTS](i)
+                parent1.data.load(1).simd_store[NELTS](
+                    i, parent1.data.load(1).simd_load[NELTS](i) + node.data.load(1).simd_load[NELTS](i)
                 )
 
             vectorize[NELTS, vectorized_reshape](parent1.cap)
@@ -94,8 +94,8 @@ struct Transpose(Operation):
 
                 @parameter
                 fn vectorized_transp[NELTS: Int](j: Int):
-                    node.store_data[NELTS](
-                        offset + j * M + i, parent1.load_data[NELTS](offset + i * N + j)
+                    node.data.load().simd_store[NELTS](
+                        offset + j * M + i, parent1.data.load().simd_load[NELTS](offset + i * N + j)
                     )
 
                 vectorize[NELTS, vectorized_transp](N)
@@ -111,10 +111,10 @@ struct Transpose(Operation):
 
                 @parameter
                 fn vectorized_transp_bw[NELTS: Int](j: Int):
-                    parent1.store_grad[NELTS](
+                    parent1.data.load(1).simd_store[NELTS](
                         offset + j * M + i,
-                        parent1.load_grad[NELTS](offset + j * M + i)
-                        + node.load_grad[NELTS](offset + i * N + j),
+                        parent1.data.load(1).simd_load[NELTS](offset + j * M + i)
+                        + node.data.load(1).simd_load[NELTS](offset + i * N + j),
                     )
 
                 vectorize[NELTS, vectorized_transp_bw](N)
@@ -130,9 +130,9 @@ struct Dropout(Operation):
         @parameter
         fn vectorized_dropout[NELTS: Int](i: Int):
             let rand = random_float64()
-            node.store_data[NELTS](
+            node.data.load().simd_store[NELTS](
                 i,
-                (rand < keep_prob).cast[DType.float32]() * parent1.load_data[NELTS](i),
+                (rand < keep_prob).cast[DType.float32]() * parent1.data.load().simd_load[NELTS](i),
             )
 
         vectorize[NELTS, vectorized_dropout](node.cap)
@@ -145,11 +145,11 @@ struct Dropout(Operation):
 
         @parameter
         fn vectorized_dropout_bw[NELTS: Int](i: Int):
-            let previous = node.load_data[NELTS](i)
-            node.store_grad[NELTS](
+            let previous = node.data.load().simd_load[NELTS](i)
+            node.data.load(1).simd_store[NELTS](
                 i,
                 (previous == 0.0).cast[DType.float32]()
-                * parent1.load_grad[NELTS](i)
+                * parent1.data.load(1).simd_load[NELTS](i)
                 * scale,
             )
 

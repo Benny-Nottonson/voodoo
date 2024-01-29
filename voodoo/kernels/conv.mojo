@@ -39,11 +39,11 @@ struct Conv1D:
             for output_x in range(output_width):
                 for kernel_x in range(kernel_width):
                     for channel in range(channels):
-                        let kernel_value = b.load_data(
+                        let kernel_value = b.data.load().load(
                             channel * kernel_width + kernel_x
                         )
 
-                        let output_value = c.load_data(
+                        let output_value = c.data.load().load(
                             batch * output_width * channels
                             + output_x * channels
                             + channel
@@ -56,7 +56,7 @@ struct Conv1D:
                             + channel
                         )
 
-                        c.store_data(
+                        c.data.load().store(
                             batch * output_width * channels
                             + output_x * channels
                             + channel,
@@ -97,11 +97,11 @@ struct Conv1D:
             for output_x in range(output_width):
                 for kernel_x in range(kernel_width):
                     for channel in range(channels):
-                        let kernel_value = b.load_data(
+                        let kernel_value = b.data.load().load(
                             channel * kernel_width + kernel_x
                         )
 
-                        let output_value = c.load_data(
+                        let output_value = c.data.load().load(
                             batch * output_width * channels
                             + output_x * channels
                             + channel
@@ -114,27 +114,27 @@ struct Conv1D:
                             + channel
                         )
 
-                        a.store_grad(
+                        a.data.load(1).store(
                             batch * input_width * channels
                             + (output_x * stride_x + kernel_x - padding_x) * channels
                             + channel,
-                            a.load_grad(
+                            a.data.load(1).load(
                                 batch * input_width * channels
                                 + (output_x * stride_x + kernel_x - padding_x)
                                 * channels
                                 + channel
                             )
                             + kernel_value
-                            * c.load_grad(
+                            * c.data.load(1).load(
                                 batch * output_width * channels
                                 + output_x * channels
                                 + channel
                             ),
                         )
 
-                        b.store_grad(
+                        b.data.load(1).store(
                             channel * kernel_width + kernel_x,
-                            b.load_grad(channel * kernel_width + kernel_x)
+                            b.data.load(1).load(channel * kernel_width + kernel_x)
                             + output_value * im2col_value,
                         )
 

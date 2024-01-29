@@ -40,11 +40,11 @@ struct MaxPool1D:
                     fn fw_vec[NELTS: Int](kernel_pos: Int):
                         let input_index = channel_offset + input_pos + kernel_pos
                         if input_index >= 0 and input_index < input_width:
-                            let value = a.load_data[NELTS](batch_offset + input_index)
+                            let value = a.data.load().simd_load[NELTS](batch_offset + input_index)
                             max_value = max(max_value, value.reduce_max())
 
                     vectorize[NELTS, fw_vec](kernel_width)
-                    c.store_data(
+                    c.data.load().store(
                         output_batch_offset + output_channel_offset + output_pos,
                         max_value,
                     )
@@ -80,22 +80,22 @@ struct MaxPool1D:
                 for output_pos in range(output_width):
                     let input_pos = output_pos * stride - padding
                     let output_index = output_batch_offset + output_channel_offset + output_pos
-                    let max_value = c.load_data(output_index)
+                    let max_value = c.data.load().load(output_index)
 
                     @parameter
                     @always_inline("nodebug")
                     fn bw_vec[NELTS: Int](kernel_pos: Int):
                         let input_index = channel_offset + input_pos + kernel_pos
                         if input_index >= 0 and input_index < input_width:
-                            let value = a.load_data[NELTS](batch_offset + input_index)
-                            let grad = c.load_grad[NELTS](output_index)
+                            let value = a.data.load().simd_load[NELTS](batch_offset + input_index)
+                            let grad = c.data.load(1).simd_load[NELTS](output_index)
                             let grad_value = (value == max_value).select(grad, 0)
-                            a.store_grad[NELTS](batch_offset + input_index, grad_value)
+                            a.data.load(1).simd_store[NELTS](batch_offset + input_index, grad_value)
 
                     vectorize[NELTS, bw_vec](kernel_width)
 
-                    let grad = c.load_grad(output_index)
-                    a.store_grad(batch_offset + input_pos, grad.reduce_add())
+                    let grad = c.data.load(1).load(output_index)
+                    a.data.load(1).store(batch_offset + input_pos, grad.reduce_add())
 
 
 struct MaxPool2D:
@@ -144,13 +144,13 @@ struct MaxPool2D:
                                     input_index >= 0
                                     and input_index < input_height * input_width
                                 ):
-                                    let value = a.load_data[NELTS](
+                                    let value = a.data.load().simd_load[NELTS](
                                         batch_offset + input_index
                                     )
                                     max_value = max(max_value, value.reduce_max())
 
                             vectorize[NELTS, fw_vec](kernel_width)
-                        c.store_data(
+                        c.data.load().store(
                             output_batch_offset
                             + output_channel_offset
                             + output_y * output_width
@@ -199,7 +199,7 @@ struct MaxPool2D:
                             + output_y * output_width
                             + output_x
                         )
-                        let max_value = c.load_data(output_index)
+                        let max_value = c.data.load().load(output_index)
 
                         for kernel_y in range(kernel_height):
 
@@ -211,21 +211,21 @@ struct MaxPool2D:
                                     input_index >= 0
                                     and input_index < input_height * input_width
                                 ):
-                                    let value = a.load_data[NELTS](
+                                    let value = a.data.load().simd_load[NELTS](
                                         batch_offset + input_index
                                     )
-                                    let grad = c.load_grad[NELTS](output_index)
+                                    let grad = c.data.load(1).simd_load[NELTS](output_index)
                                     let grad_value = (value == max_value).select(
                                         grad, 0
                                     )
-                                    a.store_grad[NELTS](
+                                    a.data.load(1).simd_store[NELTS](
                                         batch_offset + input_index, grad_value
                                     )
 
                             vectorize[NELTS, bw_vec](kernel_width)
 
-                        let grad = c.load_grad(output_index)
-                        a.store_grad(
+                        let grad = c.data.load(1).load(output_index)
+                        a.data.load(1).store(
                             batch_offset + input_y * input_width + input_x,
                             grad.reduce_add(),
                         )

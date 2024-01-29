@@ -108,13 +108,6 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         return self
 
     @always_inline("nodebug")
-    fn initialize(
-        self, data: DTypePointer[DType.float32]
-    ) raises -> Tensor[is_static, is_single]:
-        self.node.initialize(data)
-        return self
-
-    @always_inline("nodebug")
     fn fill(self, val: Float32) -> Self:
         self.node.fill(val)
         return self
@@ -486,7 +479,7 @@ fn fuse_graphs(
 
     for i in range(other_graph.nodes.len.load()):
         let node = other_graph.nodes.load(i)
-        node.store_id(node.load_id() + num_nodes)
+        node.id_ptr.store(node.id_ptr.load() + num_nodes)
         for j in range(node.children.len.load()):
             node.children.store(j, node.children.load(j) + num_nodes)
         for j in range(node.parents.len.load()):

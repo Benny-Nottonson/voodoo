@@ -110,79 +110,11 @@ struct Node:
         }
 
     @always_inline("nodebug")
-    fn store_id(self, id: Int):
-        self.id_ptr.store(id)
-
-    @always_inline("nodebug")
-    fn load_id(self) -> Int:
-        return self.id_ptr.load()
-
-    @always_inline("nodebug")
-    fn incr_dependencies(inout self):
-        self.dependencies += 1
-
-    @always_inline("nodebug")
-    fn decr_dependencies(inout self):
-        self.dependencies -= 1
-
-    @always_inline("nodebug")
-    fn add_parent(self, node_id: Int):
-        self.parents.push_back(node_id)
-
-    @always_inline("nodebug")
-    fn add_child(self, node_id: Int):
-        let vec = self.children.push_back(node_id)
-
-    @always_inline("nodebug")
-    fn load_parent_id(self, idx: Int) -> Int:
-        return self.parents.load(idx)
-
-    @always_inline("nodebug")
-    fn load_child_id(self, idx: Int) -> Int:
-        return self.children.load(idx)
-
-    @always_inline("nodebug")
-    fn load_num_parents(self) -> Int:
-        return self.parents.len.load()
-
-    @always_inline("nodebug")
-    fn load_num_children(self) -> Int:
-        return self.children.len.load()
-
-    @always_inline("nodebug")
-    fn load_is_static(self) -> Bool:
-        return self.is_static
-
-    @always_inline("nodebug")
-    fn load_computed(self) -> Bool:
-        return self.computed_ptr.load()
-
-    @always_inline("nodebug")
-    fn store_computed(self, value: Bool):
-        self.computed_ptr.store(value)
-
-    @always_inline("nodebug")
     fn is_zero(self) -> Bool:
         for i in range(self.cap):
-            if self.load_data(i) != 0.0:
+            if self.data.load().load(i) != 0.0:
                 return False
         return True
-
-    @always_inline("nodebug")
-    fn load_data(self, idx: Int) -> Float32:
-        return self.data.load().load(idx)
-
-    @always_inline("nodebug")
-    fn store_data(self, idx: Int, val: Float32):
-        self.data.load().simd_store(idx, val)
-
-    @always_inline("nodebug")
-    fn load_data[NELTS: Int](self, idx: Int) -> SIMD[DType.float32, NELTS]:
-        return self.data.load().simd_load[NELTS](idx)
-
-    @always_inline("nodebug")
-    fn store_data[NELTS: Int = 1](self, idx: Int, val: SIMD[DType.float32, NELTS]):
-        self.data.load().simd_store[NELTS](idx, val)
 
     @always_inline("nodebug")
     fn fill(self, val: Float32):
@@ -195,22 +127,6 @@ struct Node:
             self.data.load(0).store(i, Float32(i))
 
     @always_inline("nodebug")
-    fn load_grad(self, idx: Int) -> Float32:
-        return self.data.load(1).load(idx)
-
-    @always_inline("nodebug")
-    fn store_grad(self, idx: Int, val: Float32):
-        self.data.load(1).simd_store(idx, val)
-
-    @always_inline("nodebug")
-    fn load_grad[NELTS: Int](self, idx: Int) -> SIMD[DType.float32, NELTS]:
-        return self.data.load(1).simd_load[NELTS](idx)
-
-    @always_inline("nodebug")
-    fn store_grad[NELTS: Int = 1](self, idx: Int, val: SIMD[DType.float32, NELTS]):
-        self.data.load(1).simd_store[NELTS](idx, val)
-
-    @always_inline("nodebug")
     fn grad_fill_incr(self):
         for i in range(self.cap):
             self.data.load(1).store(i, Float32(i))
@@ -219,10 +135,6 @@ struct Node:
     fn fill_grad(self, val: Float32):
         for i in range(self.cap):
             self.data.load(1).store(i, val)
-
-    @always_inline("nodebug")
-    fn initialize(self, data: DTypePointer[DType.float32]):
-        self.data.store(0, data)
 
     fn initialize[
         initialization_function: String, val: Float32 = 0, val2: Float32 = 0
@@ -298,7 +210,7 @@ struct Node:
         for i in range(self.cap):
             let z = sqrt(-2.0 * log(u1.load(i))) * cos(2.0 * pi * u2.load(i))
             let sigma = sqrt(2.0 / Float32(self.shape.load(self.shape.len.load() - 1)))
-            self.store_data(i, z * sigma)
+            self.data.load().store(i, z * sigma)
 
     fn identity(self):
         let num_dims = self.num_dims
@@ -308,9 +220,9 @@ struct Node:
         for i in range(col_strides):
             for j in range(cols):
                 if i == j:
-                    self.store_data(i * cols + j, 1.0)
+                    self.data.load().store(i * cols + j, 1.0)
                 else:
-                    self.store_data(i * cols + j, 0.0)
+                    self.data.load().store(i * cols + j, 0.0)
 
     fn lecun_normal(self):
         let fan_in = self.shape.load(self.shape.len.load() - 2)
@@ -334,13 +246,13 @@ struct Node:
         rand(u2, self.cap)
         for i in range(self.cap):
             let z = sqrt(-2.0 * log(u1.load(i))) * cos(2.0 * pi * u2.load(i))
-            self.store_data(i, z * std + mu)
+            self.data.load().store(i, z * std + mu)
 
     fn random_uniform(self, min: Float32, max: Float32):
         seed()
         rand(self.data.load(0), self.cap)
         for i in range(self.cap):
-            self.store_data(i, self.load_data(i) * (max - min) + min)
+            self.data.load().store(i, self.data.load().load(i) * (max - min) + min)
 
     fn truncated_normal(self, std: Float32 = 1.0, mu: Float32 = 0.0):
         seed()
@@ -352,9 +264,9 @@ struct Node:
         for i in range(self.cap):
             let z = sqrt(-2.0 * log(u1.load(i))) * cos(2.0 * pi * u2.load(i))
             if z > -2.0 and z < 2.0:
-                self.store_data(i, z * std + mu)
+                self.data.load().store(i, z * std + mu)
             else:
-                self.store_data(i, 0.0)
+                self.data.load().store(i, 0.0)
 
     fn zeros(self):
         self.fill(0.0)
@@ -388,7 +300,7 @@ struct Node:
                 tmp.store(i * cols + j, tmp2.load(i) * gain)
         for i in range(col_strides):
             for j in range(cols):
-                self.store_data(i * cols + j, tmp.load(i * cols + j))
+                self.data.load().store(i * cols + j, tmp.load(i * cols + j))
 
     fn free(inout self):
         self.id_ptr.free()

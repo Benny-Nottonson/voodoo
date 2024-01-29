@@ -262,16 +262,16 @@ struct GenericLoss[
         @parameter
         @always_inline("nodebug")
         fn vectorized_fw[NELTS: Int](i: Int):
-            node.store_data(
+            node.data.load().store(
                 0,
-                node.load_data(0)
+                node.data.load().load(0)
                 + fw_vec[NELTS](
-                    y_true.load_data[NELTS](i), y_pred.load_data[NELTS](i)
+                    y_true.data.load().simd_load[NELTS](i), y_pred.data.load().simd_load[NELTS](i)
                 ).reduce_add(),
             )
 
         vectorize[NELTS, vectorized_fw](cap)
-        node.store_data(0, node.load_data(0) / cap / Float32(N))
+        node.data.load().store(0, node.data.load().load(0) / cap / Float32(N))
 
     @staticmethod
     fn bw(node: Node, y_pred: Node, y_true: Node):

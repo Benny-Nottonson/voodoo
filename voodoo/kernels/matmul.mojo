@@ -161,7 +161,7 @@ struct MMul:
                 fn dot_bw[NELTS: Int](n: Int):
                     let b_off = _b_off + n
 
-                    b.store_grad[NELTS](
+                    b.data.load(1).simd_store[NELTS](
                         b_off,
                         c_grad.simd_load[NELTS](_c_off + n).fma(
                             a_data,

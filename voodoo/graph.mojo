@@ -134,10 +134,10 @@ struct Graph:
         node.grad_operator_id = operator_id + 1
 
         for i in range(len(parents)):
-            node.add_parent(parents[i].load_id())
+            node.parents.push_back(parents[i].id_ptr.load())
             var mutable_parent = parents[i]
-            mutable_parent.add_child(node.load_id())
-            mutable_parent.incr_dependencies()
+            mutable_parent.children.push_back(node.id_ptr.load())
+            mutable_parent.dependencies += 1
 
         self.get_free_data(node)
 
@@ -145,7 +145,7 @@ struct Graph:
             if parents[i].dependencies == 0:
                 _ = self.forward_recursive(parents[i])
 
-        let node_id = node.load_id()
+        let node_id = node.id_ptr.load()
         if node_id < self.nodes.len.load():
             self.nodes.store(node_id, node)
         else:
@@ -174,10 +174,10 @@ struct Graph:
         node.grad_operator_id = operator_id + 1
 
         for i in range(len(parents)):
-            node.add_parent(parents[i].load_id())
+            node.parents.push_back(parents[i].id_ptr.load())
             var mutable_parent = parents[i]
-            mutable_parent.add_child(node.load_id())
-            mutable_parent.incr_dependencies()
+            mutable_parent.children.push_back(node.id_ptr.load())
+            mutable_parent.dependencies += 1
 
         self.get_free_data(node)
 
@@ -185,7 +185,7 @@ struct Graph:
             if parents[i].dependencies == 0:
                 _ = self.forward_recursive(parents[i])
 
-        let node_id = node.load_id()
+        let node_id = node.id_ptr.load()
         if node_id < self.nodes.len.load():
             self.nodes.store(node_id, node)
         else:
@@ -200,7 +200,7 @@ struct Graph:
         var idx = -1
         for i in range(node.parents.len.load()):
             let ind = node.parents.load(i)
-            let parent = self.nodes.load(node.load_parent_id(i))
+            let parent = self.nodes.load(node.parents.load(i))
             if (
                 self.load_ceiled_cap(parent.cap) == self.load_ceiled_cap(node.cap)
                 and parent.dependencies == 1
@@ -221,8 +221,8 @@ struct Graph:
             if i == idx:
                 continue
             else:
-                var parent = self.nodes.load(node.load_parent_id(i))
-                parent.decr_dependencies()
+                var parent = self.nodes.load(node.parents.load(i))
+                parent.dependencies -= 1
 
         if idx == -1:
             let index = self.get_index(node.cap)
@@ -317,7 +317,7 @@ struct Graph:
             if self.nodes.load(i).data_id.load() == -1:
                 continue
             for j in range(i + 1, self.nodes.len.load()):
-                if self.nodes.load(i).load_id() == self.nodes.load(j).load_id():
+                if self.nodes.load(i).id_ptr.load() == self.nodes.load(j).id_ptr.load():
                     self.nodes.store(i, Node(-1, -1))
                     break
 
@@ -355,8 +355,8 @@ struct Graph:
             if node.data_id.load() == -1:
                 continue
 
-            if not node.load_is_static():
-                self.free_node_ids.push_back(node.load_id())
+            if not node.is_static:
+                self.free_node_ids.push_back(node.id_ptr.load())
 
                 node.id_ptr.free()
                 node.data_id.free()
@@ -418,13 +418,13 @@ struct Graph:
     fn forward_recursive(
         self, node: Node, keep_forward_order: Bool = False
     ) raises -> Node:
-        if node.load_computed():
+        if node.computed_ptr.load():
             return node
 
         let operator_id = node.operator_id
-        if node.load_num_parents() == 1:
+        if node.parents.len.load() == 1:
             var parent1 = self.forward_recursive(
-                self.nodes.load(node.load_parent_id(0)),
+                self.nodes.load(node.parents.load(0)),
                 keep_forward_order,
             )
             self.get_free_data(node)
@@ -432,11 +432,11 @@ struct Graph:
             self.release_data(parent1)
         else:
             var parent1 = self.forward_recursive(
-                self.nodes.load(node.load_parent_id(0)),
+                self.nodes.load(node.parents.load(0)),
                 keep_forward_order,
             )
             var parent2 = self.forward_recursive(
-                self.nodes.load(node.load_parent_id(1)),
+                self.nodes.load(node.parents.load(1)),
                 keep_forward_order,
             )
             self.get_free_data(node)
@@ -446,14 +446,14 @@ struct Graph:
             self.release_data(parent2)
 
         if keep_forward_order:
-            self.forward_order.push_back(node.load_id())
+            self.forward_order.push_back(node.id_ptr.load())
 
         node.computed_ptr.store(True)
 
         return node
 
     fn forward(self, node: Node, keep_forward_order: Bool = False) raises -> Node:
-        self.last_node_id.store(node.load_id())
+        self.last_node_id.store(node.id_ptr.load())
         let res = self.forward_recursive(node, keep_forward_order)
         return res
 
@@ -480,7 +480,7 @@ struct Graph:
             return node
 
         let operator_id = node.operator_id
-        if node.load_num_parents() == 1:
+        if node.parents.len.load() == 1:
             var parent1 = self.forward_recursive_graph_slice(
                 self.nodes.load(node.parents.load(0))
             )
@@ -513,7 +513,7 @@ struct Graph:
 
             let grad_operator_id = child.grad_operator_id
             if child.parents.len.load() == 1:
-                var parent1 = self.nodes.load(child.load_parent_id(0))
+                var parent1 = self.nodes.load(child.parents.load(0))
                 _ = self.forward_recursive_graph_slice(parent1)
 
                 if parent1.grad_id.load() == -1:
@@ -524,8 +524,8 @@ struct Graph:
                 self.kernels.load(grad_operator_id).get[0, UNARY_OP]()(child, parent1)
 
             else:
-                var parent1 = self.nodes.load(child.load_parent_id(0))
-                var parent2 = self.nodes.load(child.load_parent_id(1))
+                var parent1 = self.nodes.load(child.parents.load(0))
+                var parent2 = self.nodes.load(child.parents.load(1))
 
                 _ = self.forward_recursive_graph_slice(parent1)
                 _ = self.forward_recursive_graph_slice(parent2)
@@ -542,7 +542,7 @@ struct Graph:
                     child, parent1, parent2
                 )
 
-            if child.load_id() != self.last_node_id.load():
+            if child.id_ptr.load() != self.last_node_id.load():
                 self.release_data_forced(child)
             self.release_grad_forced(child)
 
@@ -556,7 +556,7 @@ struct Graph:
         self.grad_nodes_order.clear()
 
         var backward = DynamicVector[Int]()
-        backward.push_back(node.load_id())
+        backward.push_back(node.id_ptr.load())
         var it = 0
         while it < len(backward):
             let currId = backward[it]
@@ -575,13 +575,13 @@ struct Graph:
     fn backward(self, node: Node) raises:
         self.find_grad_nodes_order(node)
 
-        self.last_node_id.store(node.load_id())
+        self.last_node_id.store(node.id_ptr.load())
 
         for i in range(self.nodes.len.load()):
             let node = self.nodes.load(i)
             node.grad_computed_ptr.store(False)
 
-            if node.is_single_ptr.load() or node.load_id() == self.last_node_id.load():
+            if node.is_single_ptr.load() or node.id_ptr.load() == self.last_node_id.load():
                 continue
 
             if not node.is_static:
