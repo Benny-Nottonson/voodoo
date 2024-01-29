@@ -393,7 +393,7 @@ struct Graph:
         self.kernels.free()
         self.forward_order.free()
 
-    fn free(inout self):
+    fn free(self):
         for i in range(self.nodes.len.load()):
             var node = self.nodes.load(i)
             node.free()

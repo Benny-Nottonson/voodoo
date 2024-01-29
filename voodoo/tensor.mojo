@@ -450,21 +450,20 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
 
 fn fuse_graphs(
     graph_ptr: Graph,
-    other_graph_ptr: Graph,
+    other_graph: Graph,
     remove_other: Bool = False,
 ) raises:
     let num_nodes = graph_ptr.nodes.len.load()
     let memory_pool_len = graph_ptr.memory_pool.len.load()
-    let other_graph = other_graph_ptr
 
     for i in range(other_graph.nodes.len.load()):
-        let node = other_graph.nodes.load(i)
+        var node = other_graph.nodes.load(i)
         node.id_ptr.store(node.id_ptr.load() + num_nodes)
         for j in range(node.children.len.load()):
             node.children.store(j, node.children.load(j) + num_nodes)
         for j in range(node.parents.len.load()):
             node.parents.store(j, node.parents.load(j) + num_nodes)
-        node.data_id.store(node.data_id.load() + memory_pool_len)
+        node.data_id = node.data_id + memory_pool_len
         graph_ptr.nodes.push_back(node)
 
     for i in range(other_graph.memory_pool.len.load()):
@@ -485,19 +484,4 @@ fn fuse_graphs(
         )
 
     if remove_other:
-        other_graph.nodes.free()
-        other_graph.nodes.free()
-        other_graph.memory_pool.free()
-        other_graph.memory_pool.free()
-
-        @unroll
-        for i in range(MEMORY_POOL_SIZE):
-            other_graph.memory_pool_manager.load(i).free()
-        other_graph.memory_pool_manager.free()
-        other_graph.free_node_ids.free()
-        other_graph.free_node_ids.free()
-        other_graph.free_data_ids.free()
-        other_graph.free_data_ids.free()
-        other_graph.last_node_id.free()
-        other_graph.kernels.free()
-        other_graph.forward_order.free()
+        other_graph.free()
