@@ -117,26 +117,26 @@ struct Node:
         return True
 
     @always_inline("nodebug")
-    fn fill(self, val: Float32):
+    fn fill(inout self, val: Float32):
         for i in range(self.cap):
             self.data.load(0).store(i, val)
 
     @always_inline("nodebug")
-    fn fill_incr(self):
+    fn fill_incr(inout self):
         iota(self.data.load(0), self.cap)
 
     @always_inline("nodebug")
-    fn fill_grad(self, val: Float32):
+    fn fill_grad(inout self, val: Float32):
         for i in range(self.cap):
             self.data.load(1).store(i, val)
 
     @always_inline("nodebug")
-    fn grad_fill_incr(self):
+    fn grad_fill_incr(inout self):
         iota(self.data.load(1), self.cap)
 
     fn initialize[
         initialization_function: String, val: Float32 = 0, val2: Float32 = 0
-    ](self):
+    ](inout self):
         @parameter
         if initialization_function == "glorot_normal":
             self.glorot_normal()
@@ -176,29 +176,29 @@ struct Node:
             )
             self.zeros()
 
-    fn glorot_normal(self):
+    fn glorot_normal(inout self):
         let fan_in = self.shape.load(self.shape.len.load() - 2)
         let fan_out = self.shape.load(self.shape.len.load() - 1)
         let scale = sqrt(2.0 / Float32(fan_in + fan_out))
         self.random_normal(scale, 0.0)
 
-    fn glorot_uniform(self):
+    fn glorot_uniform(inout self):
         let fan_in: Float32 = self.shape.load(self.shape.len.load() - 2)
         let fan_out: Float32 = self.shape.load(self.shape.len.load() - 1)
         let scale = sqrt(6.0 / (fan_in + fan_out))
         self.random_uniform(-scale, scale)
 
-    fn he_normal(self):
+    fn he_normal(inout self):
         let fan_in: Float32 = self.shape.load(self.shape.len.load() - 2)
         let scale = sqrt(2.0 / fan_in)
         self.random_normal(scale, 0.0)
 
-    fn he_uniform(self):
+    fn he_uniform(inout self):
         let fan_in = self.shape.load(self.shape.len.load() - 2)
         let scale = sqrt(6.0 / Float32(fan_in))
         self.random_uniform(-scale, scale)
 
-    fn he_random(self):
+    fn he_random(inout self):
         seed()
         let pi = 3.14159265358979
         let u1 = DTypePointer[DType.float32].alloc(self.cap)
@@ -210,7 +210,7 @@ struct Node:
             let sigma = sqrt(2.0 / Float32(self.shape.load(self.shape.len.load() - 1)))
             self.data.load().store(i, z * sigma)
 
-    fn identity(self):
+    fn identity(inout self):
         let num_dims = self.num_dims
         let row: Int = self.shape.load(num_dims - 2)
         let cols: Int = self.shape.load(num_dims - 1)
@@ -222,20 +222,20 @@ struct Node:
                 else:
                     self.data.load().store(i * cols + j, 0.0)
 
-    fn lecun_normal(self):
+    fn lecun_normal(inout self):
         let fan_in = self.shape.load(self.shape.len.load() - 2)
         let scale = sqrt(1.0 / Float32(fan_in))
         self.random_normal(scale, 0.0)
 
-    fn lecun_uniform(self):
+    fn lecun_uniform(inout self):
         let fan_in = self.shape.load(self.shape.len.load() - 2)
         let scale = sqrt(3.0 / Float32(fan_in))
         self.random_uniform(-scale, scale)
 
-    fn ones(self):
+    fn ones(inout self):
         self.fill(1.0)
 
-    fn random_normal(self, std: Float32 = 1.0, mu: Float32 = 0.0):
+    fn random_normal(inout self, std: Float32 = 1.0, mu: Float32 = 0.0):
         seed()
         let pi = 3.14159265358979
         let u1 = DTypePointer[DType.float32].alloc(self.cap)
@@ -252,7 +252,7 @@ struct Node:
         for i in range(self.cap):
             self.data.load().store(i, self.data.load().load(i) * (max - min) + min)
 
-    fn truncated_normal(self, std: Float32 = 1.0, mu: Float32 = 0.0):
+    fn truncated_normal(inout self, std: Float32 = 1.0, mu: Float32 = 0.0):
         seed()
         let pi = 3.14159265358979
         let u1 = DTypePointer[DType.float32].alloc(self.cap)
@@ -266,10 +266,10 @@ struct Node:
             else:
                 self.data.load().store(i, 0.0)
 
-    fn zeros(self):
+    fn zeros(inout self):
         self.fill(0.0)
 
-    fn orthoganal(self, gain: Float32 = 1.0):
+    fn orthoganal(inout self, gain: Float32 = 1.0):
         let num_dims = self.num_dims
         let row: Int = self.shape.load(num_dims - 2)
         let cols: Int = self.shape.load(num_dims - 1)
@@ -300,7 +300,7 @@ struct Node:
             for j in range(cols):
                 self.data.load().store(i * cols + j, tmp.load(i * cols + j))
 
-    fn free(inout self):
+    fn free(owned self):
         self.id_ptr.free()
         self.data_id.free()
         self.grad_id.free()

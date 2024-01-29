@@ -91,7 +91,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     @always_inline("nodebug")
     fn initialize[
         initialization_function: String, val: Float32 = 0, val2: Float32 = 0
-    ](self) raises -> Tensor[is_static, is_single]:
+    ](owned self) raises -> Tensor[is_static, is_single]:
         self.node.initialize[initialization_function, val, val2]()
         return self
 
@@ -154,7 +154,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         return self
 
     @always_inline("nodebug")
-    fn backward(self) raises:
+    fn backward(inout self) raises:
         if not self.node.computed_ptr.load():
             _ = self.forward()
         self.graph.backward(self.node)

@@ -572,7 +572,7 @@ struct Graph:
             node.tmp_visited = True
             it += 1
 
-    fn backward(self, node: Node) raises:
+    fn backward(self, inout node: Node) raises:
         self.find_grad_nodes_order(node)
 
         self.last_node_id.store(node.id_ptr.load())
