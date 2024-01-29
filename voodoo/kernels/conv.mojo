@@ -14,23 +14,19 @@ struct Conv1D:
         let padding_x = params.load(0)
         let stride_x = params.load(1)
 
-        let input_shape = a.shape
-        let kernel_shape = b.shape
-        let output_shape = c.shape
+        let batches = a.shape.load(0)
+        let channels = a.shape.load(1)
+        let input_width = a.shape.load(2)
 
-        let batches = input_shape.load(0)
-        let channels = input_shape.load(1)
-        let input_width = input_shape.load(2)
+        let kernel_width = b.shape.load(1)
 
-        let kernel_width = kernel_shape.load(1)
-
-        let output_width = output_shape.load(2)
+        let output_width = c.shape.load(2)
 
         let im2col = im2col2D(
             a.data.load(),
-            input_shape,
-            kernel_shape,
-            output_shape,
+            a.shape,
+            b.shape,
+            c.shape,
             padding_x,
             stride_x,
         )
@@ -72,23 +68,19 @@ struct Conv1D:
         let padding_x = params.load(0)
         let stride_x = params.load(1)
 
-        let input_shape = a.shape
-        let kernel_shape = b.shape
-        let output_shape = c.shape
+        let batches = a.shape.load(0)
+        let channels = a.shape.load(1)
+        let input_width = a.shape.load(2)
 
-        let batches = input_shape.load(0)
-        let channels = input_shape.load(1)
-        let input_width = input_shape.load(2)
+        let kernel_width = b.shape.load(1)
 
-        let kernel_width = kernel_shape.load(1)
-
-        let output_width = output_shape.load(2)
+        let output_width = c.shape.load(2)
 
         let im2col = im2col2D(
             a.data.load(),
-            input_shape,
-            kernel_shape,
-            output_shape,
+            a.shape,
+            b.shape,
+            c.shape,
             padding_x,
             stride_x,
         )
@@ -151,26 +143,22 @@ struct Conv2D:
         let stride_x = params.load(2)
         let stride_y = params.load(3)
 
-        let input_shape = a.shape
-        let kernel_shape = b.shape
-        let output_shape = c.shape
+        let batches = a.shape.load(0)
+        let channels = a.shape.load(1)
+        let input_width = a.shape.load(2)
+        let input_height = a.shape.load(3)
 
-        let batches = input_shape.load(0)
-        let channels = input_shape.load(1)
-        let input_width = input_shape.load(2)
-        let input_height = input_shape.load(3)
+        let kernel_width = b.shape.load(1)
+        let kernel_height = b.shape.load(2)
 
-        let kernel_width = kernel_shape.load(1)
-        let kernel_height = kernel_shape.load(2)
-
-        let output_width = output_shape.load(2)
-        let output_height = output_shape.load(3)
+        let output_width = c.shape.load(2)
+        let output_height = c.shape.load(3)
 
         let im2col = im2col3D(
             a.data.load(),
-            input_shape,
-            kernel_shape,
-            output_shape,
+            a.shape,
+            b.shape,
+            c.shape,
             padding_x,
             padding_y,
             stride_x,
@@ -246,26 +234,22 @@ struct Conv2D:
         let stride_x = params.load(2)
         let stride_y = params.load(3)
 
-        let input_shape = a.shape
-        let kernel_shape = b.shape
-        let output_shape = c.shape
+        let batches = a.shape.load(0)
+        let channels = a.shape.load(1)
+        let input_width = a.shape.load(2)
+        let input_height = a.shape.load(3)
 
-        let batches = input_shape.load(0)
-        let channels = input_shape.load(1)
-        let input_width = input_shape.load(2)
-        let input_height = input_shape.load(3)
+        let kernel_width = b.shape.load(1)
+        let kernel_height = b.shape.load(2)
 
-        let kernel_width = kernel_shape.load(1)
-        let kernel_height = kernel_shape.load(2)
-
-        let output_width = output_shape.load(2)
-        let output_height = output_shape.load(3)
+        let output_width = c.shape.load(2)
+        let output_height = c.shape.load(3)
 
         let im2col = im2col3D(
             a.data.load(),
-            input_shape,
-            kernel_shape,
-            output_shape,
+            a.shape,
+            b.shape,
+            c.shape,
             padding_x,
             padding_y,
             stride_x,

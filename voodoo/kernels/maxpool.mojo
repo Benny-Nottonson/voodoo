@@ -13,14 +13,11 @@ struct MaxPool1D:
         let stride = params.load(1)
         let padding = params.load(2)
 
-        let input_shape = a.shape
-        let output_shape = c.shape
+        let batches = a.shape.load(0)
+        let channels = a.shape.load(1)
+        let input_width = a.shape.load(2)
 
-        let batches = input_shape.load(0)
-        let channels = input_shape.load(1)
-        let input_width = input_shape.load(2)
-
-        let output_width = output_shape.load(2)
+        let output_width = c.shape.load(2)
 
         DTypePointer.prefetch[PREFETCH_READ](a.data.load())
         DTypePointer.prefetch[PREFETCH_WRITE](c.data.load())
@@ -59,14 +56,11 @@ struct MaxPool1D:
         let stride = params.load(1)
         let padding = params.load(2)
 
-        let input_shape = a.shape
-        let output_shape = c.shape
+        let batches = a.shape.load(0)
+        let channels = a.shape.load(1)
+        let input_width = a.shape.load(2)
 
-        let batches = input_shape.load(0)
-        let channels = input_shape.load(1)
-        let input_width = input_shape.load(2)
-
-        let output_width = output_shape.load(2)
+        let output_width = c.shape.load(2)
 
         DTypePointer.prefetch[PREFETCH_READ](a.data.load())
         DTypePointer.prefetch[PREFETCH_READ](c.data.load())
@@ -114,16 +108,13 @@ struct MaxPool2D:
         let stride = params.load(2)
         let padding = params.load(3)
 
-        let input_shape = a.shape
-        let output_shape = c.shape
+        let batches = a.shape.load(0)
+        let channels = a.shape.load(1)
+        let input_height = a.shape.load(2)
+        let input_width = a.shape.load(3)
 
-        let batches = input_shape.load(0)
-        let channels = input_shape.load(1)
-        let input_height = input_shape.load(2)
-        let input_width = input_shape.load(3)
-
-        let output_height = output_shape.load(2)
-        let output_width = output_shape.load(3)
+        let output_height = c.shape.load(2)
+        let output_width = c.shape.load(3)
 
         DTypePointer.prefetch[PREFETCH_READ](a.data.load())
         DTypePointer.prefetch[PREFETCH_WRITE](c.data.load())
@@ -173,16 +164,13 @@ struct MaxPool2D:
         let stride = params.load(2)
         let padding = params.load(3)
 
-        let input_shape = a.shape
-        let output_shape = c.shape
+        let batches = a.shape.load(0)
+        let channels = a.shape.load(1)
+        let input_height = a.shape.load(2)
+        let input_width = a.shape.load(3)
 
-        let batches = input_shape.load(0)
-        let channels = input_shape.load(1)
-        let input_height = input_shape.load(2)
-        let input_width = input_shape.load(3)
-
-        let output_height = output_shape.load(2)
-        let output_width = output_shape.load(3)
+        let output_height = c.shape.load(2)
+        let output_width = c.shape.load(3)
 
         DTypePointer.prefetch[PREFETCH_READ](a.data.load())
         DTypePointer.prefetch[PREFETCH_READ](c.data.load())
