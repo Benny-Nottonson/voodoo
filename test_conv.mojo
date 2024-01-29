@@ -1,5 +1,4 @@
 from voodoo import Tensor, get_loss_code, Graph
-from voodoo.utils.shape import shape
 from voodoo.layers.Dense import Dense
 from voodoo.layers.Conv2D import Conv2D
 from voodoo.layers.Reshape import Reshape
@@ -10,6 +9,7 @@ from voodoo.utils import (
 )
 from time.time import now
 from datasets import MNist
+from tensor import TensorShape
 
 
 fn nanoseconds_to_seconds(t: Int) -> Float64:
@@ -21,7 +21,7 @@ alias channels = 1
 alias width = 28
 alias height = 28
 
-alias data_shape = shape(batches, channels, width, height)
+alias data_shape = TensorShape(batches, channels, width, height)
 
 
 fn main() raises:
@@ -41,7 +41,7 @@ fn main() raises:
         kernel_height=2,
         stride=2,
     ]()
-    let reshape = Reshape[shape(batches, 169)]()
+    let reshape = Reshape[TensorShape(batches, 169)]()
     let dense1 = Dense[
         in_neurons=169,
         out_neurons=100,
@@ -58,8 +58,8 @@ fn main() raises:
     let every = 90
     let num_epochs = 1800
 
-    let true_vals = Tensor(shape(batches, 10)).initialize["zeros"]().dynamic()
-    let input = Tensor(shape(batches, channels, width, height)).initialize[
+    let true_vals = Tensor(TensorShape(batches, 10)).initialize["zeros"]().dynamic()
+    let input = Tensor(TensorShape(batches, channels, width, height)).initialize[
         "zeros"
     ]().dynamic()
 

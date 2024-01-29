@@ -1,4 +1,5 @@
-from voodoo import Tensor, get_activation_code, shape
+from voodoo import Tensor, get_activation_code
+from tensor import TensorShape
 from .BaseLayer import BaseLayer
 
 
@@ -20,19 +21,21 @@ struct Dense[
     fn __init__(
         inout self,
     ) raises:
-        self.W = Tensor(shape(in_neurons, out_neurons)).initialize[
-            weight_initializer, weight_mean, weight_std
-        ]()
-        self.W = self.W.requires_grad()
+        self.W = (
+            Tensor(TensorShape(in_neurons, out_neurons))
+            .initialize[weight_initializer, weight_mean, weight_std]()
+            .requires_grad()
+        )
 
         @parameter
         if self.use_bias:
-            self.bias = Tensor(shape(out_neurons)).initialize[
-                bias_initializer, bias_mean, bias_std
-            ]()
-            self.bias = self.bias.requires_grad()
+            self.bias = (
+                Tensor(TensorShape(out_neurons))
+                .initialize[bias_initializer, bias_mean, bias_std]()
+                .requires_grad()
+            )
         else:
-            self.bias = Tensor(shape(out_neurons))
+            self.bias = Tensor(TensorShape(out_neurons))
 
     @always_inline("nodebug")
     fn forward(self, x: Tensor) raises -> Tensor[False, False]:

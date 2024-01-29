@@ -1,4 +1,5 @@
-from voodoo import Tensor, shape
+from voodoo import Tensor
+from tensor import TensorShape
 from .BaseLayer import BaseLayer
 
 
@@ -24,19 +25,19 @@ struct Conv2D[
     fn __init__(
         inout self,
     ) raises:
-        self.W = Tensor(shape(in_channels, kernel_width, kernel_height)).initialize[
+        self.W = Tensor(TensorShape(in_channels, kernel_width, kernel_height)).initialize[
             weight_initializer, weight_mean, weight_std
         ]()
         self.W = self.W.requires_grad()
 
         @parameter
         if self.use_bias:
-            self.bias = Tensor(shape(in_channels, 1, 1)).initialize[
+            self.bias = Tensor(TensorShape(in_channels, 1, 1)).initialize[
                 bias_initializer, bias_mean, bias_std
             ]()
             self.bias = self.bias.requires_grad()
         else:
-            self.bias = Tensor(shape(0))
+            self.bias = Tensor(TensorShape(0))
 
     fn forward(self, x: Tensor) raises -> Tensor[False, False]:
         let res = x.conv_2d(self.W, self.padding, self.stride).compute_activation[

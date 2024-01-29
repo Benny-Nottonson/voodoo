@@ -7,32 +7,31 @@ from voodoo.utils import (
     info,
     clear,
 )
-from voodoo.utils.shape import shape
 from time.time import now
+from tensor import TensorShape
 
 
 fn nanoseconds_to_seconds(t: Int) -> Float64:
     return Float64(t) / 1_000_000_000.0
 
 
-alias data_shape = shape(32, 1)
+alias data_shape = TensorShape(32, 1)
 
 
 fn main() raises:
-    let W1 = Tensor(shape(1, 64)).initialize["he_normal"]()
-    let W2 = Tensor(shape(64, 64)).initialize["he_normal"]()
-    let W3 = Tensor(shape(64, 1)).initialize["he_normal"]()
+    let W1 = Tensor(TensorShape(1, 64)).initialize["he_normal"]()
+    let W2 = Tensor(TensorShape(64, 64)).initialize["he_normal"]()
+    let W3 = Tensor(TensorShape(64, 1)).initialize["he_normal"]()
 
-    let b1 = Tensor(shape(64)).initialize["he_normal"]()
-    let b2 = Tensor(shape(64)).initialize["he_normal"]()
-    let b3 = Tensor(shape(1)).initialize["he_normal"]()
+    let b1 = Tensor(TensorShape(64)).initialize["he_normal"]()
+    let b2 = Tensor(TensorShape(64)).initialize["he_normal"]()
+    let b3 = Tensor(TensorShape(1)).initialize["he_normal"]()
 
     var avg_loss: Float32 = 0.0
     let every = 1000
     let num_epochs = 20000
 
-    var input = Tensor(data_shape).initialize["he_normal", 0, 1]()
-    input = input.dynamic()
+    let input = Tensor(data_shape).initialize["he_normal", 0, 1]().dynamic()
     let true_vals = Tensor(data_shape)
 
     var x = (input @ W1 + b1).compute_activation["relu"]()

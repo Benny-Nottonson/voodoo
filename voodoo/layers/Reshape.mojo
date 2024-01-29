@@ -1,13 +1,14 @@
-from voodoo import Tensor, shape, Vector
+from voodoo import Tensor, Vector
+from tensor import TensorShape
 from .BaseLayer import BaseLayer
 
 
-struct Reshape[new_shape: DynamicVector[Int]](BaseLayer):
+struct Reshape[new_shape: TensorShape](BaseLayer):
     var _new_shape: Vector[Int]
 
     fn __init__(inout self) raises:
-        self._new_shape = Vector[Int](len(new_shape))
-        for i in range(len(new_shape)):
+        self._new_shape = Vector[Int](new_shape.rank())
+        for i in range(new_shape.rank()):
             self._new_shape.store(i, new_shape[i])
 
     @always_inline("nodebug")

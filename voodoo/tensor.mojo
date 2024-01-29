@@ -9,6 +9,7 @@ from .operator_codes import (
     div_code,
     pow_code,
 )
+from tensor import TensorShape
 
 
 struct Tensor[is_static: Bool = True, is_single: Bool = False]:
@@ -17,10 +18,10 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
 
     fn __init__(
         inout self,
-        shape: DynamicVector[Int],
+        shape: TensorShape,
     ) raises:
         let _shape = Vector[Int]()
-        for i in range(len(shape)):
+        for i in range(shape.rank()):
             _shape.push_back(shape[i])
 
         self.__init__(_shape)
@@ -129,20 +130,20 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         return self
 
     @always_inline("nodebug")
-    fn requires_grad(inout self) raises -> Self:
+    fn requires_grad(owned self) raises -> Self:
         self.node.requires_grad = True
         self.node.is_static = True
         self.node.computed_ptr.store(True)
         return self
 
     @always_inline("nodebug")
-    fn static(inout self) raises -> Self:
+    fn static(owned self) raises -> Self:
         _ = self.forward()
         self.node.is_static = True
         return self
 
     @always_inline("nodebug")
-    fn dynamic(inout self) raises -> Self:
+    fn dynamic(owned self) raises -> Self:
         self.node.is_static = False
         self.node.is_single_ptr.store(True)
         _ = self.forward()
@@ -153,7 +154,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         self.node.data.load().store(idx, val)
 
     @always_inline("nodebug")
-    fn free(inout self) raises:
+    fn free(owned self) raises:
         self.graph.free()
         self.node.free()
 
@@ -167,7 +168,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         return self
 
     @always_inline("nodebug")
-    fn forward_static(inout self) raises -> Self:
+    fn forward_static(owned self) raises -> Self:
         _ = self.graph.forward_static(self.node)
         return self
 

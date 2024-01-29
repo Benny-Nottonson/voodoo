@@ -1,4 +1,4 @@
-from voodoo import Tensor, shape
+from voodoo import Tensor
 from .BaseLayer import BaseLayer
 
 

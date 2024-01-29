@@ -3,7 +3,6 @@ from math import log2, exp2, ceil, round
 from voodoo.kernels import load_kernels
 from .node import Node
 from .utils import Vector, get_broadcasted_shape_for_ew_op, warn
-from .utils.shape import shape
 from .kernels.optimizers import SGD
 from .constants import MEMORY_POOL_SIZE, OP_TUPLE, BINARY_OP, UNARY_OP
 from .operator_codes import (
@@ -18,6 +17,7 @@ from .operator_codes import (
     transp_code,
     sum_code,
 )
+from tensor import TensorShape
 
 
 @register_passable("trivial")
@@ -157,7 +157,7 @@ struct Graph:
         checkpoint: Bool
     ](
         self,
-        shape: DynamicVector[Int],
+        shape: TensorShape,
         is_static: Bool,
         is_single: Bool,
         operator_id: Int,
@@ -165,7 +165,7 @@ struct Graph:
         *parents: Node,
     ) raises -> Node:
         let _shape = Vector[Int]()
-        for i in range(len(shape)):
+        for i in range(shape.rank()):
             _shape.push_back(shape[i])
         var node = Node(self.get_free_node_id(), _shape, is_static, other_params.copy())
         node.checkpoint = checkpoint
@@ -650,7 +650,7 @@ struct Graph:
         let input_width = a.shape.load(2)
         let kernel_width = b.shape.load(1)
 
-        let shape = shape(
+        let shape = TensorShape(
             batch_size,
             channels,
             (input_width - kernel_width + 2 * padding) // stride + 1,
@@ -677,7 +677,7 @@ struct Graph:
         let kernel_width = b.shape.load(1)
         let kernel_height = b.shape.load(2)
 
-        let shape = shape(
+        let shape = TensorShape(
             batch_size,
             channels,
             (input_width - kernel_width + 2 * padding[0]) // stride[0] + 1,
@@ -767,7 +767,7 @@ struct Graph:
     @always_inline("nodebug")
     fn sum(self, parent1: Node) raises -> Node:
         return self.node[False](
-            shape(1), False, False, sum_code, Vector[Int](), parent1
+            TensorShape(1), False, False, sum_code, Vector[Int](), parent1
         )
 
     @always_inline("nodebug")
@@ -814,7 +814,7 @@ struct Graph:
         operator_id: Int
     ](self, parent1: Node, parent2: Node) raises -> Node:
         return self.node[False](
-            shape(1),
+            TensorShape(1),
             False,
             False,
             operator_id,

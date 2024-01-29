@@ -1,18 +1,18 @@
 from voodoo import Tensor, get_loss_code, Graph
-from voodoo.utils.shape import shape
 from voodoo.layers.Dense import Dense
 from voodoo.utils import (
     info,
     clear,
 )
 from time.time import now
+from tensor import TensorShape
 
 
 fn nanoseconds_to_seconds(t: Int) -> Float64:
     return t / 1_000_000_000.0
 
 
-alias data_shape = shape(32, 1)
+alias data_shape = TensorShape(32, 1)
 
 
 fn main() raises:
