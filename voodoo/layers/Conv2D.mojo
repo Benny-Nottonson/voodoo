@@ -25,9 +25,9 @@ struct Conv2D[
     fn __init__(
         inout self,
     ) raises:
-        self.W = Tensor(TensorShape(in_channels, kernel_width, kernel_height)).initialize[
-            weight_initializer, weight_mean, weight_std
-        ]()
+        self.W = Tensor(
+            TensorShape(in_channels, kernel_width, kernel_height)
+        ).initialize[weight_initializer, weight_mean, weight_std]()
         self.W = self.W.requires_grad()
 
         @parameter
