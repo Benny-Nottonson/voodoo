@@ -40,7 +40,9 @@ struct MaxPool1D:
                     fn fw_vec[NELTS: Int](kernel_pos: Int):
                         let input_index = channel_offset + input_pos + kernel_pos
                         if input_index >= 0 and input_index < input_width:
-                            let value = a.data.load().simd_load[NELTS](batch_offset + input_index)
+                            let value = a.data.load().simd_load[NELTS](
+                                batch_offset + input_index
+                            )
                             max_value = max(max_value, value.reduce_max())
 
                     vectorize[NELTS, fw_vec](kernel_width)
@@ -87,10 +89,14 @@ struct MaxPool1D:
                     fn bw_vec[NELTS: Int](kernel_pos: Int):
                         let input_index = channel_offset + input_pos + kernel_pos
                         if input_index >= 0 and input_index < input_width:
-                            let value = a.data.load().simd_load[NELTS](batch_offset + input_index)
+                            let value = a.data.load().simd_load[NELTS](
+                                batch_offset + input_index
+                            )
                             let grad = c.data.load(1).simd_load[NELTS](output_index)
                             let grad_value = (value == max_value).select(grad, 0)
-                            a.data.load(1).simd_store[NELTS](batch_offset + input_index, grad_value)
+                            a.data.load(1).simd_store[NELTS](
+                                batch_offset + input_index, grad_value
+                            )
 
                     vectorize[NELTS, bw_vec](kernel_width)
 
@@ -214,7 +220,9 @@ struct MaxPool2D:
                                     let value = a.data.load().simd_load[NELTS](
                                         batch_offset + input_index
                                     )
-                                    let grad = c.data.load(1).simd_load[NELTS](output_index)
+                                    let grad = c.data.load(1).simd_load[NELTS](
+                                        output_index
+                                    )
                                     let grad_value = (value == max_value).select(
                                         grad, 0
                                     )

@@ -266,7 +266,8 @@ struct GenericLoss[
                 0,
                 node.data.load().load(0)
                 + fw_vec[NELTS](
-                    y_true.data.load().simd_load[NELTS](i), y_pred.data.load().simd_load[NELTS](i)
+                    y_true.data.load().simd_load[NELTS](i),
+                    y_pred.data.load().simd_load[NELTS](i),
                 ).reduce_add(),
             )
 

@@ -581,7 +581,10 @@ struct Graph:
             let node = self.nodes.load(i)
             node.grad_computed_ptr.store(False)
 
-            if node.is_single_ptr.load() or node.id_ptr.load() == self.last_node_id.load():
+            if (
+                node.is_single_ptr.load()
+                or node.id_ptr.load() == self.last_node_id.load()
+            ):
                 continue
 
             if not node.is_static:

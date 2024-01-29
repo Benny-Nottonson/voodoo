@@ -20,7 +20,9 @@ struct Copy(Operation):
     fn fw(node: Node, parent1: Node):
         @parameter
         fn vectorized_copy[NELTS: Int](i: Int):
-            node.data.load().simd_store[NELTS](i, parent1.data.load().simd_load[NELTS](i))
+            node.data.load().simd_store[NELTS](
+                i, parent1.data.load().simd_load[NELTS](i)
+            )
 
         vectorize[NELTS, vectorized_copy](node.cap)
 
@@ -28,7 +30,9 @@ struct Copy(Operation):
     fn bw(node: Node, parent1: Node):
         @parameter
         fn vectorized_copy_bw[NELTS: Int](i: Int):
-            parent1.data.load(1).simd_store[NELTS](i, parent1.data.load(1).simd_load[NELTS](i))
+            parent1.data.load(1).simd_store[NELTS](
+                i, parent1.data.load(1).simd_load[NELTS](i)
+            )
 
         vectorize[NELTS, vectorized_copy_bw](node.cap)
 
@@ -64,7 +68,9 @@ struct Reshape(Operation):
 
             @parameter
             fn vectorized_reshape[NELTS: Int](i: Int):
-                node.data.load().simd_store[NELTS](i, parent1.data.load().simd_load[NELTS](i))
+                node.data.load().simd_store[NELTS](
+                    i, parent1.data.load().simd_load[NELTS](i)
+                )
 
             vectorize[NELTS, vectorized_reshape](parent1.cap)
 
@@ -76,7 +82,9 @@ struct Reshape(Operation):
             @parameter
             fn vectorized_reshape[NELTS: Int](i: Int):
                 parent1.data.load(1).simd_store[NELTS](
-                    i, parent1.data.load(1).simd_load[NELTS](i) + node.data.load(1).simd_load[NELTS](i)
+                    i,
+                    parent1.data.load(1).simd_load[NELTS](i)
+                    + node.data.load(1).simd_load[NELTS](i),
                 )
 
             vectorize[NELTS, vectorized_reshape](parent1.cap)
@@ -95,7 +103,8 @@ struct Transpose(Operation):
                 @parameter
                 fn vectorized_transp[NELTS: Int](j: Int):
                     node.data.load().simd_store[NELTS](
-                        offset + j * M + i, parent1.data.load().simd_load[NELTS](offset + i * N + j)
+                        offset + j * M + i,
+                        parent1.data.load().simd_load[NELTS](offset + i * N + j),
                     )
 
                 vectorize[NELTS, vectorized_transp](N)
@@ -132,7 +141,8 @@ struct Dropout(Operation):
             let rand = random_float64()
             node.data.load().simd_store[NELTS](
                 i,
-                (rand < keep_prob).cast[DType.float32]() * parent1.data.load().simd_load[NELTS](i),
+                (rand < keep_prob).cast[DType.float32]()
+                * parent1.data.load().simd_load[NELTS](i),
             )
 
         vectorize[NELTS, vectorized_dropout](node.cap)
