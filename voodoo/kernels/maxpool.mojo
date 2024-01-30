@@ -95,7 +95,9 @@ struct MaxPool1D:
                     vectorize[NELTS, bw_vec](kernel_width)
 
                     let grad = c.data_ptr.load(1).load(output_index)
-                    a.data_ptr.load(1).store(batch_offset + input_pos, grad.reduce_add())
+                    a.data_ptr.load(1).store(
+                        batch_offset + input_pos, grad.reduce_add()
+                    )
 
 
 struct MaxPool2D:

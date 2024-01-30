@@ -21,9 +21,6 @@ struct Vector[type: AnyRegType]:
 
         return Vector[type] {data: data, len: len, cap: cap}
 
-    fn __len__(self) -> Int:
-        return self.len.load()
-
     @always_inline("nodebug")
     fn size_up(self, new_cap: Int):
         let new_data = Pointer[type].alloc(new_cap)

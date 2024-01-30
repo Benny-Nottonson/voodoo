@@ -2,10 +2,6 @@ from math import sin, cos, sqrt, log, iota
 from random import rand, seed
 from .utils import Vector, warn
 
-# This means it can never be passed as a reference, only a value
-# Because of this, anything mutable inside the struct needs to be a pointer
-# This does not include Vector as it is register passable
-
 
 @register_passable("trivial")
 struct Node:
@@ -251,7 +247,9 @@ struct Node:
         seed()
         rand(self.data_ptr.load(0), self.cap_ptr.load())
         for i in range(self.cap_ptr.load()):
-            self.data_ptr.load(0).store(i, self.data_ptr.load(0).load(i) * (max - min) + min)
+            self.data_ptr.load(0).store(
+                i, self.data_ptr.load(0).load(i) * (max - min) + min
+            )
 
     fn truncated_normal(self, std: Float32 = 1.0, mu: Float32 = 0.0):
         seed()

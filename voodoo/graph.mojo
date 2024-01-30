@@ -200,7 +200,8 @@ struct Graph:
             let ind = node.parents.load(i)
             let parent = self.nodes.load(node.parents.load(i))
             if (
-                self.load_ceiled_cap(parent.cap_ptr.load()) == self.load_ceiled_cap(node.cap_ptr.load())
+                self.load_ceiled_cap(parent.cap_ptr.load())
+                == self.load_ceiled_cap(node.cap_ptr.load())
                 and parent.dependencies_ptr.load() == 1
                 and not parent.is_static_ptr.load()
                 and not node.is_static_ptr.load()
@@ -364,25 +365,9 @@ struct Graph:
                 node.data_id_ptr.store(0)
                 node.grad_id_ptr.store(0)
 
-    fn clear(self, reset_static_nodes: Bool = False) raises:
-        self.clear_cache(reset_static_nodes)
-        self.nodes.free()
-        self.memory_pool.free()
-
-        @unroll
-        for i in range(MEMORY_POOL_SIZE):
-            self.memory_pool_manager.load(i).free()
-
-        self.memory_pool_manager.free()
-        self.free_node_ids.free()
-        self.free_data_ids.free()
-        self.last_node_id.free()
-        self.kernels.free()
-        self.forward_order.free()
-
     fn free(self):
         self.nodes.free()
-        
+
         for i in range(self.memory_pool.len.load()):
             self.memory_pool.load(i).free()
 
@@ -399,7 +384,6 @@ struct Graph:
         self.kernels.free()
         self.forward_order.free()
         self.grad_nodes_order.free()
-
 
     fn forward_recursive(
         self, node: Node, keep_forward_order: Bool = False
@@ -609,7 +593,7 @@ struct Graph:
             Vector[Int](),
             parent1,
         )
- 
+
     @always_inline("nodebug")
     fn mmul(self, a: Node, b: Node) raises -> Node:
         var shape = get_broadcasted_shape_for_ew_op(a, b)

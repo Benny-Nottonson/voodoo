@@ -93,68 +93,64 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         initialization_function: String, val: Float32 = 0, val2: Float32 = 0
     ](owned self) raises -> Tensor[is_static, is_single]:
         self.node.initialize[initialization_function, val, val2]()
-        return self
+        return self ^
 
     @always_inline("nodebug")
     fn fill(owned self, val: Float32) -> Self:
         self.node.fill(val)
-        return self
+        return self^
 
     @always_inline("nodebug")
     fn fill_incr(owned self) raises -> Self:
         self.node.fill_incr()
-        return self
+        return self^
 
     @always_inline("nodebug")
     fn grad_fill_incr(owned self) raises -> Self:
         self.node.grad_fill_incr()
-        return self
+        return self^
 
     @always_inline("nodebug")
     fn requires_grad(owned self) raises -> Self:
         self.node.requires_grad_ptr.store(True)
         self.node.is_static_ptr.store(True)
         self.node.computed_ptr.store(True)
-        return self
+        return self ^
 
     @always_inline("nodebug")
     fn static(owned self) raises -> Self:
         _ = self.forward()
         self.node.is_static_ptr.store(True)
-        return self
+        return self ^
 
     @always_inline("nodebug")
     fn dynamic(owned self) raises -> Self:
         self.node.is_static_ptr.store(False)
         self.node.is_single_ptr.store(True)
         _ = self.forward()
-        return self
+        return self ^
 
     @always_inline("nodebug")
     fn store(self, idx: Int, val: Float32):
         self.node.data_ptr.load().store(idx, val)
 
     @always_inline("nodebug")
-    fn free(owned self) raises:
+    fn free(self) raises:
         self.graph.free()
         self.node.free()
 
     @always_inline("nodebug")
-    fn clear(self, reset_static_nodes: Bool = False) raises:
-        self.graph.clear(reset_static_nodes)
-
-    @always_inline("nodebug")
-    fn forward(owned self, keep_forward_order: Bool = False) raises -> Self:
+    fn forward(self, keep_forward_order: Bool = False) raises -> Self:
         _ = self.graph.forward(self.node, keep_forward_order)
         return self
 
     @always_inline("nodebug")
-    fn forward_static(owned self) raises -> Self:
+    fn forward_static(self) raises -> Self:
         _ = self.graph.forward_static(self.node)
         return self
 
     @always_inline("nodebug")
-    fn backward(inout self) raises:
+    fn backward(self) raises:
         if not self.node.computed_ptr.load():
             _ = self.forward()
         self.graph.backward(self.node)
