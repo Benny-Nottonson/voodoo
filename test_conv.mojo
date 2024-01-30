@@ -58,10 +58,10 @@ fn main() raises:
     let every = 90
     let num_epochs = 1800
 
-    let true_vals = Tensor(TensorShape(batches, 10)).initialize["zeros"]().dynamic()
+    let true_vals = Tensor(TensorShape(batches, 10)).initialize["zeros"]()
     let input = Tensor(TensorShape(batches, channels, width, height)).initialize[
         "zeros"
-    ]().dynamic()
+    ]()
 
     for i in range(batches):
         let image = dataset.train_images[i]

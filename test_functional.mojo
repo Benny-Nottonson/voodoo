@@ -31,7 +31,7 @@ fn main() raises:
     let every = 1000
     let num_epochs = 20000
 
-    let input = Tensor(data_shape).initialize["he_normal", 0, 1]().dynamic()
+    let input = Tensor(data_shape).initialize["he_normal", 0, 1]()
     let true_vals = Tensor(data_shape)
 
     var x = (input @ W1 + b1).compute_activation["relu"]()
@@ -43,7 +43,7 @@ fn main() raises:
     var epoch_start = now()
     let bar_accuracy = 20
     for epoch in range(1, num_epochs + 1):
-        for i in range(input.initialize["random_uniform", 0, 1]().capacity()):
+        for i in range(input.initialize["random_uniform", 0, 1]().node.cap_ptr.load()):
             true_vals[i] = math.sin(15.0 * input[i])
 
         avg_loss += loss.forward_static()[0]

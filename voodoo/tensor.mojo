@@ -40,120 +40,79 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         self.node = other.node
 
     fn load_tensor_for_binary_op(self, other: Tensor) raises -> Tensor[False, False]:
-        let self_static_or_single = (
-            self.node.is_static or self.node.is_single_ptr.load()
-        )
-        let other_static_or_single = (
-            other.node.is_static or other.node.is_single_ptr.load()
-        )
+        let self_static_or_single = self.node.is_static_ptr.load() or self.node.is_single_ptr.load()
+        let other_static_or_single = other.node.is_static_ptr.load() or other.node.is_single_ptr.load()
+        let first_greater = self.graph.nodes.len.load() < other.graph.nodes.len.load()
+        let remove_other = not (self_static_or_single or other_static_or_single)
 
-        var new_tensor = Tensor[False, False](
-            shape=self.node.shape.copy(),
-        )
+        var new_tensor = Tensor[False, False](self.node.shape.copy())
 
-        if self_static_or_single:
+        if self_static_or_single or (not other_static_or_single and first_greater):
             new_tensor.graph = other.graph
-            fuse_graphs(new_tensor.graph, self.graph)
-        elif other_static_or_single:
-            new_tensor.graph = self.graph
-            fuse_graphs(new_tensor.graph, other.graph)
+            fuse_graphs(new_tensor.graph, self.graph, remove_other)
         else:
-            let self_nodes_len = self.graph.nodes.len.load()
-            let other_nodes_len = other.graph.nodes.len.load()
-
-            if self_nodes_len >= other_nodes_len:
-                new_tensor.graph = self.graph
-                fuse_graphs(new_tensor.graph, other.graph, True)
-            else:
-                new_tensor.graph = other.graph
-                fuse_graphs(new_tensor.graph, self.graph, True)
+            new_tensor.graph = self.graph
+            fuse_graphs(new_tensor.graph, other.graph, remove_other)
 
         return new_tensor
 
     fn load_tensor_for_unary_op(self) raises -> Tensor[False, False]:
-        let self_static_or_single = (
-            self.node.is_static or self.node.is_single_ptr.load()
-        )
-
-        var new_tensor = Tensor[False, False](
-            shape=self.node.shape.copy(),
-        )
-
-        if self_static_or_single:
+        if self.node.is_static_ptr.load() or self.node.is_single_ptr.load():
+            let new_tensor = Tensor[False, False](self.node.shape.copy())
             fuse_graphs(new_tensor.graph, self.graph)
-
-        elif not self_static_or_single:
+            return new_tensor
+        else:
+            var new_tensor = Tensor[False, False](self.node.shape.copy())
             new_tensor.graph = self.graph
-
-        return new_tensor
+            return new_tensor
 
     fn print(self, accuracy: Int = 6) raises:
         if not self.node.computed_ptr.load():
             _ = self.forward()
         self.node.print(accuracy)
 
-    fn print_memory_pool_manager(self) raises:
-        self.graph.print_memory_pool_manager()
-
-    fn print_graph(self) raises:
-        if not self.node.computed_ptr.load():
-            _ = self.forward()
-        self.graph.print()
-
     @always_inline("nodebug")
     fn initialize[
         initialization_function: String, val: Float32 = 0, val2: Float32 = 0
-    ](self) raises -> Tensor[is_static, is_single]:
+    ](owned self) raises -> Tensor[is_static, is_single]:
         self.node.initialize[initialization_function, val, val2]()
-        return self
+        return self ^
 
     @always_inline("nodebug")
-    fn fill(self, val: Float32) -> Self:
+    fn fill(owned self, val: Float32) -> Self:
         self.node.fill(val)
-        return self
+        return self ^
 
     @always_inline("nodebug")
-    fn fill_incr(self) raises -> Self:
+    fn fill_incr(owned self) raises -> Self:
         self.node.fill_incr()
-        return self
+        return self ^
 
     @always_inline("nodebug")
-    fn grad_fill_incr(self) raises -> Self:
+    fn grad_fill_incr(owned self) raises -> Self:
         self.node.grad_fill_incr()
-        return self
+        return self ^
 
     @always_inline("nodebug")
     fn requires_grad(owned self) raises -> Self:
-        self.node.requires_grad = True
-        self.node.is_static = True
+        self.node.is_static_ptr.store(True)
         self.node.computed_ptr.store(True)
-        return self
+        return self ^
 
     @always_inline("nodebug")
     fn static(owned self) raises -> Self:
         _ = self.forward()
-        self.node.is_static = True
-        return self
-
-    @always_inline("nodebug")
-    fn dynamic(owned self) raises -> Self:
-        self.node.is_static = False
-        self.node.is_single_ptr.store(True)
-        _ = self.forward()
-        return self
+        self.node.is_static_ptr.store(True)
+        return self ^
 
     @always_inline("nodebug")
     fn store(self, idx: Int, val: Float32):
-        self.node.data.load().store(idx, val)
+        self.node.data_ptr.load().store(idx, val)
 
     @always_inline("nodebug")
-    fn free(owned self):
+    fn free(self) raises:
         self.graph.free()
         self.node.free()
-
-    @always_inline("nodebug")
-    fn clear(self, reset_static_nodes: Bool = False) raises:
-        self.graph.clear(reset_static_nodes)
 
     @always_inline("nodebug")
     fn forward(self, keep_forward_order: Bool = False) raises -> Self:
@@ -161,7 +120,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         return self
 
     @always_inline("nodebug")
-    fn forward_static(owned self) raises -> Self:
+    fn forward_static(self) raises -> Self:
         _ = self.graph.forward_static(self.node)
         return self
 
@@ -179,15 +138,11 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     fn __getitem__(self, idx: Int) raises -> Float32:
         if not self.node.computed_ptr.load():
             _ = self.forward()
-        return self.node.data.load().load(idx)
+        return self.node.data_ptr.load().load(idx)
 
     @always_inline("nodebug")
     fn __setitem__(self, idx: Int, val: Float32) raises:
-        self.node.data.load().store(idx, val)
-
-    @always_inline("nodebug")
-    fn capacity(self) raises -> Int:
-        return self.node.cap
+        self.node.data_ptr.load().store(idx, val)
 
     @always_inline("nodebug")
     fn copy(self) raises -> Tensor[False, False]:
@@ -349,10 +304,6 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         return other.__pow__(self)
 
     @always_inline("nodebug")
-    fn __len__(self) raises -> Int:
-        return self.capacity()
-
-    @always_inline("nodebug")
     fn reshape(self, shape: Vector[Int]) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
         new_tensor.node = new_tensor.graph.reshape(self.node, shape)
@@ -470,21 +421,20 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
 
 fn fuse_graphs(
     graph_ptr: Graph,
-    other_graph_ptr: Graph,
+    other_graph: Graph,
     remove_other: Bool = False,
 ) raises:
     let num_nodes = graph_ptr.nodes.len.load()
     let memory_pool_len = graph_ptr.memory_pool.len.load()
-    let other_graph = other_graph_ptr
 
     for i in range(other_graph.nodes.len.load()):
-        let node = other_graph.nodes.load(i)
+        var node = other_graph.nodes.load(i)
         node.id_ptr.store(node.id_ptr.load() + num_nodes)
         for j in range(node.children.len.load()):
             node.children.store(j, node.children.load(j) + num_nodes)
         for j in range(node.parents.len.load()):
             node.parents.store(j, node.parents.load(j) + num_nodes)
-        node.data_id.store(node.data_id.load() + memory_pool_len)
+        node.data_id_ptr.store(node.data_id_ptr.load() + memory_pool_len)
         graph_ptr.nodes.push_back(node)
 
     for i in range(other_graph.memory_pool.len.load()):
@@ -505,19 +455,4 @@ fn fuse_graphs(
         )
 
     if remove_other:
-        other_graph.nodes.free()
-        other_graph.nodes.free()
-        other_graph.memory_pool.free()
-        other_graph.memory_pool.free()
-
-        @unroll
-        for i in range(MEMORY_POOL_SIZE):
-            other_graph.memory_pool_manager.load(i).free()
-        other_graph.memory_pool_manager.free()
-        other_graph.free_node_ids.free()
-        other_graph.free_node_ids.free()
-        other_graph.free_data_ids.free()
-        other_graph.free_data_ids.free()
-        other_graph.last_node_id.free()
-        other_graph.kernels.free()
-        other_graph.forward_order.free()
+        other_graph.free()
