@@ -117,6 +117,7 @@ struct Node:
         for i in range(self.cap_ptr.load()):
             self.data_ptr.load(0).store(i, val)
 
+    # Use math.iota here https://github.com/rd4com/mojo-learning/blob/main/tutorials/simd.md
     @always_inline("nodebug")
     fn fill_incr(self):
         iota(self.data_ptr.load(0), self.cap_ptr.load())
