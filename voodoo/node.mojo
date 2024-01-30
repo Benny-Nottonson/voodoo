@@ -31,7 +31,7 @@ struct Node:
         shape: Vector[Int],
         is_static: Bool = True,
         other_params: Vector[Int] = Vector[Int](),
-    ) -> Self:
+    ) raises -> Self:
         let id_ptr = Pointer[Int].alloc(1)
         id_ptr.store(id)
         let data_id_ptr = Pointer[Int].alloc(1)
@@ -66,20 +66,20 @@ struct Node:
         let is_single_ptr = Pointer[Bool].alloc(1)
         is_single_ptr.store(False)
         let num_dims_ptr = Pointer[Int].alloc(1)
-        num_dims_ptr.store(shape.len.load())
+        num_dims_ptr.store(shape.get_len())
         let cap_ptr = Pointer[Int].alloc(1)
         cap_ptr.store(1)
 
-        for i in range(shape.len.load()):
+        for i in range(shape.get_len()):
             cap_ptr.store(cap_ptr.load() * shape.load(i))
 
-        let strides = Vector[Int](shape.len.load())
-        strides.store(shape.len.load() - 1, 1)
-        for i in range(shape.len.load() - 1):
+        let strides = Vector[Int](shape.get_len())
+        strides.store(shape.get_len() - 1, 1)
+        for i in range(shape.get_len() - 1):
             strides.store(
-                shape.len.load() - i - 2,
-                strides.load(shape.len.load() - i - 1)
-                * shape.load(shape.len.load() - i - 1),
+                shape.get_len() - i - 2,
+                strides.load(shape.get_len() - i - 1)
+                * shape.load(shape.get_len() - i - 1),
             )
 
         return Node {
@@ -133,7 +133,7 @@ struct Node:
 
     fn initialize[
         initialization_function: String, val: Float32 = 0, val2: Float32 = 0
-    ](self):
+    ](self) raises:
         @parameter
         if initialization_function == "he_normal":
             self.he_normal()
@@ -153,8 +153,8 @@ struct Node:
             )
             self.fill(0.0)
 
-    fn he_normal(self):
-        let fan_in: Float32 = self.shape.load(self.shape.len.load() - 2)
+    fn he_normal(self) raises:
+        let fan_in: Float32 = self.shape.load(self.shape.get_len() - 2)
         let scale = sqrt(2.0 / fan_in)
         self.random_normal(scale, 0.0)
 
@@ -201,7 +201,7 @@ struct Node:
         self.strides.free()
         self.other_params.free()
 
-    fn print(self, accuracy: Int = 6):
+    fn print(self, accuracy: Int = 6) raises:
         let row: Int = self.shape.load(self.num_dims_ptr.load() - 2)
         let cols: Int = self.shape.load(self.num_dims_ptr.load() - 1)
         let col_strides: Int = (self.strides.load(0) * self.shape.load(0)) // cols

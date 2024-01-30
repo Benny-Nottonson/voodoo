@@ -1,65 +1,83 @@
 from memory import memset_zero, memcpy
 from math import max
+from sys.ffi import external_call
 from ..constants import NELTS
 
 
 @register_passable("trivial")
 struct Vector[type: AnyRegType]:
     var data: Pointer[type]
-    var len: Pointer[Int]
-    var internal_cap: Pointer[Int]
+    var internal_len: Pointer[Int]
+    var internal_cap: Int
 
-    fn __init__(_len: Int = 0) -> Self:
-        let _cap = max(_len, 8)
+    fn __init__(len: Int = 0) -> Self:
+        let internal_cap = max(len, 8)
+        let data = Pointer[type].alloc(internal_cap)
+        let internal_len = Pointer[Int].alloc(1)
+        
+        memset_zero(data, internal_cap)
+        internal_len.store(len)
 
-        let data = Pointer[type].alloc(_cap)
-        let cap = Pointer[Int].alloc(1)
-        let len = Pointer[Int].alloc(1)
-        memset_zero(data, _cap)
-        cap.store(_cap)
-        len.store(_len)
-
-        return Vector[type] {data: data, len: len, internal_cap: cap}
+        return Vector[type] {data: data, internal_len: internal_len, internal_cap: internal_cap}
 
     @always_inline("nodebug")
     fn get_cap(self) -> Int:
-        return self.internal_cap.load()
+        return self.internal_cap
 
     @always_inline("nodebug")
-    fn set_cap(self, val: Int):
-        self.internal_cap.store(val)
+    fn set_cap(inout self, val: Int):
+        self.internal_cap = val
+
+    @always_inline("nodebug")
+    fn get_len(self) -> Int:
+        return self.internal_len.load()
+
+    @always_inline("nodebug")
+    fn set_len(inout self, val: Int):
+        self.internal_len.store(val)
 
     @always_inline("nodebug")
     fn size_up(inout self, new_cap: Int):
         let new_data = Pointer[type].alloc(new_cap)
+
         memset_zero(new_data, new_cap)
         memcpy(new_data, self.data, self.get_cap())
+
         self.set_cap(new_cap)
         self.data.free()
         self.data = new_data
 
     @always_inline("nodebug")
     fn push_back(inout self, elem: type):
-        if self.len.load() == self.get_cap():
-            self.size_up(2 * self.get_cap())
-        self.data.store(self.len.load(), elem)
-        self.len.store(self.len.load() + 1)
+        let len = self.get_len()
+        let curr_cap = self.get_cap()
+        
+        if len == curr_cap:
+            self.size_up(curr_cap << 1)
+
+        self.data.store(len, elem)
+        self.set_len(len + 1)
 
     @always_inline("nodebug")
     fn size_down(inout self, new_cap: Int):
         let new_data = Pointer[type].alloc(new_cap)
+
         memcpy(new_data, self.data, new_cap)
+
         self.set_cap(new_cap)
         self.data.free()
         self.data = new_data
 
     @always_inline("nodebug")
     fn pop_back(inout self) -> type:
-        self.len.store(self.len.load() - 1)
-        let tmp = self.data.load(self.len.load())
+        let new_len = self.get_len() - 1
+        let curr_cap = self.get_cap()
 
-        if self.len.load() <= self.get_cap() // 4 and self.get_cap() > 32:
-            self.size_down(self.get_cap() // 2)
+        self.set_len(new_len)
+        let tmp = self.data.load(new_len)
+
+        if new_len <= (curr_cap >> 2) and curr_cap > 32:
+            self.size_down(curr_cap >> 1)
 
         return tmp
 
@@ -74,27 +92,21 @@ struct Vector[type: AnyRegType]:
     @always_inline("nodebug")
     fn free(self):
         self.data.free()
-        self.len.free()
-        self.internal_cap.free()
+        self.internal_len.free()
 
     @always_inline("nodebug")
     fn clear(inout self):
         self.size_down(8)
-        self.len.store(0)
+        self.set_len(0)
         self.set_cap(8)
+
         memset_zero(self.data, self.get_cap())
 
     @always_inline("nodebug")
     fn copy(self) -> Self:
-        let len = self.len.load()
+        let len = self.get_len()
         let new_vector = Vector[type](len)
-        memcpy(new_vector.data, self.data, len)
-        return new_vector
 
-    @always_inline("nodebug")
-    fn get_transposed(self) -> Self:
-        let new_shape = self.copy()
-        let len = self.len.load()
-        new_shape.store(len - 2, self.load(len - 1))
-        new_shape.store(len - 1, self.load(len - 2))
-        return new_shape
+        memcpy(new_vector.data, self.data, len)
+
+        return new_vector

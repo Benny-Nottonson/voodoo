@@ -248,7 +248,7 @@ struct GenericLoss[
 ]:
     @staticmethod
     fn fw(node: Node, y_pred: Node, y_true: Node):
-        let num_dims = y_pred.shape.len.load()
+        let num_dims = y_pred.shape.get_len()
         let N = y_pred.shape.load(num_dims - 1)
         let cap = y_pred.cap_ptr.load()
         var e: Float32 = 0.0
@@ -276,7 +276,7 @@ struct GenericLoss[
 
     @staticmethod
     fn bw(node: Node, y_pred: Node, y_true: Node):
-        let num_dims = y_pred.shape.len.load()
+        let num_dims = y_pred.shape.get_len()
         let N = y_pred.shape.load(num_dims - 1)
         let cap = y_pred.cap_ptr.load()
         let scalar = cap / Float32(N)
@@ -307,7 +307,7 @@ struct GenericLoss[
 struct GenericOptimizer[fw_vec: generic_optimizer_vectorized]:
     @staticmethod
     fn step[learning_rate: Float32](x: Vector[Node]) raises:
-        for i in range(x.len.load()):
+        for i in range(x.get_len()):
             let node = x.load(i)
             if node.is_static_ptr.load() and node.grad_computed_ptr.load():
                 let node_data = node.data_ptr.load(0)
