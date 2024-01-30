@@ -678,10 +678,11 @@ struct Graph:
         other_params.push_back(stride)
         other_params.push_back(padding)
 
-        let shape = Vector[Int]()
-        shape.push_back(a.shape.load(0))
-        shape.push_back(a.shape.load(1))
-        shape.push_back((a.shape.load(2) - kernel_size + 2 * padding) // stride + 1)
+        let shape = TensorShape(
+            a.shape.load(0),
+            a.shape.load(1),
+            (a.shape.load(2) - kernel_size + 2 * padding) // stride + 1,
+        )
 
         return self.node[True](shape, False, False, maxpool1d_code, other_params, a)
 
@@ -699,11 +700,12 @@ struct Graph:
         other_params.push_back(stride)
         other_params.push_back(padding)
 
-        let shape = Vector[Int]()
-        shape.push_back(a.shape.load(0))
-        shape.push_back(a.shape.load(1))
-        shape.push_back((a.shape.load(2) - kernel_size[0] + 2 * padding) // stride + 1)
-        shape.push_back((a.shape.load(3) - kernel_size[1] + 2 * padding) // stride + 1)
+        let shape = TensorShape(
+            a.shape.load(0),
+            a.shape.load(1),
+            (a.shape.load(2) - kernel_size[0] + 2 * padding) // stride + 1,
+            (a.shape.load(3) - kernel_size[1] + 2 * padding) // stride + 1,
+        )
 
         return self.node[True](shape, False, False, maxpool2d_code, other_params, a)
 
