@@ -7,7 +7,7 @@ from ..constants import NELTS
 struct Vector[type: AnyRegType]:
     var data: Pointer[type]
     var len: Pointer[Int]
-    var cap: Pointer[Int]
+    var internal_cap: Pointer[Int]
 
     fn __init__(_len: Int = 0) -> Self:
         let _cap = max(_len, 8)
@@ -19,19 +19,28 @@ struct Vector[type: AnyRegType]:
         cap.store(_cap)
         len.store(_len)
 
-        return Vector[type] {data: data, len: len, cap: cap}
+        return Vector[type] {data: data, len: len, internal_cap: cap}
+
+    @always_inline("nodebug")
+    fn get_cap(self) -> Int:
+        return self.internal_cap.load()
+
+    @always_inline("nodebug")
+    fn set_cap(self, val: Int):
+        self.internal_cap.store(val)
 
     @always_inline("nodebug")
     fn size_up(self, new_cap: Int):
+        # TODO: THIS IS THE PROBLEM, NOT ACTUALLY CHANGING THE DATA
         let new_data = Pointer[type].alloc(new_cap)
         memset_zero(new_data, new_cap)
-        memcpy(new_data, self.data, self.cap.load())
-        self.cap.store(new_cap)
+        memcpy(new_data, self.data, self.get_cap())
+        self.set_cap(new_cap)
 
     @always_inline("nodebug")
     fn push_back(self, elem: type):
-        if self.len.load() == self.cap.load():
-            self.size_up(2 * self.cap.load())
+        if self.len.load() == self.get_cap():
+            self.size_up(2 * self.get_cap())
         self.data.store(self.len.load(), elem)
         self.len.store(self.len.load() + 1)
 
@@ -39,15 +48,15 @@ struct Vector[type: AnyRegType]:
     fn size_down(self, new_cap: Int):
         let new_data = Pointer[type].alloc(new_cap)
         memcpy(new_data, self.data, new_cap)
-        self.cap.store(new_cap)
+        self.set_cap(new_cap)
 
     @always_inline("nodebug")
     fn pop_back(self) -> type:
         self.len.store(self.len.load() - 1)
         let tmp = self.data.load(self.len.load())
 
-        if self.len.load() <= self.cap.load() // 4 and self.cap.load() > 32:
-            self.size_down(self.cap.load() // 2)
+        if self.len.load() <= self.get_cap() // 4 and self.get_cap() > 32:
+            self.size_down(self.get_cap() // 2)
 
         return tmp
 
@@ -63,13 +72,14 @@ struct Vector[type: AnyRegType]:
     fn free(self):
         self.data.free()
         self.len.free()
-        self.cap.free()
+        self.internal_cap.free()
 
     @always_inline("nodebug")
     fn clear(self):
-        memset_zero(self.data, self.cap.load())
+        self.size_down(8)
         self.len.store(0)
-        self.cap.store(8)
+        self.set_cap(8)
+        memset_zero(self.data, self.get_cap())
 
     @always_inline("nodebug")
     fn copy(self) -> Self:
