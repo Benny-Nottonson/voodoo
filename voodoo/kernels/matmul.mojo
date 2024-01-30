@@ -51,7 +51,9 @@ struct MMul:
         DTypePointer.prefetch[PREFETCH_READ](c_data)
         DTypePointer.prefetch[PREFETCH_WRITE](c_data)
 
-        for m in range(0, M, 4):
+        alias fw_tile_size = 32
+
+        for m in range(0, M, fw_tile_size):
             let start_offset_c = offset_c + m * N
             let start_offset_a = offset_a + m * K
             for kb in range(0, K, NELTS):
@@ -74,10 +76,9 @@ struct MMul:
                                 ),
                             )
 
-                        dot_store(start_offset_c + n, start_offset_a)
-                        dot_store(start_offset_c + N + n, start_offset_a + K)
-                        dot_store(start_offset_c + 2 * N + n, start_offset_a + 2 * K)
-                        dot_store(start_offset_c + 3 * N + n, start_offset_a + 3 * K)
+                        @unroll
+                        for i in range(fw_tile_size):
+                            dot_store(start_offset_c + i * N + n, start_offset_a + i * K)
 
                     vectorize[NELTS, dot_fw](N)
 
@@ -104,7 +105,7 @@ struct MMul:
         DTypePointer.prefetch[PREFETCH_WRITE](a_grad)
         DTypePointer.prefetch[PREFETCH_READ](b_data)
         DTypePointer.prefetch[PREFETCH_READ](c_grad)
-
+        
         for m in range(0, M, 2):
             let _offset_c = offset_c + m * N
             let _offset_c_1 = offset_c + (m + 1) * N
