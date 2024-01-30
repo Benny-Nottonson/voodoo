@@ -42,24 +42,24 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     fn load_tensor_for_binary_op(self, other: Tensor) raises -> Tensor[False, False]:
         let self_static_or_single = self.node.is_static_ptr.load() or self.node.is_single_ptr.load()
         let other_static_or_single = other.node.is_static_ptr.load() or other.node.is_single_ptr.load()
-        let first_greater = self.graph.get_nodes().get_len() < other.graph.get_nodes().get_len()
+        let first_greater = self.graph._nodes.get_len() < other.graph._nodes.get_len()
         let remove_other = not (self_static_or_single or other_static_or_single)
 
         var new_tensor = Tensor[False, False](self.node.shape.copy())
 
         if self_static_or_single or (not other_static_or_single and first_greater):
             new_tensor.graph = other.graph
-            fuse_graphs(new_tensor.graph, self.graph, remove_other)
+            new_tensor.graph.fuse_graphs(self.graph, remove_other)
         else:
             new_tensor.graph = self.graph
-            fuse_graphs(new_tensor.graph, other.graph, remove_other)
+            new_tensor.graph.fuse_graphs(other.graph, remove_other)
 
         return new_tensor
 
     fn load_tensor_for_unary_op(self) raises -> Tensor[False, False]:
         if self.node.is_static_ptr.load() or self.node.is_single_ptr.load():
             var new_tensor = Tensor[False, False](self.node.shape.copy())
-            fuse_graphs(new_tensor.graph, self.graph)
+            new_tensor.graph.fuse_graphs(self.graph)
             return new_tensor
         else:
             var new_tensor = Tensor[False, False](self.node.shape.copy())
@@ -417,45 +417,3 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
             self.node, kernel_size, stride, padding
         )
         return new_tensor
-
-
-fn fuse_graphs(
-    inout graph: Graph,
-    other_graph: Graph,
-    remove_other: Bool = False,
-) raises:
-    let num_nodes = graph.get_nodes().get_len()
-    let memory_pool_len = graph.get_memory_pool().get_len()
-
-    for i in range(other_graph.get_nodes().get_len()):
-        var node = other_graph.get_nodes().load(i)
-        node.id_ptr.store(node.id_ptr.load() + num_nodes)
-        for j in range(node.children.get_len()):
-            node.children.store(j, node.children.load(j) + num_nodes)
-        for j in range(node.parents.get_len()):
-            node.parents.store(j, node.parents.load(j) + num_nodes)
-        node.data_id_ptr.store(node.data_id_ptr.load() + memory_pool_len)
-        graph.push_back_nodes(node)
-
-    for i in range(other_graph.get_memory_pool().get_len()):
-        graph.push_back_memory_pool(other_graph.get_memory_pool().load(i))
-
-    for i in range(MEMORY_POOL_SIZE):
-        for j in range(other_graph.get_memory_pool_manager().load(i).get_len()):
-            var mem_pool = graph.get_memory_pool_manager().load(i)
-            mem_pool.push_back(
-                other_graph.get_memory_pool_manager().load(i).load(j) + memory_pool_len
-            )
-
-    for i in range(graph.get_free_node_ids().get_len()):
-        graph.push_back_free_node_ids(
-            other_graph.get_free_node_ids().load(i) + num_nodes
-        )
-
-    for i in range(graph.get_free_data_ids().get_len()):
-        graph.push_back_free_data_ids(
-            other_graph.get_free_data_ids().load(i) + memory_pool_len
-        )
-
-    if remove_other:
-        other_graph.free()

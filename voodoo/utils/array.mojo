@@ -4,35 +4,19 @@ from math import max
 
 @register_passable("trivial")
 struct Vector[type: AnyRegType]:
-    """
-    A memory efficient implementation of a dynamically sized vector, passable to registers.
-    """
-
     var _data: Pointer[type]
     var _len: Pointer[Int]
     var _cap: Int
 
     fn __init__(len: Int = 0) -> Self:
         let _cap = max(len, 8)
-        let data = Pointer[type].alloc(_cap)
+        let _data = Pointer[type].alloc(_cap)
         let _len = Pointer[Int].alloc(1)
 
-        memset_zero(data, _cap)
+        memset_zero(_data, _cap)
         _len.store(len)
 
-        return Vector[type] {_data: data, _len: _len, _cap: _cap}
-
-    @always_inline("nodebug")
-    fn get_data(self) -> Pointer[type]:
-        return self._data
-
-    @always_inline("nodebug")
-    fn set_data(inout self, val: Pointer[type]):
-        self._data = val
-
-    @always_inline("nodebug")
-    fn free_data(self):
-        self._data.free()
+        return Vector[type] {_data: _data, _len: _len, _cap: _cap}
 
     @always_inline("nodebug")
     fn get_cap(self) -> Int:
@@ -51,27 +35,23 @@ struct Vector[type: AnyRegType]:
         self._len.store(val)
 
     @always_inline("nodebug")
-    fn free_len(self):
-        self._len.free()
-
-    @always_inline("nodebug")
     fn push_back(inout self, elem: type):
-        let len = self.get_len()
-        let curr_cap = self.get_cap()
+        let len = self._len.load()
+        let curr_cap = self._cap
 
         if len == curr_cap:
             self._size_up(curr_cap << 1)
 
-        self.get_data().store(len, elem)
-        self.set_len(len + 1)
+        self._data.store(len, elem)
+        self._len.store(len + 1)
 
     @always_inline("nodebug")
     fn pop_back(inout self) -> type:
-        let new_len = self.get_len() - 1
-        let curr_cap = self.get_cap()
+        let new_len = self._len.load() - 1
+        let curr_cap = self._cap
 
-        self.set_len(new_len)
-        let tmp = self.get_data().load(new_len)
+        self._len.store(new_len)
+        let tmp = self._data.load(new_len)
 
         if new_len <= (curr_cap >> 2) and curr_cap > 32:
             self._size_down(curr_cap >> 1)
@@ -79,52 +59,52 @@ struct Vector[type: AnyRegType]:
         return tmp
 
     @always_inline("nodebug")
+    fn load(self, idx: Int) -> type:
+        return self._data.load(idx)
+
+    @always_inline("nodebug")
+    fn store(self, idx: Int, value: type):
+        self._data.store(idx, value)
+
+    @always_inline("nodebug")
+    fn free(owned self):
+        self._data.free()
+        self._len.free()
+
+    @always_inline("nodebug")
+    fn clear(inout self):
+        self._size_down(8)
+        self._len.store(0)
+        self._cap = 8
+
+        memset_zero(self._data, self._cap)
+
+    @always_inline("nodebug")
+    fn copy(self) -> Self:
+        let len = self._len.load()
+        let new_vector = Vector[type](len)
+
+        memcpy(new_vector._data, self._data, len)
+
+        return new_vector
+
+    @always_inline("nodebug")
     fn _size_up(inout self, new_cap: Int):
         let new_data = Pointer[type].alloc(new_cap)
 
         memset_zero(new_data, new_cap)
-        memcpy(new_data, self.get_data(), self.get_cap())
+        memcpy(new_data, self._data, self._cap)
 
-        self.set_cap(new_cap)
-        self.free_data()
-        self.set_data(new_data)
+        self._cap = new_cap
+        self._data.free()
+        self._data = new_data
 
     @always_inline("nodebug")
     fn _size_down(inout self, new_cap: Int):
         let new_data = Pointer[type].alloc(new_cap)
 
-        memcpy(new_data, self.get_data(), new_cap)
+        memcpy(new_data, self._data, new_cap)
 
-        self.set_cap(new_cap)
-        self.free_data()
-        self.set_data(new_data)
-
-    @always_inline("nodebug")
-    fn load(self, idx: Int) -> type:
-        return self.get_data().load(idx)
-
-    @always_inline("nodebug")
-    fn store(self, idx: Int, value: type):
-        self.get_data().store(idx, value)
-
-    @always_inline("nodebug")
-    fn free(owned self):
-        self.free_data()
-        self.free_len()
-
-    @always_inline("nodebug")
-    fn clear(inout self):
-        self._size_down(8)
-        self.set_len(0)
-        self.set_cap(8)
-
-        memset_zero(self.get_data(), self.get_cap())
-
-    @always_inline("nodebug")
-    fn copy(self) -> Self:
-        let len = self.get_len()
-        let new_vector = Vector[type](len)
-
-        memcpy(new_vector.get_data(), self.get_data(), len)
-
-        return new_vector
+        self._cap = new_cap
+        self._data.free()
+        self._data = new_data
