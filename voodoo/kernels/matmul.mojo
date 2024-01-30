@@ -7,6 +7,8 @@ from voodoo.utils import (
 )
 from ..constants import PREFETCH_READ, PREFETCH_WRITE, F32_MAX, NELTS
 
+# TODO: Add cleanup for tiling
+
 
 struct MMul:
     @staticmethod
@@ -29,12 +31,15 @@ struct MMul:
     fn kernel_mmul_fw(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let M = a.shape.load(a.num_dims_ptr.load() - 2)
-        let K = b.shape.load(b.num_dims_ptr.load() - 2)
+        let a_num_dims = a.num_dims_ptr.load()
+        let b_num_dims = b.num_dims_ptr.load()
+
+        let M = a.shape.load(a_num_dims - 2)
+        let K = b.shape.load(b_num_dims - 2)
         let N = c.shape.load(c.num_dims_ptr.load() - 1)
 
-        let offset_a = a_index * M * a.shape.load(a.num_dims_ptr.load() - 1)
-        let offset_b = b_index * K * b.shape.load(b.num_dims_ptr.load() - 1)
+        let offset_a = a_index * M * a.shape.load(a_num_dims - 1)
+        let offset_b = b_index * K * b.shape.load(b_num_dims - 1)
         let offset_c = c_index * N * N
 
         let a_data = a.data_ptr.load(0)
@@ -80,12 +85,15 @@ struct MMul:
     fn kernel_mmul_bw_a(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let M = a.shape.load(a.num_dims_ptr.load() - 2)
-        let K = b.shape.load(b.num_dims_ptr.load() - 2)
+        let a_num_dims = a.num_dims_ptr.load()
+        let b_num_dims = b.num_dims_ptr.load()
+
+        let M = a.shape.load(a_num_dims - 2)
+        let K = b.shape.load(b_num_dims - 2)
         let N = c.shape.load(c.num_dims_ptr.load() - 1)
 
-        let offset_a = a_index * M * a.shape.load(a.num_dims_ptr.load() - 1)
-        let offset_b = b_index * K * b.shape.load(b.num_dims_ptr.load() - 1)
+        let offset_a = a_index * M * a.shape.load(a_num_dims - 1)
+        let offset_b = b_index * K * b.shape.load(b_num_dims - 1)
         let offset_c = c_index * N * N
 
         let a_grad = a.data_ptr.load(1)
@@ -131,12 +139,15 @@ struct MMul:
     fn kernel_mmul_bw_b(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let M = a.shape.load(a.num_dims_ptr.load() - 2)
-        let K = b.shape.load(b.num_dims_ptr.load() - 2)
+        let a_num_dims = a.num_dims_ptr.load()
+        let b_num_dims = b.num_dims_ptr.load()
+
+        let M = a.shape.load(a_num_dims - 2)
+        let K = b.shape.load(b_num_dims - 2)
         let N = c.shape.load(c.num_dims_ptr.load() - 1)
 
-        let offset_a = a_index * M * a.shape.load(a.num_dims_ptr.load() - 1)
-        let offset_b = b_index * K * b.shape.load(b.num_dims_ptr.load() - 1)
+        let offset_a = a_index * M * a.shape.load(a_num_dims - 1)
+        let offset_b = b_index * K * b.shape.load(b_num_dims - 1)
         let offset_c = c_index * N * N
 
         let a_data = a.data_ptr.load(0)
@@ -148,17 +159,17 @@ struct MMul:
         DTypePointer.prefetch[PREFETCH_WRITE](b_grad)
         DTypePointer.prefetch[PREFETCH_READ](c_grad)
 
-        for k in range(K):
-            let _a_off = offset_a + k
-            let _b_off = offset_b + k * N
+        if K == 1:
+            let _a_off = offset_a
+            let _b_off = offset_b
 
             for m in range(M):
-                let a_data = a_data.load(_a_off + m * K)
+                let a_data = a_data.load(_a_off + m)
                 let _c_off = offset_c + m * N
 
                 @parameter
                 @always_inline("nodebug")
-                fn dot_bw[NELTS: Int](n: Int):
+                fn dot_bw_single[NELTS: Int](n: Int):
                     let b_off = _b_off + n
 
                     b.data_ptr.load(1).simd_store[NELTS](
@@ -169,4 +180,39 @@ struct MMul:
                         ),
                     )
 
-                vectorize[NELTS, dot_bw](N)
+                vectorize[NELTS, dot_bw_single](N)
+        else:
+            for k in range(0, K, 2):
+                let _a_off_1 = offset_a + k
+                let _a_off_2 = offset_a + k + 1
+                let _b_off_1 = offset_b + k * N
+                let _b_off_2 = offset_b + (k + 1) * N
+
+                for m in range(M):
+                    let a_data_1 = a_data.load(_a_off_1 + m * K)
+                    let a_data_2 = a_data.load(_a_off_2 + m * K)
+                    let _c_off = offset_c + m * N
+
+                    @parameter
+                    @always_inline("nodebug")
+                    fn dot_bw_inner[NELTS: Int](n: Int):
+                        let b_off_1 = _b_off_1 + n
+                        let b_off_2 = _b_off_2 + n
+
+                        b.data_ptr.load(1).simd_store[NELTS](
+                            b_off_1,
+                            c_grad.simd_load[NELTS](_c_off + n).fma(
+                                a_data_1,
+                                b_grad.simd_load[NELTS](b_off_1),
+                            ),
+                        )
+
+                        b.data_ptr.load(1).simd_store[NELTS](
+                            b_off_2,
+                            c_grad.simd_load[NELTS](_c_off + n).fma(
+                                a_data_2,
+                                b_grad.simd_load[NELTS](b_off_2),
+                            ),
+                        )
+
+                    vectorize[NELTS, dot_bw_inner](N)
