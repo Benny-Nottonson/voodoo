@@ -115,8 +115,8 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         self.node.free()
 
     @always_inline("nodebug")
-    fn forward(inout self, keep_forward_order: Bool = False) raises -> Self:
-        _ = self.graph.forward(self.node, keep_forward_order)
+    fn forward(inout self) raises -> Self:
+        _ = self.graph.forward(self.node)
         return self
 
     @always_inline("nodebug")
