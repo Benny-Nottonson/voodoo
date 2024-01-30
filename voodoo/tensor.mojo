@@ -40,48 +40,31 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         self.node = other.node
 
     fn load_tensor_for_binary_op(self, other: Tensor) raises -> Tensor[False, False]:
-        let self_static_or_single = (
-            self.node.is_static_ptr.load() or self.node.is_single_ptr.load()
-        )
-        let other_static_or_single = (
-            other.node.is_static_ptr.load() or other.node.is_single_ptr.load()
-        )
+        let self_static_or_single = self.node.is_static_ptr.load() or self.node.is_single_ptr.load()
+        let other_static_or_single = other.node.is_static_ptr.load() or other.node.is_single_ptr.load()
+        let first_greater = self.graph.nodes.len.load() < other.graph.nodes.len.load()
+        let remove_other = not (self_static_or_single or other_static_or_single)
 
-        var new_tensor = Tensor[False, False](
-            shape=self.node.shape.copy(),
-        )
+        var new_tensor = Tensor[False, False](self.node.shape.copy())
 
-        if self_static_or_single:
+        if self_static_or_single or (not other_static_or_single and first_greater):
             new_tensor.graph = other.graph
-            fuse_graphs(new_tensor.graph, self.graph)
-        elif other_static_or_single:
-            new_tensor.graph = self.graph
-            fuse_graphs(new_tensor.graph, other.graph)
+            fuse_graphs(new_tensor.graph, self.graph, remove_other)
         else:
-            if self.graph.nodes.len.load() >= other.graph.nodes.len.load():
-                new_tensor.graph = self.graph
-                fuse_graphs(new_tensor.graph, other.graph, True)
-            else:
-                new_tensor.graph = other.graph
-                fuse_graphs(new_tensor.graph, self.graph, True)
+            new_tensor.graph = self.graph
+            fuse_graphs(new_tensor.graph, other.graph, remove_other)
 
         return new_tensor
 
     fn load_tensor_for_unary_op(self) raises -> Tensor[False, False]:
-        let self_static_or_single = (
-            self.node.is_static_ptr.load() or self.node.is_single_ptr.load()
-        )
-
-        var new_tensor = Tensor[False, False](
-            shape=self.node.shape.copy(),
-        )
-
-        if self_static_or_single:
+        if self.node.is_static_ptr.load() or self.node.is_single_ptr.load():
+            let new_tensor = Tensor[False, False](self.node.shape.copy())
             fuse_graphs(new_tensor.graph, self.graph)
+            return new_tensor
         else:
+            var new_tensor = Tensor[False, False](self.node.shape.copy())
             new_tensor.graph = self.graph
-
-        return new_tensor
+            return new_tensor
 
     fn print(self, accuracy: Int = 6) raises:
         if not self.node.computed_ptr.load():
