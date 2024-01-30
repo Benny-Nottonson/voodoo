@@ -1,11 +1,11 @@
 from memory import memset_zero, memcpy
 from math import max
-from sys.ffi import external_call
-from ..constants import NELTS
-
 
 @register_passable("trivial")
 struct Vector[type: AnyRegType]:
+    """
+    A memory efficient implementation of a dynamically sized vector, passable to registers.
+    """
     var data: Pointer[type]
     var internal_len: Pointer[Int]
     var internal_cap: Int
@@ -14,11 +14,13 @@ struct Vector[type: AnyRegType]:
         let internal_cap = max(len, 8)
         let data = Pointer[type].alloc(internal_cap)
         let internal_len = Pointer[Int].alloc(1)
-        
+
         memset_zero(data, internal_cap)
         internal_len.store(len)
 
-        return Vector[type] {data: data, internal_len: internal_len, internal_cap: internal_cap}
+        return Vector[type] {
+            data: data, internal_len: internal_len, internal_cap: internal_cap
+        }
 
     @always_inline("nodebug")
     fn get_cap(self) -> Int:
@@ -51,7 +53,7 @@ struct Vector[type: AnyRegType]:
     fn push_back(inout self, elem: type):
         let len = self.get_len()
         let curr_cap = self.get_cap()
-        
+
         if len == curr_cap:
             self.size_up(curr_cap << 1)
 

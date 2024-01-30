@@ -42,7 +42,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     fn load_tensor_for_binary_op(self, other: Tensor) raises -> Tensor[False, False]:
         let self_static_or_single = self.node.is_static_ptr.load() or self.node.is_single_ptr.load()
         let other_static_or_single = other.node.is_static_ptr.load() or other.node.is_single_ptr.load()
-        let first_greater = self.graph.nodes.get_len() < other.graph.nodes.get_len()
+        let first_greater = self.graph.get_nodes().get_len() < other.graph.get_nodes().get_len()
         let remove_other = not (self_static_or_single or other_static_or_single)
 
         var new_tensor = Tensor[False, False](self.node.shape.copy())
@@ -424,21 +424,21 @@ fn fuse_graphs(
     other_graph: Graph,
     remove_other: Bool = False,
 ) raises:
-    let num_nodes = graph.nodes.get_len()
-    let memory_pool_len = graph.memory_pool.get_len()
+    let num_nodes = graph.get_nodes().get_len()
+    let memory_pool_len = graph.get_memory_pool().get_len()
 
-    for i in range(other_graph.nodes.get_len()):
-        var node = other_graph.nodes.load(i)
+    for i in range(other_graph.get_nodes().get_len()):
+        var node = other_graph.get_nodes().load(i)
         node.id_ptr.store(node.id_ptr.load() + num_nodes)
         for j in range(node.children.get_len()):
             node.children.store(j, node.children.load(j) + num_nodes)
         for j in range(node.parents.get_len()):
             node.parents.store(j, node.parents.load(j) + num_nodes)
         node.data_id_ptr.store(node.data_id_ptr.load() + memory_pool_len)
-        graph.nodes.push_back(node)
+        graph.push_back_nodes(node)
 
-    for i in range(other_graph.memory_pool.get_len()):
-        graph.memory_pool.push_back(other_graph.memory_pool.load(i))
+    for i in range(other_graph.get_memory_pool().get_len()):
+        graph.push_back_memory_pool(other_graph.get_memory_pool().load(i))
 
     for i in range(MEMORY_POOL_SIZE):
         for j in range(other_graph.memory_pool_manager.load(i).get_len()):
@@ -447,12 +447,14 @@ fn fuse_graphs(
                 other_graph.memory_pool_manager.load(i).load(j) + memory_pool_len
             )
 
-    for i in range(graph.free_node_ids.get_len()):
-        graph.free_node_ids.push_back(other_graph.free_node_ids.load(i) + num_nodes)
+    for i in range(graph.get_free_node_ids().get_len()):
+        graph.push_back_free_node_ids(
+            other_graph.get_free_node_ids().load(i) + num_nodes
+        )
 
-    for i in range(graph.free_data_ids.get_len()):
-        graph.free_data_ids.push_back(
-            other_graph.free_data_ids.load(i) + memory_pool_len
+    for i in range(graph.get_free_data_ids().get_len()):
+        graph.push_back_free_data_ids(
+            other_graph.get_free_data_ids().load(i) + memory_pool_len
         )
 
     if remove_other:
