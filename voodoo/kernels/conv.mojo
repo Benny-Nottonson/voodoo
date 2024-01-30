@@ -23,7 +23,7 @@ struct Conv1D:
         let output_width = c.shape.load(2)
 
         let im2col = im2col2D(
-            a.data.load(),
+            a.data_ptr.load(),
             a.shape,
             b.shape,
             c.shape,
@@ -35,11 +35,11 @@ struct Conv1D:
             for output_x in range(output_width):
                 for kernel_x in range(kernel_width):
                     for channel in range(channels):
-                        let kernel_value = b.data.load().load(
+                        let kernel_value = b.data_ptr.load().load(
                             channel * kernel_width + kernel_x
                         )
 
-                        let output_value = c.data.load().load(
+                        let output_value = c.data_ptr.load().load(
                             batch * output_width * channels
                             + output_x * channels
                             + channel
@@ -52,7 +52,7 @@ struct Conv1D:
                             + channel
                         )
 
-                        c.data.load().store(
+                        c.data_ptr.load().store(
                             batch * output_width * channels
                             + output_x * channels
                             + channel,
@@ -77,7 +77,7 @@ struct Conv1D:
         let output_width = c.shape.load(2)
 
         let im2col = im2col2D(
-            a.data.load(),
+            a.data_ptr.load(),
             a.shape,
             b.shape,
             c.shape,
@@ -89,11 +89,11 @@ struct Conv1D:
             for output_x in range(output_width):
                 for kernel_x in range(kernel_width):
                     for channel in range(channels):
-                        let kernel_value = b.data.load().load(
+                        let kernel_value = b.data_ptr.load().load(
                             channel * kernel_width + kernel_x
                         )
 
-                        let output_value = c.data.load().load(
+                        let output_value = c.data_ptr.load().load(
                             batch * output_width * channels
                             + output_x * channels
                             + channel
@@ -106,27 +106,27 @@ struct Conv1D:
                             + channel
                         )
 
-                        a.data.load(1).store(
+                        a.data_ptr.load(1).store(
                             batch * input_width * channels
                             + (output_x * stride_x + kernel_x - padding_x) * channels
                             + channel,
-                            a.data.load(1).load(
+                            a.data_ptr.load(1).load(
                                 batch * input_width * channels
                                 + (output_x * stride_x + kernel_x - padding_x)
                                 * channels
                                 + channel
                             )
                             + kernel_value
-                            * c.data.load(1).load(
+                            * c.data_ptr.load(1).load(
                                 batch * output_width * channels
                                 + output_x * channels
                                 + channel
                             ),
                         )
 
-                        b.data.load(1).store(
+                        b.data_ptr.load(1).store(
                             channel * kernel_width + kernel_x,
-                            b.data.load(1).load(channel * kernel_width + kernel_x)
+                            b.data_ptr.load(1).load(channel * kernel_width + kernel_x)
                             + output_value * im2col_value,
                         )
 
@@ -155,7 +155,7 @@ struct Conv2D:
         let output_height = c.shape.load(3)
 
         let im2col = im2col3D(
-            a.data.load(),
+            a.data_ptr.load(),
             a.shape,
             b.shape,
             c.shape,
@@ -165,9 +165,9 @@ struct Conv2D:
             stride_y,
         )
 
-        let a_data = a.data.load(0)
-        let b_data = b.data.load(0)
-        let c_data = c.data.load(0)
+        let a_data = a.data_ptr.load(0)
+        let b_data = b.data_ptr.load(0)
+        let c_data = c.data_ptr.load(0)
 
         DTypePointer[DType.float32].prefetch[PREFETCH_READ](a_data)
         DTypePointer[DType.float32].prefetch[PREFETCH_READ](b_data)
@@ -246,7 +246,7 @@ struct Conv2D:
         let output_height = c.shape.load(3)
 
         let im2col = im2col3D(
-            a.data.load(),
+            a.data_ptr.load(),
             a.shape,
             b.shape,
             c.shape,
@@ -256,11 +256,11 @@ struct Conv2D:
             stride_y,
         )
 
-        let b_data = b.data.load(0)
-        let c_data = c.data.load(0)
-        let a_grad = a.data.load(1)
-        let b_grad = b.data.load(1)
-        let c_grad = c.data.load(1)
+        let b_data = b.data_ptr.load(0)
+        let c_data = c.data_ptr.load(0)
+        let a_grad = a.data_ptr.load(1)
+        let b_grad = b.data_ptr.load(1)
+        let c_grad = c.data_ptr.load(1)
 
         DTypePointer[DType.float32].prefetch[PREFETCH_READ](b_data)
         DTypePointer[DType.float32].prefetch[PREFETCH_READ](c_data)

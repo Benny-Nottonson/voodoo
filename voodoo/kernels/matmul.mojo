@@ -12,7 +12,7 @@ struct MMul:
     @staticmethod
     @always_inline("nodebug")
     fn base_case_depth(depth: Int, a: Node, b: Node) -> Bool:
-        return depth == max(a.num_dims, b.num_dims) - 2
+        return depth == max(a.num_dims_ptr.load(), b.num_dims_ptr.load()) - 2
 
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
@@ -29,17 +29,17 @@ struct MMul:
     fn kernel_mmul_fw(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let M = a.shape.load(a.num_dims - 2)
-        let K = b.shape.load(b.num_dims - 2)
-        let N = c.shape.load(c.num_dims - 1)
+        let M = a.shape.load(a.num_dims_ptr.load() - 2)
+        let K = b.shape.load(b.num_dims_ptr.load() - 2)
+        let N = c.shape.load(c.num_dims_ptr.load() - 1)
 
-        let offset_a = a_index * M * a.shape.load(a.num_dims - 1)
-        let offset_b = b_index * K * b.shape.load(b.num_dims - 1)
+        let offset_a = a_index * M * a.shape.load(a.num_dims_ptr.load() - 1)
+        let offset_b = b_index * K * b.shape.load(b.num_dims_ptr.load() - 1)
         let offset_c = c_index * N * N
 
-        let a_data = a.data.load(0)
-        let b_data = b.data.load(0)
-        let c_data = c.data.load(0)
+        let a_data = a.data_ptr.load(0)
+        let b_data = b.data_ptr.load(0)
+        let c_data = c.data_ptr.load(0)
 
         DTypePointer.prefetch[PREFETCH_READ](a_data)
         DTypePointer.prefetch[PREFETCH_READ](b_data)
@@ -80,17 +80,17 @@ struct MMul:
     fn kernel_mmul_bw_a(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let M = a.shape.load(a.num_dims - 2)
-        let K = b.shape.load(b.num_dims - 2)
-        let N = c.shape.load(c.num_dims - 1)
+        let M = a.shape.load(a.num_dims_ptr.load() - 2)
+        let K = b.shape.load(b.num_dims_ptr.load() - 2)
+        let N = c.shape.load(c.num_dims_ptr.load() - 1)
 
-        let offset_a = a_index * M * a.shape.load(a.num_dims - 1)
-        let offset_b = b_index * K * b.shape.load(b.num_dims - 1)
+        let offset_a = a_index * M * a.shape.load(a.num_dims_ptr.load() - 1)
+        let offset_b = b_index * K * b.shape.load(b.num_dims_ptr.load() - 1)
         let offset_c = c_index * N * N
 
-        let a_grad = a.data.load(1)
-        let b_data = b.data.load(0)
-        let c_grad = c.data.load(1)
+        let a_grad = a.data_ptr.load(1)
+        let b_data = b.data_ptr.load(0)
+        let c_grad = c.data_ptr.load(1)
 
         DTypePointer.prefetch[PREFETCH_READ](a_grad)
         DTypePointer.prefetch[PREFETCH_WRITE](a_grad)
@@ -131,17 +131,17 @@ struct MMul:
     fn kernel_mmul_bw_b(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let M = a.shape.load(a.num_dims - 2)
-        let K = b.shape.load(b.num_dims - 2)
-        let N = c.shape.load(c.num_dims - 1)
+        let M = a.shape.load(a.num_dims_ptr.load() - 2)
+        let K = b.shape.load(b.num_dims_ptr.load() - 2)
+        let N = c.shape.load(c.num_dims_ptr.load() - 1)
 
-        let offset_a = a_index * M * a.shape.load(a.num_dims - 1)
-        let offset_b = b_index * K * b.shape.load(b.num_dims - 1)
+        let offset_a = a_index * M * a.shape.load(a.num_dims_ptr.load() - 1)
+        let offset_b = b_index * K * b.shape.load(b.num_dims_ptr.load() - 1)
         let offset_c = c_index * N * N
 
-        let a_data = a.data.load(0)
-        let b_grad = b.data.load(1)
-        let c_grad = c.data.load(1)
+        let a_data = a.data_ptr.load(0)
+        let b_grad = b.data_ptr.load(1)
+        let c_grad = c.data_ptr.load(1)
 
         DTypePointer.prefetch[PREFETCH_READ](a_data)
         DTypePointer.prefetch[PREFETCH_READ](b_grad)
@@ -161,7 +161,7 @@ struct MMul:
                 fn dot_bw[NELTS: Int](n: Int):
                     let b_off = _b_off + n
 
-                    b.data.load(1).simd_store[NELTS](
+                    b.data_ptr.load(1).simd_store[NELTS](
                         b_off,
                         c_grad.simd_load[NELTS](_c_off + n).fma(
                             a_data,

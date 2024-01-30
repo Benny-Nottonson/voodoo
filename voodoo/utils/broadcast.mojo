@@ -4,33 +4,33 @@ from voodoo import Node
 
 @always_inline("nodebug")
 fn shape_a(depth: Int, a: Node, b: Node) -> Int:
-    let diff = max(b.num_dims - a.num_dims, 0)
+    let diff = max(b.num_dims_ptr.load() - a.num_dims_ptr.load(), 0)
     return a.shape.load(depth - diff) if depth >= diff else 1
 
 
 @always_inline("nodebug")
 fn shape_b(depth: Int, a: Node, b: Node) -> Int:
-    let diff = max(a.num_dims - b.num_dims, 0)
+    let diff = max(a.num_dims_ptr.load() - b.num_dims_ptr.load(), 0)
     return b.shape.load(depth - diff) if depth >= diff else 1
 
 
 @always_inline("nodebug")
 fn strides_a(depth: Int, a: Node, b: Node) -> Int:
-    let diff = max(b.num_dims - a.num_dims, 0)
+    let diff = max(b.num_dims_ptr.load() - a.num_dims_ptr.load(), 0)
     return a.strides.load(depth - diff) if depth >= diff else a.strides.load(0)
 
 
 @always_inline("nodebug")
 fn strides_b(depth: Int, a: Node, b: Node) -> Int:
-    let diff = max(a.num_dims - b.num_dims, 0)
+    let diff = max(a.num_dims_ptr.load() - b.num_dims_ptr.load(), 0)
     return b.strides.load(depth - diff) if depth >= diff else b.strides.load(0)
 
 
 @always_inline("nodebug")
 fn get_broadcasted_shape_for_ew_op(parent1: Node, parent2: Node) -> DynamicVector[Int]:
     var shape = DynamicVector[Int]()
-    let target = parent1 if parent1.num_dims - parent2.num_dims > 0 else parent2
-    for i in range(max(parent1.num_dims, parent2.num_dims)):
+    let target = parent1 if parent1.num_dims_ptr.load() - parent2.num_dims_ptr.load() > 0 else parent2
+    for i in range(max(parent1.num_dims_ptr.load(), parent2.num_dims_ptr.load())):
         shape.push_back(target.shape.load(i))
     return shape
 

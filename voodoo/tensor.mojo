@@ -41,10 +41,10 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
 
     fn load_tensor_for_binary_op(self, other: Tensor) raises -> Tensor[False, False]:
         let self_static_or_single = (
-            self.node.is_static or self.node.is_single_ptr.load()
+            self.node.is_static_ptr.load() or self.node.is_single_ptr.load()
         )
         let other_static_or_single = (
-            other.node.is_static or other.node.is_single_ptr.load()
+            other.node.is_static_ptr.load() or other.node.is_single_ptr.load()
         )
 
         var new_tensor = Tensor[False, False](
@@ -69,7 +69,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
 
     fn load_tensor_for_unary_op(self) raises -> Tensor[False, False]:
         let self_static_or_single = (
-            self.node.is_static or self.node.is_single_ptr.load()
+            self.node.is_static_ptr.load() or self.node.is_single_ptr.load()
         )
 
         var new_tensor = Tensor[False, False](
@@ -112,27 +112,27 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
 
     @always_inline("nodebug")
     fn requires_grad(owned self) raises -> Self:
-        self.node.requires_grad = True
-        self.node.is_static = True
+        self.node.requires_grad_ptr.store(True)
+        self.node.is_static_ptr.store(True)
         self.node.computed_ptr.store(True)
         return self
 
     @always_inline("nodebug")
     fn static(owned self) raises -> Self:
         _ = self.forward()
-        self.node.is_static = True
+        self.node.is_static_ptr.store(True)
         return self
 
     @always_inline("nodebug")
     fn dynamic(owned self) raises -> Self:
-        self.node.is_static = False
+        self.node.is_static_ptr.store(False)
         self.node.is_single_ptr.store(True)
         _ = self.forward()
         return self
 
     @always_inline("nodebug")
     fn store(self, idx: Int, val: Float32):
-        self.node.data.load().store(idx, val)
+        self.node.data_ptr.load().store(idx, val)
 
     @always_inline("nodebug")
     fn free(owned self) raises:
@@ -167,11 +167,11 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     fn __getitem__(self, idx: Int) raises -> Float32:
         if not self.node.computed_ptr.load():
             _ = self.forward()
-        return self.node.data.load().load(idx)
+        return self.node.data_ptr.load().load(idx)
 
     @always_inline("nodebug")
     fn __setitem__(self, idx: Int, val: Float32) raises:
-        self.node.data.load().store(idx, val)
+        self.node.data_ptr.load().store(idx, val)
 
     @always_inline("nodebug")
     fn copy(self) raises -> Tensor[False, False]:
@@ -463,7 +463,7 @@ fn fuse_graphs(
             node.children.store(j, node.children.load(j) + num_nodes)
         for j in range(node.parents.len.load()):
             node.parents.store(j, node.parents.load(j) + num_nodes)
-        node.data_id = node.data_id + memory_pool_len
+        node.data_id_ptr.store(node.data_id_ptr.load() + memory_pool_len)
         graph_ptr.nodes.push_back(node)
 
     for i in range(other_graph.memory_pool.len.load()):
