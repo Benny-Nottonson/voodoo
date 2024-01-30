@@ -54,16 +54,16 @@ struct Graph:
 
     @always_inline("nodebug")
     fn get_free_node_id(inout self) raises -> Int:
-        if self._free_node_ids.get_len() > 0:
+        if len(self._free_data_ids) > 0:
             return self._free_node_ids.pop_back()
         else:
-            return self._nodes.get_len()
+            return len(self._nodes)
 
     @always_inline("nodebug")
     fn get_free_data_id(inout self) raises -> Int:
-        if self._free_data_ids.get_len() > 0:
+        if len(self._free_data_ids) > 0:
             return self._free_data_ids.pop_back()
-        return self._memory_pool.get_len()
+        return len(self._memory_pool)
 
     @always_inline("nodebug")
     fn load_ceiled_cap(self, cap: Int) raises -> Int:
@@ -103,7 +103,7 @@ struct Graph:
                 _ = self.forward_recursive(parents[i])
 
         let node_id = node.id_ptr.load()
-        if node_id < self._nodes.get_len():
+        if node_id < len(self._nodes):
             self._nodes.store(node_id, node)
         else:
             self._nodes.push_back(node)
@@ -143,7 +143,7 @@ struct Graph:
                 _ = self.forward_recursive(parents[i])
 
         let node_id = node.id_ptr.load()
-        if node_id < self._nodes.get_len():
+        if node_id < len(self._nodes):
             self._nodes.store(node_id, node)
         else:
             self._nodes.push_back(node)
@@ -155,7 +155,7 @@ struct Graph:
             return
 
         var idx = -1
-        for i in range(node.parents.get_len()):
+        for i in range(len(node.parents)):
             let ind = node.parents.load(i)
             let parent = self._nodes.load(node.parents.load(i))
             if (
@@ -175,7 +175,7 @@ struct Graph:
                 idx = i
                 break
 
-        for i in range(node.parents.get_len()):
+        for i in range(len(node.parents)):
             if i == idx:
                 continue
             else:
@@ -185,7 +185,7 @@ struct Graph:
         if idx == -1:
             let index = self.get_index(node.cap_ptr.load())
             var mem_pool = self._memory_pool_manager.load(index)
-            if mem_pool.get_len() > 0:
+            if len(mem_pool) > 0:
                 let data_id = mem_pool.pop_back()
                 node.data_id_ptr.store(data_id)
                 let ceiled_cap = self.load_ceiled_cap(node.cap_ptr.load())
@@ -197,7 +197,7 @@ struct Graph:
                 node.data_id_ptr.store(data_id)
                 let ceiled_cap = self.load_ceiled_cap(node.cap_ptr.load() + 1)
                 let new_data_ptr = DTypePointer[DType.float32].alloc(ceiled_cap)
-                if data_id == self._memory_pool.get_len():
+                if data_id == len(self._memory_pool):
                     self._memory_pool.push_back(new_data_ptr)
                 else:
                     self._memory_pool.store(data_id, new_data_ptr)
@@ -211,7 +211,7 @@ struct Graph:
 
         let index = self.get_index(node.cap_ptr.load())
         var mem_pool = self._memory_pool_manager.load(index)
-        if mem_pool.get_len() > 0:
+        if len(mem_pool) > 0:
             let grad_id = mem_pool.pop_back()
             node.grad_id_ptr.store(grad_id)
             let ceiled_cap = self.load_ceiled_cap(node.cap_ptr.load())
@@ -223,7 +223,7 @@ struct Graph:
             node.grad_id_ptr.store(grad_id)
             let ceiled_cap = self.load_ceiled_cap(node.cap_ptr.load())
             let new_grad_ptr = DTypePointer[DType.float32].alloc(ceiled_cap)
-            if grad_id == self._memory_pool.get_len():
+            if grad_id == len(self._memory_pool):
                 self._memory_pool.push_back(new_grad_ptr)
             else:
                 self._memory_pool.store(grad_id, new_grad_ptr)
@@ -246,7 +246,7 @@ struct Graph:
             var mem_pool = self._memory_pool_manager.load(index)
             mem_pool.push_back(data_id)
             node.data_id_ptr.store(-1)
-            node.dependencies_ptr.store(node.children.get_len())
+            node.dependencies_ptr.store(len(node.children))
             node.computed_ptr.store(False)
 
     fn release_data_forced(self, node: Node) raises:
@@ -258,7 +258,7 @@ struct Graph:
         mem_pool.push_back(data_id)
         node.data_id_ptr.store(-1)
         node.computed_ptr.store(False)
-        node.dependencies_ptr.store(node.children.get_len())
+        node.dependencies_ptr.store(len(node.children))
 
     fn release_grad_forced(self, node: Node) raises:
         if node.is_static_ptr.load() or node.grad_id_ptr.load() == -1:
@@ -271,15 +271,14 @@ struct Graph:
         node.grad_computed_ptr.store(False)
 
     fn clear_cache(inout self, reset_static_nodes: Bool = False) raises:
-        let memory_pool = self._memory_pool
         if self._last_node_id.load() != -1:
             let node = self._nodes.load(self._last_node_id.load())
             self.release_data_forced(node)
 
-        for i in range(self._nodes.get_len() - 1):
+        for i in range(len(self._nodes) - 1):
             if self._nodes.load(i).data_id_ptr.load() == -1:
                 continue
-            for j in range(i + 1, self._nodes.get_len()):
+            for j in range(i + 1, len(self._nodes)):
                 if (
                     self._nodes.load(i).id_ptr.load()
                     == self._nodes.load(j).id_ptr.load()
@@ -287,17 +286,17 @@ struct Graph:
                     self._nodes.store(i, Node(-1, -1))
                     break
 
-        for i in range(memory_pool.get_len()):
-            let array = memory_pool.load(i)
-            for j in range(i + 1, memory_pool.get_len()):
-                let other = memory_pool.load(j)
+        for i in range(len(self._memory_pool)):
+            let array = self._memory_pool.load(i)
+            for j in range(i + 1, len(self._memory_pool)):
+                let other = self._memory_pool.load(j)
                 if array == other:
-                    memory_pool.store(i, DTypePointer[DType.float32].get_null())
+                    self._memory_pool.store(i, DTypePointer[DType.float32].get_null())
 
-        let deletable_data = Vector[Bool](memory_pool.get_len())
-        for i in range(memory_pool.get_len()):
+        let deletable_data = Vector[Bool](len(self._memory_pool))
+        for i in range(len(self._memory_pool)):
             deletable_data.store(i, True)
-        for i in range(self._nodes.get_len()):
+        for i in range(len(self._nodes)):
             let node = self._nodes.load(i)
             if node.data_id_ptr.load() == -1:
                 continue
@@ -308,15 +307,15 @@ struct Graph:
                 if node.grad_id_ptr.load() != -1:
                     deletable_data.store(node.grad_id_ptr.load(), False)
 
-        for i in range(deletable_data.get_len()):
+        for i in range(len(deletable_data)):
             if (
                 deletable_data.load(i)
-                and not memory_pool.load(i) == DTypePointer[DType.float32].get_null()
+                and not self._memory_pool.load(i) == DTypePointer[DType.float32].get_null()
             ):
-                memory_pool.load(i).free()
+                self._memory_pool.load(i).free()
         deletable_data.free()
 
-        for i in range(self._nodes.get_len() - 1, -1, -1):
+        for i in range(len(self._nodes) - 1, -1, -1):
             var node = self._nodes.load(i)
             if node.data_id_ptr.load() == -1:
                 continue
@@ -335,7 +334,7 @@ struct Graph:
     fn free(self):
         self._nodes.free()
 
-        for i in range(self._memory_pool.get_len()):
+        for i in range(len(self._memory_pool)):
             self._memory_pool.load(i).free()
 
         self._memory_pool.free()
@@ -356,7 +355,7 @@ struct Graph:
             return node
 
         let operator_id = node.operator_id_ptr.load()
-        if node.parents.get_len() == 1:
+        if len(node.parents) == 1:
             let parent1 = self.forward_recursive(self._nodes.load(node.parents.load(0)))
             self.get_free_data(node)
             self._kernels.load(operator_id).get[0, UNARY_OP]()(node, parent1)
@@ -381,7 +380,7 @@ struct Graph:
     fn forward_static(inout self, node: Node) raises -> Node:
         self.release_data_forced(node)
 
-        for i in range(self._nodes.get_len()):
+        for i in range(len(self._nodes)):
             let node = self._nodes.load(i)
             if node.is_single_ptr.load():
                 continue
@@ -390,7 +389,7 @@ struct Graph:
                 node.computed_ptr.store(False)
                 node.grad_id_ptr.store(-1)
                 node.data_id_ptr.store(-1)
-            node.dependencies_ptr.store(node.children.get_len())
+            node.dependencies_ptr.store(len(node.children))
 
         _ = self.forward_recursive(node)
 
@@ -401,7 +400,7 @@ struct Graph:
             return node
 
         let operator_id = node.operator_id_ptr.load()
-        if node.parents.get_len() == 1:
+        if len(node.parents) == 1:
             let parent1 = self.forward_recursive_graph_slice(
                 self._nodes.load(node.parents.load(0))
             )
@@ -427,13 +426,13 @@ struct Graph:
         if node.grad_computed_ptr.load():
             return node
 
-        for i in range(node.children.get_len()):
+        for i in range(len(node.children)):
             let child_id = node.children.load(i)
             let child = self._nodes.load(child_id)
             _ = self.backward_recursive(child)
 
             let grad_operator_id = child.grad_operator_id_ptr.load()
-            if child.parents.get_len() == 1:
+            if len(child.parents) == 1:
                 let parent1 = self._nodes.load(child.parents.load(0))
                 _ = self.forward_recursive_graph_slice(parent1)
 
@@ -471,7 +470,7 @@ struct Graph:
 
     fn find_grad_nodes_order(inout self, node: Node) raises:
         self._grad_nodes_order.clear()
-        for i in range(self._nodes.get_len()):
+        for i in range(len(self._nodes)):
             let node = self._nodes.load(i)
             node.tmp_visited_ptr.store(False)
         self._grad_nodes_order.clear()
@@ -482,7 +481,7 @@ struct Graph:
         while it < len(backward):
             let currId = backward[it]
             let curr = self._nodes.load(currId)
-            for i in range(curr.parents.get_len()):
+            for i in range(len(curr.parents)):
                 let parId = curr.parents.load(i)
                 let par = self._nodes.load(parId)
                 if not par.tmp_visited_ptr.load():
@@ -498,7 +497,7 @@ struct Graph:
 
         self._last_node_id.store(node.id_ptr.load())
 
-        for i in range(self._nodes.get_len()):
+        for i in range(len(self._nodes)):
             let node = self._nodes.load(i)
             node.grad_computed_ptr.store(False)
 
@@ -523,7 +522,7 @@ struct Graph:
         self.get_free_grad(node)
         node.fill_grad(1.0)
         node.grad_computed_ptr.store(True)
-        for i in range(self._grad_nodes_order.get_len()):
+        for i in range(len(self._grad_nodes_order)):
             let curr_node = self._nodes.load(self._grad_nodes_order.load(i))
             _ = self.backward_recursive(curr_node)
 
@@ -685,8 +684,8 @@ struct Graph:
 
         return self.node[False](
             TensorShape(
-                old_shape.load(old_shape.get_len() - 1),
-                old_shape.load(old_shape.get_len() - 2),
+                old_shape.load(len(old_shape) - 1),
+                old_shape.load(len(old_shape) - 2),
             ),
             False,
             False,
@@ -761,35 +760,35 @@ struct Graph:
         other_graph: Graph,
         remove_other: Bool = False,
     ) raises:
-        let num_nodes = self._nodes.get_len()
-        let memory_pool_len = self._memory_pool.get_len()
+        let num_nodes = len(self._nodes)
+        let memory_pool_len = len(self._memory_pool)
 
-        for i in range(other_graph._nodes.get_len()):
-            var node = other_graph._nodes.load(i)
+        for i in range(len(other_graph._nodes)):
+            var node = other_graph._nodes.load(i) 
             node.id_ptr.store(node.id_ptr.load() + num_nodes)
-            for j in range(node.children.get_len()):
+            for j in range(len(node.children)):
                 node.children.store(j, node.children.load(j) + num_nodes)
-            for j in range(node.parents.get_len()):
+            for j in range(len(node.parents)):
                 node.parents.store(j, node.parents.load(j) + num_nodes)
             node.data_id_ptr.store(node.data_id_ptr.load() + memory_pool_len)
             self._nodes.push_back(node)
 
-        for i in range(other_graph._memory_pool.get_len()):
+        for i in range(len(other_graph._memory_pool)):
             self._memory_pool.push_back(other_graph._memory_pool.load(i))
 
         for i in range(MEMORY_POOL_SIZE):
-            for j in range(other_graph._memory_pool_manager.load(i).get_len()):
+            for j in range(len(other_graph._memory_pool_manager.load(i))):
                 var mem_pool = self._memory_pool_manager.load(i)
                 mem_pool.push_back(
                     other_graph._memory_pool_manager.load(i).load(j) + memory_pool_len
                 )
 
-        for i in range(self._free_node_ids.get_len()):
+        for i in range(len(self._free_node_ids)):
             self._free_node_ids.push_back(
                 other_graph._free_node_ids.load(i) + num_nodes
             )
 
-        for i in range(self._free_data_ids.get_len()):
+        for i in range(len(self._free_data_ids)):
             self._free_data_ids.push_back(
                 other_graph._free_data_ids.load(i) + memory_pool_len
             )

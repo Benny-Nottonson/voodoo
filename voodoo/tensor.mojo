@@ -42,7 +42,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     fn load_tensor_for_binary_op(self, other: Tensor) raises -> Tensor[False, False]:
         let self_static_or_single = self.node.is_static_ptr.load() or self.node.is_single_ptr.load()
         let other_static_or_single = other.node.is_static_ptr.load() or other.node.is_single_ptr.load()
-        let first_greater = self.graph._nodes.get_len() < other.graph._nodes.get_len()
+        let first_greater = len(self.graph._nodes) < len(other.graph._nodes)
         let remove_other = not (self_static_or_single or other_static_or_single)
 
         var new_tensor = Tensor[False, False](self.node.shape.copy())
@@ -313,7 +313,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     fn flatten(self) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
         var shape = Vector[Int]()
-        let dims = self.node.shape.get_len()
+        let dims = len(self.node.shape)
         shape.push_back(self.node.shape.load(0))
         for i in range(1, dims):
             shape.store(0, shape.load(0) * self.node.shape.load(i))

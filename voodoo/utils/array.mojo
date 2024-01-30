@@ -3,7 +3,7 @@ from math import max
 
 
 @register_passable("trivial")
-struct Vector[type: AnyRegType]:
+struct Vector[type: AnyRegType](Sized):
     var _data: Pointer[type]
     var _len: Pointer[Int]
     var _cap: Int
@@ -19,20 +19,8 @@ struct Vector[type: AnyRegType]:
         return Vector[type] {_data: _data, _len: _len, _cap: _cap}
 
     @always_inline("nodebug")
-    fn get_cap(self) -> Int:
-        return self._cap
-
-    @always_inline("nodebug")
-    fn set_cap(inout self, val: Int):
-        self._cap = val
-
-    @always_inline("nodebug")
-    fn get_len(self) -> Int:
+    fn __len__(self) -> Int:
         return self._len.load()
-
-    @always_inline("nodebug")
-    fn set_len(inout self, val: Int):
-        self._len.store(val)
 
     @always_inline("nodebug")
     fn push_back(inout self, elem: type):

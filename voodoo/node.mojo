@@ -66,20 +66,20 @@ struct Node:
         let is_single_ptr = Pointer[Bool].alloc(1)
         is_single_ptr.store(False)
         let num_dims_ptr = Pointer[Int].alloc(1)
-        num_dims_ptr.store(shape.get_len())
+        num_dims_ptr.store(len(shape))
         let cap_ptr = Pointer[Int].alloc(1)
         cap_ptr.store(1)
 
-        for i in range(shape.get_len()):
+        for i in range(len(shape)):
             cap_ptr.store(cap_ptr.load() * shape.load(i))
 
-        let strides = Vector[Int](shape.get_len())
-        strides.store(shape.get_len() - 1, 1)
-        for i in range(shape.get_len() - 1):
+        let strides = Vector[Int](len(shape))
+        strides.store(len(shape) - 1, 1)
+        for i in range(len(shape) - 1):
             strides.store(
-                shape.get_len() - i - 2,
-                strides.load(shape.get_len() - i - 1)
-                * shape.load(shape.get_len() - i - 1),
+                len(shape) - i - 2,
+                strides.load(len(shape) - i - 1)
+                * shape.load(len(shape) - i - 1),
             )
 
         return Node {
@@ -154,9 +154,9 @@ struct Node:
             self.fill(0.0)
 
     fn he_normal(self) raises:
-        let fan_in: Float32 = self.shape.load(self.shape.get_len() - 2)
+        let fan_in: Float32 = self.shape.load(len(self.shape) - 2)
         let scale = sqrt(2.0 / fan_in)
-        self.random_normal(scale, 0.0)
+        self.random_normal(scale, 0.0) 
 
     fn random_normal(self, std: Float32 = 1.0, mu: Float32 = 0.0):
         seed()
