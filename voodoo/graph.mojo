@@ -22,14 +22,14 @@ from tensor import TensorShape
 
 @register_passable("trivial")
 struct Graph:
-    var nodes: Vector[Node]
-    var memory_pool: Vector[DTypePointer[DType.float32]]
-    var memory_pool_manager: Pointer[Vector[Int]]
-    var free_node_ids: Vector[Int]
-    var free_data_ids: Vector[Int]
-    var last_node_id: Pointer[Int]
-    var kernels: Pointer[OP_TUPLE]
-    var grad_nodes_order: Vector[Int]
+    var _nodes: Vector[Node]
+    var _memory_pool: Vector[DTypePointer[DType.float32]]
+    var _memory_pool_manager: Pointer[Vector[Int]]
+    var _free_node_ids: Vector[Int]
+    var _free_data_ids: Vector[Int]
+    var _last_node_id: Pointer[Int]
+    var _kernels: Pointer[OP_TUPLE]
+    var _grad_nodes_order: Vector[Int]
 
     fn __init__() -> Self:
         let memory_pool_manager = Pointer[Vector[Int]].alloc(MEMORY_POOL_SIZE)
@@ -42,99 +42,99 @@ struct Graph:
         last_node_id.store(-1)
 
         return Graph {
-            nodes: Vector[Node](),
-            memory_pool: Vector[DTypePointer[DType.float32]](),
-            memory_pool_manager: memory_pool_manager,
-            free_node_ids: Vector[Int](),
-            free_data_ids: Vector[Int](),
-            last_node_id: last_node_id,
-            kernels: load_kernels(),
-            grad_nodes_order: Vector[Int](),
+            _nodes: Vector[Node](),
+            _memory_pool: Vector[DTypePointer[DType.float32]](),
+            _memory_pool_manager: memory_pool_manager,
+            _free_node_ids: Vector[Int](),
+            _free_data_ids: Vector[Int](),
+            _last_node_id: last_node_id,
+            _kernels: load_kernels(),
+            _grad_nodes_order: Vector[Int](),
         }
-
+    
     @always_inline("nodebug")
     fn get_nodes(self) -> Vector[Node]:
-        return self.nodes
+        return self._nodes
 
     @always_inline("nodebug")
     fn push_back_nodes(inout self, node: Node) raises:
-        self.nodes.push_back(node)
+        self._nodes.push_back(node)
 
     @always_inline("nodebug")
     fn get_memory_pool(self) -> Vector[DTypePointer[DType.float32]]:
-        return self.memory_pool
+        return self._memory_pool
 
     @always_inline("nodebug")
     fn push_back_memory_pool(inout self, data: DTypePointer[DType.float32]) raises:
-        self.memory_pool.push_back(data)
+        self._memory_pool.push_back(data)
 
     @always_inline("nodebug")
     fn get_memory_pool_manager(self) -> Pointer[Vector[Int]]:
-        return self.memory_pool_manager
+        return self._memory_pool_manager
 
     @always_inline("nodebug")
     fn get_free_node_ids(self) -> Vector[Int]:
-        return self.free_node_ids
+        return self._free_node_ids
 
     @always_inline("nodebug")
     fn push_back_free_node_ids(inout self, node_id: Int) raises:
-        self.free_node_ids.push_back(node_id)
+        self._free_node_ids.push_back(node_id)
 
     @always_inline("nodebug")
     fn pop_back_free_node_ids(inout self) raises -> Int:
-        return self.free_node_ids.pop_back()
+        return self._free_node_ids.pop_back()
 
     @always_inline("nodebug")
     fn get_free_data_ids(self) -> Vector[Int]:
-        return self.free_data_ids
+        return self._free_data_ids
 
     @always_inline("nodebug")
     fn push_back_free_data_ids(inout self, data_id: Int) raises:
-        self.free_data_ids.push_back(data_id)
+        self._free_data_ids.push_back(data_id)
 
     @always_inline("nodebug")
     fn pop_back_free_data_ids(inout self) raises -> Int:
-        return self.free_data_ids.pop_back()
+        return self._free_data_ids.pop_back()
 
     @always_inline("nodebug")
     fn get_last_node_id(self) -> Int:
-        return self.last_node_id.load()
+        return self._last_node_id.load()
 
     @always_inline("nodebug")
     fn set_last_node_id(inout self, node_id: Int) raises:
-        self.last_node_id.store(node_id)
+        self._last_node_id.store(node_id)
 
     @always_inline("nodebug")
     fn free_last_node_id(self):
-        self.last_node_id.free()
+        self._last_node_id.free()
 
     @always_inline("nodebug")
     fn get_kernel(self, idx: Int) -> OP_TUPLE:
-        return self.kernels.load(idx)
+        return self._kernels.load(idx)
 
     @always_inline("nodebug")
     fn free_kernels(self):
-        self.kernels.free()
+        self._kernels.free()
         
     @always_inline("nodebug")
     fn get_grad_nodes_order(self) -> Vector[Int]:
-        return self.grad_nodes_order
+        return self._grad_nodes_order
 
     @always_inline("nodebug")
     fn push_back_grad_nodes_order(inout self, node_id: Int) raises:
-        self.grad_nodes_order.push_back(node_id)
+        self._grad_nodes_order.push_back(node_id)
 
     @always_inline("nodebug")
     fn pop_back_grad_nodes_order(inout self) raises -> Int:
-        return self.grad_nodes_order.pop_back()
+        return self._grad_nodes_order.pop_back()
 
     @always_inline("nodebug")
     fn free_grad_nodes_order(self):
-        self.grad_nodes_order.free()
+        self._grad_nodes_order.free()
 
     @always_inline("nodebug")
     fn clear_grad_nodes_order(inout self):
-        self.grad_nodes_order.clear()
+        self._grad_nodes_order.clear()
 
 
     @always_inline("nodebug")

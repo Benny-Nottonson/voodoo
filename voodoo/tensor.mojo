@@ -441,10 +441,10 @@ fn fuse_graphs(
         graph.push_back_memory_pool(other_graph.get_memory_pool().load(i))
 
     for i in range(MEMORY_POOL_SIZE):
-        for j in range(other_graph.memory_pool_manager.load(i).get_len()):
-            var mem_pool = graph.memory_pool_manager.load(i)
+        for j in range(other_graph.get_memory_pool_manager().load(i).get_len()):
+            var mem_pool = graph.get_memory_pool_manager().load(i)
             mem_pool.push_back(
-                other_graph.memory_pool_manager.load(i).load(j) + memory_pool_len
+                other_graph.get_memory_pool_manager().load(i).load(j) + memory_pool_len
             )
 
     for i in range(graph.get_free_node_ids().get_len()):
