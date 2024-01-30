@@ -30,28 +30,31 @@ struct Vector[type: AnyRegType]:
         self.internal_cap.store(val)
 
     @always_inline("nodebug")
-    fn size_up(self, new_cap: Int):
-        # TODO: THIS IS THE PROBLEM, NOT ACTUALLY CHANGING THE DATA
+    fn size_up(inout self, new_cap: Int):
         let new_data = Pointer[type].alloc(new_cap)
         memset_zero(new_data, new_cap)
         memcpy(new_data, self.data, self.get_cap())
         self.set_cap(new_cap)
+        self.data.free()
+        self.data = new_data
 
     @always_inline("nodebug")
-    fn push_back(self, elem: type):
+    fn push_back(inout self, elem: type):
         if self.len.load() == self.get_cap():
             self.size_up(2 * self.get_cap())
         self.data.store(self.len.load(), elem)
         self.len.store(self.len.load() + 1)
 
     @always_inline("nodebug")
-    fn size_down(self, new_cap: Int):
+    fn size_down(inout self, new_cap: Int):
         let new_data = Pointer[type].alloc(new_cap)
         memcpy(new_data, self.data, new_cap)
         self.set_cap(new_cap)
+        self.data.free()
+        self.data = new_data
 
     @always_inline("nodebug")
-    fn pop_back(self) -> type:
+    fn pop_back(inout self) -> type:
         self.len.store(self.len.load() - 1)
         let tmp = self.data.load(self.len.load())
 
@@ -75,7 +78,7 @@ struct Vector[type: AnyRegType]:
         self.internal_cap.free()
 
     @always_inline("nodebug")
-    fn clear(self):
+    fn clear(inout self):
         self.size_down(8)
         self.len.store(0)
         self.set_cap(8)

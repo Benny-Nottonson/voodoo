@@ -20,7 +20,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         inout self,
         shape: TensorShape,
     ) raises:
-        let _shape = Vector[Int]()
+        var _shape = Vector[Int]()
         for i in range(shape.rank()):
             _shape.push_back(shape[i])
 
@@ -58,7 +58,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
 
     fn load_tensor_for_unary_op(self) raises -> Tensor[False, False]:
         if self.node.is_static_ptr.load() or self.node.is_single_ptr.load():
-            let new_tensor = Tensor[False, False](self.node.shape.copy())
+            var new_tensor = Tensor[False, False](self.node.shape.copy())
             fuse_graphs(new_tensor.graph, self.graph)
             return new_tensor
         else:
@@ -66,7 +66,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
             new_tensor.graph = self.graph
             return new_tensor
 
-    fn print(self, accuracy: Int = 6) raises:
+    fn print(inout self, accuracy: Int = 6) raises:
         if not self.node.computed_ptr.load():
             _ = self.forward()
         self.node.print(accuracy)
@@ -115,17 +115,17 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         self.node.free()
 
     @always_inline("nodebug")
-    fn forward(self, keep_forward_order: Bool = False) raises -> Self:
+    fn forward(inout self, keep_forward_order: Bool = False) raises -> Self:
         _ = self.graph.forward(self.node, keep_forward_order)
         return self
 
     @always_inline("nodebug")
-    fn forward_static(self) raises -> Self:
+    fn forward_static(inout self) raises -> Self:
         _ = self.graph.forward_static(self.node)
         return self
 
     @always_inline("nodebug")
-    fn backward(self) raises:
+    fn backward(inout self) raises:
         if not self.node.computed_ptr.load():
             _ = self.forward()
         self.graph.backward(self.node)
@@ -135,7 +135,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         self.graph.optimizer_step[type, lr]()
 
     @always_inline("nodebug")
-    fn __getitem__(self, idx: Int) raises -> Float32:
+    fn __getitem__(inout self, idx: Int) raises -> Float32:
         if not self.node.computed_ptr.load():
             _ = self.forward()
         return self.node.data_ptr.load().load(idx)
@@ -312,7 +312,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     @always_inline("nodebug")
     fn flatten(self) raises -> Tensor[False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
-        let shape = Vector[Int]()
+        var shape = Vector[Int]()
         let dims = self.node.shape.len.load()
         shape.push_back(self.node.shape.load(0))
         for i in range(1, dims):
@@ -420,12 +420,12 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
 
 
 fn fuse_graphs(
-    graph_ptr: Graph,
+    inout graph: Graph,
     other_graph: Graph,
     remove_other: Bool = False,
 ) raises:
-    let num_nodes = graph_ptr.nodes.len.load()
-    let memory_pool_len = graph_ptr.memory_pool.len.load()
+    let num_nodes = graph.nodes.len.load()
+    let memory_pool_len = graph.memory_pool.len.load()
 
     for i in range(other_graph.nodes.len.load()):
         var node = other_graph.nodes.load(i)
@@ -435,22 +435,23 @@ fn fuse_graphs(
         for j in range(node.parents.len.load()):
             node.parents.store(j, node.parents.load(j) + num_nodes)
         node.data_id_ptr.store(node.data_id_ptr.load() + memory_pool_len)
-        graph_ptr.nodes.push_back(node)
+        graph.nodes.push_back(node)
 
     for i in range(other_graph.memory_pool.len.load()):
-        graph_ptr.memory_pool.push_back(other_graph.memory_pool.load(i))
+        graph.memory_pool.push_back(other_graph.memory_pool.load(i))
 
     for i in range(MEMORY_POOL_SIZE):
         for j in range(other_graph.memory_pool_manager.load(i).len.load()):
-            graph_ptr.memory_pool_manager.load(i).push_back(
+            var mem_pool = graph.memory_pool_manager.load(i)
+            mem_pool.push_back(
                 other_graph.memory_pool_manager.load(i).load(j) + memory_pool_len
             )
 
-    for i in range(graph_ptr.free_node_ids.len.load()):
-        graph_ptr.free_node_ids.push_back(other_graph.free_node_ids.load(i) + num_nodes)
+    for i in range(graph.free_node_ids.len.load()):
+        graph.free_node_ids.push_back(other_graph.free_node_ids.load(i) + num_nodes)
 
-    for i in range(graph_ptr.free_data_ids.len.load()):
-        graph_ptr.free_data_ids.push_back(
+    for i in range(graph.free_data_ids.len.load()):
+        graph.free_data_ids.push_back(
             other_graph.free_data_ids.load(i) + memory_pool_len
         )
 

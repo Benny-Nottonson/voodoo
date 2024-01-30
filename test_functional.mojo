@@ -31,7 +31,7 @@ fn main() raises:
     let every = 1000
     let num_epochs = 20000
 
-    let input = Tensor(data_shape).initialize["he_normal", 0, 1]()
+    var input = Tensor(data_shape).initialize["he_normal", 0, 1]()
     let true_vals = Tensor(data_shape)
 
     var x = (input @ W1 + b1).compute_activation["relu"]()
@@ -46,7 +46,8 @@ fn main() raises:
         for i in range(input.initialize["random_uniform", 0, 1]().node.cap_ptr.load()):
             true_vals[i] = math.sin(15.0 * input[i])
 
-        avg_loss += loss.forward_static()[0]
+        var computed_loss = loss.forward_static()
+        avg_loss += computed_loss[0]
         loss.backward()
         loss.optimize["sgd", 0.01]()
 
