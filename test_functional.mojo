@@ -31,7 +31,7 @@ fn main() raises:
     let every = 1000
     let num_epochs = 20000
 
-    let input = Tensor(data_shape).initialize["he_normal", 0, 1]().dynamic()
+    let input = Tensor(data_shape).initialize["he_normal", 0, 1]()
     let true_vals = Tensor(data_shape)
 
     var x = (input @ W1 + b1).compute_activation["relu"]()

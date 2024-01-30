@@ -17,7 +17,6 @@ struct Node:
     var grad_computed_ptr: Pointer[Bool]
     var operator_id_ptr: Pointer[Int]
     var grad_operator_id_ptr: Pointer[Int]
-    var requires_grad_ptr: Pointer[Bool]
     var tmp_visited_ptr: Pointer[Bool]
     var checkpoint_ptr: Pointer[Bool]
     var is_single_ptr: Pointer[Bool]
@@ -96,7 +95,6 @@ struct Node:
             grad_computed_ptr: grad_computed_ptr,
             operator_id_ptr: operator_id_ptr,
             grad_operator_id_ptr: grad_operator_id_ptr,
-            requires_grad_ptr: requires_grad_ptr,
             tmp_visited_ptr: tmp_visited_ptr,
             checkpoint_ptr: checkpoint_ptr,
             is_single_ptr: is_single_ptr,
@@ -136,101 +134,28 @@ struct Node:
         initialization_function: String, val: Float32 = 0, val2: Float32 = 0
     ](self):
         @parameter
-        if initialization_function == "glorot_normal":
-            self.glorot_normal()
-        elif initialization_function == "glorot_uniform":
-            self.glorot_uniform()
-        elif initialization_function == "he_normal":
+        if initialization_function == "he_normal":
             self.he_normal()
-        elif initialization_function == "he_uniform":
-            self.he_uniform()
-        elif initialization_function == "identity":
-            self.identity()
-        elif initialization_function == "lecun_normal":
-            self.lecun_normal()
-        elif initialization_function == "lecun_uniform":
-            self.lecun_uniform()
-        elif initialization_function == "ones":
-            self.ones()
-        elif initialization_function == "random_normal":
-            self.random_normal()
         elif initialization_function == "random_uniform":
             self.random_uniform(val, val2)
-        elif initialization_function == "truncated_normal":
-            self.truncated_normal()
+        elif initialization_function == "random_normal":
+            self.random_normal(val, val2)
+        elif initialization_function == "ones":
+            self.fill(1.0)
         elif initialization_function == "zeros":
-            self.zeros()
-        elif initialization_function == "fill":
-            self.fill(val)
-        elif initialization_function == "fill_incr":
-            self.fill_incr()
-        elif initialization_function == "grad_fill_incr":
-            self.grad_fill_incr()
+            self.fill(0.0)
         else:
             warn(
                 "Invalid initialization function: "
                 + initialization_function
                 + " using zeros\n"
             )
-            self.zeros()
-
-    fn glorot_normal(self):
-        let fan_in = self.shape.load(self.shape.len.load() - 2)
-        let fan_out = self.shape.load(self.shape.len.load() - 1)
-        let scale = sqrt(2.0 / Float32(fan_in + fan_out))
-        self.random_normal(scale, 0.0)
-
-    fn glorot_uniform(self):
-        let fan_in: Float32 = self.shape.load(self.shape.len.load() - 2)
-        let fan_out: Float32 = self.shape.load(self.shape.len.load() - 1)
-        let scale = sqrt(6.0 / (fan_in + fan_out))
-        self.random_uniform(-scale, scale)
+            self.fill(0.0)
 
     fn he_normal(self):
         let fan_in: Float32 = self.shape.load(self.shape.len.load() - 2)
         let scale = sqrt(2.0 / fan_in)
         self.random_normal(scale, 0.0)
-
-    fn he_uniform(self):
-        let fan_in = self.shape.load(self.shape.len.load() - 2)
-        let scale = sqrt(6.0 / Float32(fan_in))
-        self.random_uniform(-scale, scale)
-
-    fn he_random(self):
-        seed()
-        let pi = 3.14159265358979
-        let u1 = DTypePointer[DType.float32].alloc(self.cap_ptr.load())
-        let u2 = DTypePointer[DType.float32].alloc(self.cap_ptr.load())
-        rand(u1, self.cap_ptr.load())
-        rand(u2, self.cap_ptr.load())
-        for i in range(self.cap_ptr.load()):
-            let z = sqrt(-2.0 * log(u1.load(i))) * cos(2.0 * pi * u2.load(i))
-            let sigma = sqrt(2.0 / Float32(self.shape.load(self.shape.len.load() - 1)))
-            self.data_ptr.load(0).store(i, z * sigma)
-
-    fn identity(self):
-        let row: Int = self.shape.load(self.num_dims_ptr.load() - 2)
-        let cols: Int = self.shape.load(self.num_dims_ptr.load() - 1)
-        let col_strides: Int = (self.strides.load(0) * self.shape.load(0)) // cols
-        for i in range(col_strides):
-            for j in range(cols):
-                if i == j:
-                    self.data_ptr.load(0).store(i * cols + j, 1.0)
-                else:
-                    self.data_ptr.load(0).store(i * cols + j, 0.0)
-
-    fn lecun_normal(self):
-        let fan_in = self.shape.load(self.shape.len.load() - 2)
-        let scale = sqrt(1.0 / Float32(fan_in))
-        self.random_normal(scale, 0.0)
-
-    fn lecun_uniform(self):
-        let fan_in = self.shape.load(self.shape.len.load() - 2)
-        let scale = sqrt(3.0 / Float32(fan_in))
-        self.random_uniform(-scale, scale)
-
-    fn ones(self):
-        self.fill(1.0)
 
     fn random_normal(self, std: Float32 = 1.0, mu: Float32 = 0.0):
         seed()
@@ -251,53 +176,6 @@ struct Node:
                 i, self.data_ptr.load(0).load(i) * (max - min) + min
             )
 
-    fn truncated_normal(self, std: Float32 = 1.0, mu: Float32 = 0.0):
-        seed()
-        let pi = 3.14159265358979
-        let u1 = DTypePointer[DType.float32].alloc(self.cap_ptr.load())
-        let u2 = DTypePointer[DType.float32].alloc(self.cap_ptr.load())
-        rand(u1, self.cap_ptr.load())
-        rand(u2, self.cap_ptr.load())
-        for i in range(self.cap_ptr.load()):
-            let z = sqrt(-2.0 * log(u1.load(i))) * cos(2.0 * pi * u2.load(i))
-            if z > -2.0 and z < 2.0:
-                self.data_ptr.load(0).store(i, z * std + mu)
-            else:
-                self.data_ptr.load(0).store(i, 0.0)
-
-    fn zeros(self):
-        self.fill(0.0)
-
-    fn orthoganal(self, gain: Float32 = 1.0):
-        let row: Int = self.shape.load(self.num_dims_ptr.load() - 2)
-        let cols: Int = self.shape.load(self.num_dims_ptr.load() - 1)
-        let col_strides: Int = (self.strides.load(0) * self.shape.load(0)) // cols
-        let tmp = DTypePointer[DType.float32](col_strides)
-        for i in range(col_strides):
-            for j in range(cols):
-                if i == j:
-                    tmp.store(i * cols + j, 1.0)
-                else:
-                    tmp.store(i * cols + j, 0.0)
-        seed()
-        let pi = 3.14159265358979
-        let u1 = DTypePointer[DType.float32].alloc(col_strides)
-        let u2 = DTypePointer[DType.float32].alloc(col_strides)
-        rand(u1, col_strides)
-        rand(u2, col_strides)
-        for i in range(col_strides):
-            let z = sqrt(-2.0 * log(u1.load(i))) * cos(2.0 * pi * u2.load(i))
-            tmp.store(i, z)
-        let tmp2 = DTypePointer[DType.float32](col_strides)
-        for i in range(col_strides):
-            tmp2.store(i, tmp.load(i))
-        for i in range(col_strides):
-            for j in range(cols):
-                tmp.store(i * cols + j, tmp2.load(i) * gain)
-        for i in range(col_strides):
-            for j in range(cols):
-                self.data_ptr.load(0).store(i * cols + j, tmp.load(i * cols + j))
-
     fn free(self):
         self.id_ptr.free()
         self.data_id_ptr.free()
@@ -313,7 +191,6 @@ struct Node:
         self.grad_computed_ptr.free()
         self.operator_id_ptr.free()
         self.grad_operator_id_ptr.free()
-        self.requires_grad_ptr.free()
         self.tmp_visited_ptr.free()
         self.checkpoint_ptr.free()
         self.is_single_ptr.free()

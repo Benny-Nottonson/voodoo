@@ -68,37 +68,10 @@ struct Graph:
             grad_nodes_order: grad_nodes_order,
         }
 
-    fn print_memory_pool_manager(self) raises:
-        @unroll
-        for i in range(MEMORY_POOL_SIZE):
-            let ceiled_cap = exp2(Float32(i)).to_int()
-            print_no_newline("    cap:", ceiled_cap)
-            print_no_newline(" - data_ids: [")
-            for j in range(self.memory_pool_manager.load(i).len.load()):
-                print_no_newline(self.memory_pool_manager.load(i).load(j))
-                if j < self.memory_pool_manager.load(i).len.load() - 1:
-                    print_no_newline(", ")
-            print("]")
-
-    fn print(self, accuracy: Int = 6) raises:
-        print("\nGraph (Nodes):")
-        for i in range(self.nodes.len.load()):
-            let node = self.nodes.load(i)
-            if node.data_id_ptr.load() == -1:
-                continue
-            node.print(accuracy)
-
     @always_inline("nodebug")
     fn get_free_node_id(self) raises -> Int:
         if self.free_node_ids.len.load() > 0:
             return self.free_node_ids.pop_back()
-        else:
-            return self.nodes.len.load()
-
-    @always_inline("nodebug")
-    fn get_free_node_id_no_pop(self) raises -> Int:
-        if self.free_node_ids.len.load() > 0:
-            return self.free_node_ids.load(self.free_node_ids.len.load() - 1)
         else:
             return self.nodes.len.load()
 
@@ -536,7 +509,7 @@ struct Graph:
                 let par = self.nodes.load(parId)
                 if not par.tmp_visited_ptr.load():
                     backward.push_back(parId)
-            if curr.requires_grad_ptr.load() or curr.checkpoint_ptr.load():
+            if curr.is_static_ptr.load() or curr.checkpoint_ptr.load():
                 self.grad_nodes_order.push_back(currId)
             let node = self.nodes.load(currId)
             node.tmp_visited_ptr.store(True)

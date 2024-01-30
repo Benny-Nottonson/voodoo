@@ -31,7 +31,7 @@ fn main() raises:
     let num_epochs = 20000
 
     var input = Tensor(data_shape).initialize["he_normal", 0, 1]()
-    input = input.dynamic()
+    input = input
     let true_vals = Tensor(data_shape)
 
     var x = input_layer.forward(input)

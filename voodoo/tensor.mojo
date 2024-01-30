@@ -98,21 +98,20 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     @always_inline("nodebug")
     fn fill(owned self, val: Float32) -> Self:
         self.node.fill(val)
-        return self^
+        return self ^
 
     @always_inline("nodebug")
     fn fill_incr(owned self) raises -> Self:
         self.node.fill_incr()
-        return self^
+        return self ^
 
     @always_inline("nodebug")
     fn grad_fill_incr(owned self) raises -> Self:
         self.node.grad_fill_incr()
-        return self^
+        return self ^
 
     @always_inline("nodebug")
     fn requires_grad(owned self) raises -> Self:
-        self.node.requires_grad_ptr.store(True)
         self.node.is_static_ptr.store(True)
         self.node.computed_ptr.store(True)
         return self ^
@@ -121,13 +120,6 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     fn static(owned self) raises -> Self:
         _ = self.forward()
         self.node.is_static_ptr.store(True)
-        return self ^
-
-    @always_inline("nodebug")
-    fn dynamic(owned self) raises -> Self:
-        self.node.is_static_ptr.store(False)
-        self.node.is_single_ptr.store(True)
-        _ = self.forward()
         return self ^
 
     @always_inline("nodebug")
