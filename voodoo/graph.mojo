@@ -475,7 +475,7 @@ struct Graph:
     fn find_grad_nodes_order(inout self, node: Node) raises:
         self._grad_nodes_order.clear()
         for i in range(len(self._nodes)):
-            let node = self._nodes.load(i)
+            var node = self._nodes.load(i)
             node.set_tmp_visited(False)
         self._grad_nodes_order.clear()
 
@@ -492,7 +492,7 @@ struct Graph:
                     backward.push_back(parId)
             if curr.get_is_static() or curr.get_checkpoint():
                 self._grad_nodes_order.push_back(currId)
-            let node = self._nodes.load(currId)
+            var node = self._nodes.load(currId)
             node.set_tmp_visited(True)
             it += 1
 
