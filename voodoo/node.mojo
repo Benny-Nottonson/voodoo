@@ -11,10 +11,10 @@ struct Node:
     var _data_ptr: Pointer[DTypePointer[DType.float32]]
     var _parents: Vector[Int]
     var _children: Vector[Int]
-    var _dependencies_ptr: Pointer[Int]
-    var _is_static_ptr: Pointer[Bool]
-    var _computed_ptr: Pointer[Bool]
-    var _grad_computed_ptr: Pointer[Bool]
+    var _dependencies_ptr: Pointer[Int] # Has to be a pointer
+    var _is_static: Bool
+    var _computed_ptr: Pointer[Bool] # Has to be a pointer
+    var _grad_computed_ptr: Pointer[Bool] # Has to be a pointer
     var _operator_id: Int
     var _grad_operator_id: Int
     var _tmp_visited: Bool
@@ -47,8 +47,6 @@ struct Node:
         let children = Vector[Int]()
         let dependencies_ptr = Pointer[Int].alloc(1)
         dependencies_ptr.store(0)
-        let is_static_ptr = Pointer[Bool].alloc(1)
-        is_static_ptr.store(is_static)
         let computed_ptr = Pointer[Bool].alloc(1)
         computed_ptr.store(is_static)
         let grad_computed_ptr = Pointer[Bool].alloc(1)
@@ -74,7 +72,7 @@ struct Node:
             _parents: parents,
             _children: children,
             _dependencies_ptr: dependencies_ptr,
-            _is_static_ptr: is_static_ptr,
+            _is_static: is_static,
             _computed_ptr: computed_ptr,
             _grad_computed_ptr: grad_computed_ptr,
             _operator_id: -1,
@@ -163,11 +161,11 @@ struct Node:
 
     @always_inline("nodebug")
     fn get_is_static(self) -> Bool:
-        return self._is_static_ptr.load()
+        return self._is_static
 
     @always_inline("nodebug")
-    fn set_is_static(self, is_static: Bool):
-        self._is_static_ptr.store(is_static)
+    fn set_is_static(inout self, is_static: Bool):
+        self._is_static = is_static
 
     @always_inline("nodebug")
     fn get_computed(self) -> Bool:
@@ -327,7 +325,6 @@ struct Node:
         self._parents.free()
         self._children.free()
         self._dependencies_ptr.free()
-        self._is_static_ptr.free()
         self._computed_ptr.free()
         self._grad_computed_ptr.free()
         self._shape.free()
