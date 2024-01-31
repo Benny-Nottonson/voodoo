@@ -5,26 +5,26 @@ from .utils import Vector, warn
 
 @register_passable("trivial")
 struct Node:
-    var id_ptr: Pointer[Int]
-    var data_id_ptr: Pointer[Int]
-    var grad_id_ptr: Pointer[Int]
-    var data_ptr: Pointer[DTypePointer[DType.float32]]
-    var parents: Vector[Int]
-    var children: Vector[Int]
-    var dependencies_ptr: Pointer[Int]
-    var is_static_ptr: Pointer[Bool]
-    var computed_ptr: Pointer[Bool]
-    var grad_computed_ptr: Pointer[Bool]
-    var operator_id_ptr: Pointer[Int]
-    var grad_operator_id_ptr: Pointer[Int]
-    var tmp_visited_ptr: Pointer[Bool]
-    var checkpoint_ptr: Pointer[Bool]
-    var is_single_ptr: Pointer[Bool]
-    var cap_ptr: Pointer[Int]
-    var num_dims_ptr: Pointer[Int]
-    var shape: Vector[Int]
-    var strides: Vector[Int]
-    var other_params: Vector[Int]
+    var _id_ptr: Pointer[Int]
+    var _data_id_ptr: Pointer[Int]
+    var _grad_id_ptr: Pointer[Int]
+    var _data_ptr: Pointer[DTypePointer[DType.float32]]
+    var _parents: Vector[Int]
+    var _children: Vector[Int]
+    var _dependencies_ptr: Pointer[Int]
+    var _is_static_ptr: Pointer[Bool]
+    var _computed_ptr: Pointer[Bool]
+    var _grad_computed_ptr: Pointer[Bool]
+    var _operator_id_ptr: Pointer[Int]
+    var _grad_operator_id_ptr: Pointer[Int]
+    var _tmp_visited_ptr: Pointer[Bool]
+    var _checkpoint_ptr: Pointer[Bool]
+    var _is_single_ptr: Pointer[Bool]
+    var _cap_ptr: Pointer[Int]
+    var _num_dims_ptr: Pointer[Int]
+    var _shape: Vector[Int]
+    var _strides: Vector[Int]
+    var _other_params: Vector[Int]
 
     fn __init__(
         id: Int,
@@ -78,58 +78,213 @@ struct Node:
         for i in range(len(shape) - 1):
             strides.store(
                 len(shape) - i - 2,
-                strides.load(len(shape) - i - 1)
-                * shape.load(len(shape) - i - 1),
+                strides.load(len(shape) - i - 1) * shape.load(len(shape) - i - 1),
             )
 
         return Node {
-            id_ptr: id_ptr,
-            data_id_ptr: data_id_ptr,
-            grad_id_ptr: grad_id_ptr,
-            data_ptr: data_ptr,
-            parents: parents,
-            children: children,
-            dependencies_ptr: dependencies_ptr,
-            is_static_ptr: is_static_ptr,
-            computed_ptr: computed_ptr,
-            grad_computed_ptr: grad_computed_ptr,
-            operator_id_ptr: operator_id_ptr,
-            grad_operator_id_ptr: grad_operator_id_ptr,
-            tmp_visited_ptr: tmp_visited_ptr,
-            checkpoint_ptr: checkpoint_ptr,
-            is_single_ptr: is_single_ptr,
-            cap_ptr: cap_ptr,
-            num_dims_ptr: num_dims_ptr,
-            shape: shape,
-            strides: strides,
-            other_params: other_params,
+            _id_ptr: id_ptr,
+            _data_id_ptr: data_id_ptr,
+            _grad_id_ptr: grad_id_ptr,
+            _data_ptr: data_ptr,
+            _parents: parents,
+            _children: children,
+            _dependencies_ptr: dependencies_ptr,
+            _is_static_ptr: is_static_ptr,
+            _computed_ptr: computed_ptr,
+            _grad_computed_ptr: grad_computed_ptr,
+            _operator_id_ptr: operator_id_ptr,
+            _grad_operator_id_ptr: grad_operator_id_ptr,
+            _tmp_visited_ptr: tmp_visited_ptr,
+            _checkpoint_ptr: checkpoint_ptr,
+            _is_single_ptr: is_single_ptr,
+            _cap_ptr: cap_ptr,
+            _num_dims_ptr: num_dims_ptr,
+            _shape: shape,
+            _strides: strides,
+            _other_params: other_params,
         }
 
     @always_inline("nodebug")
+    fn get_id(self) -> Int:
+        return self._id_ptr.load()
+
+    @always_inline("nodebug")
+    fn set_id(self, id: Int):
+        self._id_ptr.store(id)
+
+    @always_inline("nodebug")
+    fn get_data_id(self) -> Int:
+        return self._data_id_ptr.load()
+
+    @always_inline("nodebug")
+    fn set_data_id(self, id: Int):
+        self._data_id_ptr.store(id)
+
+    @always_inline("nodebug")
+    fn get_grad_id(self) -> Int:
+        return self._grad_id_ptr.load()
+
+    @always_inline("nodebug")
+    fn set_grad_id(self, id: Int):
+        self._grad_id_ptr.store(id)
+
+    @always_inline("nodebug")
+    fn get_data(self) -> DTypePointer[DType.float32]:
+        return self._data_ptr.load(0)
+
+    @always_inline("nodebug")
+    fn set_data(self, data: DTypePointer[DType.float32]):
+        self._data_ptr.store(0, data)
+
+    @always_inline("nodebug")
+    fn get_grad(self) -> DTypePointer[DType.float32]:
+        return self._data_ptr.load(1)
+
+    @always_inline("nodebug")
+    fn set_grad(self, grad: DTypePointer[DType.float32]):
+        self._data_ptr.store(1, grad)
+
+    @always_inline("nodebug")
+    fn get_parents(self) -> Vector[Int]:
+        return self._parents
+
+    @always_inline("nodebug")
+    fn push_back_parent(inout self, parent: Int):
+        self._parents.push_back(parent)
+
+    @always_inline("nodebug")
+    fn clear_parents(inout self):
+        self._parents.clear()
+
+    @always_inline("nodebug")
+    fn get_children(self) -> Vector[Int]:
+        return self._children
+
+    @always_inline("nodebug")
+    fn push_back_child(inout self, child: Int):
+        self._children.push_back(child)
+
+    @always_inline("nodebug")
+    fn clear_children(inout self):
+        self._children.clear()
+
+    @always_inline("nodebug")
+    fn get_dependencies(self) -> Int:
+        return self._dependencies_ptr.load()
+
+    @always_inline("nodebug")
+    fn set_dependencies(self, dependencies: Int):
+        self._dependencies_ptr.store(dependencies)
+
+    @always_inline("nodebug")
+    fn get_is_static(self) -> Bool:
+        return self._is_static_ptr.load()
+
+    @always_inline("nodebug")
+    fn set_is_static(self, is_static: Bool):
+        self._is_static_ptr.store(is_static)
+
+    @always_inline("nodebug")
+    fn get_computed(self) -> Bool:
+        return self._computed_ptr.load()
+
+    @always_inline("nodebug")
+    fn set_computed(self, computed: Bool):
+        self._computed_ptr.store(computed)
+
+    @always_inline("nodebug")
+    fn get_grad_computed(self) -> Bool:
+        return self._grad_computed_ptr.load()
+
+    @always_inline("nodebug")
+    fn set_grad_computed(self, grad_computed: Bool):
+        self._grad_computed_ptr.store(grad_computed)
+
+    @always_inline("nodebug")
+    fn get_operator_id(self) -> Int:
+        return self._operator_id_ptr.load()
+
+    @always_inline("nodebug")
+    fn set_operator_id(self, operator_id: Int):
+        self._operator_id_ptr.store(operator_id)
+
+    @always_inline("nodebug")
+    fn get_grad_operator_id(self) -> Int:
+        return self._grad_operator_id_ptr.load()
+
+    @always_inline("nodebug")
+    fn set_grad_operator_id(self, grad_operator_id: Int):
+        self._grad_operator_id_ptr.store(grad_operator_id)
+
+    @always_inline("nodebug")
+    fn get_tmp_visited(self) -> Bool:
+        return self._tmp_visited_ptr.load()
+
+    @always_inline("nodebug")
+    fn set_tmp_visited(self, tmp_visited: Bool):
+        self._tmp_visited_ptr.store(tmp_visited)
+
+    @always_inline("nodebug")
+    fn get_checkpoint(self) -> Bool:
+        return self._checkpoint_ptr.load()
+
+    @always_inline("nodebug")
+    fn set_checkpoint(self, checkpoint: Bool):
+        self._checkpoint_ptr.store(checkpoint)
+
+    @always_inline("nodebug")
+    fn get_is_single(self) -> Bool:
+        return self._is_single_ptr.load()
+
+    @always_inline("nodebug")
+    fn set_is_single(self, is_single: Bool):
+        self._is_single_ptr.store(is_single)
+
+    @always_inline("nodebug")
+    fn get_cap(self) -> Int:
+        return self._cap_ptr.load()
+
+    @always_inline("nodebug")
+    fn get_num_dims(self) -> Int:
+        return self._num_dims_ptr.load()
+
+    @always_inline("nodebug")
+    fn get_shape(self) -> Vector[Int]:
+        return self._shape
+
+    @always_inline("nodebug")
+    fn get_strides(self) -> Vector[Int]:
+        return self._strides
+
+    @always_inline("nodebug")
+    fn get_other_params(self) -> Vector[Int]:
+        return self._other_params
+
+    @always_inline("nodebug")
     fn is_zero(self) -> Bool:
-        for i in range(self.cap_ptr.load()):
-            if self.data_ptr.load(0).load(i) != 0.0:
+        for i in range(self._cap_ptr.load()):
+            if self._data_ptr.load(0).load(i) != 0.0:
                 return False
         return True
 
     @always_inline("nodebug")
     fn fill(self, val: Float32):
-        for i in range(self.cap_ptr.load()):
-            self.data_ptr.load(0).store(i, val)
+        for i in range(self._cap_ptr.load()):
+            self._data_ptr.load(0).store(i, val)
 
     # Use math.iota here https://github.com/rd4com/mojo-learning/blob/main/tutorials/simd.md
     @always_inline("nodebug")
     fn fill_incr(self):
-        iota(self.data_ptr.load(0), self.cap_ptr.load())
+        iota(self._data_ptr.load(0), self._cap_ptr.load())
 
     @always_inline("nodebug")
     fn fill_grad(self, val: Float32):
-        for i in range(self.cap_ptr.load()):
-            self.data_ptr.load(1).store(i, val)
+        for i in range(self._cap_ptr.load()):
+            self._data_ptr.load(1).store(i, val)
 
     @always_inline("nodebug")
     fn grad_fill_incr(self):
-        iota(self.data_ptr.load(1), self.cap_ptr.load())
+        iota(self._data_ptr.load(1), self._cap_ptr.load())
 
     fn initialize[
         initialization_function: String, val: Float32 = 0, val2: Float32 = 0
@@ -154,60 +309,60 @@ struct Node:
             self.fill(0.0)
 
     fn he_normal(self) raises:
-        let fan_in: Float32 = self.shape.load(len(self.shape) - 2)
+        let fan_in: Float32 = self._shape.load(len(self._shape) - 2)
         let scale = sqrt(2.0 / fan_in)
-        self.random_normal(scale, 0.0) 
+        self.random_normal(scale, 0.0)
 
     fn random_normal(self, std: Float32 = 1.0, mu: Float32 = 0.0):
         seed()
         let pi = 3.14159265358979
-        let u1 = DTypePointer[DType.float32].alloc(self.cap_ptr.load())
-        let u2 = DTypePointer[DType.float32].alloc(self.cap_ptr.load())
-        rand(u1, self.cap_ptr.load())
-        rand(u2, self.cap_ptr.load())
-        for i in range(self.cap_ptr.load()):
+        let u1 = DTypePointer[DType.float32].alloc(self._cap_ptr.load())
+        let u2 = DTypePointer[DType.float32].alloc(self._cap_ptr.load())
+        rand(u1, self._cap_ptr.load())
+        rand(u2, self._cap_ptr.load())
+        for i in range(self._cap_ptr.load()):
             let z = sqrt(-2.0 * log(u1.load(i))) * cos(2.0 * pi * u2.load(i))
-            self.data_ptr.load(0).store(i, z * std + mu)
+            self._data_ptr.load(0).store(i, z * std + mu)
 
     fn random_uniform(self, min: Float32, max: Float32):
         seed()
-        rand(self.data_ptr.load(0), self.cap_ptr.load())
-        for i in range(self.cap_ptr.load()):
-            self.data_ptr.load(0).store(
-                i, self.data_ptr.load(0).load(i) * (max - min) + min
+        rand(self._data_ptr.load(0), self._cap_ptr.load())
+        for i in range(self._cap_ptr.load()):
+            self._data_ptr.load(0).store(
+                i, self._data_ptr.load(0).load(i) * (max - min) + min
             )
 
     fn free(self):
-        self.id_ptr.free()
-        self.data_id_ptr.free()
-        self.grad_id_ptr.free()
-        self.data_ptr.load(0).free()
-        self.data_ptr.load(1).free()
-        self.data_ptr.free()
-        self.parents.free()
-        self.children.free()
-        self.dependencies_ptr.free()
-        self.is_static_ptr.free()
-        self.computed_ptr.free()
-        self.grad_computed_ptr.free()
-        self.operator_id_ptr.free()
-        self.grad_operator_id_ptr.free()
-        self.tmp_visited_ptr.free()
-        self.checkpoint_ptr.free()
-        self.is_single_ptr.free()
-        self.cap_ptr.free()
-        self.num_dims_ptr.free()
-        self.shape.free()
-        self.strides.free()
-        self.other_params.free()
+        self._id_ptr.free()
+        self._data_id_ptr.free()
+        self._grad_id_ptr.free()
+        self._data_ptr.load(0).free()
+        self._data_ptr.load(1).free()
+        self._data_ptr.free()
+        self._parents.free()
+        self._children.free()
+        self._dependencies_ptr.free()
+        self._is_static_ptr.free()
+        self._computed_ptr.free()
+        self._grad_computed_ptr.free()
+        self._operator_id_ptr.free()
+        self._grad_operator_id_ptr.free()
+        self._tmp_visited_ptr.free()
+        self._checkpoint_ptr.free()
+        self._is_single_ptr.free()
+        self._cap_ptr.free()
+        self._num_dims_ptr.free()
+        self._shape.free()
+        self._strides.free()
+        self._other_params.free()
 
     fn print(self, accuracy: Int = 6) raises:
-        let row: Int = self.shape.load(self.num_dims_ptr.load() - 2)
-        let cols: Int = self.shape.load(self.num_dims_ptr.load() - 1)
-        let col_strides: Int = (self.strides.load(0) * self.shape.load(0)) // cols
+        let row: Int = self._shape.load(self._num_dims_ptr.load() - 2)
+        let cols: Int = self._shape.load(self._num_dims_ptr.load() - 1)
+        let col_strides: Int = (self._strides.load(0) * self._shape.load(0)) // cols
         print(" ")
         var times = 1
-        if self.grad_computed_ptr.load() and self.grad_id_ptr.load() != -1:
+        if self._grad_computed_ptr.load() and self._grad_id_ptr.load() != -1:
             times = 2
         print_no_newline("<Tensor: ")
         for i in range(col_strides):
@@ -222,8 +377,8 @@ struct Node:
                     print_no_newline("[ ")
 
                 var indent = 0
-                for d in range(self.num_dims_ptr.load() - 1):
-                    if cols * i % self.strides.load(d) == 0:
+                for d in range(self._num_dims_ptr.load() - 1):
+                    if cols * i % self._strides.load(d) == 0:
                         print_no_newline("[ ")
                         indent += 1
                     else:
@@ -237,16 +392,16 @@ struct Node:
                     else:
                         let idx = cols * i + j
                         print_no_newline(
-                            String(self.data_ptr.load(0).load(idx))[
+                            String(self._data_ptr.load(0).load(idx))[
                                 :accuracy
-                            ] if self.data_ptr.load(0).load(idx)
+                            ] if self._data_ptr.load(0).load(idx)
                             != 0.0 else String(0.000)[:accuracy]
                         )
                         if j != cols - 1:
                             print_no_newline(", ")
 
-                for d in range(self.num_dims_ptr.load() - 2, -1, -1):
-                    if cols * (i + 1) % self.strides.load(d) == 0:
+                for d in range(self._num_dims_ptr.load() - 2, -1, -1):
+                    if cols * (i + 1) % self._strides.load(d) == 0:
                         print_no_newline(" ]")
 
                 if i < col_strides - 1:
@@ -254,9 +409,9 @@ struct Node:
                     put_new_line()
                 else:
                     print_no_newline(" ], shape: [")
-                    for i in range(self.num_dims_ptr.load()):
-                        print_no_newline(self.shape.load(i))
-                        if i < self.num_dims_ptr.load() - 1:
+                    for i in range(self._num_dims_ptr.load()):
+                        print_no_newline(self._shape.load(i))
+                        if i < self._num_dims_ptr.load() - 1:
                             print_no_newline(",")
                     print_no_newline("] ")
                     print_no_newline(">")

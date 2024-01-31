@@ -7,20 +7,20 @@ from ..constants import PREFETCH_READ, PREFETCH_WRITE, F32_MAX, NELTS
 struct MaxPool1D:
     @staticmethod
     fn fw(c: Node, a: Node):
-        let params = c.other_params
+        let params = c.get_other_params()
 
         let kernel_width = params.load(0)
         let stride = params.load(1)
         let padding = params.load(2)
 
-        let batches = a.shape.load(0)
-        let channels = a.shape.load(1)
-        let input_width = a.shape.load(2)
+        let batches = a.get_shape().load(0)
+        let channels = a.get_shape().load(1)
+        let input_width = a.get_shape().load(2)
 
-        let output_width = c.shape.load(2)
+        let output_width = c.get_shape().load(2)
 
-        DTypePointer.prefetch[PREFETCH_READ](a.data_ptr.load())
-        DTypePointer.prefetch[PREFETCH_WRITE](c.data_ptr.load())
+        DTypePointer.prefetch[PREFETCH_READ](a.get_data())
+        DTypePointer.prefetch[PREFETCH_WRITE](c.get_data())
 
         for batch in range(batches):
             let batch_offset = batch * channels * input_width
@@ -37,35 +37,35 @@ struct MaxPool1D:
                     fn fw_vec[NELTS: Int](kernel_pos: Int):
                         let input_index = channel_offset + input_pos + kernel_pos
                         if input_index >= 0 and input_index < input_width:
-                            let value = a.data_ptr.load().simd_load[NELTS](
+                            let value = a.get_data().simd_load[NELTS](
                                 batch_offset + input_index
                             )
                             max_value = max(max_value, value.reduce_max())
 
                     vectorize[NELTS, fw_vec](kernel_width)
-                    c.data_ptr.load().store(
+                    c.get_data().store(
                         output_batch_offset + output_channel_offset + output_pos,
                         max_value,
                     )
 
     @staticmethod
     fn bw(c: Node, a: Node):
-        let params = c.other_params
+        let params = c.get_other_params()
 
         let kernel_width = params.load(0)
         let stride = params.load(1)
         let padding = params.load(2)
 
-        let batches = a.shape.load(0)
-        let channels = a.shape.load(1)
-        let input_width = a.shape.load(2)
+        let batches = a.get_shape().load(0)
+        let channels = a.get_shape().load(1)
+        let input_width = a.get_shape().load(2)
 
-        let output_width = c.shape.load(2)
+        let output_width = c.get_shape().load(2)
 
-        DTypePointer.prefetch[PREFETCH_READ](a.data_ptr.load())
-        DTypePointer.prefetch[PREFETCH_READ](c.data_ptr.load())
-        DTypePointer.prefetch[PREFETCH_READ](c.data_ptr.load(1))
-        DTypePointer.prefetch[PREFETCH_WRITE](a.data_ptr.load(1))
+        DTypePointer.prefetch[PREFETCH_READ](a.get_data())
+        DTypePointer.prefetch[PREFETCH_READ](c.get_data())
+        DTypePointer.prefetch[PREFETCH_READ](c.get_grad())
+        DTypePointer.prefetch[PREFETCH_WRITE](a.get_grad())
 
         for batch in range(batches):
             let batch_offset = batch * channels * input_width
@@ -76,50 +76,48 @@ struct MaxPool1D:
                 for output_pos in range(output_width):
                     let input_pos = output_pos * stride - padding
                     let output_index = output_batch_offset + output_channel_offset + output_pos
-                    let max_value = c.data_ptr.load().load(output_index)
+                    let max_value = c.get_data().load(output_index)
 
                     @parameter
                     @always_inline("nodebug")
                     fn bw_vec[NELTS: Int](kernel_pos: Int):
                         let input_index = channel_offset + input_pos + kernel_pos
                         if input_index >= 0 and input_index < input_width:
-                            let value = a.data_ptr.load().simd_load[NELTS](
+                            let value = a.get_data().simd_load[NELTS](
                                 batch_offset + input_index
                             )
-                            let grad = c.data_ptr.load(1).simd_load[NELTS](output_index)
+                            let grad = c.get_grad().simd_load[NELTS](output_index)
                             let grad_value = (value == max_value).select(grad, 0)
-                            a.data_ptr.load(1).simd_store[NELTS](
+                            a.get_grad().simd_store[NELTS](
                                 batch_offset + input_index, grad_value
                             )
 
                     vectorize[NELTS, bw_vec](kernel_width)
 
-                    let grad = c.data_ptr.load(1).load(output_index)
-                    a.data_ptr.load(1).store(
-                        batch_offset + input_pos, grad.reduce_add()
-                    )
+                    let grad = c.get_grad().load(output_index)
+                    a.get_grad().store(batch_offset + input_pos, grad.reduce_add())
 
 
 struct MaxPool2D:
     @staticmethod
     fn fw(c: Node, a: Node):
-        let params = c.other_params
+        let params = c.get_other_params()
 
         let kernel_width = params.load(0)
         let kernel_height = params.load(1)
         let stride = params.load(2)
         let padding = params.load(3)
 
-        let batches = a.shape.load(0)
-        let channels = a.shape.load(1)
-        let input_height = a.shape.load(2)
-        let input_width = a.shape.load(3)
+        let batches = a.get_shape().load(0)
+        let channels = a.get_shape().load(1)
+        let input_height = a.get_shape().load(2)
+        let input_width = a.get_shape().load(3)
 
-        let output_height = c.shape.load(2)
-        let output_width = c.shape.load(3)
+        let output_height = c.get_shape().load(2)
+        let output_width = c.get_shape().load(3)
 
-        DTypePointer.prefetch[PREFETCH_READ](a.data_ptr.load())
-        DTypePointer.prefetch[PREFETCH_WRITE](c.data_ptr.load())
+        DTypePointer.prefetch[PREFETCH_READ](a.get_data())
+        DTypePointer.prefetch[PREFETCH_WRITE](c.get_data())
 
         for batch in range(batches):
             let batch_offset = batch * channels * input_height * input_width
@@ -143,13 +141,13 @@ struct MaxPool2D:
                                     input_index >= 0
                                     and input_index < input_height * input_width
                                 ):
-                                    let value = a.data_ptr.load().simd_load[NELTS](
+                                    let value = a.get_data().simd_load[NELTS](
                                         batch_offset + input_index
                                     )
                                     max_value = max(max_value, value.reduce_max())
 
                             vectorize[NELTS, fw_vec](kernel_width)
-                        c.data_ptr.load().store(
+                        c.get_data().store(
                             output_batch_offset
                             + output_channel_offset
                             + output_y * output_width
@@ -159,25 +157,25 @@ struct MaxPool2D:
 
     @staticmethod
     fn bw(c: Node, a: Node):
-        let params = c.other_params
+        let params = c.get_other_params()
 
         let kernel_width = params.load(0)
         let kernel_height = params.load(1)
         let stride = params.load(2)
         let padding = params.load(3)
 
-        let batches = a.shape.load(0)
-        let channels = a.shape.load(1)
-        let input_height = a.shape.load(2)
-        let input_width = a.shape.load(3)
+        let batches = a.get_shape().load(0)
+        let channels = a.get_shape().load(1)
+        let input_height = a.get_shape().load(2)
+        let input_width = a.get_shape().load(3)
 
-        let output_height = c.shape.load(2)
-        let output_width = c.shape.load(3)
+        let output_height = c.get_shape().load(2)
+        let output_width = c.get_shape().load(3)
 
-        DTypePointer.prefetch[PREFETCH_READ](a.data_ptr.load())
-        DTypePointer.prefetch[PREFETCH_READ](c.data_ptr.load())
-        DTypePointer.prefetch[PREFETCH_READ](c.data_ptr.load(1))
-        DTypePointer.prefetch[PREFETCH_WRITE](a.data_ptr.load(1))
+        DTypePointer.prefetch[PREFETCH_READ](a.get_data())
+        DTypePointer.prefetch[PREFETCH_READ](c.get_data())
+        DTypePointer.prefetch[PREFETCH_READ](c.get_grad())
+        DTypePointer.prefetch[PREFETCH_WRITE](a.get_grad())
 
         for batch in range(batches):
             let batch_offset = batch * channels * input_height * input_width
@@ -195,7 +193,7 @@ struct MaxPool2D:
                             + output_y * output_width
                             + output_x
                         )
-                        let max_value = c.data_ptr.load().load(output_index)
+                        let max_value = c.get_data().load(output_index)
 
                         for kernel_y in range(kernel_height):
 
@@ -207,23 +205,23 @@ struct MaxPool2D:
                                     input_index >= 0
                                     and input_index < input_height * input_width
                                 ):
-                                    let value = a.data_ptr.load().simd_load[NELTS](
+                                    let value = a.get_data().simd_load[NELTS](
                                         batch_offset + input_index
                                     )
-                                    let grad = c.data_ptr.load(1).simd_load[NELTS](
+                                    let grad = c.get_grad().simd_load[NELTS](
                                         output_index
                                     )
                                     let grad_value = (value == max_value).select(
                                         grad, 0
                                     )
-                                    a.data_ptr.load(1).simd_store[NELTS](
+                                    a.get_grad().simd_store[NELTS](
                                         batch_offset + input_index, grad_value
                                     )
 
                             vectorize[NELTS, bw_vec](kernel_width)
 
-                        let grad = c.data_ptr.load(1).load(output_index)
-                        a.data_ptr.load(1).store(
+                        let grad = c.get_grad().load(output_index)
+                        a.get_grad().store(
                             batch_offset + input_y * input_width + input_x,
                             grad.reduce_add(),
                         )

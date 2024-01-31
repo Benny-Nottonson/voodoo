@@ -14,7 +14,7 @@ struct MMul:
     @staticmethod
     @always_inline("nodebug")
     fn base_case_depth(depth: Int, a: Node, b: Node) -> Bool:
-        return depth == max(a.num_dims_ptr.load(), b.num_dims_ptr.load()) - 2
+        return depth == max(a.get_num_dims(), b.get_num_dims()) - 2
 
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
@@ -22,29 +22,29 @@ struct MMul:
 
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
-        if not a.is_single_ptr.load():
+        if not a.get_is_single():
             recursive_broadcast_bw[Self.kernel_mmul_bw_a, Self.base_case_depth](c, a, b)
-        if not b.is_single_ptr.load():
+        if not b.get_is_single():
             recursive_broadcast_bw[Self.kernel_mmul_bw_b, Self.base_case_depth](c, a, b)
 
     @staticmethod
     fn kernel_mmul_fw(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let a_num_dims = a.num_dims_ptr.load()
-        let b_num_dims = b.num_dims_ptr.load()
+        let a_num_dims = a.get_num_dims()
+        let b_num_dims = b.get_num_dims()
 
-        let M = a.shape.load(a_num_dims - 2)
-        let K = b.shape.load(b_num_dims - 2)
-        let N = c.shape.load(c.num_dims_ptr.load() - 1)
+        let M = a.get_shape().load(a_num_dims - 2)
+        let K = b.get_shape().load(b_num_dims - 2)
+        let N = c.get_shape().load(c.get_num_dims() - 1)
 
-        let offset_a = a_index * M * a.shape.load(a_num_dims - 1)
-        let offset_b = b_index * K * b.shape.load(b_num_dims - 1)
+        let offset_a = a_index * M * a.get_shape().load(a_num_dims - 1)
+        let offset_b = b_index * K * b.get_shape().load(b_num_dims - 1)
         let offset_c = c_index * N * N
 
-        let a_data = a.data_ptr.load(0)
-        let b_data = b.data_ptr.load(0)
-        let c_data = c.data_ptr.load(0)
+        let a_data = a.get_data()
+        let b_data = b.get_data()
+        let c_data = c.get_data()
 
         DTypePointer.prefetch[PREFETCH_READ](a_data)
         DTypePointer.prefetch[PREFETCH_READ](b_data)
@@ -88,20 +88,20 @@ struct MMul:
     fn kernel_mmul_bw_a(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let a_num_dims = a.num_dims_ptr.load()
-        let b_num_dims = b.num_dims_ptr.load()
+        let a_num_dims = a.get_num_dims()
+        let b_num_dims = b.get_num_dims()
 
-        let M = a.shape.load(a_num_dims - 2)
-        let K = b.shape.load(b_num_dims - 2)
-        let N = c.shape.load(c.num_dims_ptr.load() - 1)
+        let M = a.get_shape().load(a_num_dims - 2)
+        let K = b.get_shape().load(b_num_dims - 2)
+        let N = c.get_shape().load(c.get_num_dims() - 1)
 
-        let offset_a = a_index * M * a.shape.load(a_num_dims - 1)
-        let offset_b = b_index * K * b.shape.load(b_num_dims - 1)
+        let offset_a = a_index * M * a.get_shape().load(a_num_dims - 1)
+        let offset_b = b_index * K * b.get_shape().load(b_num_dims - 1)
         let offset_c = c_index * N * N
 
-        let a_grad = a.data_ptr.load(1)
-        let b_data = b.data_ptr.load(0)
-        let c_grad = c.data_ptr.load(1)
+        let a_grad = a.get_grad()
+        let b_data = b.get_data()
+        let c_grad = c.get_grad()
 
         DTypePointer.prefetch[PREFETCH_READ](a_grad)
         DTypePointer.prefetch[PREFETCH_WRITE](a_grad)
@@ -142,20 +142,20 @@ struct MMul:
     fn kernel_mmul_bw_b(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let a_num_dims = a.num_dims_ptr.load()
-        let b_num_dims = b.num_dims_ptr.load()
+        let a_num_dims = a.get_num_dims()
+        let b_num_dims = b.get_num_dims()
 
-        let M = a.shape.load(a_num_dims - 2)
-        let K = b.shape.load(b_num_dims - 2)
-        let N = c.shape.load(c.num_dims_ptr.load() - 1)
+        let M = a.get_shape().load(a_num_dims - 2)
+        let K = b.get_shape().load(b_num_dims - 2)
+        let N = c.get_shape().load(c.get_num_dims() - 1)
 
-        let offset_a = a_index * M * a.shape.load(a_num_dims - 1)
-        let offset_b = b_index * K * b.shape.load(b_num_dims - 1)
+        let offset_a = a_index * M * a.get_shape().load(a_num_dims - 1)
+        let offset_b = b_index * K * b.get_shape().load(b_num_dims - 1)
         let offset_c = c_index * N * N
 
-        let a_data = a.data_ptr.load(0)
-        let b_grad = b.data_ptr.load(1)
-        let c_grad = c.data_ptr.load(1)
+        let a_data = a.get_data()
+        let b_grad = b.get_grad()
+        let c_grad = c.get_grad()
 
         DTypePointer.prefetch[PREFETCH_READ](a_data)
         DTypePointer.prefetch[PREFETCH_READ](b_grad)
@@ -175,7 +175,7 @@ struct MMul:
                 fn dot_bw_single[NELTS: Int](n: Int):
                     let b_off = _b_off + n
 
-                    b.data_ptr.load(1).simd_store[NELTS](
+                    b.get_grad().simd_store[NELTS](
                         b_off,
                         c_grad.simd_load[NELTS](_c_off + n).fma(
                             a_data,
@@ -202,7 +202,7 @@ struct MMul:
                         let b_off_1 = _b_off_1 + n
                         let b_off_2 = _b_off_2 + n
 
-                        b.data_ptr.load(1).simd_store[NELTS](
+                        b.get_grad().simd_store[NELTS](
                             b_off_1,
                             c_grad.simd_load[NELTS](_c_off + n).fma(
                                 a_data_1,
@@ -210,7 +210,7 @@ struct MMul:
                             ),
                         )
 
-                        b.data_ptr.load(1).simd_store[NELTS](
+                        b.get_grad().simd_store[NELTS](
                             b_off_2,
                             c_grad.simd_load[NELTS](_c_off + n).fma(
                                 a_data_2,

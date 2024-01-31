@@ -43,7 +43,7 @@ fn main() raises:
     var epoch_start = now()
     let bar_accuracy = 20
     for epoch in range(1, num_epochs + 1):
-        for i in range(input.initialize["random_uniform", 0, 1]().node.cap_ptr.load()):
+        for i in range(input.initialize["random_uniform", 0, 1]().node.get_cap()):
             true_vals[i] = math.sin(15.0 * input[i])
 
         var computed_loss = loss.forward_static()

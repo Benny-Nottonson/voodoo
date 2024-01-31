@@ -20,21 +20,19 @@ struct Copy(Operation):
     fn fw(node: Node, parent1: Node):
         @parameter
         fn vectorized_copy[NELTS: Int](i: Int):
-            node.data_ptr.load().simd_store[NELTS](
-                i, parent1.data_ptr.load().simd_load[NELTS](i)
-            )
+            node.get_data().simd_store[NELTS](i, parent1.get_data().simd_load[NELTS](i))
 
-        vectorize[NELTS, vectorized_copy](node.cap_ptr.load())
+        vectorize[NELTS, vectorized_copy](node.get_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
         fn vectorized_copy_bw[NELTS: Int](i: Int):
-            parent1.data_ptr.load(1).simd_store[NELTS](
-                i, parent1.data_ptr.load(1).simd_load[NELTS](i)
+            parent1.get_grad().simd_store[NELTS](
+                i, parent1.get_grad().simd_load[NELTS](i)
             )
 
-        vectorize[NELTS, vectorized_copy_bw](node.cap_ptr.load())
+        vectorize[NELTS, vectorized_copy_bw](node.get_cap())
 
 
 struct Sum(Operation):
@@ -44,88 +42,87 @@ struct Sum(Operation):
 
         @parameter
         fn vectorized_sum[NELTS: Int](i: Int):
-            sum += parent1.data_ptr.load().simd_load[NELTS](i).reduce_add()
+            sum += parent1.get_data().simd_load[NELTS](i).reduce_add()
 
-        vectorize[NELTS, vectorized_sum](parent1.cap_ptr.load())
-        node.data_ptr.load().store(0, sum)
+        vectorize[NELTS, vectorized_sum](parent1.get_cap())
+        node.get_data().store(0, sum)
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
         @parameter
         fn vectorized_sum_bw[NELTS: Int](i: Int):
-            parent1.data_ptr.load(1).simd_store[NELTS](
+            parent1.get_grad().simd_store[NELTS](
                 i,
-                parent1.data_ptr.load(1).simd_load[NELTS](i)
-                + node.data_ptr.load(1).load(0),
+                parent1.get_grad().simd_load[NELTS](i) + node.get_grad().load(0),
             )
 
-        vectorize[NELTS, vectorized_sum_bw](parent1.cap_ptr.load())
+        vectorize[NELTS, vectorized_sum_bw](parent1.get_cap())
 
 
 struct Reshape(Operation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
-        for s in range(node.cap_ptr.load() // parent1.cap_ptr.load()):
-            let offset = s * parent1.cap_ptr.load()
+        for s in range(node.get_cap() // parent1.get_cap()):
+            let offset = s * parent1.get_cap()
 
             @parameter
             fn vectorized_reshape[NELTS: Int](i: Int):
-                node.data_ptr.load().simd_store[NELTS](
-                    i, parent1.data_ptr.load().simd_load[NELTS](i)
+                node.get_data().simd_store[NELTS](
+                    i, parent1.get_data().simd_load[NELTS](i)
                 )
 
-            vectorize[NELTS, vectorized_reshape](parent1.cap_ptr.load())
+            vectorize[NELTS, vectorized_reshape](parent1.get_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
-        for s in range(node.cap_ptr.load() // parent1.cap_ptr.load()):
-            let offset = s * parent1.cap_ptr.load()
+        for s in range(node.get_cap() // parent1.get_cap()):
+            let offset = s * parent1.get_cap()
 
             @parameter
             fn vectorized_reshape[NELTS: Int](i: Int):
-                parent1.data_ptr.load(1).simd_store[NELTS](
+                parent1.get_grad().simd_store[NELTS](
                     i,
-                    parent1.data_ptr.load(1).simd_load[NELTS](i)
-                    + node.data_ptr.load(1).simd_load[NELTS](i),
+                    parent1.get_grad().simd_load[NELTS](i)
+                    + node.get_grad().simd_load[NELTS](i),
                 )
 
-            vectorize[NELTS, vectorized_reshape](parent1.cap_ptr.load())
+            vectorize[NELTS, vectorized_reshape](parent1.get_cap())
 
 
 struct Transpose(Operation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
-        let num_dims = parent1.num_dims_ptr.load()
-        let M = parent1.shape.load(num_dims - 2)
-        let N = parent1.shape.load(num_dims - 1)
-        for s in range(node.cap_ptr.load() // (M * N)):
+        let num_dims = parent1.get_num_dims()
+        let M = parent1.get_shape().load(num_dims - 2)
+        let N = parent1.get_shape().load(num_dims - 1)
+        for s in range(node.get_cap() // (M * N)):
             let offset = s * M * N
             for i in range(M):
 
                 @parameter
                 fn vectorized_transp[NELTS: Int](j: Int):
-                    node.data_ptr.load().simd_store[NELTS](
+                    node.get_data().simd_store[NELTS](
                         offset + j * M + i,
-                        parent1.data_ptr.load().simd_load[NELTS](offset + i * N + j),
+                        parent1.get_data().simd_load[NELTS](offset + i * N + j),
                     )
 
                 vectorize[NELTS, vectorized_transp](N)
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
-        let num_dims = parent1.num_dims_ptr.load()
-        let M = parent1.shape.load(num_dims - 2)
-        let N = parent1.shape.load(num_dims - 1)
-        for s in range(node.cap_ptr.load() // (M * N)):
+        let num_dims = parent1.get_num_dims()
+        let M = parent1.get_shape().load(num_dims - 2)
+        let N = parent1.get_shape().load(num_dims - 1)
+        for s in range(node.get_cap() // (M * N)):
             let offset = s * M * N
             for i in range(M):
 
                 @parameter
                 fn vectorized_transp_bw[NELTS: Int](j: Int):
-                    parent1.data_ptr.load(1).simd_store[NELTS](
+                    parent1.get_grad().simd_store[NELTS](
                         offset + j * M + i,
-                        parent1.data_ptr.load(1).simd_load[NELTS](offset + j * M + i)
-                        + node.data_ptr.load(1).simd_load[NELTS](offset + i * N + j),
+                        parent1.get_grad().simd_load[NELTS](offset + j * M + i)
+                        + node.get_grad().simd_load[NELTS](offset + i * N + j),
                     )
 
                 vectorize[NELTS, vectorized_transp_bw](N)
@@ -134,35 +131,35 @@ struct Transpose(Operation):
 struct Dropout(Operation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
-        let params = node.other_params
+        let params = node.get_other_params()
         let keep_prob = 1 - params.load(0) / 1000000.0
         let scale = 1.0 / keep_prob
 
         @parameter
         fn vectorized_dropout[NELTS: Int](i: Int):
             let rand = random_float64()
-            node.data_ptr.load().simd_store[NELTS](
+            node.get_data().simd_store[NELTS](
                 i,
                 (rand < keep_prob).select[DType.float32](1.0, 0.0)
-                * parent1.data_ptr.load().simd_load[NELTS](i),
+                * parent1.get_data().simd_load[NELTS](i),
             )
 
-        vectorize[NELTS, vectorized_dropout](node.cap_ptr.load())
+        vectorize[NELTS, vectorized_dropout](node.get_cap())
 
     @staticmethod
     fn bw(node: Node, parent1: Node):
-        let params = node.other_params
+        let params = node.get_other_params()
         let keep_prob = 1 - params.load(0) / 1000000.0
         let scale = 1.0 / keep_prob
 
         @parameter
         fn vectorized_dropout_bw[NELTS: Int](i: Int):
-            let previous = node.data_ptr.load().simd_load[NELTS](i)
-            node.data_ptr.load(1).simd_store[NELTS](
+            let previous = node.get_data().simd_load[NELTS](i)
+            node.get_grad().simd_store[NELTS](
                 i,
                 (previous == 0.0).select[DType.float32](
-                    parent1.data_ptr.load(1).simd_load[NELTS](i) * scale, 0.0
+                    parent1.get_grad().simd_load[NELTS](i) * scale, 0.0
                 ),
             )
 
-        vectorize[NELTS, vectorized_dropout_bw](node.cap_ptr.load())
+        vectorize[NELTS, vectorized_dropout_bw](node.get_cap())
