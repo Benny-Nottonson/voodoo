@@ -23,6 +23,14 @@ struct Vector[type: AnyRegType](Sized):
         return self._len.load()
 
     @always_inline("nodebug")
+    fn __getitem__(self, idx: Int) -> type:
+        return self._data.load(idx)
+
+    @always_inline("nodebug")
+    fn __setitem__(self, idx: Int, value: type):
+        self._data.store(idx, value)
+
+    @always_inline("nodebug")
     fn push_back(inout self, elem: type):
         let len = self._len.load()
         let curr_cap = self._cap
@@ -45,14 +53,6 @@ struct Vector[type: AnyRegType](Sized):
             self._size_down(curr_cap >> 1)
 
         return tmp
-
-    @always_inline("nodebug")
-    fn load(self, idx: Int) -> type:
-        return self._data.load(idx)
-
-    @always_inline("nodebug")
-    fn store(self, idx: Int, value: type):
-        self._data.store(idx, value)
 
     @always_inline("nodebug")
     fn free(owned self):

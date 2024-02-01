@@ -5,29 +5,25 @@ from voodoo import Node
 @always_inline("nodebug")
 fn shape_a(depth: Int, a: Node, b: Node) -> Int:
     let diff = max(b.get_num_dims() - a.get_num_dims(), 0)
-    return a.get_shape().load(depth - diff) if depth >= diff else 1
+    return a.get_shape()[depth - diff] if depth >= diff else 1
 
 
 @always_inline("nodebug")
 fn shape_b(depth: Int, a: Node, b: Node) -> Int:
     let diff = max(a.get_num_dims() - b.get_num_dims(), 0)
-    return b.get_shape().load(depth - diff) if depth >= diff else 1
+    return b.get_shape()[depth - diff] if depth >= diff else 1
 
 
 @always_inline("nodebug")
 fn strides_a(depth: Int, a: Node, b: Node) -> Int:
     let diff = max(b.get_num_dims() - a.get_num_dims(), 0)
-    return a.get_strides().load(
-        depth - diff
-    ) if depth >= diff else a.get_strides().load(0)
+    return a.get_strides()[depth - diff] if depth >= diff else a.get_strides()[0]
 
 
 @always_inline("nodebug")
 fn strides_b(depth: Int, a: Node, b: Node) -> Int:
     let diff = max(a.get_num_dims() - b.get_num_dims(), 0)
-    return b.get_strides().load(
-        depth - diff
-    ) if depth >= diff else b.get_strides().load(0)
+    return b.get_strides()[depth - diff] if depth >= diff else b.get_strides()[0]
 
 
 @always_inline("nodebug")
@@ -35,7 +31,7 @@ fn get_broadcasted_shape_for_ew_op(parent1: Node, parent2: Node) -> DynamicVecto
     var shape = DynamicVector[Int]()
     let target = parent1 if parent1.get_num_dims() - parent2.get_num_dims() > 0 else parent2
     for i in range(target.get_num_dims()):
-        shape.push_back(target.get_shape().load(i))
+        shape.push_back(target.get_shape()[i])
     return shape
 
 
@@ -59,7 +55,7 @@ fn recursive_broadcast[
 
     let a_shape = shape_a(depth, a, b)
     let b_shape = shape_b(depth, a, b)
-    let c_shape = c.get_shape().load(depth)
+    let c_shape = c.get_shape()[depth]
 
     let scaled_a_index = a_index * a_shape
     let scaled_b_index = b_index * b_shape
@@ -96,7 +92,7 @@ fn recursive_broadcast_bw[
 
     let a_shape = shape_a(depth, a, b)
     let b_shape = shape_b(depth, a, b)
-    let c_shape = c.get_shape().load(depth)
+    let c_shape = c.get_shape()[depth]
 
     let scaled_a_index = a_index * a_shape
     let scaled_b_index = b_index * b_shape

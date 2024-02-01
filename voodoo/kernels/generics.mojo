@@ -154,7 +154,7 @@ struct GenericBinaryArithmetic[
     ) -> None:
         let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
         let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-        let c_rest = c.get_shape().load(depth) * c.get_strides().load(depth)
+        let c_rest = c.get_shape()[depth] * c.get_strides()[depth]
         let offset_c = c_index * c_rest
 
         let a_data = a.get_data()
@@ -187,7 +187,7 @@ struct GenericBinaryArithmetic[
     ) -> None:
         let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
         let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
-        let c_rest = c.get_shape().load(depth) * c.get_strides().load(depth)
+        let c_rest = c.get_shape()[depth] * c.get_strides()[depth]
         let offset_c = c_index * c_rest
 
         let a_data = a.get_data()
@@ -249,7 +249,7 @@ struct GenericLoss[
     @staticmethod
     fn fw(node: Node, y_pred: Node, y_true: Node):
         let num_dims = len(y_pred.get_shape())
-        let N = y_pred.get_shape().load(num_dims - 1)
+        let N = y_pred.get_shape()[num_dims - 1]
         let cap = y_pred.get_cap()
         var e: Float32 = 0.0
 
@@ -264,7 +264,7 @@ struct GenericLoss[
         fn vectorized_fw[NELTS: Int](i: Int):
             node.get_data().store(
                 0,
-                node.get_data().load(0)
+                node.get_data()[0]
                 + fw_vec[NELTS](
                     y_true.get_data().simd_load[NELTS](i),
                     y_pred.get_data().simd_load[NELTS](i),
@@ -272,12 +272,12 @@ struct GenericLoss[
             )
 
         vectorize[NELTS, vectorized_fw](cap)
-        node.get_data().store(0, node.get_data().load(0) / cap / Float32(N))
+        node.get_data().store(0, node.get_data()[0] / cap / Float32(N))
 
     @staticmethod
     fn bw(node: Node, y_pred: Node, y_true: Node):
         let num_dims = len(y_pred.get_shape())
-        let N = y_pred.get_shape().load(num_dims - 1)
+        let N = y_pred.get_shape()[num_dims - 1]
         let cap = y_pred.get_cap()
         let scalar = cap / Float32(N)
 
@@ -308,7 +308,7 @@ struct GenericOptimizer[fw_vec: generic_optimizer_vectorized]:
     @staticmethod
     fn step[learning_rate: Float32](x: Vector[Node]) raises:
         for i in range(len(x)):
-            let node = x.load(i)
+            let node = x[i]
             if node.get_is_static() and node.get_grad_computed():
                 let node_data = node.get_data()
                 let node_grad = node.get_grad()

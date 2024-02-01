@@ -138,7 +138,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
     fn __getitem__(inout self, idx: Int) raises -> Float32:
         if not self.node.get_computed():
             _ = self.forward()
-        return self.node.get_data().load(idx)
+        return self.node.get_data()[idx]
 
     @always_inline("nodebug")
     fn __setitem__(self, idx: Int, val: Float32) raises:
@@ -314,9 +314,9 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
         var new_tensor = self.load_tensor_for_unary_op()
         var shape = Vector[Int]()
         let dims = len(self.node.get_shape())
-        shape.push_back(self.node.get_shape().load(0))
+        shape.push_back(self.node.get_shape()[0])
         for i in range(1, dims):
-            shape.store(0, shape.load(0) * self.node.get_shape().load(i))
+            shape[0] = shape[0] * self.node.get_shape()[i]
         new_tensor.node = new_tensor.graph.reshape(self.node, shape)
         return new_tensor
 

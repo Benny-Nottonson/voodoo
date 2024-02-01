@@ -11,16 +11,16 @@ struct Conv1D:
     fn fw(c: Node, a: Node, b: Node):
         let params = c.get_other_params()
 
-        let padding_x = params.load(0)
-        let stride_x = params.load(1)
+        let padding_x = params[0]
+        let stride_x = params[1]
 
-        let batches = a.get_shape().load(0)
-        let channels = a.get_shape().load(1)
-        let input_width = a.get_shape().load(2)
+        let batches = a.get_shape()[0]
+        let channels = a.get_shape()[1]
+        let input_width = a.get_shape()[2]
 
-        let kernel_width = b.get_shape().load(1)
+        let kernel_width = b.get_shape()[1]
 
-        let output_width = c.get_shape().load(2)
+        let output_width = c.get_shape()[2]
 
         let im2col = im2col2D(
             a.get_data(),
@@ -65,16 +65,16 @@ struct Conv1D:
     fn bw(c: Node, a: Node, b: Node):
         let params = c.get_other_params()
 
-        let padding_x = params.load(0)
-        let stride_x = params.load(1)
+        let padding_x = params[0]
+        let stride_x = params[1]
 
-        let batches = a.get_shape().load(0)
-        let channels = a.get_shape().load(1)
-        let input_width = a.get_shape().load(2)
+        let batches = a.get_shape()[0]
+        let channels = a.get_shape()[1]
+        let input_width = a.get_shape()[2]
 
-        let kernel_width = b.get_shape().load(1)
+        let kernel_width = b.get_shape()[1]
 
-        let output_width = c.get_shape().load(2)
+        let output_width = c.get_shape()[2]
 
         let im2col = im2col2D(
             a.get_data(),
@@ -126,7 +126,7 @@ struct Conv1D:
 
                         b.get_grad().store(
                             channel * kernel_width + kernel_x,
-                            b.get_grad().load(channel * kernel_width + kernel_x)
+                            b.get_grad()[channel * kernel_width + kernel_x]
                             + output_value * im2col_value,
                         )
 
@@ -138,21 +138,21 @@ struct Conv2D:
     fn fw(c: Node, a: Node, b: Node):
         let params = c.get_other_params()
 
-        let padding_x = params.load(0)
-        let padding_y = params.load(1)
-        let stride_x = params.load(2)
-        let stride_y = params.load(3)
+        let padding_x = params[0]
+        let padding_y = params[1]
+        let stride_x = params[2]
+        let stride_y = params[3]
 
-        let batches = a.get_shape().load(0)
-        let channels = a.get_shape().load(1)
-        let input_width = a.get_shape().load(2)
-        let input_height = a.get_shape().load(3)
+        let batches = a.get_shape()[0]
+        let channels = a.get_shape()[1]
+        let input_width = a.get_shape()[2]
+        let input_height = a.get_shape()[3]
 
-        let kernel_width = b.get_shape().load(1)
-        let kernel_height = b.get_shape().load(2)
+        let kernel_width = b.get_shape()[1]
+        let kernel_height = b.get_shape()[2]
 
-        let output_width = c.get_shape().load(2)
-        let output_height = c.get_shape().load(3)
+        let output_width = c.get_shape()[2]
+        let output_height = c.get_shape()[3]
 
         let im2col = im2col3D(
             a.get_data(),
@@ -229,21 +229,21 @@ struct Conv2D:
     fn bw(c: Node, a: Node, b: Node):
         let params = c.get_other_params()
 
-        let padding_x = params.load(0)
-        let padding_y = params.load(1)
-        let stride_x = params.load(2)
-        let stride_y = params.load(3)
+        let padding_x = params[0]
+        let padding_y = params[1]
+        let stride_x = params[2]
+        let stride_y = params[3]
 
-        let batches = a.get_shape().load(0)
-        let channels = a.get_shape().load(1)
-        let input_width = a.get_shape().load(2)
-        let input_height = a.get_shape().load(3)
+        let batches = a.get_shape()[0]
+        let channels = a.get_shape()[1]
+        let input_width = a.get_shape()[2]
+        let input_height = a.get_shape()[3]
 
-        let kernel_width = b.get_shape().load(1)
-        let kernel_height = b.get_shape().load(2)
+        let kernel_width = b.get_shape()[1]
+        let kernel_height = b.get_shape()[2]
 
-        let output_width = c.get_shape().load(2)
-        let output_height = c.get_shape().load(3)
+        let output_width = c.get_shape()[2]
+        let output_height = c.get_shape()[3]
 
         let im2col = im2col3D(
             a.get_data(),
@@ -359,13 +359,13 @@ fn im2col2D(
     padding: Int,
     stride: Int,
 ) -> DTypePointer[DType.float32]:
-    let batches = input_shape.load(0)
-    let channels = input_shape.load(1)
-    let input_width = input_shape.load(2)
+    let batches = input_shape[0]
+    let channels = input_shape[1]
+    let input_width = input_shape[2]
 
-    let kernel_width = kernel_shape.load(1)
+    let kernel_width = kernel_shape[1]
 
-    let output_width = output_shape.load(2)
+    let output_width = output_shape[2]
 
     let im2col = DTypePointer[DType.float32].alloc(
         batches * output_width * kernel_width * channels
@@ -421,16 +421,16 @@ fn im2col3D(
     stride_x: Int,
     stride_y: Int,
 ) -> DTypePointer[DType.float32]:
-    let batches = input_shape.load(0)
-    let channels = input_shape.load(1)
-    let input_width = input_shape.load(2)
-    let input_height = input_shape.load(3)
+    let batches = input_shape[0]
+    let channels = input_shape[1]
+    let input_width = input_shape[2]
+    let input_height = input_shape[3]
 
-    let kernel_width = kernel_shape.load(1)
-    let kernel_height = kernel_shape.load(2)
+    let kernel_width = kernel_shape[1]
+    let kernel_height = kernel_shape[2]
 
-    let output_width = output_shape.load(2)
-    let output_height = output_shape.load(3)
+    let output_width = output_shape[2]
+    let output_height = output_shape[3]
 
     let im2col = DTypePointer[DType.float32].alloc(
         batches * output_width * output_height * kernel_width * kernel_height * channels

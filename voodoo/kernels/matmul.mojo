@@ -34,12 +34,12 @@ struct MMul:
         let a_num_dims = a.get_num_dims()
         let b_num_dims = b.get_num_dims()
 
-        let M = a.get_shape().load(a_num_dims - 2)
-        let K = b.get_shape().load(b_num_dims - 2)
-        let N = c.get_shape().load(c.get_num_dims() - 1)
+        let M = a.get_shape()[a_num_dims - 2]
+        let K = b.get_shape()[b_num_dims - 2]
+        let N = c.get_shape()[c.get_num_dims() - 1]
 
-        let offset_a = a_index * M * a.get_shape().load(a_num_dims - 1)
-        let offset_b = b_index * K * b.get_shape().load(b_num_dims - 1)
+        let offset_a = a_index * M * a.get_shape()[a_num_dims - 1]
+        let offset_b = b_index * K * b.get_shape()[b_num_dims - 1]
         let offset_c = c_index * N * N
 
         let a_data = a.get_data()
@@ -71,7 +71,7 @@ struct MMul:
                             c_data.simd_store[NELTS](
                                 c_off_n,
                                 b_data_n.fma(
-                                    a_data.load(a_off + k),
+                                    a_data[a_off + k],
                                     c_data.simd_load[NELTS](c_off_n),
                                 ),
                             )
@@ -91,12 +91,12 @@ struct MMul:
         let a_num_dims = a.get_num_dims()
         let b_num_dims = b.get_num_dims()
 
-        let M = a.get_shape().load(a_num_dims - 2)
-        let K = b.get_shape().load(b_num_dims - 2)
-        let N = c.get_shape().load(c.get_num_dims() - 1)
+        let M = a.get_shape()[a_num_dims - 2]
+        let K = b.get_shape()[b_num_dims - 2]
+        let N = c.get_shape()[c.get_num_dims() - 1]
 
-        let offset_a = a_index * M * a.get_shape().load(a_num_dims - 1)
-        let offset_b = b_index * K * b.get_shape().load(b_num_dims - 1)
+        let offset_a = a_index * M * a.get_shape()[a_num_dims - 1]
+        let offset_b = b_index * K * b.get_shape()[b_num_dims - 1]
         let offset_c = c_index * N * N
 
         let a_grad = a.get_grad()
@@ -114,8 +114,8 @@ struct MMul:
             let start_offset_a = offset_a + m * K
             for nb in range(0, N, NELTS):
                 for n in range(nb, min(nb + NELTS, N), 2):
-                    let c_grad_0 = c_grad.load(_offset_c + n)
-                    let c_grad_1 = c_grad.load(_offset_c_1 + n)
+                    let c_grad_0 = c_grad[_offset_c + n]
+                    let c_grad_1 = c_grad[_offset_c_1 + n]
 
                     @parameter
                     @always_inline("nodebug")
@@ -145,12 +145,12 @@ struct MMul:
         let a_num_dims = a.get_num_dims()
         let b_num_dims = b.get_num_dims()
 
-        let M = a.get_shape().load(a_num_dims - 2)
-        let K = b.get_shape().load(b_num_dims - 2)
-        let N = c.get_shape().load(c.get_num_dims() - 1)
+        let M = a.get_shape()[a_num_dims - 2]
+        let K = b.get_shape()[b_num_dims - 2]
+        let N = c.get_shape()[c.get_num_dims() - 1]
 
-        let offset_a = a_index * M * a.get_shape().load(a_num_dims - 1)
-        let offset_b = b_index * K * b.get_shape().load(b_num_dims - 1)
+        let offset_a = a_index * M * a.get_shape()[a_num_dims - 1]
+        let offset_b = b_index * K * b.get_shape()[b_num_dims - 1]
         let offset_c = c_index * N * N
 
         let a_data = a.get_data()
@@ -167,7 +167,7 @@ struct MMul:
             let _b_off = offset_b
 
             for m in range(M):
-                let a_data = a_data.load(_a_off + m)
+                let a_data = a_data[_a_off + m]
                 let _c_off = offset_c + m * N
 
                 @parameter
@@ -192,8 +192,8 @@ struct MMul:
                 let _b_off_2 = offset_b + (k + 1) * N
 
                 for m in range(M):
-                    let a_data_1 = a_data.load(_a_off_1 + m * K)
-                    let a_data_2 = a_data.load(_a_off_2 + m * K)
+                    let a_data_1 = a_data[_a_off_1 + m * K]
+                    let a_data_2 = a_data[_a_off_2 + m * K]
                     let _c_off = offset_c + m * N
 
                     @parameter

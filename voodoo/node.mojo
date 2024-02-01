@@ -54,15 +54,12 @@ struct Node:
 
         var cap = 1
         for i in range(len(shape)):
-            cap *= shape.load(i)
+            cap *= shape[i]
 
         let strides = Vector[Int](len(shape))
-        strides.store(len(shape) - 1, 1)
+        strides[len(shape) - 1] = 1
         for i in range(len(shape) - 1):
-            strides.store(
-                len(shape) - i - 2,
-                strides.load(len(shape) - i - 1) * shape.load(len(shape) - i - 1),
-            )
+            strides[len(shape) - i - 2] = strides[len(shape) - i - 1] * shape[len(shape) - i - 1]
 
         return Node {
             _id_ptr: id_ptr,
@@ -113,7 +110,7 @@ struct Node:
 
     @always_inline("nodebug")
     fn get_data(self) -> DTypePointer[DType.float32]:
-        return self._data_ptr.load(0)
+        return self._data_ptr[0]
 
     @always_inline("nodebug")
     fn set_data(self, data: DTypePointer[DType.float32]):
@@ -121,7 +118,7 @@ struct Node:
 
     @always_inline("nodebug")
     fn get_grad(self) -> DTypePointer[DType.float32]:
-        return self._data_ptr.load(1)
+        return self._data_ptr[1]
 
     @always_inline("nodebug")
     fn set_grad(self, grad: DTypePointer[DType.float32]):
@@ -246,28 +243,28 @@ struct Node:
     @always_inline("nodebug")
     fn is_zero(self) -> Bool:
         for i in range(self._cap):
-            if self._data_ptr.load(0).load(i) != 0.0:
+            if self._data_ptr[0][i] != 0.0:
                 return False
         return True
 
     @always_inline("nodebug")
     fn fill(self, val: Float32):
         for i in range(self._cap):
-            self._data_ptr.load(0).store(i, val)
+            self._data_ptr[0].store(i, val)
 
     # Use math.iota here https://github.com/rd4com/mojo-learning/blob/main/tutorials/simd.md
     @always_inline("nodebug")
     fn fill_incr(self):
-        iota(self._data_ptr.load(0), self._cap)
+        iota(self._data_ptr[0], self._cap)
 
     @always_inline("nodebug")
     fn fill_grad(self, val: Float32):
         for i in range(self._cap):
-            self._data_ptr.load(1).store(i, val)
+            self._data_ptr[1].store(i, val)
 
     @always_inline("nodebug")
     fn grad_fill_incr(self):
-        iota(self._data_ptr.load(1), self._cap)
+        iota(self._data_ptr[1], self._cap)
 
     fn initialize[
         initialization_function: String, val: Float32 = 0, val2: Float32 = 0
@@ -292,7 +289,7 @@ struct Node:
             self.fill(0.0)
 
     fn he_normal(self) raises:
-        let fan_in: Float32 = self._shape.load(len(self._shape) - 2)
+        let fan_in: Float32 = self._shape[len(self._shape) - 2]
         let scale = sqrt(2.0 / fan_in)
         self.random_normal(scale, 0.0)
 
@@ -304,23 +301,23 @@ struct Node:
         rand(u1, self._cap)
         rand(u2, self._cap)
         for i in range(self._cap):
-            let z = sqrt(-2.0 * log(u1.load(i))) * cos(2.0 * pi * u2.load(i))
-            self._data_ptr.load(0).store(i, z * std + mu)
+            let z = sqrt(-2.0 * log(u1[i])) * cos(2.0 * pi * u2[i])
+            self._data_ptr[0].store(i, z * std + mu)
 
     fn random_uniform(self, min: Float32, max: Float32):
         seed()
-        rand(self._data_ptr.load(0), self._cap)
+        rand(self._data_ptr[0], self._cap)
         for i in range(self._cap):
-            self._data_ptr.load(0).store(
-                i, self._data_ptr.load(0).load(i) * (max - min) + min
+            self._data_ptr[0].store(
+                i, self._data_ptr[0][i] * (max - min) + min
             )
 
     fn free(self):
         self._id_ptr.free()
         self._data_id_ptr.free()
         self._grad_id_ptr.free()
-        self._data_ptr.load(0).free()
-        self._data_ptr.load(1).free()
+        self._data_ptr[0].free()
+        self._data_ptr[1].free()
         self._data_ptr.free()
         self._parents.free()
         self._children.free()
@@ -332,9 +329,9 @@ struct Node:
         self._other_params.free()
 
     fn print(self, accuracy: Int = 6) raises:
-        let row: Int = self._shape.load(self._num_dims - 2)
-        let cols: Int = self._shape.load(self._num_dims - 1)
-        let col_strides: Int = (self._strides.load(0) * self._shape.load(0)) // cols
+        let row: Int = self._shape[self._num_dims - 2]
+        let cols: Int = self._shape[self._num_dims - 1]
+        let col_strides: Int = (self._strides[0] * self._shape[0]) // cols
         print(" ")
         var times = 1
         if self._grad_computed_ptr.load() and self._grad_id_ptr.load() != -1:
@@ -353,7 +350,7 @@ struct Node:
 
                 var indent = 0
                 for d in range(self._num_dims - 1):
-                    if cols * i % self._strides.load(d) == 0:
+                    if cols * i % self._strides[d] == 0:
                         print_no_newline("[ ")
                         indent += 1
                     else:
@@ -367,16 +364,16 @@ struct Node:
                     else:
                         let idx = cols * i + j
                         print_no_newline(
-                            String(self._data_ptr.load(0).load(idx))[
+                            String(self._data_ptr[0][idx])[
                                 :accuracy
-                            ] if self._data_ptr.load(0).load(idx)
+                            ] if self._data_ptr[0][idx]
                             != 0.0 else String(0.000)[:accuracy]
                         )
                         if j != cols - 1:
                             print_no_newline(", ")
 
                 for d in range(self._num_dims - 2, -1, -1):
-                    if cols * (i + 1) % self._strides.load(d) == 0:
+                    if cols * (i + 1) % self._strides[d] == 0:
                         print_no_newline(" ]")
 
                 if i < col_strides - 1:
@@ -385,7 +382,7 @@ struct Node:
                 else:
                     print_no_newline(" ], shape: [")
                     for i in range(self._num_dims):
-                        print_no_newline(self._shape.load(i))
+                        print_no_newline(self._shape[i])
                         if i < self._num_dims - 1:
                             print_no_newline(",")
                     print_no_newline("] ")

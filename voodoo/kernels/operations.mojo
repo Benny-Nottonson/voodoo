@@ -53,7 +53,7 @@ struct Sum(Operation):
         fn vectorized_sum_bw[NELTS: Int](i: Int):
             parent1.get_grad().simd_store[NELTS](
                 i,
-                parent1.get_grad().simd_load[NELTS](i) + node.get_grad().load(0),
+                parent1.get_grad().simd_load[NELTS](i) + node.get_grad()[0],
             )
 
         vectorize[NELTS, vectorized_sum_bw](parent1.get_cap())
@@ -93,8 +93,8 @@ struct Transpose(Operation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         let num_dims = parent1.get_num_dims()
-        let M = parent1.get_shape().load(num_dims - 2)
-        let N = parent1.get_shape().load(num_dims - 1)
+        let M = parent1.get_shape()[num_dims - 2]
+        let N = parent1.get_shape()[num_dims - 1]
         for s in range(node.get_cap() // (M * N)):
             let offset = s * M * N
             for i in range(M):
@@ -111,8 +111,8 @@ struct Transpose(Operation):
     @staticmethod
     fn bw(node: Node, parent1: Node):
         let num_dims = parent1.get_num_dims()
-        let M = parent1.get_shape().load(num_dims - 2)
-        let N = parent1.get_shape().load(num_dims - 1)
+        let M = parent1.get_shape()[num_dims - 2]
+        let N = parent1.get_shape()[num_dims - 1]
         for s in range(node.get_cap() // (M * N)):
             let offset = s * M * N
             for i in range(M):
@@ -132,7 +132,7 @@ struct Dropout(Operation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         let params = node.get_other_params()
-        let keep_prob = 1 - params.load(0) / 1000000.0
+        let keep_prob = 1 - params[0] / 1000000.0
         let scale = 1.0 / keep_prob
 
         @parameter
@@ -149,7 +149,7 @@ struct Dropout(Operation):
     @staticmethod
     fn bw(node: Node, parent1: Node):
         let params = node.get_other_params()
-        let keep_prob = 1 - params.load(0) / 1000000.0
+        let keep_prob = 1 - params[0] / 1000000.0
         let scale = 1.0 / keep_prob
 
         @parameter
