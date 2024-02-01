@@ -11,10 +11,10 @@ struct Node:
     var _data_ptr: Pointer[DTypePointer[DType.float32]]
     var _parents: Vector[Int]
     var _children: Vector[Int]
-    var _dependencies_ptr: Pointer[Int] # Has to be a pointer
+    var _dependencies_ptr: Pointer[Int]  # Has to be a pointer
     var _is_static: Bool
-    var _computed_ptr: Pointer[Bool] # Has to be a pointer
-    var _grad_computed_ptr: Pointer[Bool] # Has to be a pointer
+    var _computed_ptr: Pointer[Bool]  # Has to be a pointer
+    var _grad_computed_ptr: Pointer[Bool]  # Has to be a pointer
     var _operator_id: Int
     var _grad_operator_id: Int
     var _tmp_visited: Bool
@@ -59,7 +59,9 @@ struct Node:
         let strides = Vector[Int](len(shape))
         strides[len(shape) - 1] = 1
         for i in range(len(shape) - 1):
-            strides[len(shape) - i - 2] = strides[len(shape) - i - 1] * shape[len(shape) - i - 1]
+            strides[len(shape) - i - 2] = (
+                strides[len(shape) - i - 1] * shape[len(shape) - i - 1]
+            )
 
         return Node {
             _id_ptr: id_ptr,
@@ -308,9 +310,7 @@ struct Node:
         seed()
         rand(self._data_ptr[0], self._cap)
         for i in range(self._cap):
-            self._data_ptr[0].store(
-                i, self._data_ptr[0][i] * (max - min) + min
-            )
+            self._data_ptr[0].store(i, self._data_ptr[0][i] * (max - min) + min)
 
     fn free(self):
         self._id_ptr.free()
@@ -364,9 +364,9 @@ struct Node:
                     else:
                         let idx = cols * i + j
                         print_no_newline(
-                            String(self._data_ptr[0][idx])[
-                                :accuracy
-                            ] if self._data_ptr[0][idx]
+                            String(self._data_ptr[0][idx])[:accuracy] if self._data_ptr[
+                                0
+                            ][idx]
                             != 0.0 else String(0.000)[:accuracy]
                         )
                         if j != cols - 1:

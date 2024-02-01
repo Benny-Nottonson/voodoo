@@ -3,7 +3,7 @@ from math.limit import inf
 from sys.intrinsics import PrefetchOptions
 
 alias PI = 3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342
-alias MEMORY_POOL_SIZE = 2500
+alias MEMORY_POOL_SIZE = 20
 alias EPSILON = 1e-8
 alias F32_MAX = inf[DType.float32]()
 alias PREFETCH_READ = PrefetchOptions().for_read().high_locality().to_data_cache()

@@ -231,16 +231,16 @@ struct Graph:
             node.set_grad(self._memory_pool[node.get_grad_id()])
             memset_zero(node.get_grad(), ceiled_cap)
 
-    fn release_data(self, node: Node) raises:
+    fn release_data[forced: Bool = False](self, node: Node) raises:
         if (
             node.get_is_static()
-            or node.get_checkpoint()
-            or node.get_is_single()
+            or (node.get_checkpoint() and not forced)
+            or (node.get_is_single() and not forced)
             or node.get_data_id() == -1
         ):
             return
 
-        if node.get_dependencies() == 0:
+        if node.get_dependencies() == 0 or forced:
             let index = self.get_index(node.get_cap())
             let data_id = node.get_data_id()
             var mem_pool = self._memory_pool_manager[index]
@@ -248,17 +248,6 @@ struct Graph:
             node.set_data_id(-1)
             node.set_dependencies(len(node.get_children()))
             node.set_computed(False)
-
-    fn release_data_forced(self, node: Node) raises:
-        if node.get_is_static() or node.get_data_id() == -1:
-            return
-        let index = self.get_index(node.get_cap())
-        let data_id = node.get_data_id()
-        var mem_pool = self._memory_pool_manager[index]
-        mem_pool.push_back(data_id)
-        node.set_data_id(-1)
-        node.set_computed(False)
-        node.set_dependencies(len(node.get_children()))
 
     fn release_grad_forced(self, node: Node) raises:
         if node.get_is_static() or node.get_grad_id() == -1:
@@ -273,7 +262,7 @@ struct Graph:
     fn clear_cache(inout self, reset_static_nodes: Bool = False) raises:
         if self._last_node_id.load() != -1:
             let node = self._nodes[self._last_node_id.load()]
-            self.release_data_forced(node)
+            self.release_data[True](node)
 
         for i in range(len(self._nodes) - 1):
             if self._nodes[i].get_data_id() == -1:
@@ -307,8 +296,7 @@ struct Graph:
         for i in range(len(deletable_data)):
             if (
                 deletable_data[i]
-                and not self._memory_pool[i]
-                == DTypePointer[DType.float32].get_null()
+                and not self._memory_pool[i] == DTypePointer[DType.float32].get_null()
             ):
                 self._memory_pool[i].free()
         deletable_data.free()
@@ -354,19 +342,13 @@ struct Graph:
 
         let operator_id = node.get_operator_id()
         if len(node.get_parents()) == 1:
-            let parent1 = self.forward_recursive(
-                self._nodes[node.get_parents()[0]]
-            )
+            let parent1 = self.forward_recursive(self._nodes[node.get_parents()[0]])
             self.get_free_data(node)
             self._kernels[operator_id].get[0, UNARY_OP]()(node, parent1)
             self.release_data(parent1)
         else:
-            let parent1 = self.forward_recursive(
-                self._nodes[node.get_parents()[0]]
-            )
-            let parent2 = self.forward_recursive(
-                self._nodes[node.get_parents()[1]]
-            )
+            let parent1 = self.forward_recursive(self._nodes[node.get_parents()[0]])
+            let parent2 = self.forward_recursive(self._nodes[node.get_parents()[1]])
             self.get_free_data(node)
             self._kernels[operator_id].get[1, BINARY_OP]()(node, parent1, parent2)
             self.release_data(parent1)
@@ -382,7 +364,7 @@ struct Graph:
         return res
 
     fn forward_static(inout self, node: Node) raises -> Node:
-        self.release_data_forced(node)
+        self.release_data[True](node)
 
         for i in range(len(self._nodes)):
             let node = self._nodes[i]
@@ -467,7 +449,7 @@ struct Graph:
                 )
 
             if child.get_id() != self._last_node_id.load():
-                self.release_data_forced(child)
+                self.release_data[True](child)
             self.release_grad_forced(child)
 
         return node
@@ -684,10 +666,7 @@ struct Graph:
         let old_shape = parent1.get_shape().copy()
 
         return self.node[False](
-            TensorShape(
-                old_shape[len(old_shape) - 1],
-                old_shape[len(old_shape) - 2]
-            ),
+            TensorShape(old_shape[len(old_shape) - 1], old_shape[len(old_shape) - 2]),
             False,
             False,
             transp_code,
@@ -765,7 +744,7 @@ struct Graph:
         let memory_pool_len = len(self._memory_pool)
 
         for i in range(len(other_graph._nodes)):
-            var node = other_graph._nodes[i]
+            let node = other_graph._nodes[i]
             node.set_id(node.get_id() + num_nodes)
             for j in range(len(node.get_children())):
                 node.get_children()[j] = node.get_children()[j] + num_nodes
@@ -777,19 +756,20 @@ struct Graph:
         for i in range(len(other_graph._memory_pool)):
             self._memory_pool.push_back(other_graph._memory_pool[i])
 
+        @unroll
         for i in range(MEMORY_POOL_SIZE):
-            for j in range(len(other_graph._memory_pool_manager[i])):
-                var mem_pool = self._memory_pool_manager[i]
-                mem_pool.push_back(
+            let mem_pool_len = len(other_graph._memory_pool_manager[i])
+            for j in range(mem_pool_len):
+                self._memory_pool_manager[i].push_back(
                     other_graph._memory_pool_manager[i][j] + memory_pool_len
                 )
 
-        for i in range(len(self._free_node_ids)):
-            self._free_node_ids.push_back(
-                other_graph._free_node_ids[i] + num_nodes
-            )
+        let free_node_ids_len = len(self._free_node_ids)
+        for i in range(free_node_ids_len):
+            self._free_node_ids.push_back(other_graph._free_node_ids[i] + num_nodes)
 
-        for i in range(len(self._free_data_ids)):
+        let free_data_ids_len = len(self._free_data_ids)
+        for i in range(free_data_ids_len):
             self._free_data_ids.push_back(
                 other_graph._free_data_ids[i] + memory_pool_len
             )
