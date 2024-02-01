@@ -63,7 +63,6 @@ struct Vector[type: AnyRegType](Sized):
     fn clear(inout self):
         self._size_down(8)
         self._len.store(0)
-        self._cap = 8
 
         memset_zero(self._data, self._cap)
 
