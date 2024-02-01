@@ -36,7 +36,7 @@ struct Vector[type: AnyRegType](Sized):
         let curr_cap = self._cap
 
         if len == curr_cap:
-            self._size_up(curr_cap << 1)
+            self._resize[True](max(1, curr_cap << 1))
 
         self._data.store(len, elem)
         self._len.store(len + 1)
@@ -50,7 +50,7 @@ struct Vector[type: AnyRegType](Sized):
         let tmp = self._data.load(new_len)
 
         if new_len <= (curr_cap >> 2) and curr_cap > 32:
-            self._size_down(curr_cap >> 1)
+            self._resize[False](curr_cap >> 1)
 
         return tmp
 
@@ -61,7 +61,7 @@ struct Vector[type: AnyRegType](Sized):
 
     @always_inline("nodebug")
     fn clear(inout self):
-        self._size_down(8)
+        self._resize[False](8)
         self._len.store(0)
 
         memset_zero(self._data, self._cap)
@@ -76,21 +76,15 @@ struct Vector[type: AnyRegType](Sized):
         return new_vector
 
     @always_inline("nodebug")
-    fn _size_up(inout self, new_cap: Int):
+    fn _resize[up: Bool](inout self, new_cap: Int):
         let new_data = Pointer[type].alloc(new_cap)
 
-        memset_zero(new_data, new_cap)
-        memcpy(new_data, self._data, self._cap)
-
-        self._cap = new_cap
-        self._data.free()
-        self._data = new_data
-
-    @always_inline("nodebug")
-    fn _size_down(inout self, new_cap: Int):
-        let new_data = Pointer[type].alloc(new_cap)
-
-        memcpy(new_data, self._data, new_cap)
+        @parameter
+        if up:
+            memset_zero(new_data, new_cap)
+            memcpy(new_data, self._data, self._cap)
+        else:
+            memcpy(new_data, self._data, new_cap)
 
         self._cap = new_cap
         self._data.free()
