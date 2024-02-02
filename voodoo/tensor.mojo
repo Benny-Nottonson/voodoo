@@ -296,7 +296,7 @@ struct Tensor[is_static: Bool = True, is_single: Bool = False]:
 
     @always_inline("nodebug")
     fn __rpow__(self, number: Float32) raises -> Tensor[False, False]:
-        let other = Tensor[False, False](
+        var other = Tensor[False, False](
             self.node.get_shape().copy(),
         ).fill(number)
         other.node.set_is_single(True)
