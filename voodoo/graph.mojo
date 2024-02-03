@@ -175,8 +175,8 @@ struct Graph:
         is_static: Bool,
         is_single: Bool,
         operator_id: Int,
-    ](inout self, other_params: Vector[Int]) raises -> Node:
-        var node = Node(self.get_free_node_id(), shape, is_static, other_params.copy())
+    ](inout self) raises -> Node:
+        var node = Node(self.get_free_node_id(), shape, is_static, Vector[Int]())
         node.set_checkpoint(checkpoint)
         node.set_operator_id(operator_id)
         node.set_is_single(is_single)

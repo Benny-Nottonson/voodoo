@@ -18,7 +18,7 @@ struct Tensor[shape: Vector[Int], is_static: Bool = True, is_single: Bool = Fals
 
     fn __init__(inout self) raises:
         self.graph = Graph()
-        self.node = self.graph.node[False, shape, is_static, is_single, -1](Vector[Int]())
+        self.node = self.graph.node[False, shape, is_static, is_single, -1]()
 
     fn __copyinit__(inout self, other: Self):
         self.graph = other.graph
