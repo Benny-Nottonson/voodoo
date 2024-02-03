@@ -1,4 +1,5 @@
 from memory import memset_zero, memcpy
+from tensor import TensorShape
 from math import max
 
 
@@ -17,6 +18,18 @@ struct Vector[type: AnyRegType](Sized):
         _len.store(len)
 
         return Vector[type] {_data: _data, _len: _len, _cap: _cap}
+
+    fn __init__(shape: TensorShape) -> Self:
+        let len = shape.rank()
+        let _data = Pointer[type].alloc(len)
+        let _len = Pointer[Int].alloc(1)
+
+        for i in range(len):
+            _data.store(i, shape[i])
+
+        _len.store(len)
+
+        return Vector[type] {_data: _data, _len: _len, _cap: len}
 
     @always_inline("nodebug")
     fn __len__(self) -> Int:
