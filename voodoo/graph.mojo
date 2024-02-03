@@ -21,16 +21,41 @@ from tensor import TensorShape
 
 
 @register_passable("trivial")
-struct Graph:
-    var _nodes: Vector[Node]
+struct MemoryPool(Sized):
     var _memory_pool: Vector[DTypePointer[DType.float32]]
-    var _memory_pool_manager: Pointer[Vector[Int]]
-    var _free_node_ids: Vector[Int]
-    var _free_data_ids: Vector[Int]
-    var _last_node_id: Pointer[Int]
-    var _kernels: Pointer[OP_TUPLE]
-    var _grad_nodes_order: Vector[Int]
 
+    @always_inline("nodebug")
+    fn __init__() -> Self:
+        return MemoryPool {_memory_pool: Vector[DTypePointer[DType.float32]]()}
+
+    @always_inline("nodebug")
+    fn __getitem__(self, index: Int) -> DTypePointer[DType.float32]:
+        return self._memory_pool[index]
+
+    @always_inline("nodebug")
+    fn __setitem__(inout self, index: Int, value: DTypePointer[DType.float32]):
+        self._memory_pool[index] = value
+
+    @always_inline("nodebug")
+    fn __len__(self) -> Int:
+        return len(self._memory_pool)
+
+    @always_inline("nodebug")
+    fn free(self):
+        for i in range(len(self._memory_pool)):
+            self._memory_pool[i].free()
+        self._memory_pool.free()
+
+    @always_inline("nodebug")
+    fn push_back(inout self, value: DTypePointer[DType.float32]):
+        self._memory_pool.push_back(value)
+
+
+@register_passable("trivial")
+struct MemoryPoolManager:
+    var _memory_pool_manager: Pointer[Vector[Int]]
+
+    @always_inline("nodebug")
     fn __init__() -> Self:
         let memory_pool_manager = Pointer[Vector[Int]].alloc(MEMORY_POOL_SIZE)
 
@@ -38,13 +63,47 @@ struct Graph:
         for i in range(MEMORY_POOL_SIZE):
             memory_pool_manager.store(i, Vector[Int]())
 
+        return MemoryPoolManager {_memory_pool_manager: memory_pool_manager}
+
+    @always_inline("nodebug")
+    fn __getitem__(self, index: Int) -> Vector[Int]:
+        return self._memory_pool_manager[index]
+
+    @always_inline("nodebug")
+    fn __setitem__(inout self, index: Int, value: Vector[Int]):
+        self._memory_pool_manager[index] = value
+
+    @always_inline("nodebug")
+    fn __len__(self) -> Int:
+        return MEMORY_POOL_SIZE
+
+    @always_inline("nodebug")
+    fn free(self):
+        @unroll
+        for i in range(MEMORY_POOL_SIZE):
+            self._memory_pool_manager[i].free()
+        self._memory_pool_manager.free()
+
+
+@register_passable("trivial")
+struct Graph:
+    var _nodes: Vector[Node]
+    var _memory_pool: MemoryPool
+    var _memory_pool_manager: MemoryPoolManager
+    var _free_node_ids: Vector[Int]
+    var _free_data_ids: Vector[Int]
+    var _last_node_id: Pointer[Int]
+    var _kernels: Pointer[OP_TUPLE]
+    var _grad_nodes_order: Vector[Int]
+
+    fn __init__() -> Self:
         let last_node_id = Pointer[Int].alloc(1)
         last_node_id.store(-1)
 
         return Graph {
             _nodes: Vector[Node](),
-            _memory_pool: Vector[DTypePointer[DType.float32]](),
-            _memory_pool_manager: memory_pool_manager,
+            _memory_pool: MemoryPool(),
+            _memory_pool_manager: MemoryPoolManager(),
             _free_node_ids: Vector[Int](),
             _free_data_ids: Vector[Int](),
             _last_node_id: last_node_id,
