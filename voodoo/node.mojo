@@ -254,7 +254,6 @@ struct Node:
         for i in range(self._cap):
             self._data_ptr[0].store(i, val)
 
-    # Use math.iota here https://github.com/rd4com/mojo-learning/blob/main/tutorials/simd.md
     @always_inline("nodebug")
     fn fill_incr(self):
         iota(self._data_ptr[0], self._cap)
@@ -275,7 +274,11 @@ struct Node:
         if initialization_function == "he_normal":
             self.he_normal()
         elif initialization_function == "random_uniform":
-            self.random_uniform(val, val2)
+            voodoo.kernels.initializers.random_uniform(
+                self._data_ptr.load(0),
+                self._cap,
+                StaticIntTuple[2](val.to_int(), val2.to_int()),
+            )
         elif initialization_function == "random_normal":
             self.random_normal(val, val2)
         elif initialization_function == "ones":
@@ -305,12 +308,6 @@ struct Node:
         for i in range(self._cap):
             let z = sqrt(-2.0 * log(u1[i])) * cos(2.0 * pi * u2[i])
             self._data_ptr[0].store(i, z * std + mu)
-
-    fn random_uniform(self, min: Float32, max: Float32):
-        seed()
-        rand(self._data_ptr[0], self._cap)
-        for i in range(self._cap):
-            self._data_ptr[0].store(i, self._data_ptr[0][i] * (max - min) + min)
 
     fn free(self):
         self._id_ptr.free()
