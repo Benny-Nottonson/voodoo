@@ -1,5 +1,8 @@
 name: MojoCodeTest
 
+env:
+  MOJO_HOME: /home/runner/.modular/pkg/packages.modular.com_mojo/bin
+
 on:
   push:
     branches: [ "main" ]
