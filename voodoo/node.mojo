@@ -267,48 +267,6 @@ struct Node:
     fn grad_fill_incr(self):
         iota(self._data_ptr[1], self._cap)
 
-    fn initialize[
-        initialization_function: String, val: Float32 = 0, val2: Float32 = 0
-    ](self) raises:
-        @parameter
-        if initialization_function == "he_normal":
-            self.he_normal()
-        elif initialization_function == "random_uniform":
-            voodoo.kernels.initializers.random_uniform(
-                self._data_ptr.load(0),
-                self._cap,
-                StaticIntTuple[2](val.to_int(), val2.to_int()),
-            )
-        elif initialization_function == "random_normal":
-            self.random_normal(val, val2)
-        elif initialization_function == "ones":
-            self.fill(1.0)
-        elif initialization_function == "zeros":
-            self.fill(0.0)
-        else:
-            warn(
-                "Invalid initialization function: "
-                + initialization_function
-                + " using zeros\n"
-            )
-            self.fill(0.0)
-
-    fn he_normal(self) raises:
-        let fan_in: Float32 = self._shape[len(self._shape) - 2]
-        let scale = sqrt(2.0 / fan_in)
-        self.random_normal(scale, 0.0)
-
-    fn random_normal(self, std: Float32 = 1.0, mu: Float32 = 0.0):
-        seed()
-        let pi = 3.14159265358979
-        let u1 = DTypePointer[DType.float32].alloc(self._cap)
-        let u2 = DTypePointer[DType.float32].alloc(self._cap)
-        rand(u1, self._cap)
-        rand(u2, self._cap)
-        for i in range(self._cap):
-            let z = sqrt(-2.0 * log(u1[i])) * cos(2.0 * pi * u2[i])
-            self._data_ptr[0].store(i, z * std + mu)
-
     fn free(self):
         self._id_ptr.free()
         self._data_id_ptr.free()

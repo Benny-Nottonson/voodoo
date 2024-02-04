@@ -10,13 +10,20 @@ from .operator_codes import (
     pow_code,
 )
 from tensor import TensorShape
+from .initializers import Initializer, Zeroes
 
 
-struct Tensor[shape: Vector[Int], is_static: Bool = True, is_single: Bool = False]:
+struct Tensor[
+    shape: Vector[Int],
+    is_static: Bool = True,
+    is_single: Bool = False,
+]:
     var graph: Graph
     var node: Node
 
-    fn __init__(inout self) raises:
+    fn __init__(
+        inout self,
+    ) raises:
         self.graph = Graph()
         self.node = self.graph.node[False, shape, is_static, is_single, -1]()
 
@@ -60,12 +67,11 @@ struct Tensor[shape: Vector[Int], is_static: Bool = True, is_single: Bool = Fals
             _ = self.forward()
         self.node.print(accuracy)
 
-    @always_inline("nodebug")
     fn initialize[
-        initialization_function: String, val: Float32 = 0, val2: Float32 = 0
-    ](owned self) raises -> Tensor[shape, is_static, is_single]:
-        self.node.initialize[initialization_function, val, val2]()
-        return self ^
+        initializer: Initializer, arg0: Float64 = 0.0, arg1: Float64 = 0.0
+    ](self) -> Self:
+        initializer.initialize[shape, arg0, arg1](self.node.get_data())
+        return self
 
     @always_inline("nodebug")
     fn fill(owned self, val: Float32) -> Self:
