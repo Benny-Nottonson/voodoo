@@ -19,4 +19,4 @@ jobs:
           modular install mojo
       - name: Run Mojo and Check for Errors
         run: |
-          mojo ${{ secrets.TEST_FILE }}
+          mojo ${{ vars.TEST_FILE }}
