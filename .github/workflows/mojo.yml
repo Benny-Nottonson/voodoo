@@ -19,5 +19,4 @@ jobs:
           modular install mojo
       - name: Run Mojo and Check for Errors
         run: |
-          ls
-          mojo ${{ vars.TEST_FILE }}
+         ${{ env.MOJO_HOME }}/mojo ${{ vars.TEST_FILE }}
