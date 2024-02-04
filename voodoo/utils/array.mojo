@@ -87,7 +87,6 @@ struct Vector[type: AnyRegType](Sized):
         memcpy(new_vector._data, self._data, len)
 
         return new_vector
-            
 
     @always_inline("nodebug")
     fn _resize[up: Bool](inout self, new_cap: Int):

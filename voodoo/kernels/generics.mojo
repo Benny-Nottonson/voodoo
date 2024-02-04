@@ -9,6 +9,11 @@ from voodoo.utils import (
 )
 from ..constants import NELTS, PREFETCH_READ, PREFETCH_WRITE
 
+
+trait Generic:
+    ...
+
+
 alias generic_activation_vectorized = fn[
     NELTS: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ] (SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]
@@ -32,13 +37,14 @@ alias generic_optimizer_vectorized = fn[NELTS: Int, learning_rate: Float32] (
 ) -> SIMD[DType.float32, NELTS]
 
 
+@register_passable("trivial")
 struct GenericActivation[
     fw_vec: generic_activation_vectorized,
     bw_vec: generic_activation_vectorized,
     arg1: Float32,
     arg2: Float32,
     arg3: Float32,
-]:
+](Generic):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         let node_data = node.get_data()
@@ -82,9 +88,10 @@ struct GenericActivation[
         vectorize[NELTS, vectorized_bw](node.get_cap())
 
 
+@register_passable("trivial")
 struct GenericArithmetic[
     fw_vec: generic_arithmetic_vectorized, bw_vec: generic_arithmetic_vectorized
-]:
+](Generic):
     @staticmethod
     fn fw(node: Node, parent1: Node):
         let node_data = node.get_data()
@@ -126,11 +133,12 @@ struct GenericArithmetic[
         vectorize[NELTS, vectorized_bw](node.get_cap())
 
 
+@register_passable("trivial")
 struct GenericBinaryArithmetic[
     fw_vec: generic_binary_arithmetic_vectorized,
     bw_a_vec: generic_binary_arithmetic_vectorized,
     bw_b_vec: generic_binary_arithmetic_vectorized,
-]:
+](Generic):
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
         recursive_broadcast[Self.kernel_fw[fw_vec], Self.base_case](c, a, b)
@@ -242,10 +250,11 @@ struct GenericBinaryArithmetic[
         ) * shape_b(depth, a, b)
 
 
+@register_passable("trivial")
 struct GenericLoss[
     fw_vec: generic_loss_vectorized_fw,
     bw_vec: generic_loss_vectorized_bw,
-]:
+](Generic):
     @staticmethod
     fn fw(node: Node, y_pred: Node, y_true: Node):
         let num_dims = len(y_pred.get_shape())
@@ -304,7 +313,8 @@ struct GenericLoss[
         vectorize[NELTS, vectorized_mae_bw](cap)
 
 
-struct GenericOptimizer[fw_vec: generic_optimizer_vectorized]:
+@register_passable("trivial")
+struct GenericOptimizer[fw_vec: generic_optimizer_vectorized](Generic):
     @staticmethod
     fn step[learning_rate: Float32](x: Vector[Node]) raises:
         for i in range(len(x)):

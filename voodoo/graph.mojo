@@ -147,7 +147,6 @@ struct Graph:
         node.set_checkpoint(checkpoint)
         node.set_operator_id(operator_id)
         node.set_is_single(is_single)
-        node.set_grad_operator_id(operator_id + 1)
 
         for i in range(len(parents)):
             node.push_back_parent(parents[i].get_id())
@@ -171,7 +170,7 @@ struct Graph:
 
     fn node[
         checkpoint: Bool,
-        shape: Vector[Int],
+        shape: TensorShape,
         is_static: Bool,
         is_single: Bool,
         operator_id: Int,
@@ -180,7 +179,6 @@ struct Graph:
         node.set_checkpoint(checkpoint)
         node.set_operator_id(operator_id)
         node.set_is_single(is_single)
-        node.set_grad_operator_id(operator_id + 1)
 
         self.get_free_data(node)
 
@@ -210,7 +208,6 @@ struct Graph:
         node.set_checkpoint(checkpoint)
         node.set_is_single(is_single)
         node.set_operator_id(operator_id)
-        node.set_grad_operator_id(operator_id + 1)
 
         for i in range(len(parents)):
             node.push_back_parent(parents[i].get_id())
@@ -322,7 +319,18 @@ struct Graph:
         ):
             return
 
-        if node.get_dependencies() == 0 or forced:
+        @parameter
+        if forced:
+            let index = self.get_index(node.get_cap())
+            let data_id = node.get_data_id()
+            var mem_pool = self._memory_pool_manager[index]
+            mem_pool.push_back(data_id)
+            node.set_data_id(-1)
+            node.set_dependencies(len(node.get_children()))
+            node.set_computed(False)
+            return
+
+        if node.get_dependencies() == 0:
             let index = self.get_index(node.get_cap())
             let data_id = node.get_data_id()
             var mem_pool = self._memory_pool_manager[index]

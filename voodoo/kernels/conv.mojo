@@ -6,7 +6,12 @@ from ..constants import NELTS, PREFETCH_READ, PREFETCH_WRITE
 alias tile_sizes = VariadicList[Int](32, 16, 8, 4, 2, 1)
 
 
-struct Conv1D:
+trait Conv:
+    ...
+
+
+@register_passable("trivial")
+struct Conv1D(Conv):
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
         let params = c.get_other_params()
@@ -133,7 +138,8 @@ struct Conv1D:
         im2col.free()
 
 
-struct Conv2D:
+@register_passable("trivial")
+struct Conv2D(Conv):
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
         let params = c.get_other_params()

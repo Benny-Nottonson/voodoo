@@ -1,79 +1,98 @@
 from .generics import GenericActivation
 from math import exp, log, abs, tanh, cosh, erf
-from ..constants import F32_MAX
+from ..constants import F32_MAX, NELTS
 
 
-struct Relu[arg1: Float32, arg2: Float32, arg3: Float32]:
+trait Activation:
+    ...
+
+
+@register_passable("trivial")
+struct Relu[arg1: Float32, arg2: Float32, arg3: Float32](Activation):
     alias fw = GenericActivation[relu_fw_vec, relu_bw_vec, arg1, arg2, arg3].fw
     alias bw = GenericActivation[relu_fw_vec, relu_bw_vec, arg1, arg2, arg3].bw
 
 
-struct Sigmoid[]:
+@register_passable("trivial")
+struct Sigmoid[](Activation):
     alias fw = GenericActivation[sigmoid_fw_vec, sigmoid_bw_vec, 0.0, 0.0, 0.0].fw
     alias bw = GenericActivation[sigmoid_fw_vec, sigmoid_bw_vec, 0.0, 0.0, 0.0].bw
 
 
-struct Softplus[]:
+@register_passable("trivial")
+struct Softplus[](Activation):
     alias fw = GenericActivation[softplus_fw_vec, softplus_bw_vec, 0.0, 0.0, 0.0].fw
     alias bw = GenericActivation[softplus_fw_vec, softplus_bw_vec, 0.0, 0.0, 0.0].bw
 
 
-struct Softsign[]:
+@register_passable("trivial")
+struct Softsign[](Activation):
     alias fw = GenericActivation[softsign_fw_vec, softsign_bw_vec, 0.0, 0.0, 0.0].fw
     alias bw = GenericActivation[softsign_fw_vec, softsign_bw_vec, 0.0, 0.0, 0.0].bw
 
 
-struct Tanh[]:
+@register_passable("trivial")
+struct Tanh[](Activation):
     alias fw = GenericActivation[tanh_fw_vec, tanh_bw_vec, 0.0, 0.0, 0.0].fw
     alias bw = GenericActivation[tanh_fw_vec, tanh_bw_vec, 0.0, 0.0, 0.0].bw
 
 
-struct Selu[]:
+@register_passable("trivial")
+struct Selu[](Activation):
     alias fw = GenericActivation[selu_fw_vec, selu_bw_vec, 0.0, 0.0, 0.0].fw
     alias bw = GenericActivation[selu_fw_vec, selu_bw_vec, 0.0, 0.0, 0.0].bw
 
 
-struct Elu[alpha: Float32]:
+@register_passable("trivial")
+struct Elu[alpha: Float32](Activation):
     alias fw = GenericActivation[elu_fw_vec, elu_bw_vec, 0.0, 0.0, alpha].fw
     alias bw = GenericActivation[elu_fw_vec, elu_bw_vec, 0.0, 0.0, alpha].bw
 
 
-struct Exp[]:
+@register_passable("trivial")
+struct Exp[](Activation):
     alias fw = GenericActivation[exp_vec, exp_vec, 0.0, 0.0, 0.0].fw
     alias bw = GenericActivation[exp_vec, exp_vec, 0.0, 0.0, 0.0].bw
 
 
-struct LeakyRelu[alpha: Float32]:
+@register_passable("trivial")
+struct LeakyRelu[alpha: Float32](Activation):
     alias fw = GenericActivation[relu_fw_vec, relu_bw_vec, alpha, F32_MAX, 0.0].fw
     alias bw = GenericActivation[relu_fw_vec, relu_bw_vec, alpha, F32_MAX, 0.0].bw
 
 
-struct Relu6[]:
+@register_passable("trivial")
+struct Relu6[](Activation):
     alias fw = GenericActivation[relu_fw_vec, relu_bw_vec, 0.0, 6.0, 0.0].fw
     alias bw = GenericActivation[relu_fw_vec, relu_bw_vec, 0.0, 6.0, 0.0].bw
 
 
-struct Silu[]:
+@register_passable("trivial")
+struct Silu[](Activation):
     alias fw = GenericActivation[silu_fw_vec, silu_bw_vec, 0.0, 0.0, 0.0].fw
     alias bw = GenericActivation[silu_fw_vec, silu_bw_vec, 0.0, 0.0, 0.0].bw
 
 
-struct Gelu[approximate: Float32]:
+@register_passable("trivial")
+struct Gelu[approximate: Float32](Activation):
     alias fw = GenericActivation[gelu_fw_vec, gelu_bw_vec, approximate, 0.0, 0.0].fw
     alias bw = GenericActivation[gelu_fw_vec, gelu_bw_vec, approximate, 0.0, 0.0].bw
 
 
-struct HardSigmoid[]:
+@register_passable("trivial")
+struct HardSigmoid[](Activation):
     alias fw = GenericActivation[hsig_fw_vec, hsig_bw_vec, 0.0, 0.0, 0.0].fw
     alias bw = GenericActivation[hsig_fw_vec, hsig_bw_vec, 0.0, 0.0, 0.0].bw
 
 
-struct Linear[]:
+@register_passable("trivial")
+struct Linear[](Activation):
     alias fw = GenericActivation[linear_fw_vec, linear_bw_vec, 0.0, 0.0, 0.0].fw
     alias bw = GenericActivation[linear_fw_vec, linear_bw_vec, 0.0, 0.0, 0.0].bw
 
 
-struct Mish[]:
+@register_passable("trivial")
+struct Mish[](Activation):
     alias fw = GenericActivation[mish_fw_vec, mish_bw_vec, 0.0, 0.0, 0.0].fw
     alias bw = GenericActivation[mish_fw_vec, mish_bw_vec, 0.0, 0.0, 0.0].bw
 

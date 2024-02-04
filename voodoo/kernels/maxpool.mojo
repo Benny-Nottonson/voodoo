@@ -4,7 +4,12 @@ from voodoo import Node
 from ..constants import PREFETCH_READ, PREFETCH_WRITE, F32_MAX, NELTS
 
 
-struct MaxPool1D:
+trait MaxPool:
+    ...
+
+
+@register_passable("trivial")
+struct MaxPool1D(MaxPool):
     @staticmethod
     fn fw(c: Node, a: Node):
         let params = c.get_other_params()
@@ -98,7 +103,8 @@ struct MaxPool1D:
                     a.get_grad().store(batch_offset + input_pos, grad.reduce_add())
 
 
-struct MaxPool2D:
+@register_passable("trivial")
+struct MaxPool2D(MaxPool):
     @staticmethod
     fn fw(c: Node, a: Node):
         let params = c.get_other_params()
