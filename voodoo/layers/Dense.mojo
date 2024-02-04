@@ -1,52 +1,57 @@
-# from voodoo import Tensor, get_activation_code
-# from tensor import TensorShape
-# from .BaseLayer import BaseLayer
+from voodoo import Tensor, get_activation_code
+from tensor import TensorShape
+from .BaseLayer import BaseLayer
+from ..initializers import Initializer, GlorotUniform, Zeroes
 
 
-# struct Dense[
-#     in_neurons: Int,
-#     out_neurons: Int,
-#     activation: String = "none",
-#     use_bias: Bool = True,
-#     weight_initializer: String = "glorot_uniform",
-#     bias_initializer: String = "zeros",
-#     weight_mean: Float32 = 0.0,
-#     weight_std: Float32 = 0.05,
-#     bias_mean: Float32 = 0.0,
-#     bias_std: Float32 = 0.05,
-# ](BaseLayer):
-#     var W: Tensor
-#     var bias: Tensor
+struct Dense[
+    in_neurons: Int,
+    out_neurons: Int,
+    activation: String = "none",
+    use_bias: Bool = True,
+    weight_initializer: Initializer = GlorotUniform,
+    bias_initializer: Initializer = Zeroes,
+    weight_initializer_arg0: Float64 = 0.0,
+    weight_initializer_arg1: Float64 = 0.0,
+    bias_initializer_arg0: Float64 = 0.0,
+    bias_initializer_arg1: Float64 = 0.0,
+](BaseLayer):
+    var W: Tensor[TensorShape(in_neurons, out_neurons)]
+    var bias: Tensor[TensorShape(out_neurons)]
 
-#     fn __init__(
-#         inout self,
-#     ) raises:
-#         self.W = (
-#             Tensor(TensorShape(in_neurons, out_neurons))
-#             .initialize[weight_initializer, weight_mean, weight_std]()
-#             .requires_grad()
-#         )
+    fn __init__(
+        inout self,
+    ) raises:
+        self.W = (
+            Tensor[TensorShape(in_neurons, out_neurons)]()
+            .initialize[
+                weight_initializer, weight_initializer_arg0, weight_initializer_arg1
+            ]()
+            .requires_grad()
+        )
 
-#         @parameter
-#         if self.use_bias:
-#             self.bias = (
-#                 Tensor(TensorShape(out_neurons))
-#                 .initialize[bias_initializer, bias_mean, bias_std]()
-#                 .requires_grad()
-#             )
-#         else:
-#             self.bias = Tensor(TensorShape(out_neurons))
+        @parameter
+        if self.use_bias:
+            self.bias = (
+                Tensor[TensorShape(out_neurons)]()
+                .initialize[
+                    bias_initializer, bias_initializer_arg0, bias_initializer_arg1
+                ]()
+                .requires_grad()
+            )
+        else:
+            self.bias = Tensor[TensorShape(out_neurons)]()
 
-#     @always_inline("nodebug")
-#     fn forward(self, x: Tensor) raises -> Tensor[False, False]:
-#         var computed = x @ self.W
+    @always_inline("nodebug")
+    fn forward(self, x: Tensor) raises -> Tensor[x.shape, False, False]:
+        var computed = x @ self.W
 
-#         @parameter
-#         if self.use_bias:
-#             computed = computed + self.bias
+        @parameter
+        if self.use_bias:
+            computed = computed + self.bias
 
-#         @parameter
-#         if self.activation != "none":
-#             return computed.compute_activation[get_activation_code[activation]()]()
+        @parameter
+        if self.activation != "none":
+            return computed.compute_activation[get_activation_code[activation]()]()
 
-#         return computed
+        return computed

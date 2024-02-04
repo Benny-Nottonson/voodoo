@@ -15,6 +15,7 @@ trait Operation:
         ...
 
 
+@register_passable("trivial")
 struct Copy(Operation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
@@ -35,6 +36,7 @@ struct Copy(Operation):
         vectorize[NELTS, vectorized_copy_bw](node.get_cap())
 
 
+@register_passable("trivial")
 struct Sum(Operation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
@@ -59,6 +61,7 @@ struct Sum(Operation):
         vectorize[NELTS, vectorized_sum_bw](parent1.get_cap())
 
 
+@register_passable("trivial")
 struct Reshape(Operation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
@@ -89,6 +92,7 @@ struct Reshape(Operation):
             vectorize[NELTS, vectorized_reshape](parent1.get_cap())
 
 
+@register_passable("trivial")
 struct Transpose(Operation):
     @staticmethod
     fn fw(node: Node, parent1: Node):
@@ -128,6 +132,7 @@ struct Transpose(Operation):
                 vectorize[NELTS, vectorized_transp_bw](N)
 
 
+@register_passable("trivial")
 struct Dropout(Operation):
     @staticmethod
     fn fw(node: Node, parent1: Node):

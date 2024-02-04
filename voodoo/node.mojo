@@ -16,7 +16,6 @@ struct Node:
     var _computed_ptr: Pointer[Bool]  # Has to be a pointer
     var _grad_computed_ptr: Pointer[Bool]  # Has to be a pointer
     var _operator_id: Int
-    var _grad_operator_id: Int
     var _tmp_visited: Bool
     var _checkpoint: Bool
     var _is_single: Bool
@@ -75,7 +74,6 @@ struct Node:
             _computed_ptr: computed_ptr,
             _grad_computed_ptr: grad_computed_ptr,
             _operator_id: -1,
-            _grad_operator_id: -1,
             _tmp_visited: False,
             _checkpoint: False,
             _is_single: False,
@@ -192,11 +190,7 @@ struct Node:
 
     @always_inline("nodebug")
     fn get_grad_operator_id(self) -> Int:
-        return self._grad_operator_id
-
-    @always_inline("nodebug")
-    fn set_grad_operator_id(inout self, grad_operator_id: Int):
-        self._grad_operator_id = grad_operator_id
+        return self._operator_id + 1
 
     @always_inline("nodebug")
     fn get_tmp_visited(self) -> Bool:

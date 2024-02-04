@@ -30,7 +30,7 @@ fn main() raises:
 
     var avg_loss: Float32 = 0.0
     let every = 1000
-    let num_epochs = 20000
+    let num_epochs = 200000
 
     var input = Tensor[data_shape]().initialize[RandomUniform, 0, 1]()
     let true_vals = Tensor[data_shape]().initialize[RandomUniform, 0, 1]()
@@ -46,7 +46,7 @@ fn main() raises:
     for epoch in range(1, num_epochs + 1):
         input = input.initialize[RandomUniform, 0, 1]()
         for i in range(data_shape.num_elements()):
-             true_vals[i] = math.sin(15.0 * input[i])
+            true_vals[i] = math.sin(15.0 * input[i])
 
         var computed_loss = loss.forward_static()
         avg_loss += computed_loss[0]

@@ -14,7 +14,7 @@ from .initializers import Initializer, Zeroes
 
 
 struct Tensor[
-    shape: Vector[Int],
+    shape: TensorShape,
     is_static: Bool = True,
     is_single: Bool = False,
 ]:
@@ -32,7 +32,7 @@ struct Tensor[
         self.node = other.node
 
     fn load_tensor_for_binary_op[
-        new_shape: Vector[Int] = shape
+        new_shape: TensorShape = shape
     ](self, other: Tensor) raises -> Tensor[new_shape, False, False]:
         let self_static_or_single = self.node.get_is_static() or self.node.get_is_single()
         let other_static_or_single = other.node.get_is_static() or other.node.get_is_single()
@@ -51,7 +51,7 @@ struct Tensor[
         return new_tensor
 
     fn load_tensor_for_unary_op[
-        new_shape: Vector[Int] = shape
+        new_shape: TensorShape = shape
     ](self) raises -> Tensor[new_shape, False, False]:
         if self.node.get_is_static() or self.node.get_is_single():
             var new_tensor = Tensor[new_shape, False, False]()
@@ -295,7 +295,7 @@ struct Tensor[
         return other.__pow__(self)
 
     @always_inline("nodebug")
-    fn reshape[new_shape: Vector[Int]](self) raises -> Tensor[new_shape, False, False]:
+    fn reshape[new_shape: TensorShape](self) raises -> Tensor[new_shape, False, False]:
         var new_tensor = self.load_tensor_for_unary_op[new_shape]()
         new_tensor.node = new_tensor.graph.reshape(self.node, shape)
         return new_tensor

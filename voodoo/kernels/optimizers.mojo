@@ -1,7 +1,12 @@
 from .generics import GenericOptimizer
 
 
-struct SGD[learning_rate: Float32]:
+trait Optimizer:
+    ...
+
+
+@register_passable("trivial")
+struct SGD[learning_rate: Float32](Optimizer):
     alias step = GenericOptimizer[sgd_step].step[learning_rate]
 
 

@@ -2,92 +2,114 @@ from .generics import GenericArithmetic, GenericBinaryArithmetic
 from math import sqrt, exp2, exp, log2, sin, cos, tan, log, asin, acos, atan, sinh, cosh
 
 
-struct Sqrt[]:
+trait Aritmetic:
+    ...
+
+
+@register_passable("trivial")
+struct Sqrt[](Aritmetic):
     alias fw = GenericArithmetic[sqrt_fw_vec, sqrt_bw_vec].fw
     alias bw = GenericArithmetic[sqrt_fw_vec, sqrt_bw_vec].bw
 
 
-struct Abs[]:
+@register_passable("trivial")
+struct Abs[](Aritmetic):
     alias fw = GenericArithmetic[abs_fw_vec, abs_bw_vec].fw
     alias bw = GenericArithmetic[abs_fw_vec, abs_bw_vec].bw
 
 
-struct Exp2[]:
+@register_passable("trivial")
+struct Exp2[](Aritmetic):
     alias fw = GenericArithmetic[exp2_fw_vec, exp2_bw_vec].fw
     alias bw = GenericArithmetic[exp2_fw_vec, exp2_bw_vec].bw
 
 
-struct Log2[]:
+@register_passable("trivial")
+struct Log2[](Aritmetic):
     alias fw = GenericArithmetic[log2_fw_vec, log2_bw_vec].fw
     alias bw = GenericArithmetic[log2_fw_vec, log2_bw_vec].bw
 
 
-struct Log[]:
+@register_passable("trivial")
+struct Log[](Aritmetic):
     alias fw = GenericArithmetic[log_fw_vec, log_bw_vec].fw
     alias bw = GenericArithmetic[log_fw_vec, log_bw_vec].bw
 
 
-struct Sin[]:
+@register_passable("trivial")
+struct Sin[](Aritmetic):
     alias fw = GenericArithmetic[sin_fw_vec, sin_bw_vec].fw
     alias bw = GenericArithmetic[sin_fw_vec, sin_bw_vec].bw
 
 
-struct Cos[]:
+@register_passable("trivial")
+struct Cos[](Aritmetic):
     alias fw = GenericArithmetic[cos_fw_vec, cos_bw_vec].fw
     alias bw = GenericArithmetic[cos_fw_vec, cos_bw_vec].bw
 
 
-struct Tan[]:
+@register_passable("trivial")
+struct Tan[](Aritmetic):
     alias fw = GenericArithmetic[tan_fw_vec, tan_bw_vec].fw
     alias bw = GenericArithmetic[tan_fw_vec, tan_bw_vec].bw
 
 
-struct Asin[]:
+@register_passable("trivial")
+struct Asin[](Aritmetic):
     alias fw = GenericArithmetic[asin_fw_vec, asin_bw_vec].fw
     alias bw = GenericArithmetic[asin_fw_vec, asin_bw_vec].bw
 
 
-struct Acos[]:
+@register_passable("trivial")
+struct Acos[](Aritmetic):
     alias fw = GenericArithmetic[acos_fw_vec, acos_bw_vec].fw
     alias bw = GenericArithmetic[acos_fw_vec, acos_bw_vec].bw
 
 
-struct Atan[]:
+@register_passable("trivial")
+struct Atan[](Aritmetic):
     alias fw = GenericArithmetic[atan_fw_vec, atan_bw_vec].fw
     alias bw = GenericArithmetic[atan_fw_vec, atan_bw_vec].bw
 
 
-struct Sinh[]:
+@register_passable("trivial")
+struct Sinh[](Aritmetic):
     alias fw = GenericArithmetic[sinh_fw_vec, sinh_bw_vec].fw
     alias bw = GenericArithmetic[sinh_fw_vec, sinh_bw_vec].bw
 
 
-struct Cosh[]:
+@register_passable("trivial")
+struct Cosh[](Aritmetic):
     alias fw = GenericArithmetic[cosh_fw_vec, cosh_bw_vec].fw
     alias bw = GenericArithmetic[cosh_fw_vec, cosh_bw_vec].bw
 
 
-struct Add[]:
+@register_passable("trivial")
+struct Add[](Aritmetic):
     alias fw = GenericBinaryArithmetic[add_fw, add_bw, add_bw].fw
     alias bw = GenericBinaryArithmetic[add_fw, add_bw, add_bw].bw
 
 
-struct Sub[]:
+@register_passable("trivial")
+struct Sub[](Aritmetic):
     alias fw = GenericBinaryArithmetic[sub_fw, sub_bw_a, sub_bw_b].fw
     alias bw = GenericBinaryArithmetic[sub_fw, sub_bw_a, sub_bw_b].bw
 
 
-struct Mul[]:
+@register_passable("trivial")
+struct Mul[](Aritmetic):
     alias fw = GenericBinaryArithmetic[mul_fw, mul_bw_a, mul_bw_b].fw
     alias bw = GenericBinaryArithmetic[mul_fw, mul_bw_a, mul_bw_b].bw
 
 
-struct Div[]:
+@register_passable("trivial")
+struct Div[](Aritmetic):
     alias fw = GenericBinaryArithmetic[div_fw, div_bw_a, div_bw_b].fw
     alias bw = GenericBinaryArithmetic[div_fw, div_bw_a, div_bw_b].bw
 
 
-struct Pow[]:
+@register_passable("trivial")
+struct Pow[](Aritmetic):
     alias fw = GenericBinaryArithmetic[pow_fw, pow_bw_a, pow_bw_b].fw
     alias bw = GenericBinaryArithmetic[pow_fw, pow_bw_a, pow_bw_b].bw
 

@@ -3,22 +3,30 @@ from math import log, abs
 from ..constants import EPSILON
 
 
-struct MSE[]:
+trait Loss:
+    ...
+
+
+@register_passable("trivial")
+struct MSE[](Loss):
     alias fw = GenericLoss[mse_error, mse_grad].fw
     alias bw = GenericLoss[mse_error, mse_grad].bw
 
 
-struct MAE[]:
+@register_passable("trivial")
+struct MAE[](Loss):
     alias fw = GenericLoss[mae_error, mae_grad].fw
     alias bw = GenericLoss[mae_error, mae_grad].bw
 
 
-struct MAPE[]:
+@register_passable("trivial")
+struct MAPE[](Loss):
     alias fw = GenericLoss[mape_error, mape_grad].fw
     alias bw = GenericLoss[mape_error, mape_grad].bw
 
 
-struct MSLE[]:
+@register_passable("trivial")
+struct MSLE[](Loss):
     alias fw = GenericLoss[msle_error, msle_grad].fw
     alias bw = GenericLoss[msle_error, msle_grad].bw
 

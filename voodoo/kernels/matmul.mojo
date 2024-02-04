@@ -10,7 +10,12 @@ from ..constants import PREFETCH_READ, PREFETCH_WRITE, F32_MAX, NELTS
 # TODO: Add cleanup for tiling
 
 
-struct MMul:
+trait MatMul:
+    ...
+
+
+@register_passable("trivial")
+struct MMul(MatMul):
     @staticmethod
     @always_inline("nodebug")
     fn base_case_depth(depth: Int, a: Node, b: Node) -> Bool:
