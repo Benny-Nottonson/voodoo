@@ -88,4 +88,3 @@ fn main() raises:
 
     print_no_newline("Total Time: ")
     info(String(nanoseconds_to_seconds(now() - initial_start)) + "s\n\n")
-    external_call["exit", NoneType]()
