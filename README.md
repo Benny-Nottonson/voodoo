@@ -40,7 +40,7 @@
 
 | Project   | Average Time(s) | Average Loss(% * 100) |
 |----------|------------------|-----------------------|
-| Voodoo   | 3.250541113      | 0.004832965205       |
+| Voodoo   | 2.3847274239999998s      | 0.004832965205       |
 | [Infermo](https://github.com/TilliFe/Infermo)  | 17.70960819      | 0.004756938394       |
 | [Dainemo](https://github.com/StijnWoestenborghs/dainemo)  | N/A               | N/A        |
 
