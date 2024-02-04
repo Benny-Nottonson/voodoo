@@ -1,4 +1,4 @@
-from .array import Vector
+from .array import Vector, reduce_vector_mul
 from .broadcast import (
     shape_a,
     shape_b,

@@ -10,14 +10,7 @@ from random import (
 )
 from math import min
 from .constants import NELTS
-
-
-@always_inline("nodebug")
-fn reduce_vector_mul[v: Vector[Int]]() -> Int:
-    var result = 1
-    for i in range(len(v)):
-        result *= v[i]
-    return result
+from .utils import reduce_vector_mul
 
 
 trait Initializer:
@@ -318,4 +311,4 @@ struct NoneInitializer(Initializer):
         arg0: Float64,
         arg1: Float64,
     ](data: DTypePointer[DType.float32]):
-        return
+        ...

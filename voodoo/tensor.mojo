@@ -11,6 +11,7 @@ from .operator_codes import (
 )
 from tensor import TensorShape
 from .initializers import Initializer, Zeroes
+from .constraints import Constraint, NoneConstraint
 
 
 struct Tensor[
@@ -67,10 +68,18 @@ struct Tensor[
             _ = self.forward()
         self.node.print(accuracy)
 
+    @always_inline("nodebug")
     fn initialize[
         initializer: Initializer, arg0: Float64 = 0.0, arg1: Float64 = 0.0
     ](self) -> Self:
         initializer.initialize[shape, arg0, arg1](self.node.get_data())
+        return self
+
+    @always_inline("nodebug")
+    fn constrain[
+        constraint: Constraint, arg0: Float64 = 0.0, arg1: Float64 = 0.0
+    ](self) -> Self:
+        constraint.constrain[shape, arg0, arg1](self.node.get_data())
         return self
 
     @always_inline("nodebug")
