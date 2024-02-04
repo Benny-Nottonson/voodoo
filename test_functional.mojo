@@ -9,6 +9,7 @@ from voodoo.utils import (
 )
 from time.time import now
 from tensor import TensorShape
+from voodoo.initializers import HeNormal, RandomUniform
 
 
 fn nanoseconds_to_seconds(t: Int) -> Float64:
@@ -19,20 +20,20 @@ alias data_shape = TensorShape(32, 1)
 
 
 fn main() raises:
-    let W1 = Tensor[TensorShape(1, 64)]().initialize["he_normal"]()
-    let W2 = Tensor[TensorShape(64, 64)]().initialize["he_normal"]()
-    let W3 = Tensor[TensorShape(64, 1)]().initialize["he_normal"]()
+    let W1 = Tensor[TensorShape(1, 64)]().initialize[HeNormal, 1]()
+    let W2 = Tensor[TensorShape(64, 64)]().initialize[HeNormal, 64]()
+    let W3 = Tensor[TensorShape(64, 1)]().initialize[HeNormal, 64]()
 
-    let b1 = Tensor[TensorShape(64)]().initialize["he_normal"]()
-    let b2 = Tensor[TensorShape(64)]().initialize["he_normal"]()
-    let b3 = Tensor[TensorShape(1)]().initialize["he_normal"]()
+    let b1 = Tensor[TensorShape(64)]().initialize[HeNormal, 64]()
+    let b2 = Tensor[TensorShape(64)]().initialize[HeNormal, 64]()
+    let b3 = Tensor[TensorShape(1)]().initialize[HeNormal, 1]()
 
     var avg_loss: Float32 = 0.0
     let every = 1000
     let num_epochs = 20000
 
-    var input = Tensor[data_shape]().initialize["he_normal", 0, 1]()
-    let true_vals = Tensor[data_shape]()
+    var input = Tensor[data_shape]().initialize[RandomUniform, 0, 1]()
+    let true_vals = Tensor[data_shape]().initialize[RandomUniform, 0, 1]()
 
     var x = (input @ W1 + b1).compute_activation["relu"]()
     x = (x @ W2 + b2).compute_activation["relu"]()
@@ -43,8 +44,9 @@ fn main() raises:
     var epoch_start = now()
     let bar_accuracy = 20
     for epoch in range(1, num_epochs + 1):
-        for i in range(input.initialize["random_uniform", 0, 1]().node.get_cap()):
-            true_vals[i] = math.sin(15.0 * input[i])
+        input = input.initialize[RandomUniform, 0, 1]()
+        for i in range(data_shape.num_elements()):
+             true_vals[i] = math.sin(15.0 * input[i])
 
         var computed_loss = loss.forward_static()
         avg_loss += computed_loss[0]
