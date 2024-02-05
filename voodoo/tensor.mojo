@@ -28,7 +28,10 @@ struct Tensor[
     ) raises:
         self.graph = Graph()
         self.node = self.graph.node[False, shape, is_static, is_single, -1]()
-        initializer().initialize[shape](self.node.get_data())
+        
+        @parameter
+        if initializer.key() != "NoneInitializer":
+            initializer().initialize[shape](self.node.get_data())
 
     fn __copyinit__(inout self, other: Self):
         self.graph = other.graph

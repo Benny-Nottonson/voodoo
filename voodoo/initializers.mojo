@@ -16,13 +16,16 @@ from tensor import TensorShape
 
 
 trait Initializer(CollectionElement):
-    alias key = ""
-
     fn __init__(inout self):
         ...
 
     @always_inline("nodebug")
     fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]) -> None:
+        ...
+
+    @staticmethod
+    @always_inline("nodebug")
+    fn key() -> String:
         ...
 
 
@@ -46,6 +49,11 @@ struct Constant[value: Float64](CollectionElement, Initializer):
 
         vectorize[NELTS, vec](reduce_vector_mul[shape]())
 
+    @staticmethod
+    @always_inline("nodebug")
+    fn key() -> String:
+        return "Constant"
+
 
 @register_passable("trivial")
 struct Zeroes[](CollectionElement, Initializer):
@@ -66,6 +74,11 @@ struct Zeroes[](CollectionElement, Initializer):
             data.simd_store[NELTS](x, 0.0)
 
         vectorize[NELTS, vec](reduce_vector_mul[shape]())
+
+    @staticmethod
+    @always_inline("nodebug")
+    fn key() -> String:
+        return "Zeroes"
 
 
 @register_passable("trivial")
@@ -88,6 +101,11 @@ struct Ones[](CollectionElement, Initializer):
 
         vectorize[NELTS, vec](reduce_vector_mul[shape]())
 
+    @staticmethod
+    @always_inline("nodebug")
+    fn key() -> String:
+        return "Ones"
+
 
 @register_passable("trivial")
 struct GlorotNormal[input_units: Float64, output_units: Float64](CollectionElement):
@@ -108,6 +126,11 @@ struct GlorotNormal[input_units: Float64, output_units: Float64](CollectionEleme
             0.0,
             (2.0 / (input_units + output_units)) ** 0.5,
         )
+
+    @staticmethod
+    @always_inline("nodebug")
+    fn key() -> String:
+        return "GlorotNormal"
 
 
 @register_passable("trivial")
@@ -133,6 +156,11 @@ struct GlorotUniform[input_units: Float64, output_units: Float64](CollectionElem
 
         vectorize[NELTS, vec](reduce_vector_mul[shape]())
 
+    @staticmethod
+    @always_inline("nodebug")
+    fn key() -> String:
+        return "GlorotUniform"
+
 
 @register_passable("trivial")
 struct HeNormal[input_units: Float64](CollectionElement, Initializer):
@@ -148,6 +176,11 @@ struct HeNormal[input_units: Float64](CollectionElement, Initializer):
     fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         seed()
         randn(data, reduce_vector_mul[shape](), 0.0, (2.0 / input_units) ** 0.5)
+
+    @staticmethod
+    @always_inline("nodebug")
+    fn key() -> String:
+        return "HeNormal"
 
 
 @register_passable("trivial")
@@ -173,6 +206,11 @@ struct HeUniform[input_units: Float64](CollectionElement, Initializer):
 
         vectorize[NELTS, vec](reduce_vector_mul[shape]())
 
+    @staticmethod
+    @always_inline("nodebug")
+    fn key() -> String:
+        return "HeUniform"
+
 
 @register_passable("trivial")
 struct Identity[](CollectionElement, Initializer):
@@ -197,6 +235,11 @@ struct Identity[](CollectionElement, Initializer):
 
         vectorize[NELTS, vec](n * m)
 
+    @staticmethod
+    @always_inline("nodebug")
+    fn key() -> String:
+        return "Identity"
+
 
 @register_passable("trivial")
 struct LecunNormal[input_units: Float64](CollectionElement, Initializer):
@@ -212,6 +255,11 @@ struct LecunNormal[input_units: Float64](CollectionElement, Initializer):
     fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         seed()
         randn(data, reduce_vector_mul[shape](), 0.0, (1.0 / input_units) ** 0.5)
+
+    @staticmethod
+    @always_inline("nodebug")
+    fn key() -> String:
+        return "LecunNormal"
 
 
 @register_passable("trivial")
@@ -237,6 +285,11 @@ struct LecunUniform[input_units: Float64](CollectionElement, Initializer):
 
         vectorize[NELTS, vec](reduce_vector_mul[shape]())
 
+    @staticmethod
+    @always_inline("nodebug")
+    fn key() -> String:
+        return "LecunUniform"
+
 
 @register_passable("trivial")
 struct RandomNormal[mean: Float64, std: Float64](CollectionElement, Initializer):
@@ -252,6 +305,11 @@ struct RandomNormal[mean: Float64, std: Float64](CollectionElement, Initializer)
     fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         seed()
         randn(data, reduce_vector_mul[shape](), mean, std)
+
+    @staticmethod
+    @always_inline("nodebug")
+    fn key() -> String:
+        return "RandomNormal"
 
 
 @register_passable("trivial")
@@ -273,6 +331,11 @@ struct RandomUniform[low: Float64, high: Float64](CollectionElement, Initializer
             data.simd_store[NELTS](x, random_float64(low, high).cast[DType.float32]())
 
         vectorize[NELTS, vec](reduce_vector_mul[shape]())
+
+    @staticmethod
+    @always_inline("nodebug")
+    fn key() -> String:
+        return "RandomUniform"
 
 
 @register_passable("trivial")
@@ -300,6 +363,11 @@ struct TruncatedNormal[mean: Float64, std: Float64](CollectionElement, Initializ
 
         vectorize[NELTS, vec](reduce_vector_mul[shape]())
 
+    @staticmethod
+    @always_inline("nodebug")
+    fn key() -> String:
+        return "TruncatedNormal"
+
 
 @register_passable("trivial")
 struct NoneInitializer[](CollectionElement, Initializer):
@@ -314,3 +382,8 @@ struct NoneInitializer[](CollectionElement, Initializer):
     @always_inline("nodebug")
     fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         ...
+
+    @staticmethod
+    @always_inline("nodebug")
+    fn key() -> String:
+        return "NoneInitializer"
