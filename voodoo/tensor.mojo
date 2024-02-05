@@ -138,9 +138,7 @@ struct Tensor[
         self.graph.optimizer_step[type, lr]()
 
     @always_inline("nodebug")
-    fn __getitem__(inout self, idx: Int) raises -> Float32:
-        if not self.node.get_computed():
-            _ = self.forward()
+    fn __getitem__(self, idx: Int) raises -> Float32:
         return self.node.get_data()[idx]
 
     @always_inline("nodebug")

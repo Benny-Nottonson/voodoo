@@ -21,35 +21,29 @@ fn main() raises:
         in_neurons=1,
         out_neurons=32,
         activation="relu",
-        weight_initializer=HeNormal,
-        bias_initializer=HeNormal,
-        weight_initializer_arg0=1,
-        bias_initializer_arg0=32,
+        weight_initializer=HeNormal[1],
+        bias_initializer=HeNormal[32],
     ]()
     let dense_layer = Dense[
         in_neurons=32,
         out_neurons=32,
         activation="relu",
-        weight_initializer=HeNormal,
-        bias_initializer=HeNormal,
-        weight_initializer_arg0=32,
-        bias_initializer_arg0=32,
+        weight_initializer=HeNormal[32],
+        bias_initializer=HeNormal[32],
     ]()
     let output_layer = Dense[
         in_neurons=32,
         out_neurons=1,
-        weight_initializer=HeNormal,
-        bias_initializer=HeNormal,
-        weight_initializer_arg0=32,
-        bias_initializer_arg0=1,
+        weight_initializer=HeNormal[32],
+        bias_initializer=HeNormal[1],
     ]()
 
     var avg_loss: Float32 = 0.0
     let every = 1000
     let num_epochs = 200000
 
-    var input = Tensor[data_shape]().initialize[RandomUniform, 0, 1]()
-    let true_vals = Tensor[data_shape]().initialize[RandomUniform, 0, 1]()
+    let input = Tensor[data_shape, RandomUniform[0, 1]]()
+    let true_vals = Tensor[data_shape, RandomUniform[0, 1]]()
 
     var x = input_layer.forward(input)
     x = dense_layer.forward(x)
@@ -60,7 +54,7 @@ fn main() raises:
     var epoch_start = now()
     let bar_accuracy = 20
     for epoch in range(1, num_epochs + 1):
-        input = input.initialize[RandomUniform, 0, 1]()
+        input.refresh()
         for i in range(data_shape.num_elements()):
             true_vals[i] = math.sin(15.0 * input[i])
 
