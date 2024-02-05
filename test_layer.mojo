@@ -21,21 +21,21 @@ fn main() raises:
         in_neurons=1,
         out_neurons=32,
         activation="relu",
-        weight_initializer=HeNormal[1],
-        bias_initializer=HeNormal[32],
+        weight_initializer = HeNormal[1],
+        bias_initializer = HeNormal[32],
     ]()
     let dense_layer = Dense[
         in_neurons=32,
         out_neurons=32,
         activation="relu",
-        weight_initializer=HeNormal[32],
-        bias_initializer=HeNormal[32],
+        weight_initializer = HeNormal[32],
+        bias_initializer = HeNormal[32],
     ]()
     let output_layer = Dense[
         in_neurons=32,
         out_neurons=1,
-        weight_initializer=HeNormal[32],
-        bias_initializer=HeNormal[1],
+        weight_initializer = HeNormal[32],
+        bias_initializer = HeNormal[1],
     ]()
 
     var avg_loss: Float32 = 0.0

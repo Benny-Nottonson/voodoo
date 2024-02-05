@@ -47,7 +47,9 @@ struct Dense[
             self.bias = Tensor[TensorShape(out_neurons), bias_initializer]()
 
     @always_inline("nodebug")
-    fn forward(self, x: Tensor) raises -> Tensor[x.shape, NoneInitializer, False, False]:
+    fn forward(
+        self, x: Tensor
+    ) raises -> Tensor[x.shape, NoneInitializer, False, False]:
         var computed = x @ self.W
 
         @parameter

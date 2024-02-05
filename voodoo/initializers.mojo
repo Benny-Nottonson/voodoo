@@ -16,27 +16,14 @@ from tensor import TensorShape
 
 
 trait Initializer(CollectionElement):
+    alias key = ""
+
     fn __init__(inout self):
         ...
 
     @always_inline("nodebug")
     fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]) -> None:
         ...
-
-@register_passable("trivial")
-struct GenericInitializer[](CollectionElement, Initializer):
-    """
-    An initializer that fills a Tensor with values from a normal distribution.
-    """
-
-    @always_inline("nodebug")
-    fn __init__() -> Self:
-        return GenericInitializer[] {}
-
-    @always_inline("nodebug")
-    fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
-        seed()
-        randn(data, reduce_vector_mul[shape](), 0.0, 1.0)
 
 
 @register_passable("trivial")
