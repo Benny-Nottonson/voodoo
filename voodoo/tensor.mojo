@@ -34,10 +34,6 @@ struct Tensor[
         self.graph = other.graph
         self.node = other.node
 
-    @always_inline("nodebug")
-    fn refresh(self) raises:
-        initializer().initialize[shape](self.node.get_data())
-
     fn load_tensor_for_binary_op[
         new_shape: TensorShape = shape
     ](self, other: Tensor) raises -> Tensor[new_shape, NoneInitializer, False, False]:
@@ -73,6 +69,10 @@ struct Tensor[
         if not self.node.get_computed():
             _ = self.forward()
         self.node.print(accuracy)
+
+    @always_inline("nodebug")
+    fn refresh(self) raises:
+        initializer().initialize[shape](self.node.get_data())
 
     @always_inline("nodebug")
     fn constrain[
