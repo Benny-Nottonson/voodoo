@@ -20,20 +20,20 @@ alias data_shape = TensorShape(32, 1)
 
 
 fn main() raises:
-    var W1 = Tensor[TensorShape(1, 32)]().initialize[HeNormal, 1]()
-    let W2 = Tensor[TensorShape(32, 32)]().initialize[HeNormal, 32]()
-    let W3 = Tensor[TensorShape(32, 1)]().initialize[HeNormal, 32]()
+    let W1 = Tensor[TensorShape(1, 32), HeNormal[1]]()
+    let W2 = Tensor[TensorShape(32, 32), HeNormal[32]]()
+    let W3 = Tensor[TensorShape(32, 1), HeNormal[32]]()
 
-    let b1 = Tensor[TensorShape(32)]().initialize[HeNormal, 32]()
-    let b2 = Tensor[TensorShape(32)]().initialize[HeNormal, 32]()
-    let b3 = Tensor[TensorShape(1)]().initialize[HeNormal, 1]()
+    let b1 = Tensor[TensorShape(32), HeNormal[32]]()
+    let b2 = Tensor[TensorShape(32), HeNormal[32]]()
+    let b3 = Tensor[TensorShape(1), HeNormal[1]]()
 
     var avg_loss: Float32 = 0.0
     let every = 1000
     let num_epochs = 20000
 
-    var input = Tensor[data_shape]().initialize[RandomUniform, 0, 1]()
-    let true_vals = Tensor[data_shape]().initialize[RandomUniform, 0, 1]()
+    var input = Tensor[data_shape, RandomUniform[0, 1]]()
+    let true_vals = Tensor[data_shape, RandomUniform[0, 1]]()
 
     var x = (input @ W1 + b1).compute_activation["relu"]()
     x = (x @ W2 + b2).compute_activation["relu"]()
@@ -43,8 +43,9 @@ fn main() raises:
     let initial_start = now()
     var epoch_start = now()
     let bar_accuracy = 20
+
     for epoch in range(1, num_epochs + 1):
-        input = input.initialize[RandomUniform, 0, 1]()
+        input.refresh()
         for i in range(data_shape.num_elements()):
             true_vals[i] = math.sin(15.0 * input[i])
 

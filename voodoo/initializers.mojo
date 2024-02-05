@@ -11,30 +11,46 @@ from random import (
 from math import min
 from .constants import NELTS
 from .utils import reduce_vector_mul
+from utils.variant import Variant
+from tensor import TensorShape
 
 
-trait Initializer:
-    @staticmethod
-    fn initialize[
-        shape: Vector[Int],
-        arg0: Float64,
-        arg1: Float64,
-    ](data: DTypePointer[DType.float32]):
+trait Initializer(CollectionElement):
+    fn __init__(inout self):
         ...
 
+    @always_inline("nodebug")
+    fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]) -> None:
+        ...
 
-struct Constant(Initializer):
+@register_passable("trivial")
+struct GenericInitializer[](CollectionElement, Initializer):
+    """
+    An initializer that fills a Tensor with values from a normal distribution.
+    """
+
+    @always_inline("nodebug")
+    fn __init__() -> Self:
+        return GenericInitializer[] {}
+
+    @always_inline("nodebug")
+    fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
+        seed()
+        randn(data, reduce_vector_mul[shape](), 0.0, 1.0)
+
+
+@register_passable("trivial")
+struct Constant[value: Float64](CollectionElement, Initializer):
     """
     An initializer that fills a Tensor with a constant value.
     """
 
-    @staticmethod
     @always_inline("nodebug")
-    fn initialize[
-        shape: Vector[Int],
-        value: Float64,
-        arg1: Float64 = 0.0,
-    ](data: DTypePointer[DType.float32]):
+    fn __init__() -> Self:
+        return Constant[value] {}
+
+    @always_inline("nodebug")
+    fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         seed()
 
         @parameter
@@ -44,18 +60,18 @@ struct Constant(Initializer):
         vectorize[NELTS, vec](reduce_vector_mul[shape]())
 
 
-struct Zeroes(Initializer):
+@register_passable("trivial")
+struct Zeroes[](CollectionElement, Initializer):
     """
     An initializer that fills a Tensor with zeros.
     """
 
-    @staticmethod
     @always_inline("nodebug")
-    fn initialize[
-        shape: Vector[Int],
-        arg0: Float64 = 0.0,
-        arg1: Float64 = 0.0,
-    ](data: DTypePointer[DType.float32]):
+    fn __init__() -> Self:
+        return Zeroes[] {}
+
+    @always_inline("nodebug")
+    fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         seed()
 
         @parameter
@@ -65,18 +81,18 @@ struct Zeroes(Initializer):
         vectorize[NELTS, vec](reduce_vector_mul[shape]())
 
 
-struct Ones(Initializer):
+@register_passable("trivial")
+struct Ones[](CollectionElement, Initializer):
     """
     An initializer that fills a Tensor with ones.
     """
 
-    @staticmethod
     @always_inline("nodebug")
-    fn initialize[
-        shape: Vector[Int],
-        arg0: Float64 = 0.0,
-        arg1: Float64 = 0.0,
-    ](data: DTypePointer[DType.float32]):
+    fn __init__() -> Self:
+        return Ones[] {}
+
+    @always_inline("nodebug")
+    fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         seed()
 
         @parameter
@@ -86,18 +102,18 @@ struct Ones(Initializer):
         vectorize[NELTS, vec](reduce_vector_mul[shape]())
 
 
-struct GlorotNormal(Initializer):
+@register_passable("trivial")
+struct GlorotNormal[input_units: Float64, output_units: Float64](CollectionElement):
     """
     An initializer that fills a Tensor with values from a Glorot normal distribution, also known as Xavier normal distribution.
     """
 
-    @staticmethod
     @always_inline("nodebug")
-    fn initialize[
-        shape: Vector[Int],
-        input_units: Float64,
-        output_units: Float64,
-    ](data: DTypePointer[DType.float32]):
+    fn __init__() -> Self:
+        return GlorotNormal[input_units, output_units] {}
+
+    @always_inline("nodebug")
+    fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         seed()
         randn(
             data,
@@ -107,18 +123,18 @@ struct GlorotNormal(Initializer):
         )
 
 
-struct GlorotUniform(Initializer):
+@register_passable("trivial")
+struct GlorotUniform[input_units: Float64, output_units: Float64](CollectionElement):
     """
     An initializer that fills a Tensor with values from a Glorot uniform distribution, also known as Xavier uniform distribution.
     """
 
-    @staticmethod
     @always_inline("nodebug")
-    fn initialize[
-        shape: Vector[Int],
-        input_units: Float64,
-        output_units: Float64,
-    ](data: DTypePointer[DType.float32]):
+    fn __init__() -> Self:
+        return GlorotUniform[input_units, output_units] {}
+
+    @always_inline("nodebug")
+    fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         seed()
         let limit = (6.0 / (input_units + output_units)) ** 0.5
 
@@ -131,34 +147,34 @@ struct GlorotUniform(Initializer):
         vectorize[NELTS, vec](reduce_vector_mul[shape]())
 
 
-struct HeNormal(Initializer):
+@register_passable("trivial")
+struct HeNormal[input_units: Float64](CollectionElement, Initializer):
     """
     An initializer that fills a Tensor with values from a He normal distribution.
     """
 
-    @staticmethod
     @always_inline("nodebug")
-    fn initialize[
-        shape: Vector[Int],
-        input_units: Float64,
-        arg1: Float64 = 0.0,
-    ](data: DTypePointer[DType.float32]):
+    fn __init__() -> Self:
+        return HeNormal[input_units] {}
+
+    @always_inline("nodebug")
+    fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         seed()
         randn(data, reduce_vector_mul[shape](), 0.0, (2.0 / input_units) ** 0.5)
 
 
-struct HeUniform(Initializer):
+@register_passable("trivial")
+struct HeUniform[input_units: Float64](CollectionElement, Initializer):
     """
     An initializer that fills a Tensor with values from a He uniform distribution.
     """
 
-    @staticmethod
     @always_inline("nodebug")
-    fn initialize[
-        shape: Vector[Int],
-        input_units: Float64,
-        arg1: Float64 = 0.0,
-    ](data: DTypePointer[DType.float32]):
+    fn __init__() -> Self:
+        return HeUniform[input_units] {}
+
+    @always_inline("nodebug")
+    fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         seed()
         let limit = (6.0 / input_units) ** 0.5
 
@@ -171,18 +187,17 @@ struct HeUniform(Initializer):
         vectorize[NELTS, vec](reduce_vector_mul[shape]())
 
 
-struct Identity(Initializer):
+@register_passable("trivial")
+struct Identity[](CollectionElement, Initializer):
     """
     An initializer that fills a Tensor with the identity matrix. Must be a 2D tensor.
     """
 
-    @staticmethod
+    fn __init__() -> Self:
+        return Identity[] {}
+
     @always_inline("nodebug")
-    fn initialize[
-        shape: Vector[Int],
-        arg0: Float64 = 0.0,
-        arg1: Float64 = 0.0,
-    ](data: DTypePointer[DType.float32]):
+    fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         seed()
         let n = shape[0]
         let m = shape[1]
@@ -196,34 +211,34 @@ struct Identity(Initializer):
         vectorize[NELTS, vec](n * m)
 
 
-struct LecunNormal(Initializer):
+@register_passable("trivial")
+struct LecunNormal[input_units: Float64](CollectionElement, Initializer):
     """
     An initializer that fills a Tensor with values from a Lecun normal distribution.
     """
 
-    @staticmethod
     @always_inline("nodebug")
-    fn initialize[
-        shape: Vector[Int],
-        input_units: Float64,
-        arg1: Float64 = 0.0,
-    ](data: DTypePointer[DType.float32]):
+    fn __init__() -> Self:
+        return LecunNormal[input_units] {}
+
+    @always_inline("nodebug")
+    fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         seed()
         randn(data, reduce_vector_mul[shape](), 0.0, (1.0 / input_units) ** 0.5)
 
 
-struct LecunUniform(Initializer):
+@register_passable("trivial")
+struct LecunUniform[input_units: Float64](CollectionElement, Initializer):
     """
     An initializer that fills a Tensor with values from a Lecun uniform distribution.
     """
 
-    @staticmethod
     @always_inline("nodebug")
-    fn initialize[
-        shape: Vector[Int],
-        input_units: Float64,
-        arg1: Float64 = 0.0,
-    ](data: DTypePointer[DType.float32]):
+    fn __init__() -> Self:
+        return LecunUniform[input_units] {}
+
+    @always_inline("nodebug")
+    fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         seed()
         let limit = (3.0 / input_units) ** 0.5
 
@@ -236,34 +251,34 @@ struct LecunUniform(Initializer):
         vectorize[NELTS, vec](reduce_vector_mul[shape]())
 
 
-struct RandomNormal(Initializer):
+@register_passable("trivial")
+struct RandomNormal[mean: Float64, std: Float64](CollectionElement, Initializer):
     """
     An initializer that fills a Tensor with values from a normal distribution.
     """
 
-    @staticmethod
     @always_inline("nodebug")
-    fn initialize[
-        shape: Vector[Int],
-        mean: Float64,
-        std: Float64,
-    ](data: DTypePointer[DType.float32]):
+    fn __init__() -> Self:
+        return RandomNormal[mean, std] {}
+
+    @always_inline("nodebug")
+    fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         seed()
         randn(data, reduce_vector_mul[shape](), mean, std)
 
 
-struct RandomUniform(Initializer):
+@register_passable("trivial")
+struct RandomUniform[low: Float64, high: Float64](CollectionElement, Initializer):
     """
     An initializer that fills a Tensor with values from a uniform distribution.
     """
 
-    @staticmethod
     @always_inline("nodebug")
-    fn initialize[
-        shape: Vector[Int],
-        low: Float64,
-        high: Float64,
-    ](data: DTypePointer[DType.float32]):
+    fn __init__() -> Self:
+        return RandomUniform[low, high] {}
+
+    @always_inline("nodebug")
+    fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         seed()
 
         @parameter
@@ -273,18 +288,18 @@ struct RandomUniform(Initializer):
         vectorize[NELTS, vec](reduce_vector_mul[shape]())
 
 
-struct TruncatedNormal(Initializer):
+@register_passable("trivial")
+struct TruncatedNormal[mean: Float64, std: Float64](CollectionElement, Initializer):
     """
     An initializer that fills a Tensor with values from a truncated normal distribution.
     """
 
-    @staticmethod
     @always_inline("nodebug")
-    fn initialize[
-        shape: Vector[Int],
-        mean: Float64,
-        std: Float64,
-    ](data: DTypePointer[DType.float32]):
+    fn __init__() -> Self:
+        return TruncatedNormal[mean, std] {}
+
+    @always_inline("nodebug")
+    fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         seed()
         let low = mean - 2.0 * std
         let high = mean + 2.0 * std
@@ -299,16 +314,16 @@ struct TruncatedNormal(Initializer):
         vectorize[NELTS, vec](reduce_vector_mul[shape]())
 
 
-struct NoneInitializer(Initializer):
+@register_passable("trivial")
+struct NoneInitializer[](CollectionElement, Initializer):
     """
     An initializer that does nothing.
     """
 
-    @staticmethod
     @always_inline("nodebug")
-    fn initialize[
-        shape: Vector[Int],
-        arg0: Float64,
-        arg1: Float64,
-    ](data: DTypePointer[DType.float32]):
+    fn __init__() -> Self:
+        return NoneInitializer[] {}
+
+    @always_inline("nodebug")
+    fn initialize[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         ...
