@@ -103,9 +103,12 @@ struct Vector[type: AnyRegType](Sized):
         self._data.free()
         self._data = new_data
 
+
 @always_inline("nodebug")
 fn reduce_vector_mul[v: Vector[Int]]() -> Int:
     var result = 1
+
     for i in range(len(v)):
         result *= v[i]
+
     return result
