@@ -17,6 +17,7 @@ from .constraints import Constraint, NoneConstraint
 struct Tensor[
     shape: TensorShape,
     initializer: Initializer = NoneInitializer,
+    constraint: Constraint = NoneConstraint,
     is_static: Bool = True,
     is_single: Bool = False,
 ]:
@@ -28,10 +29,14 @@ struct Tensor[
     ) raises:
         self.graph = Graph()
         self.node = self.graph.node[False, shape, is_static, is_single, -1]()
-        
+
         @parameter
         if initializer.key() != "NoneInitializer":
             initializer().initialize[shape](self.node.get_data())
+
+        @parameter
+        if constraint.key() != "NoneConstraint":
+            constraint().constrain[shape](self.node.get_data())
 
     fn __copyinit__(inout self, other: Self):
         self.graph = other.graph
@@ -39,13 +44,17 @@ struct Tensor[
 
     fn load_tensor_for_binary_op[
         new_shape: TensorShape = shape
-    ](self, other: Tensor) raises -> Tensor[new_shape, NoneInitializer, False, False]:
+    ](self, other: Tensor) raises -> Tensor[
+        new_shape, NoneInitializer, NoneConstraint, False, False
+    ]:
         let self_static_or_single = self.node.get_is_static() or self.node.get_is_single()
         let other_static_or_single = other.node.get_is_static() or other.node.get_is_single()
         let first_greater = len(self.graph._nodes) < len(other.graph._nodes)
         let remove_other = not (self_static_or_single or other_static_or_single)
 
-        var new_tensor = Tensor[new_shape, NoneInitializer, False, False]()
+        var new_tensor = Tensor[
+            new_shape, NoneInitializer, NoneConstraint, False, False
+        ]()
 
         if self_static_or_single or (not other_static_or_single and first_greater):
             new_tensor.graph = other.graph
@@ -58,13 +67,17 @@ struct Tensor[
 
     fn load_tensor_for_unary_op[
         new_shape: TensorShape = shape
-    ](self) raises -> Tensor[new_shape, NoneInitializer, False, False]:
+    ](self) raises -> Tensor[new_shape, NoneInitializer, NoneConstraint, False, False]:
         if self.node.get_is_static() or self.node.get_is_single():
-            var new_tensor = Tensor[new_shape, NoneInitializer, False, False]()
+            var new_tensor = Tensor[
+                new_shape, NoneInitializer, NoneConstraint, False, False
+            ]()
             new_tensor.graph.fuse_graphs(self.graph)
             return new_tensor
         else:
-            var new_tensor = Tensor[new_shape, NoneInitializer, False, False]()
+            var new_tensor = Tensor[
+                new_shape, NoneInitializer, NoneConstraint, False, False
+            ]()
             new_tensor.graph = self.graph
             return new_tensor
 
@@ -76,13 +89,6 @@ struct Tensor[
     @always_inline("nodebug")
     fn refresh(self) raises:
         initializer().initialize[shape](self.node.get_data())
-
-    @always_inline("nodebug")
-    fn constrain[
-        constraint: Constraint, arg0: Float64 = 0.0, arg1: Float64 = 0.0
-    ](self) -> Self:
-        constraint.constrain[shape, arg0, arg1](self.node.get_data())
-        return self
 
     @always_inline("nodebug")
     fn fill(owned self, val: Float32) -> Self:
@@ -149,7 +155,9 @@ struct Tensor[
         self.node.get_data().store(idx, val)
 
     @always_inline("nodebug")
-    fn copy(self) raises -> Tensor[shape, NoneInitializer, False, False]:
+    fn copy(
+        self,
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
         new_tensor.node = new_tensor.graph.copy(self.node)
         return new_tensor
@@ -157,7 +165,7 @@ struct Tensor[
     @always_inline("nodebug")
     fn dropout[
         dropout_rate: Float32, noise_shape: DynamicVector[Int]
-    ](self) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ](self) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
         new_tensor.node = new_tensor.graph.dropout(self.node, dropout_rate, noise_shape)
         return new_tensor
@@ -165,7 +173,9 @@ struct Tensor[
     @always_inline("nodebug")
     fn _magic_arithmetic_generic[
         operation_code: Int
-    ](self, other: Tensor) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ](self, other: Tensor) raises -> Tensor[
+        shape, NoneInitializer, NoneConstraint, False, False
+    ]:
         var new_tensor = self.load_tensor_for_binary_op(other)
         new_tensor.node = new_tensor.graph.arithmetic_general[operation_code](
             self.node, other.node
@@ -183,37 +193,37 @@ struct Tensor[
     @always_inline("nodebug")
     fn __add__(
         self, other: Tensor
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         return self._magic_arithmetic_generic[add_code](other)
 
     @always_inline("nodebug")
     fn __sub__(
         self, other: Tensor
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         return self._magic_arithmetic_generic[sub_code](other)
 
     @always_inline("nodebug")
     fn __mul__(
         self, other: Tensor
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         return self._magic_arithmetic_generic[mul_code](other)
 
     @always_inline("nodebug")
     fn __truediv__(
         self, other: Tensor
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         return self._magic_arithmetic_generic[div_code](other)
 
     @always_inline("nodebug")
     fn __pow__(
         self, other: Tensor
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         return self._magic_arithmetic_generic[pow_code](other)
 
     @always_inline("nodebug")
     fn __matmul__(
         self, other: Tensor
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         var new_tensor = self.load_tensor_for_binary_op(other)
         new_tensor.node = new_tensor.graph.mmul(self.node, other.node)
         return new_tensor
@@ -221,37 +231,37 @@ struct Tensor[
     @always_inline("nodebug")
     fn __radd__(
         self, other: Tensor
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         return self.__add__(other)
 
     @always_inline("nodebug")
     fn __rsub__(
         self, other: Tensor
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         return self.__sub__(other)
 
     @always_inline("nodebug")
     fn __rmul__(
         self, other: Tensor
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         return self.__mul__(other)
 
     @always_inline("nodebug")
     fn __rtruediv__(
         self, other: Tensor
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         return self.__truediv__(other)
 
     @always_inline("nodebug")
     fn __rpow__(
         self, other: Tensor
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         return self.__pow__(other)
 
     @always_inline("nodebug")
     fn __rmatmul__(
         self, other: Tensor
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         return self.__matmul__(other)
 
     @always_inline("nodebug")
@@ -281,70 +291,74 @@ struct Tensor[
     @always_inline("nodebug")
     fn _prep_scalar_tensor(
         self, number: Float32
-    ) raises -> Tensor[shape, NoneInitializer, False, True]:
-        let new_tensor = Tensor[shape, NoneInitializer, False, True]().fill(number)
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, True]:
+        let new_tensor = Tensor[
+            shape, NoneInitializer, NoneConstraint, False, True
+        ]().fill(number)
         new_tensor.node.set_computed(True)
         return new_tensor
 
     @always_inline("nodebug")
     fn __add__(
         self, number: Float32
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         return self.__add__(self._prep_scalar_tensor(number))
 
     @always_inline("nodebug")
     fn __sub__(
         self, number: Float32
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         return self.__sub__(self._prep_scalar_tensor(number))
 
     @always_inline("nodebug")
     fn __mul__(
         self, number: Float32
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         return self.__mul__(self._prep_scalar_tensor(number))
 
     @always_inline("nodebug")
     fn __truediv__(
         self, number: Float32
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         return self.__truediv__(self._prep_scalar_tensor(number))
 
     @always_inline("nodebug")
     fn __pow__(
         self, number: Float32
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         return self.__pow__(self._prep_scalar_tensor(number))
 
     @always_inline("nodebug")
     fn __radd__(
         self, number: Float32
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         return self.__add__(number)
 
     @always_inline("nodebug")
     fn __rsub__(
         self, number: Float32
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         return self.__sub__(number)
 
     @always_inline("nodebug")
     fn __rmul__(
         self, number: Float32
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         return self.__mul__(number)
 
     @always_inline("nodebug")
     fn __rtruediv__(
         self, number: Float32
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         return self.__truediv__(number)
 
     @always_inline("nodebug")
     fn __rpow__(
         self, number: Float32
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
-        var other = Tensor[shape, NoneInitializer, False, False]().fill(number)
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
+        var other = Tensor[shape, NoneInitializer, NoneConstraint, False, False]().fill(
+            number
+        )
         other.node.set_is_single(True)
         other.node.set_computed(True)
         return other.__pow__(self)
@@ -352,13 +366,15 @@ struct Tensor[
     @always_inline("nodebug")
     fn reshape[
         new_shape: TensorShape
-    ](self) raises -> Tensor[new_shape, NoneInitializer, False, False]:
+    ](self) raises -> Tensor[new_shape, NoneInitializer, NoneConstraint, False, False]:
         var new_tensor = self.load_tensor_for_unary_op[new_shape]()
         new_tensor.node = new_tensor.graph.reshape(self.node, shape)
         return new_tensor
 
     @always_inline("nodebug")
-    fn flatten(self) raises -> Tensor[shape, NoneInitializer, False, False]:
+    fn flatten(
+        self,
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
         var shape = Vector[Int]()
         let dims = len(self.node.get_shape())
@@ -369,13 +385,15 @@ struct Tensor[
         return new_tensor
 
     @always_inline("nodebug")
-    fn transp(self) raises -> Tensor[shape, NoneInitializer, False, False]:
+    fn transp(
+        self,
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
         new_tensor.node = new_tensor.graph.transp(self.node)
         return new_tensor
 
     @always_inline("nodebug")
-    fn sum(self) raises -> Tensor[shape, NoneInitializer, False, False]:
+    fn sum(self) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
         new_tensor.node = new_tensor.graph.sum(self.node)
         return new_tensor
@@ -383,7 +401,7 @@ struct Tensor[
     @always_inline("nodebug")
     fn compute_function[
         operator_id: Int
-    ](self) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ](self) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
         new_tensor.node = new_tensor.graph.function_general[operator_id](self.node)
         return new_tensor
@@ -391,7 +409,9 @@ struct Tensor[
     @always_inline("nodebug")
     fn compute_loss[
         operator_id: Int
-    ](self, other: Tensor) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ](self, other: Tensor) raises -> Tensor[
+        shape, NoneInitializer, NoneConstraint, False, False
+    ]:
         var new_tensor = self.load_tensor_for_binary_op(other)
         new_tensor.node = new_tensor.graph.loss_general[operator_id](
             self.node, other.node
@@ -401,7 +421,9 @@ struct Tensor[
     @always_inline("nodebug")
     fn compute_loss[
         operator_name: String
-    ](self, other: Tensor) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ](self, other: Tensor) raises -> Tensor[
+        shape, NoneInitializer, NoneConstraint, False, False
+    ]:
         var new_tensor = self.load_tensor_for_binary_op(other)
         new_tensor.node = new_tensor.graph.loss_general[get_loss_code[operator_name]()](
             self.node, other.node
@@ -411,7 +433,7 @@ struct Tensor[
     @always_inline("nodebug")
     fn compute_activation[
         operator_id: Int, arg1: Float32 = 0.0
-    ](self) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ](self) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
         new_tensor.node = new_tensor.graph.activation_general[operator_id, arg1](
             self.node
@@ -421,7 +443,7 @@ struct Tensor[
     @always_inline("nodebug")
     fn compute_activation[
         operator_name: String, arg1: Float32 = 0.0
-    ](self) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ](self) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
         new_tensor.node = new_tensor.graph.activation_general[
             get_activation_code[operator_name](), arg1
@@ -431,7 +453,7 @@ struct Tensor[
     @always_inline("nodebug")
     fn conv_1d(
         self, other: Tensor, padding: Int, stride: Int
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         var new_tensor = self.load_tensor_for_binary_op(other)
         new_tensor.node = new_tensor.graph.conv_1d(
             self.node, other.node, padding, stride
@@ -441,7 +463,7 @@ struct Tensor[
     @always_inline("nodebug")
     fn conv_2d(
         self, other: Tensor, padding: StaticIntTuple[2], stride: StaticIntTuple[2]
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         var new_tensor = self.load_tensor_for_binary_op(other)
         new_tensor.node = new_tensor.graph.conv_2d(
             self.node, other.node, padding, stride
@@ -451,7 +473,7 @@ struct Tensor[
     @always_inline("nodebug")
     fn maxpool_1d(
         self, kernel_size: Int, stride: Int, padding: Int
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
         new_tensor.node = new_tensor.graph.maxpool_1d(
             self.node, kernel_size, stride, padding
@@ -461,7 +483,7 @@ struct Tensor[
     @always_inline("nodebug")
     fn maxpool_2d(
         self, kernel_size: StaticIntTuple[2], stride: Int, padding: Int
-    ) raises -> Tensor[shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
         new_tensor.node = new_tensor.graph.maxpool_2d(
             self.node, kernel_size, stride, padding

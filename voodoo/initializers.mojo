@@ -2,16 +2,11 @@ from algorithm import vectorize
 from random import (
     seed,
     random_float64,
-    random_si64,
-    randint,
-    rand,
     randn_float64,
     randn,
 )
-from math import min
 from .constants import NELTS
 from .utils import reduce_vector_mul
-from utils.variant import Variant
 from tensor import TensorShape
 
 

@@ -1,181 +1,201 @@
 from algorithm import vectorize
-from random import (
-    seed,
-    random_float64,
-    random_si64,
-    randint,
-    rand,
-    randn_float64,
-    randn,
-)
-from math import min, sqrt, max, abs
+from math import sqrt, max, abs
 from .constants import NELTS, EPSILON
 from .utils import reduce_vector_mul
+from tensor import TensorShape
 
 
-trait Constraint:
+trait Constraint(CollectionElement):
+    fn __init__(inout self):
+        ...
+
+    @always_inline("nodebug")
+    fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]) -> None:
+        ...
+
     @staticmethod
-    fn constrain[
-        shape: Vector[Int],
-        arg0: Float64,
-        arg1: Float64,
-    ](data: DTypePointer[DType.float32]):
+    @always_inline("nodebug")
+    fn key() -> String:
         ...
 
 
-struct MaxNorm(Constraint):
+@register_passable("trivial")
+struct MaxNorm[max_value: Float32](CollectionElement, Constraint):
     """
-    A constraint that enforces the maximum norm of the weights. Norm is the square root of the sum of the squared elements.
+    A constraint that enforces the maximum norm of the weights.
     """
 
-    @staticmethod
     @always_inline("nodebug")
-    fn constrain[
-        shape: Vector[Int],
-        max_norm: Float64,
-        arg1: Float64,
-    ](data: DTypePointer[DType.float32]):
-        var norm: Float32 = 0.0
-        var elems = reduce_vector_mul[shape]()
+    fn __init__() -> Self:
+        return MaxNorm[max_value] {}
+
+    @always_inline("nodebug")
+    fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
+        let num_elements = reduce_vector_mul[shape]()
+        var norms: Float32 = 0.0
+
+        @parameter
+        fn vec_norm[NELTS: Int](x: Int):
+            norms += (data.simd_load[NELTS](x) ** 2).reduce_add()
+
+        vectorize[NELTS, vec_norm](num_elements)
+        norms = sqrt(norms)
+        let scale = max_value / (norms + EPSILON)
 
         @parameter
         fn vec[NELTS: Int](x: Int):
-            norm += (data.simd_load[NELTS](x) ** 2).reduce_add()
+            data.simd_store[NELTS](x, data.simd_load[NELTS](x) * scale)
 
-        vectorize[NELTS, vec](elems)
-
-        norm = sqrt(norm)
-
-        if norm > max_norm.cast[DType.float32]():
-            var scale = max_norm.cast[DType.float32]() / (norm + EPSILON)
-
-            @parameter
-            fn vec_2[NELTS: Int](x: Int):
-                data.simd_store[NELTS](x, data.simd_load[NELTS](x) * scale)
-
-            vectorize[NELTS, vec_2](elems)
-
-
-struct MinMaxNorm(Constraint):
-    """
-    A constraint that enforces the minimum and maximum norm of the weights. Norm is the square root of the sum of the squared elements.
-    """
+        vectorize[NELTS, vec](num_elements)
 
     @staticmethod
     @always_inline("nodebug")
-    fn constrain[
-        shape: Vector[Int],
-        min_value: Float64,
-        max_value: Float64,
-    ](data: DTypePointer[DType.float32]):
-        var elems = reduce_vector_mul[shape]()
+    fn key() -> String:
+        return "MaxNorm"
+
+
+@register_passable("trivial")
+struct MinMaxNorm[min_value: Float32, max_value: Float32](
+    CollectionElement, Constraint
+):
+    """
+    A constraint that enforces the minimum and maximum norm of the weights.
+    """
+
+    @always_inline("nodebug")
+    fn __init__() -> Self:
+        return MinMaxNorm[min_value, max_value] {}
+
+    @always_inline("nodebug")
+    fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
+        let num_elements = reduce_vector_mul[shape]()
+        var norms: Float32 = 0.0
+
+        @parameter
+        fn vec_norm[NELTS: Int](x: Int):
+            norms += (data.simd_load[NELTS](x) ** 2).reduce_add()
+
+        vectorize[NELTS, vec_norm](num_elements)
+        norms = sqrt(norms)
+        let scaleMax = max_value / (norms + EPSILON)
+        let scaleMin = min_value / (norms + EPSILON)
 
         @parameter
         fn vec[NELTS: Int](x: Int):
-            var norm: Float32 = (data.simd_load[NELTS](x) ** 2).reduce_add()
-            norm = sqrt(norm)
+            let d = data.simd_load[NELTS](x)
+            let norm = d * (
+                scaleMax if d > max_value else scaleMin if d < min_value else 1.0
+            )
+            data.simd_store[NELTS](x, norm)
 
-            if norm < min_value.cast[DType.float32]():
-                var scale = min_value.cast[DType.float32]() / (norm + EPSILON)
-                data.simd_store[NELTS](x, data.simd_load[NELTS](x) * scale)
-            elif norm > max_value.cast[DType.float32]():
-                var scale = max_value.cast[DType.float32]() / (norm + EPSILON)
-                data.simd_store[NELTS](x, data.simd_load[NELTS](x) * scale)
+        vectorize[NELTS, vec](num_elements)
 
-        vectorize[NELTS, vec](elems)
+    @staticmethod
+    @always_inline("nodebug")
+    fn key() -> String:
+        return "MinMaxNorm"
 
 
-struct NonNeg(Constraint):
+@register_passable("trivial")
+struct NonNeg[](CollectionElement, Constraint):
     """
     A constraint that enforces non-negative weights.
     """
 
-    @staticmethod
     @always_inline("nodebug")
-    fn constrain[
-        shape: Vector[Int],
-        arg0: Float64,
-        arg1: Float64,
-    ](data: DTypePointer[DType.float32]):
-        var elems = reduce_vector_mul[shape]()
+    fn __init__() -> Self:
+        return NonNeg[] {}
+
+    @always_inline("nodebug")
+    fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
+        let num_elements = reduce_vector_mul[shape]()
 
         @parameter
         fn vec[NELTS: Int](x: Int):
             data.simd_store[NELTS](x, abs(data.simd_load[NELTS](x)))
 
-        vectorize[NELTS, vec](elems)
-
-
-struct RadialConstraint(Constraint):
-    """
-    A constraint that enforces the radial constraint of the weights.
-    """
+        vectorize[NELTS, vec](num_elements)
 
     @staticmethod
     @always_inline("nodebug")
-    fn constrain[
-        shape: Vector[Int],
-        arg0: Float64,
-        arg1: Float64,
-    ](data: DTypePointer[DType.float32]):
-        var elems = reduce_vector_mul[shape]()
+    fn key() -> String:
+        return "NonNeg"
+
+
+@register_passable("trivial")
+struct RadialConstraint[](CollectionElement, Constraint):
+    """
+    A constraint that enforces the radial constraint on the weights.
+    """
+
+    @always_inline("nodebug")
+    fn __init__() -> Self:
+        return RadialConstraint[] {}
+
+    @always_inline("nodebug")
+    fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
+        let num_elements = reduce_vector_mul[shape]()
+        let center = shape[0] // 2
 
         @parameter
         fn vec[NELTS: Int](x: Int):
-            var center = data.simd_load[NELTS](x)
-            var corner = data.simd_load[NELTS](x + 3)
-            var side = data.simd_load[NELTS](x + 1)
-            var diag = data.simd_load[NELTS](x + 2)
+            let i = x // shape[1]
+            let j = x % shape[1]
+            let d = sqrt((i - center) ** 2 + (j - center) ** 2)
+            data.simd_store[NELTS](
+                x, data.simd_load[NELTS](x) * (1.0 if d <= center else 0.0)
+            )
 
-            var avg = (center + corner + side + diag) / 4.0
-            data.simd_store[NELTS](x, avg)
-            data.simd_store[NELTS](x + 3, avg)
-            data.simd_store[NELTS](x + 1, avg)
-            data.simd_store[NELTS](x + 2, avg)
-
-        vectorize[NELTS, vec](elems)
-
-
-struct UnitNorm(Constraint):
-    """
-    A constraint that enforces the weights to have unit norm.
-    """
+        vectorize[NELTS, vec](num_elements)
 
     @staticmethod
     @always_inline("nodebug")
-    fn constrain[
-        shape: Vector[Int],
-        arg0: Float64,
-        arg1: Float64,
-    ](data: DTypePointer[DType.float32]):
-        var norm: Float32 = 0.0
-        var elems = reduce_vector_mul[shape]()
+    fn key() -> String:
+        return "RadialConstraint"
+
+
+@register_passable("trivial")
+struct UnitNorm[](CollectionElement, Constraint):
+    """
+    A constraint that enforces the unit norm of the weights.
+    """
+
+    @always_inline("nodebug")
+    fn __init__() -> Self:
+        return UnitNorm[] {}
+
+    @always_inline("nodebug")
+    fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
+        let num_elements = reduce_vector_mul[shape]()
 
         @parameter
         fn vec[NELTS: Int](x: Int):
-            norm += (data.simd_load[NELTS](x) ** 2).reduce_add()
-
-        vectorize[NELTS, vec](elems)
-
-        norm = sqrt(norm)
-
-        @parameter
-        fn vec_2[NELTS: Int](x: Int):
+            let norm = sqrt((data.simd_load[NELTS](x) ** 2).reduce_add())
             data.simd_store[NELTS](x, data.simd_load[NELTS](x) / (norm + EPSILON))
 
-        vectorize[NELTS, vec_2](elems)
-
-
-struct NoneConstraint(Constraint):
-    """
-    A constraint that does nothing.
-    """
+        vectorize[NELTS, vec](num_elements)
 
     @staticmethod
     @always_inline("nodebug")
-    fn constrain[
-        shape: Vector[Int],
-        arg0: Float64,
-        arg1: Float64,
-    ](data: DTypePointer[DType.float32]):
+    fn key() -> String:
+        return "UnitNorm"
+
+
+@register_passable("trivial")
+struct NoneConstraint[](CollectionElement, Constraint):
+    """
+    An constraint that does nothing.
+    """
+
+    @always_inline("nodebug")
+    fn __init__() -> Self:
+        return NoneConstraint[] {}
+
+    @always_inline("nodebug")
+    fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         ...
+
+    @staticmethod
+    @always_inline("nodebug")
+    fn key() -> String:
+        return "NoneConstraint"

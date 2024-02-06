@@ -13,43 +13,35 @@ struct Dense[
     use_bias: Bool = True,
     weight_initializer: Initializer = NoneInitializer,
     weight_constraint: Constraint = NoneConstraint,
-    weight_constraint_arg0: Float64 = 0.0,
-    weight_constraint_arg1: Float64 = 0.0,
     bias_initializer: Initializer = NoneInitializer,
     bias_constraint: Constraint = NoneConstraint,
-    bias_constraint_arg0: Float64 = 0.0,
-    bias_constraint_arg1: Float64 = 0.0,
 ]():
-    var W: Tensor[TensorShape(in_neurons, out_neurons), weight_initializer]
-    var bias: Tensor[TensorShape(out_neurons), bias_initializer]
+    var W: Tensor[
+        TensorShape(in_neurons, out_neurons), weight_initializer, weight_constraint
+    ]
+    var bias: Tensor[TensorShape(out_neurons), bias_initializer, bias_constraint]
 
     fn __init__(
         inout self,
     ) raises:
-        self.W = (
-            Tensor[TensorShape(in_neurons, out_neurons), weight_initializer]()
-            .constrain[
-                weight_constraint, weight_constraint_arg0, weight_constraint_arg1
-            ]()
-            .requires_grad()
-        )
+        self.W = Tensor[
+            TensorShape(in_neurons, out_neurons), weight_initializer, weight_constraint
+        ]().requires_grad()
 
         @parameter
         if self.use_bias:
-            self.bias = (
-                Tensor[TensorShape(out_neurons), bias_initializer]()
-                .constrain[
-                    bias_constraint, bias_constraint_arg0, bias_constraint_arg1
-                ]()
-                .requires_grad()
-            )
+            self.bias = Tensor[
+                TensorShape(out_neurons), bias_initializer, bias_constraint
+            ]().requires_grad()
         else:
-            self.bias = Tensor[TensorShape(out_neurons), bias_initializer]()
+            self.bias = Tensor[
+                TensorShape(out_neurons), bias_initializer, bias_constraint
+            ]()
 
     @always_inline("nodebug")
     fn forward(
         self, x: Tensor
-    ) raises -> Tensor[x.shape, NoneInitializer, False, False]:
+    ) raises -> Tensor[x.shape, NoneInitializer, NoneConstraint, False, False]:
         var computed = x @ self.W
 
         @parameter
