@@ -14,20 +14,15 @@ trait MatMul:
 @register_passable("trivial")
 struct MMul(MatMul):
     @staticmethod
-    @always_inline("nodebug")
-    fn base_case_depth(depth: Int, a: Node, b: Node) -> Bool:
-        return depth == max(a.get_num_dims(), b.get_num_dims()) - 2
-
-    @staticmethod
     fn fw(c: Node, a: Node, b: Node):
-        recursive_broadcast[Self.kernel_mmul_fw, Self.base_case_depth](c, a, b)
+        recursive_broadcast[Self.kernel_mmul_fw, False](c, a, b)
 
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
         if not a.get_is_single():
-            recursive_broadcast[Self.kernel_mmul_bw_a, Self.base_case_depth](c, a, b)
+            recursive_broadcast[Self.kernel_mmul_bw_a, False](c, a, b)
         if not b.get_is_single():
-            recursive_broadcast[Self.kernel_mmul_bw_b, Self.base_case_depth](c, a, b)
+            recursive_broadcast[Self.kernel_mmul_bw_b, False](c, a, b)
 
     @staticmethod
     fn kernel_mmul_fw(

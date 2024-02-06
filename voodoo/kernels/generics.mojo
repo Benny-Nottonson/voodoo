@@ -140,16 +140,14 @@ struct GenericBinaryArithmetic[
 ](Generic):
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
-        recursive_broadcast[Self.kernel_fw[fw_vec], Self.base_case](c, a, b)
+        recursive_broadcast[Self.kernel_fw[fw_vec], True](c, a, b)
 
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
         if not a.get_is_single():
-            recursive_broadcast[Self.kernel_bw[bw_a_vec, True], Self.base_case](c, a, b)
+            recursive_broadcast[Self.kernel_bw[bw_a_vec, True], True](c, a, b)
         if not b.get_is_single():
-            recursive_broadcast[Self.kernel_bw[bw_b_vec, False], Self.base_case](
-                c, a, b
-            )
+            recursive_broadcast[Self.kernel_bw[bw_b_vec, False], True](c, a, b)
 
     @staticmethod
     fn kernel_fw[
@@ -238,13 +236,6 @@ struct GenericBinaryArithmetic[
             vectorize[NELTS, vectorized_bw_a](c_rest)
         else:
             vectorize[NELTS, vectorized_bw_b](c_rest)
-
-    @always_inline("nodebug")
-    @staticmethod
-    fn base_case(depth: Int, a: Node, b: Node) -> Bool:
-        return strides_a(depth, a, b) * shape_a(depth, a, b) == strides_b(
-            depth, a, b
-        ) * shape_b(depth, a, b)
 
 
 @register_passable("trivial")

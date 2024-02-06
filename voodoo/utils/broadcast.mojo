@@ -35,11 +35,22 @@ fn get_broadcasted_shape_for_ew_op(parent1: Node, parent2: Node) -> DynamicVecto
     return shape
 
 
+@always_inline("nodebug")
+fn base_case[use_strides: Bool](depth: Int, a: Node, b: Node) -> Bool:
+    @parameter
+    if use_strides:
+        return strides_a(depth, a, b) * shape_a(depth, a, b) == strides_b(
+            depth, a, b
+        ) * shape_b(depth, a, b)
+    else:
+        return depth == max(a.get_num_dims(), b.get_num_dims()) - 2
+
+
 fn recursive_broadcast[
     kernel: fn (
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None,
-    base_case: fn (depth: Int, a: Node, b: Node) -> Bool,
+    use_strides: Bool,
 ](
     c: Node,
     a: Node,
@@ -60,7 +71,7 @@ fn recursive_broadcast[
         let item_c_index = item[2]
         let item_depth = item[3]
 
-        if base_case(item_depth, a, b):
+        if base_case[use_strides](item_depth, a, b):
             kernel(c, a, b, item_a_index, item_b_index, item_c_index, item_depth)
             continue
 
