@@ -229,7 +229,7 @@ struct Graph:
 
         return node
 
-    fn get_free_data(inout self, node: Node, unique: Bool = False) raises:
+    fn get_free_data[unique: Bool = False](inout self, node: Node) raises:
         let data_id = node.get_data_id()
         if data_id != -1:
             return
@@ -491,7 +491,7 @@ struct Graph:
             let parent1 = self.forward_recursive_graph_slice(
                 self._nodes[node.get_parents()[0]]
             )
-            self.get_free_data(node, True)
+            self.get_free_data[True](node)
 
             self._kernels[operator_id].get[0, UNARY_OP]()(node, parent1)
         else:
@@ -502,7 +502,7 @@ struct Graph:
                 self._nodes[node.get_parents()[1]]
             )
 
-            self.get_free_data(node, True)
+            self.get_free_data[True](node)
             self._kernels[operator_id].get[1, BINARY_OP]()(node, parent1, parent2)
 
         node.set_computed(True)
