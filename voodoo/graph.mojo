@@ -24,29 +24,23 @@ from tensor import TensorShape
 struct MemoryPool(Sized):
     var _memory_pool: Vector[DTypePointer[DType.float32]]
 
-    @always_inline("nodebug")
     fn __init__() -> Self:
         return MemoryPool {_memory_pool: Vector[DTypePointer[DType.float32]]()}
 
-    @always_inline("nodebug")
     fn __getitem__(self, index: Int) -> DTypePointer[DType.float32]:
         return self._memory_pool[index]
 
-    @always_inline("nodebug")
     fn __setitem__(inout self, index: Int, value: DTypePointer[DType.float32]):
         self._memory_pool[index] = value
 
-    @always_inline("nodebug")
     fn __len__(self) -> Int:
         return len(self._memory_pool)
 
-    @always_inline("nodebug")
     fn free(self):
         for i in range(len(self._memory_pool)):
             self._memory_pool[i].free()
         self._memory_pool.free()
 
-    @always_inline("nodebug")
     fn push_back(inout self, value: DTypePointer[DType.float32]):
         self._memory_pool.push_back(value)
 
@@ -55,7 +49,6 @@ struct MemoryPool(Sized):
 struct MemoryPoolManager:
     var _memory_pool_manager: Pointer[Vector[Int]]
 
-    @always_inline("nodebug")
     fn __init__() -> Self:
         let memory_pool_manager = Pointer[Vector[Int]].alloc(MEMORY_POOL_SIZE)
 
@@ -65,19 +58,15 @@ struct MemoryPoolManager:
 
         return MemoryPoolManager {_memory_pool_manager: memory_pool_manager}
 
-    @always_inline("nodebug")
     fn __getitem__(self, index: Int) -> Vector[Int]:
         return self._memory_pool_manager[index]
 
-    @always_inline("nodebug")
     fn __setitem__(inout self, index: Int, value: Vector[Int]):
         self._memory_pool_manager[index] = value
 
-    @always_inline("nodebug")
     fn __len__(self) -> Int:
         return MEMORY_POOL_SIZE
 
-    @always_inline("nodebug")
     fn free(self):
         @unroll
         for i in range(MEMORY_POOL_SIZE):
@@ -111,24 +100,20 @@ struct Graph:
             _grad_nodes_order: Vector[Int](),
         }
 
-    @always_inline("nodebug")
     fn get_free_node_id(inout self) raises -> Int:
         if len(self._free_data_ids) > 0:
             return self._free_node_ids.pop_back()
         else:
             return len(self._nodes)
 
-    @always_inline("nodebug")
     fn get_free_data_id(inout self) raises -> Int:
         if len(self._free_data_ids) > 0:
             return self._free_data_ids.pop_back()
         return len(self._memory_pool)
 
-    @always_inline("nodebug")
     fn load_ceiled_cap(self, cap: Int) raises -> Int:
         return exp2(ceil(log2(Float32(cap)))).to_int()
 
-    @always_inline("nodebug")
     fn get_index(self, cap: Int) raises -> Int:
         return ceil(log2(Float32(cap))).to_int()
 
@@ -617,7 +602,6 @@ struct Graph:
             warn("Invalid optimizer: " + type + " using sgd\n")
             SGD[learning_rate].step(self._nodes)
 
-    @always_inline("nodebug")
     fn copy(inout self, parent1: Node) raises -> Node:
         return self.node[False](
             parent1.get_shape().copy(),
@@ -628,7 +612,6 @@ struct Graph:
             parent1,
         )
 
-    @always_inline("nodebug")
     fn mmul(inout self, a: Node, b: Node) raises -> Node:
         var shape = get_broadcasted_shape_for_ew_op(a, b)
         let a_dims = a.get_num_dims()
@@ -644,7 +627,6 @@ struct Graph:
 
         return self.node[True](shape, False, False, mmul_code, other_params, a, b)
 
-    @always_inline("nodebug")
     fn conv_1d(
         inout self,
         a: Node,
@@ -669,7 +651,6 @@ struct Graph:
 
         return self.node[True](shape, False, False, conv1d_code, other_params, a, b)
 
-    @always_inline("nodebug")
     fn conv_2d(
         inout self,
         a: Node,
@@ -699,7 +680,6 @@ struct Graph:
 
         return self.node[True](shape, False, False, conv2d_code, other_params, a, b)
 
-    @always_inline("nodebug")
     fn maxpool_1d(
         inout self,
         a: Node,
@@ -720,7 +700,6 @@ struct Graph:
 
         return self.node[True](shape, False, False, maxpool1d_code, other_params, a)
 
-    @always_inline("nodebug")
     fn maxpool_2d(
         inout self,
         a: Node,
@@ -743,7 +722,6 @@ struct Graph:
 
         return self.node[True](shape, False, False, maxpool2d_code, other_params, a)
 
-    @always_inline("nodebug")
     fn dropout(
         inout self, a: Node, dropout_rate: Float32, noise_shape: DynamicVector[Int]
     ) raises -> Node:
@@ -756,13 +734,11 @@ struct Graph:
             a,
         )
 
-    @always_inline("nodebug")
     fn reshape(inout self, parent1: Node, shape: Vector[Int]) raises -> Node:
         return self.node[False](
             shape, False, False, reshape_code, Vector[Int](), parent1
         )
 
-    @always_inline("nodebug")
     fn transp(inout self, parent1: Node) raises -> Node:
         let old_shape = parent1.get_shape().copy()
 
@@ -775,13 +751,11 @@ struct Graph:
             parent1,
         )
 
-    @always_inline("nodebug")
     fn sum(inout self, parent1: Node) raises -> Node:
         return self.node[False](
             TensorShape(1), False, False, sum_code, Vector[Int](), parent1
         )
 
-    @always_inline("nodebug")
     fn function_general[operator_id: Int](inout self, parent1: Node) raises -> Node:
         return self.node[False](
             parent1.get_shape().copy(),
@@ -792,7 +766,6 @@ struct Graph:
             parent1,
         )
 
-    @always_inline("nodebug")
     fn arithmetic_general[
         operator_id: Int
     ](inout self, a: Node, b: Node) raises -> Node:
@@ -806,7 +779,6 @@ struct Graph:
             b,
         )
 
-    @always_inline("nodebug")
     fn activation_general[
         operator_id: Int,
         arg1: Float32 = 0.0,
@@ -822,7 +794,6 @@ struct Graph:
             parent1,
         )
 
-    @always_inline("nodebug")
     fn loss_general[
         operator_id: Int
     ](inout self, parent1: Node, parent2: Node) raises -> Node:

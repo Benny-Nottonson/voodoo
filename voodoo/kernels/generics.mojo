@@ -53,7 +53,6 @@ struct GenericActivation[
         DTypePointer[DType.float32].prefetch[PREFETCH_READ](parent1_data)
 
         @parameter
-        @always_inline("nodebug")
         fn vectorized_fw[NELTS: Int](i: Int):
             node_data.simd_store[NELTS](
                 i,
@@ -75,7 +74,6 @@ struct GenericActivation[
         DTypePointer[DType.float32].prefetch[PREFETCH_WRITE](parent1_grad)
 
         @parameter
-        @always_inline("nodebug")
         fn vectorized_bw[NELTS: Int](i: Int):
             parent1_grad.simd_store[NELTS](
                 i,
@@ -169,7 +167,6 @@ struct GenericBinaryArithmetic[
         DTypePointer[DType.float32].prefetch[PREFETCH_WRITE](c_data)
 
         @parameter
-        @always_inline("nodebug")
         fn vectorized_fw[NELTS: Int](i: Int):
             c_data.simd_store[NELTS](
                 offset_c + i,
@@ -206,7 +203,6 @@ struct GenericBinaryArithmetic[
         DTypePointer[DType.float32].prefetch[PREFETCH_WRITE](b_grad)
 
         @parameter
-        @always_inline("nodebug")
         fn vectorized_bw_a[NELTS: Int](i: Int):
             a_grad.simd_store[NELTS](
                 offset_a + i,
@@ -219,7 +215,6 @@ struct GenericBinaryArithmetic[
             )
 
         @parameter
-        @always_inline("nodebug")
         fn vectorized_bw_b[NELTS: Int](i: Int):
             b_grad.simd_store[NELTS](
                 offset_b + i,
@@ -257,7 +252,6 @@ struct GenericLoss[
         DTypePointer[DType.float32].prefetch[PREFETCH_READ](y_true_data)
 
         @parameter
-        @always_inline("nodebug")
         fn vectorized_fw[NELTS: Int](i: Int):
             node.get_data().store(
                 0,
@@ -289,7 +283,6 @@ struct GenericLoss[
         DTypePointer[DType.float32].prefetch[PREFETCH_READ](y_true_grad)
 
         @parameter
-        @always_inline("nodebug")
         fn vectorized_mae_bw[NELTS: Int](i: Int):
             let grad = bw_vec[NELTS](
                 y_true_data.simd_load[NELTS](i), y_pred_data.simd_load[NELTS](i), cap, N
@@ -316,7 +309,6 @@ struct GenericOptimizer[fw_vec: generic_optimizer_vectorized](Generic):
                 DTypePointer[DType.float32].prefetch[PREFETCH_WRITE](node_data)
 
                 @parameter
-                @always_inline("nodebug")
                 fn vectorized_update[NELTS: Int](i: Int):
                     node_data.simd_store[NELTS](
                         i,

@@ -58,12 +58,10 @@ struct MMul(MatMul):
                     let b_off = offset_b + k * N
 
                     @parameter
-                    @always_inline("nodebug")
                     fn dot_fw[NELTS: Int](n: Int):
                         let b_data_n = b_data.simd_load[NELTS](b_off + n)
 
                         @parameter
-                        @always_inline("nodebug")
                         fn dot_store(c_off_n: Int, a_off: Int):
                             c_data.simd_store[NELTS](
                                 c_off_n,
@@ -115,10 +113,8 @@ struct MMul(MatMul):
                     let c_grad_1 = c_grad[_offset_c_1 + n]
 
                     @parameter
-                    @always_inline("nodebug")
                     fn dot_bw[NELTS: Int](k: Int):
                         @parameter
-                        @always_inline("nodebug")
                         fn dot_store(a_off: Int, b_off: Int, scalar: Float32):
                             a_grad.simd_store[NELTS](
                                 a_off,
@@ -168,7 +164,6 @@ struct MMul(MatMul):
                 let _c_off = offset_c + m * N
 
                 @parameter
-                @always_inline("nodebug")
                 fn dot_bw_single[NELTS: Int](n: Int):
                     let b_off = _b_off + n
 
@@ -194,7 +189,6 @@ struct MMul(MatMul):
                     let _c_off = offset_c + m * N
 
                     @parameter
-                    @always_inline("nodebug")
                     fn dot_bw_inner[NELTS: Int](n: Int):
                         let b_off_1 = _b_off_1 + n
                         let b_off_2 = _b_off_2 + n

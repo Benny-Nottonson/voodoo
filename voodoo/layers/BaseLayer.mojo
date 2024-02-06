@@ -1,10 +1,13 @@
 from voodoo import Tensor
+from voodoo.initializers import NoneInitializer
+from voodoo.constraints import NoneConstraint
 
 
 trait BaseLayer:
     fn __init__(inout self) raises:
         ...
 
-    @always_inline("nodebug")
-    fn forward(self, x: Tensor) raises -> Tensor[x.shape, False, False]:
+    fn forward(
+        self, x: Tensor
+    ) raises -> Tensor[x.shape, NoneInitializer, NoneConstraint, False, False]:
         ...

@@ -8,6 +8,6 @@
 #     ) raises:
 #         ...
 
-#     @always_inline("nodebug")
+#
 #     fn forward(self, x: Tensor) raises -> Tensor[False, False]:
 #         return x.flatten()

@@ -84,180 +84,137 @@ struct Node:
             _other_params: other_params,
         }
 
-    @always_inline("nodebug")
     fn get_id(self) -> Int:
         return self._id_ptr.load()
 
-    @always_inline("nodebug")
     fn set_id(self, id: Int):
         self._id_ptr.store(id)
 
-    @always_inline("nodebug")
     fn get_data_id(self) -> Int:
         return self._data_id_ptr.load()
 
-    @always_inline("nodebug")
     fn set_data_id(self, id: Int):
         self._data_id_ptr.store(id)
 
-    @always_inline("nodebug")
     fn get_grad_id(self) -> Int:
         return self._grad_id_ptr.load()
 
-    @always_inline("nodebug")
     fn set_grad_id(self, id: Int):
         self._grad_id_ptr.store(id)
 
-    @always_inline("nodebug")
     fn get_data(self) -> DTypePointer[DType.float32]:
         return self._data_ptr[0]
 
-    @always_inline("nodebug")
     fn set_data(self, data: DTypePointer[DType.float32]):
         self._data_ptr.store(0, data)
 
-    @always_inline("nodebug")
     fn get_grad(self) -> DTypePointer[DType.float32]:
         return self._data_ptr[1]
 
-    @always_inline("nodebug")
     fn set_grad(self, grad: DTypePointer[DType.float32]):
         self._data_ptr.store(1, grad)
 
-    @always_inline("nodebug")
     fn get_parents(self) -> Vector[Int]:
         return self._parents
 
-    @always_inline("nodebug")
     fn push_back_parent(inout self, parent: Int):
         self._parents.push_back(parent)
 
-    @always_inline("nodebug")
     fn clear_parents(inout self):
         self._parents.clear()
 
-    @always_inline("nodebug")
     fn get_children(self) -> Vector[Int]:
         return self._children
 
-    @always_inline("nodebug")
     fn push_back_child(inout self, child: Int):
         self._children.push_back(child)
 
-    @always_inline("nodebug")
     fn clear_children(inout self):
         self._children.clear()
 
-    @always_inline("nodebug")
     fn get_dependencies(self) -> Int:
         return self._dependencies_ptr.load()
 
-    @always_inline("nodebug")
     fn set_dependencies(self, dependencies: Int):
         self._dependencies_ptr.store(dependencies)
 
-    @always_inline("nodebug")
     fn get_is_static(self) -> Bool:
         return self._is_static
 
-    @always_inline("nodebug")
     fn set_is_static(inout self, is_static: Bool):
         self._is_static = is_static
 
-    @always_inline("nodebug")
     fn get_computed(self) -> Bool:
         return self._computed_ptr.load()
 
-    @always_inline("nodebug")
     fn set_computed(self, computed: Bool):
         self._computed_ptr.store(computed)
 
-    @always_inline("nodebug")
     fn get_grad_computed(self) -> Bool:
         return self._grad_computed_ptr.load()
 
-    @always_inline("nodebug")
     fn set_grad_computed(self, grad_computed: Bool):
         self._grad_computed_ptr.store(grad_computed)
 
-    @always_inline("nodebug")
     fn get_operator_id(self) -> Int:
         return self._operator_id
 
-    @always_inline("nodebug")
     fn set_operator_id(inout self, operator_id: Int):
         self._operator_id = operator_id
 
-    @always_inline("nodebug")
     fn get_grad_operator_id(self) -> Int:
         return self._operator_id + 1
 
-    @always_inline("nodebug")
     fn get_tmp_visited(self) -> Bool:
         return self._tmp_visited
 
-    @always_inline("nodebug")
     fn set_tmp_visited(inout self, tmp_visited: Bool):
         self._tmp_visited = tmp_visited
 
-    @always_inline("nodebug")
     fn get_checkpoint(self) -> Bool:
         return self._checkpoint
 
-    @always_inline("nodebug")
     fn set_checkpoint(inout self, checkpoint: Bool):
         self._checkpoint = checkpoint
 
-    @always_inline("nodebug")
     fn get_is_single(self) -> Bool:
         return self._is_single
 
-    @always_inline("nodebug")
     fn set_is_single(inout self, is_single: Bool):
         self._is_single = is_single
 
-    @always_inline("nodebug")
     fn get_cap(self) -> Int:
         return self._cap
 
-    @always_inline("nodebug")
     fn get_num_dims(self) -> Int:
         return self._num_dims
 
-    @always_inline("nodebug")
     fn get_shape(self) -> Vector[Int]:
         return self._shape
 
-    @always_inline("nodebug")
     fn get_strides(self) -> Vector[Int]:
         return self._strides
 
-    @always_inline("nodebug")
     fn get_other_params(self) -> Vector[Int]:
         return self._other_params
 
-    @always_inline("nodebug")
     fn is_zero(self) -> Bool:
         for i in range(self._cap):
             if self._data_ptr[0][i] != 0.0:
                 return False
         return True
 
-    @always_inline("nodebug")
     fn fill(self, val: Float32):
         for i in range(self._cap):
             self._data_ptr[0].store(i, val)
 
-    @always_inline("nodebug")
     fn fill_incr(self):
         iota(self._data_ptr[0], self._cap)
 
-    @always_inline("nodebug")
     fn fill_grad(self, val: Float32):
         for i in range(self._cap):
             self._data_ptr[1].store(i, val)
 
-    @always_inline("nodebug")
     fn grad_fill_incr(self):
         iota(self._data_ptr[1], self._cap)
 

@@ -97,7 +97,6 @@ struct Mish[](Activation):
     alias bw = GenericActivation[mish_fw_vec, mish_bw_vec, 0.0, 0.0, 0.0].bw
 
 
-@always_inline("nodebug")
 fn relu_fw_vec[
     NELTS: Int,
     negative_slope: Float32 = 0.0,
@@ -112,7 +111,6 @@ fn relu_fw_vec[
     return (x > threshold).select(x, negative_slope * x).min(max_value)
 
 
-@always_inline("nodebug")
 fn relu_bw_vec[
     NELTS: Int,
     negative_slope: Float32 = 0.0,
@@ -127,7 +125,6 @@ fn relu_bw_vec[
     return (x < max_value).select((x > threshold).select(1.0, negative_slope), 0.0)
 
 
-@always_inline("nodebug")
 fn sigmoid_fw_vec[
     NELTS: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
@@ -136,7 +133,6 @@ fn sigmoid_fw_vec[
     return 1.0 / (1.0 + exp(-x))
 
 
-@always_inline("nodebug")
 fn sigmoid_bw_vec[
     NELTS: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
@@ -146,7 +142,6 @@ fn sigmoid_bw_vec[
     return e_x / (1.0 + e_x) ** 2
 
 
-@always_inline("nodebug")
 fn softplus_fw_vec[
     NELTS: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
@@ -155,7 +150,6 @@ fn softplus_fw_vec[
     return log(1.0 + exp(x))
 
 
-@always_inline("nodebug")
 fn softplus_bw_vec[
     NELTS: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
@@ -165,7 +159,6 @@ fn softplus_bw_vec[
     return e_x / (1.0 + e_x)
 
 
-@always_inline("nodebug")
 fn softsign_fw_vec[
     NELTS: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
@@ -174,7 +167,6 @@ fn softsign_fw_vec[
     return x / (1.0 + abs(x))
 
 
-@always_inline("nodebug")
 fn softsign_bw_vec[
     NELTS: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
@@ -184,7 +176,6 @@ fn softsign_bw_vec[
     return 1.0 / abs(x).fma(2.0, x.fma(x, 1.0))
 
 
-@always_inline("nodebug")
 fn tanh_fw_vec[
     NELTS: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
@@ -193,7 +184,6 @@ fn tanh_fw_vec[
     return tanh(x)
 
 
-@always_inline("nodebug")
 fn tanh_bw_vec[
     NELTS: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
@@ -202,7 +192,6 @@ fn tanh_bw_vec[
     return 1.0 / cosh(x) ** 2
 
 
-@always_inline("nodebug")
 fn selu_fw_vec[
     NELTS: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
@@ -211,7 +200,6 @@ fn selu_fw_vec[
     return (x > 0.0).select(1.05070098 * x, exp(x).fma(1.75809932607, -1.75809932607))
 
 
-@always_inline("nodebug")
 fn selu_bw_vec[
     NELTS: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
@@ -220,7 +208,6 @@ fn selu_bw_vec[
     return (x > 0.0).select(1.05070098, 1.75809932607 * exp(x))
 
 
-@always_inline("nodebug")
 fn elu_fw_vec[
     NELTS: Int,
     arg1: Float32,
@@ -235,7 +222,6 @@ fn elu_fw_vec[
     return (x > 0.0).select(x, alpha * (exp(x) - 1.0))
 
 
-@always_inline("nodebug")
 fn elu_bw_vec[
     NELTS: Int,
     arg1: Float32,
@@ -250,7 +236,6 @@ fn elu_bw_vec[
     return (x > 0.0).select(1.0, alpha * exp(x))
 
 
-@always_inline("nodebug")
 fn exp_vec[
     NELTS: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
@@ -259,7 +244,6 @@ fn exp_vec[
     return exp(x)
 
 
-@always_inline("nodebug")
 fn silu_fw_vec[
     NELTS: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
@@ -268,7 +252,6 @@ fn silu_fw_vec[
     return x / (1.0 + exp(-x))
 
 
-@always_inline("nodebug")
 fn silu_bw_vec[
     NELTS: Int, arg1: Float32, arg2: Float32, arg3: Float32
 ](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
@@ -278,7 +261,6 @@ fn silu_bw_vec[
     return (e_x.fma(x, e_x) + exp(2.0 * x)) / (e_x + 1.0) ** 2
 
 
-@always_inline("nodebug")
 fn gelu_fw_vec[
     NELTS: Int,
     arg1: Float32,
@@ -296,7 +278,6 @@ fn gelu_fw_vec[
     return tanh(x.fma(0.7978845608028654, 0.03567740813 * x**3)).fma(x_05, x_05)
 
 
-@always_inline("nodebug")
 fn gelu_bw_vec[
     NELTS: Int,
     arg1: Float32,
@@ -318,7 +299,6 @@ fn gelu_bw_vec[
     )
 
 
-@always_inline("nodebug")
 fn hsig_fw_vec[
     NELTS: Int,
     arg1: Float32,
@@ -330,7 +310,6 @@ fn hsig_fw_vec[
     return (x > 2.5).select(1.0, (x > -2.5).select(x.fma(0.2, 0.5), 0.0))
 
 
-@always_inline("nodebug")
 fn hsig_bw_vec[
     NELTS: Int,
     arg1: Float32,
@@ -342,7 +321,6 @@ fn hsig_bw_vec[
     return ((x > -2.5) & (x < 2.5)).select[DType.float32](0.2, 0.0)
 
 
-@always_inline("nodebug")
 fn linear_fw_vec[
     NELTS: Int,
     arg1: Float32,
@@ -354,7 +332,6 @@ fn linear_fw_vec[
     return x
 
 
-@always_inline("nodebug")
 fn linear_bw_vec[
     NELTS: Int,
     arg1: Float32,
@@ -366,7 +343,6 @@ fn linear_bw_vec[
     return 1.0
 
 
-@always_inline("nodebug")
 fn mish_fw_vec[
     NELTS: Int,
     arg1: Float32,
@@ -378,7 +354,6 @@ fn mish_fw_vec[
     return x * tanh(log(1.0 + exp(x)))
 
 
-@always_inline("nodebug")
 fn mish_bw_vec[
     NELTS: Int,
     arg1: Float32,

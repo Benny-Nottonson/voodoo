@@ -50,7 +50,6 @@ from ..operator_codes import *
 from ..constants import F32_MAX, UNARY_OP, BINARY_OP, OP_TUPLE, NU, NB
 
 
-@always_inline("nodebug")
 fn k_add[
     code: Int,
     u_fw: UNARY_OP,
@@ -60,7 +59,6 @@ fn k_add[
     kernel.store(code + 1, OP_TUPLE(u_bw, NB))
 
 
-@always_inline("nodebug")
 fn k_add[
     code: Int,
     b_fw: BINARY_OP,

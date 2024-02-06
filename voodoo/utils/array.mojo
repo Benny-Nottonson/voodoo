@@ -31,19 +31,15 @@ struct Vector[type: AnyRegType](Sized):
 
         return Vector[type] {_data: _data, _len: _len, _cap: len}
 
-    @always_inline("nodebug")
     fn __len__(self) -> Int:
         return self._len.load()
 
-    @always_inline("nodebug")
     fn __getitem__(self, idx: Int) -> type:
         return self._data.load(idx)
 
-    @always_inline("nodebug")
     fn __setitem__(self, idx: Int, value: type):
         self._data.store(idx, value)
 
-    @always_inline("nodebug")
     fn push_back(inout self, elem: type):
         let len = self._len.load()
         let curr_cap = self._cap
@@ -54,7 +50,6 @@ struct Vector[type: AnyRegType](Sized):
         self._data.store(len, elem)
         self._len.store(len + 1)
 
-    @always_inline("nodebug")
     fn pop_back(inout self) -> type:
         let new_len = self._len.load() - 1
         let curr_cap = self._cap
@@ -67,19 +62,16 @@ struct Vector[type: AnyRegType](Sized):
 
         return tmp
 
-    @always_inline("nodebug")
     fn free(owned self):
         self._data.free()
         self._len.free()
 
-    @always_inline("nodebug")
     fn clear(inout self):
         self._resize[False](8)
         self._len.store(0)
 
         memset_zero(self._data, self._cap)
 
-    @always_inline("nodebug")
     fn copy(self) -> Self:
         let len = self._len.load()
         let new_vector = Vector[type](len)
@@ -88,7 +80,6 @@ struct Vector[type: AnyRegType](Sized):
 
         return new_vector
 
-    @always_inline("nodebug")
     fn _resize[up: Bool](inout self, new_cap: Int):
         let new_data = Pointer[type].alloc(new_cap)
 
@@ -104,7 +95,6 @@ struct Vector[type: AnyRegType](Sized):
         self._data = new_data
 
 
-@always_inline("nodebug")
 fn reduce_vector_mul[v: Vector[Int]]() -> Int:
     var result = 1
 

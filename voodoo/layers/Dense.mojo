@@ -38,7 +38,6 @@ struct Dense[
                 TensorShape(out_neurons), bias_initializer, bias_constraint
             ]()
 
-    @always_inline("nodebug")
     fn forward(
         self, x: Tensor
     ) raises -> Tensor[x.shape, NoneInitializer, NoneConstraint, False, False]:

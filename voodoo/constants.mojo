@@ -14,11 +14,9 @@ alias BINARY_OP = fn (c: Node, a: Node, b: Node) -> None
 alias OP_TUPLE = Tuple[UNARY_OP, BINARY_OP]
 
 
-@always_inline("nodebug")
 fn NU(b: Node, a: Node):
     ...
 
 
-@always_inline("nodebug")
 fn NB(c: Node, a: Node, b: Node):
     ...

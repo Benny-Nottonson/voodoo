@@ -9,12 +9,10 @@ trait Constraint(CollectionElement):
     fn __init__(inout self):
         ...
 
-    @always_inline("nodebug")
     fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]) -> None:
         ...
 
     @staticmethod
-    @always_inline("nodebug")
     fn key() -> String:
         ...
 
@@ -25,11 +23,9 @@ struct MaxNorm[max_value: Float32](CollectionElement, Constraint):
     A constraint that enforces the maximum norm of the weights.
     """
 
-    @always_inline("nodebug")
     fn __init__() -> Self:
         return MaxNorm[max_value] {}
 
-    @always_inline("nodebug")
     fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         let num_elements = reduce_vector_mul[shape]()
         var norms: Float32 = 0.0
@@ -49,7 +45,6 @@ struct MaxNorm[max_value: Float32](CollectionElement, Constraint):
         vectorize[NELTS, vec](num_elements)
 
     @staticmethod
-    @always_inline("nodebug")
     fn key() -> String:
         return "MaxNorm"
 
@@ -62,11 +57,9 @@ struct MinMaxNorm[min_value: Float32, max_value: Float32](
     A constraint that enforces the minimum and maximum norm of the weights.
     """
 
-    @always_inline("nodebug")
     fn __init__() -> Self:
         return MinMaxNorm[min_value, max_value] {}
 
-    @always_inline("nodebug")
     fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         let num_elements = reduce_vector_mul[shape]()
         var norms: Float32 = 0.0
@@ -91,7 +84,6 @@ struct MinMaxNorm[min_value: Float32, max_value: Float32](
         vectorize[NELTS, vec](num_elements)
 
     @staticmethod
-    @always_inline("nodebug")
     fn key() -> String:
         return "MinMaxNorm"
 
@@ -102,11 +94,9 @@ struct NonNeg[](CollectionElement, Constraint):
     A constraint that enforces non-negative weights.
     """
 
-    @always_inline("nodebug")
     fn __init__() -> Self:
         return NonNeg[] {}
 
-    @always_inline("nodebug")
     fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         let num_elements = reduce_vector_mul[shape]()
 
@@ -117,7 +107,6 @@ struct NonNeg[](CollectionElement, Constraint):
         vectorize[NELTS, vec](num_elements)
 
     @staticmethod
-    @always_inline("nodebug")
     fn key() -> String:
         return "NonNeg"
 
@@ -128,11 +117,9 @@ struct RadialConstraint[](CollectionElement, Constraint):
     A constraint that enforces the radial constraint on the weights.
     """
 
-    @always_inline("nodebug")
     fn __init__() -> Self:
         return RadialConstraint[] {}
 
-    @always_inline("nodebug")
     fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         let num_elements = reduce_vector_mul[shape]()
         let center = shape[0] // 2
@@ -149,7 +136,6 @@ struct RadialConstraint[](CollectionElement, Constraint):
         vectorize[NELTS, vec](num_elements)
 
     @staticmethod
-    @always_inline("nodebug")
     fn key() -> String:
         return "RadialConstraint"
 
@@ -160,11 +146,9 @@ struct UnitNorm[](CollectionElement, Constraint):
     A constraint that enforces the unit norm of the weights.
     """
 
-    @always_inline("nodebug")
     fn __init__() -> Self:
         return UnitNorm[] {}
 
-    @always_inline("nodebug")
     fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         let num_elements = reduce_vector_mul[shape]()
 
@@ -176,7 +160,6 @@ struct UnitNorm[](CollectionElement, Constraint):
         vectorize[NELTS, vec](num_elements)
 
     @staticmethod
-    @always_inline("nodebug")
     fn key() -> String:
         return "UnitNorm"
 
@@ -187,15 +170,12 @@ struct NoneConstraint[](CollectionElement, Constraint):
     An constraint that does nothing.
     """
 
-    @always_inline("nodebug")
     fn __init__() -> Self:
         return NoneConstraint[] {}
 
-    @always_inline("nodebug")
     fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
         ...
 
     @staticmethod
-    @always_inline("nodebug")
     fn key() -> String:
         return "NoneConstraint"
