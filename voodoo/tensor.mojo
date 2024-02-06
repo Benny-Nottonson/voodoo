@@ -34,9 +34,13 @@ struct Tensor[
         if initializer.key() != "NoneInitializer":
             initializer().initialize[shape](self.node.get_data())
 
-        @parameter
-        if constraint.key() != "NoneConstraint":
-            constraint().constrain[shape](self.node.get_data())
+            self.node.set_computed(True)
+            self.node.set_is_static(True)
+            self.node.set_is_single(True)
+            
+            @parameter
+            if constraint.key() != "NoneConstraint":
+                constraint().constrain[shape](self.node.get_data())
 
     fn __copyinit__(inout self, other: Self):
         self.graph = other.graph
