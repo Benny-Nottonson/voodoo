@@ -1,4 +1,3 @@
-from sys.param_env import env_get_int
 from math.limit import inf
 from sys.intrinsics import PrefetchOptions
 
