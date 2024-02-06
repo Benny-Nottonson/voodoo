@@ -1,10 +1,7 @@
 from algorithm import vectorize
 from math import max, min
 from voodoo import Node
-from voodoo.utils import (
-    recursive_broadcast,
-    recursive_broadcast_bw,
-)
+from voodoo.utils import recursive_broadcast
 from ..constants import PREFETCH_READ, PREFETCH_WRITE, F32_MAX, NELTS
 
 # TODO: Add cleanup for tiling
@@ -28,9 +25,9 @@ struct MMul(MatMul):
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
         if not a.get_is_single():
-            recursive_broadcast_bw[Self.kernel_mmul_bw_a, Self.base_case_depth](c, a, b)
+            recursive_broadcast[Self.kernel_mmul_bw_a, Self.base_case_depth](c, a, b)
         if not b.get_is_single():
-            recursive_broadcast_bw[Self.kernel_mmul_bw_b, Self.base_case_depth](c, a, b)
+            recursive_broadcast[Self.kernel_mmul_bw_b, Self.base_case_depth](c, a, b)
 
     @staticmethod
     fn kernel_mmul_fw(

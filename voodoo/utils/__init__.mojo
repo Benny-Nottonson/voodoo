@@ -6,6 +6,5 @@ from .broadcast import (
     strides_b,
     get_broadcasted_shape_for_ew_op,
     recursive_broadcast,
-    recursive_broadcast_bw,
 )
 from .console import warn, error, info, success, debug, clear

@@ -49,61 +49,39 @@ fn recursive_broadcast[
     c_index: Int = 0,
     depth: Int = 0,
 ):
-    if base_case(depth, a, b):
-        kernel(c, a, b, a_index, b_index, c_index, depth)
-        return
+    var stack = Vector[StaticIntTuple[4]]()
+    stack.push_back(StaticIntTuple[4](a_index, b_index, c_index, depth))
 
-    let a_shape = shape_a(depth, a, b)
-    let b_shape = shape_b(depth, a, b)
-    let c_shape = c.get_shape()[depth]
+    while len(stack) > 0:
+        let item = stack.pop_back()
 
-    let scaled_a_index = a_index * a_shape
-    let scaled_b_index = b_index * b_shape
+        let item_a_index = item[0]
+        let item_b_index = item[1]
+        let item_c_index = item[2]
+        let item_depth = item[3]
 
-    for s in range(max(a_shape, b_shape)):
-        recursive_broadcast[kernel, base_case](
-            c,
-            a,
-            b,
-            scaled_a_index + s if a_shape != 1 else a_index,
-            scaled_b_index + s if b_shape != 1 else b_index,
-            c_shape * c_index + s,
-            depth + 1,
-        )
+        if base_case(item_depth, a, b):
+            kernel(c, a, b, item_a_index, item_b_index, item_c_index, item_depth)
+            continue
 
+        let a_shape = shape_a(item_depth, a, b)
+        let b_shape = shape_b(item_depth, a, b)
+        let c_shape_indexed = c.get_shape()[item_depth] * item_c_index
 
-fn recursive_broadcast_bw[
-    kernel: fn (
-        c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
-    ) -> None,
-    base_case: fn (depth: Int, a: Node, b: Node) -> Bool,
-](
-    c: Node,
-    a: Node,
-    b: Node,
-    a_index: Int = 0,
-    b_index: Int = 0,
-    c_index: Int = 0,
-    depth: Int = 0,
-):
-    if base_case(depth, a, b):
-        kernel(c, a, b, a_index, b_index, c_index, depth)
-        return
+        let scaled_a_index = item_a_index * a_shape
+        let scaled_b_index = item_b_index * b_shape
+        let max_shape = max(a_shape, b_shape)
 
-    let a_shape = shape_a(depth, a, b)
-    let b_shape = shape_b(depth, a, b)
-    let c_shape = c.get_shape()[depth]
+        let a_step = 0 if a_shape == 1 else 1
+        let b_step = 0 if b_shape == 1 else 1
+        let new_depth = item_depth + 1
 
-    let scaled_a_index = a_index * a_shape
-    let scaled_b_index = b_index * b_shape
-
-    for s in range(max(a_shape, b_shape)):
-        recursive_broadcast_bw[kernel, base_case](
-            c,
-            a,
-            b,
-            scaled_a_index + s if a_shape != 1 else a_index,
-            scaled_b_index + s if b_shape != 1 else b_index,
-            c_shape * c_index + s,
-            depth + 1,
-        )
+        for s in range(max_shape):
+            stack.push_back(
+                StaticIntTuple[4](
+                    scaled_a_index + s * a_step,
+                    scaled_b_index + s * b_step,
+                    c_shape_indexed + s,
+                    new_depth,
+                )
+            )

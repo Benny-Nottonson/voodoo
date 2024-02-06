@@ -5,7 +5,6 @@ from voodoo.utils import (
     strides_a,
     strides_b,
     recursive_broadcast,
-    recursive_broadcast_bw,
 )
 from ..constants import NELTS, PREFETCH_READ, PREFETCH_WRITE
 
@@ -146,11 +145,9 @@ struct GenericBinaryArithmetic[
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
         if not a.get_is_single():
-            recursive_broadcast_bw[Self.kernel_bw[bw_a_vec, True], Self.base_case](
-                c, a, b
-            )
+            recursive_broadcast[Self.kernel_bw[bw_a_vec, True], Self.base_case](c, a, b)
         if not b.get_is_single():
-            recursive_broadcast_bw[Self.kernel_bw[bw_b_vec, False], Self.base_case](
+            recursive_broadcast[Self.kernel_bw[bw_b_vec, False], Self.base_case](
                 c, a, b
             )
 
