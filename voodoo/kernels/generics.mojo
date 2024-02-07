@@ -187,49 +187,59 @@ struct GenericBinaryArithmetic[
     ) -> None:
         let offset_a = a_index * shape_a(depth, a, b) * strides_a(depth, a, b)
         let offset_b = b_index * shape_b(depth, a, b) * strides_b(depth, a, b)
+        let offset_c = c_index * c.get_shape()[depth] * c.get_strides()[depth]
         let c_rest = c.get_shape()[depth] * c.get_strides()[depth]
-        let offset_c = c_index * c_rest
-
-        let a_data = a.get_data()
-        let b_data = b.get_data()
-        let a_grad = a.get_grad()
-        let b_grad = b.get_grad()
-        let c_grad = c.get_grad()
-
-        DTypePointer[DType.float32].prefetch[PREFETCH_READ](a_data)
-        DTypePointer[DType.float32].prefetch[PREFETCH_READ](b_data)
-        DTypePointer[DType.float32].prefetch[PREFETCH_READ](c_grad)
-        DTypePointer[DType.float32].prefetch[PREFETCH_WRITE](a_grad)
-        DTypePointer[DType.float32].prefetch[PREFETCH_WRITE](b_grad)
-
-        @parameter
-        fn vectorized_bw_a[NELTS: Int](i: Int):
-            a_grad.simd_store[NELTS](
-                offset_a + i,
-                a_grad.simd_load[NELTS](offset_a + i)
-                + generic_func(
-                    a_data.simd_load[NELTS](offset_a + i),
-                    b_data.simd_load[NELTS](offset_b + i),
-                )
-                * c_grad.simd_load[NELTS](offset_c + i),
-            )
-
-        @parameter
-        fn vectorized_bw_b[NELTS: Int](i: Int):
-            b_grad.simd_store[NELTS](
-                offset_b + i,
-                b_grad.simd_load[NELTS](offset_b + i)
-                + generic_func(
-                    a_data.simd_load[NELTS](offset_a + i),
-                    b_data.simd_load[NELTS](offset_b + i),
-                )
-                * c_grad.simd_load[NELTS](offset_c + i),
-            )
 
         @parameter
         if is_a:
+            let a_data = a.get_data()
+            let b_data = b.get_data()
+            let a_grad = a.get_grad()
+            let c_grad = c.get_grad()
+
+            DTypePointer[DType.float32].prefetch[PREFETCH_WRITE](a_grad)
+            DTypePointer[DType.float32].prefetch[PREFETCH_READ](a_grad)
+            DTypePointer[DType.float32].prefetch[PREFETCH_READ](a_data)
+            DTypePointer[DType.float32].prefetch[PREFETCH_READ](b_data)
+            DTypePointer[DType.float32].prefetch[PREFETCH_READ](c_grad)
+
+            @parameter
+            fn vectorized_bw_a[NELTS: Int](i: Int):
+                a_grad.simd_store[NELTS](
+                    offset_a + i,
+                    a_grad.simd_load[NELTS](offset_a + i)
+                    + generic_func(
+                        a_data.simd_load[NELTS](offset_a + i),
+                        b_data.simd_load[NELTS](offset_b + i),
+                    )
+                    * c_grad.simd_load[NELTS](offset_c + i),
+                )
+
             vectorize[NELTS, vectorized_bw_a](c_rest)
         else:
+            let a_data = a.get_data()
+            let b_data = b.get_data()
+            let b_grad = b.get_grad()
+            let c_grad = c.get_grad()
+
+            DTypePointer[DType.float32].prefetch[PREFETCH_WRITE](b_grad)
+            DTypePointer[DType.float32].prefetch[PREFETCH_READ](b_grad)
+            DTypePointer[DType.float32].prefetch[PREFETCH_READ](a_data)
+            DTypePointer[DType.float32].prefetch[PREFETCH_READ](b_data)
+            DTypePointer[DType.float32].prefetch[PREFETCH_READ](c_grad)
+
+            @parameter
+            fn vectorized_bw_b[NELTS: Int](i: Int):
+                b_grad.simd_store[NELTS](
+                    offset_b + i,
+                    b_grad.simd_load[NELTS](offset_b + i)
+                    + generic_func(
+                        a_data.simd_load[NELTS](offset_a + i),
+                        b_data.simd_load[NELTS](offset_b + i),
+                    )
+                    * c_grad.simd_load[NELTS](offset_c + i),
+                )
+
             vectorize[NELTS, vectorized_bw_b](c_rest)
 
 

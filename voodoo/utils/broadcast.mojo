@@ -71,8 +71,8 @@ fn recursive_broadcast[
     c_index: Int = 0,
     depth: Int = 0,
 ):
-    var stack = Vector[StaticIntTuple[4]]()
-    stack.push_back(StaticIntTuple[4](a_index, b_index, c_index, depth))
+    var stack = Vector[Tuple[Int, Int, Int, Int]]()
+    stack.push_back((a_index, b_index, c_index, depth))
 
     let a_b_diff = max(a.get_num_dims() - b.get_num_dims(), 0)
     let b_a_diff = max(b.get_num_dims() - a.get_num_dims(), 0)
@@ -90,10 +90,10 @@ fn recursive_broadcast[
     while len(stack) > 0:
         let item = stack.pop_back()
 
-        let item_a_index = item[0]
-        let item_b_index = item[1]
-        let item_c_index = item[2]
-        let item_depth = item[3]
+        let item_a_index = item.get[0, Int]()
+        let item_b_index = item.get[1, Int]()
+        let item_c_index = item.get[2, Int]()
+        let item_depth = item.get[3, Int]()
 
         if base_case[use_strides](item_depth, a, b, a_b_diff, b_a_diff):
             kernel(c, a, b, item_a_index, item_b_index, item_c_index, item_depth)

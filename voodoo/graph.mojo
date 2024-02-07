@@ -268,13 +268,13 @@ struct Graph:
             memset_zero(node.get_grad(), ceiled_cap)
 
     fn release_data[forced: Bool = False](self, node: Node) raises:
-        if (
-            node.get_is_static()
-            or (node.get_checkpoint() and not forced)
-            or (node.get_is_single() and not forced)
-            or node.get_data_id() == -1
-        ):
+        if node.get_is_static() or node.get_data_id() == -1:
             return
+
+        @parameter
+        if not forced:
+            if node.get_checkpoint() or node.get_is_single():
+                return
 
         @parameter
         if forced:
@@ -460,13 +460,14 @@ struct Graph:
             return node
 
         for i in range(len(node.get_children())):
-            let child_id = node.get_children()[i]
-            let child = self._nodes[child_id]
+            let child = self._nodes[node.get_children()[i]]
+            let grad_operator_id = child.get_grad_operator_id()
+            let child_parents = child.get_parents()
+
             _ = self.backward_recursive(child)
 
-            let grad_operator_id = child.get_grad_operator_id()
-            if len(child.get_parents()) == 1:
-                let parent1 = self._nodes[child.get_parents()[0]]
+            if len(child_parents) == 1:
+                let parent1 = self._nodes[child_parents[0]]
                 _ = self.forward_recursive_graph_slice(parent1)
 
                 if parent1.get_grad_id() == -1:
@@ -475,10 +476,9 @@ struct Graph:
                 parent1.set_grad_computed(True)
 
                 self._kernels[grad_operator_id].get[0, UNARY_OP]()(child, parent1)
-
             else:
-                let parent1 = self._nodes[child.get_parents()[0]]
-                let parent2 = self._nodes[child.get_parents()[1]]
+                let parent1 = self._nodes[child_parents[0]]
+                let parent2 = self._nodes[child_parents[1]]
 
                 _ = self.forward_recursive_graph_slice(parent1)
                 _ = self.forward_recursive_graph_slice(parent2)
@@ -508,7 +508,7 @@ struct Graph:
             node.set_tmp_visited(False)
         self._grad_nodes_order.clear()
 
-        var backward = DynamicVector[Int]()
+        var backward = Vector[Int]()
         backward.push_back(node.get_id())
         var it = 0
         while it < len(backward):
@@ -526,15 +526,16 @@ struct Graph:
             it += 1
 
     fn backward(inout self, node: Node) raises:
-        self.find_grad_nodes_order(node)
+        let new_last_node_id = node.get_id()
 
-        self._last_node_id.store(node.get_id())
+        self.find_grad_nodes_order(node)
+        self._last_node_id.store(new_last_node_id)
 
         for i in range(len(self._nodes)):
             let node = self._nodes[i]
             node.set_grad_computed(False)
 
-            if node.get_is_single() or node.get_id() == self._last_node_id.load():
+            if node.get_is_single() or node.get_id() == new_last_node_id:
                 continue
 
             if not node.get_is_static():
