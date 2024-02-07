@@ -5,8 +5,7 @@ from tensor import TensorShape
 
 
 struct Dropout[
-    dropout_rate: Float32 = 0.5,
-    noise_shape: TensorShape = TensorShape(0)
+    dropout_rate: Float32 = 0.5, noise_shape: TensorShape = TensorShape(0)
 ]():
     fn __init__(
         inout self,

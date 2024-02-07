@@ -32,9 +32,7 @@ fn main() raises:
         weight_initializer = HeNormal[32],
         bias_initializer = HeNormal[32],
     ]()
-    let dropout_layer = Dropout[
-        dropout_rate=0.1
-    ]()
+    let dropout_layer = Dropout[dropout_rate=0.1]()
     let output_layer = Dense[
         in_neurons=32,
         out_neurons=1,

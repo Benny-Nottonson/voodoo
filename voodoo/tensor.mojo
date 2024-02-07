@@ -327,9 +327,20 @@ struct Tensor[
 
     fn flatten(
         self,
-    ) raises -> Tensor[TensorShape(self.shape[0], self.shape.num_elements() // self.shape[0]), NoneInitializer, NoneConstraint, False, False]:
-        var new_tensor = self.load_tensor_for_unary_op[TensorShape(self.shape[0], self.shape.num_elements() // self.shape[0])]()
-        new_tensor.node = new_tensor.graph.reshape(self.node, TensorShape(self.shape[0], self.shape.num_elements() // self.shape[0]))
+    ) raises -> Tensor[
+        TensorShape(self.shape[0], self.shape.num_elements() // self.shape[0]),
+        NoneInitializer,
+        NoneConstraint,
+        False,
+        False,
+    ]:
+        var new_tensor = self.load_tensor_for_unary_op[
+            TensorShape(self.shape[0], self.shape.num_elements() // self.shape[0])
+        ]()
+        new_tensor.node = new_tensor.graph.reshape(
+            self.node,
+            TensorShape(self.shape[0], self.shape.num_elements() // self.shape[0]),
+        )
         return new_tensor
 
     fn transp(

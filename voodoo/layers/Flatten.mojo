@@ -12,5 +12,11 @@ struct Flatten[]():
 
     fn forward(
         self, x: Tensor
-    ) raises -> Tensor[TensorShape(x.shape[0], x.shape.num_elements() // x.shape[0]), NoneInitializer, NoneConstraint, False, False]:
+    ) raises -> Tensor[
+        TensorShape(x.shape[0], x.shape.num_elements() // x.shape[0]),
+        NoneInitializer,
+        NoneConstraint,
+        False,
+        False,
+    ]:
         return x.flatten()
