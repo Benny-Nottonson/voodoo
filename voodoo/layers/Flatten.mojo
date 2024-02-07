@@ -1,13 +1,16 @@
-# from voodoo import Tensor
-# from .BaseLayer import BaseLayer
+from voodoo import Tensor
+from voodoo.initializers import NoneInitializer
+from voodoo.constraints import NoneConstraint
+from tensor import TensorShape
 
 
-# struct Flatten[](BaseLayer):
-#     fn __init__(
-#         inout self,
-#     ) raises:
-#         ...
+struct Flatten[]():
+    fn __init__(
+        inout self,
+    ) raises:
+        ...
 
-#
-#     fn forward(self, x: Tensor) raises -> Tensor[False, False]:
-#         return x.flatten()
+    fn forward(
+        self, x: Tensor
+    ) raises -> Tensor[TensorShape(x.shape[0], x.shape.num_elements() // x.shape[0]), NoneInitializer, NoneConstraint, False, False]:
+        return x.flatten()

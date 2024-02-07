@@ -1,16 +1,14 @@
-# from voodoo import Tensor, Vector
-# from tensor import TensorShape
-# from .BaseLayer import BaseLayer
+from voodoo import Tensor, Vector
+from tensor import TensorShape
+from voodoo.initializers import NoneInitializer
+from voodoo.constraints import NoneConstraint
 
 
-# struct Reshape[new_shape: TensorShape](BaseLayer):
-#     var _new_shape: Vector[Int]
+struct Reshape[new_shape: TensorShape]():
+    fn __init__(inout self) raises:
+        ...
 
-#     fn __init__(inout self) raises:
-#         self._new_shape = Vector[Int](new_shape.rank())
-#         for i in range(new_shape.rank()):
-#             self._new_shape.store(i, new_shape[i])
-
-#
-#     fn forward(self, x: Tensor) raises -> Tensor[False, False]:
-#         return x.reshape(self._new_shape)
+    fn forward(
+        self, x: Tensor
+    ) raises -> Tensor[new_shape, NoneInitializer, NoneConstraint, False, False]:
+        return x.reshape[new_shape]()

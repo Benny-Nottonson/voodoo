@@ -1,5 +1,7 @@
 from voodoo import Tensor, get_loss_code, Graph
 from voodoo.layers.Dense import Dense
+from voodoo.layers.Dropout import Dropout
+from voodoo.layers.LeakyReLu import LeakyReLu
 from voodoo.utils import (
     info,
     clear,
@@ -24,12 +26,14 @@ fn main() raises:
         weight_initializer = HeNormal[1],
         bias_initializer = HeNormal[32],
     ]()
-    let dense_layer = Dense[
+    let dense_layer = LeakyReLu[
         in_neurons=32,
         out_neurons=32,
-        activation="relu",
         weight_initializer = HeNormal[32],
         bias_initializer = HeNormal[32],
+    ]()
+    let dropout_layer = Dropout[
+        dropout_rate=0.1
     ]()
     let output_layer = Dense[
         in_neurons=32,
@@ -40,13 +44,14 @@ fn main() raises:
 
     var avg_loss: Float32 = 0.0
     let every = 1000
-    let num_epochs = 200000
+    let num_epochs = 2000000
 
     let input = Tensor[data_shape, RandomUniform[0, 1]]()
     let true_vals = Tensor[data_shape, RandomUniform[0, 1]]()
 
     var x = input_layer.forward(input)
     x = dense_layer.forward(x)
+    x = dropout_layer.forward(x)
     x = output_layer.forward(x)
     var loss = x.compute_loss["mse"](true_vals)
 

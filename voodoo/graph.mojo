@@ -723,7 +723,7 @@ struct Graph:
         return self.node[True](shape, False, False, maxpool2d_code, other_params, a)
 
     fn dropout(
-        inout self, a: Node, dropout_rate: Float32, noise_shape: DynamicVector[Int]
+        inout self, a: Node, dropout_rate: Float32, noise_shape: TensorShape
     ) raises -> Node:
         return self.node[False](
             a.get_shape().copy(),

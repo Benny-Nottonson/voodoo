@@ -1,48 +1,50 @@
-# from voodoo import Tensor
-# from tensor import TensorShape
-# from .BaseLayer import BaseLayer
+from voodoo import Tensor, get_activation_code
+from tensor import TensorShape
+from ..initializers import Initializer, GlorotUniform, NoneInitializer
+from ..constraints import Constraint, NoneConstraint
+from utils.variant import Variant
+from voodoo.operator_codes import lrelu_code
 
 
-# struct LeakyReLu[
-#     in_neurons: Int,
-#     out_neurons: Int,
-#     use_bias: Bool = True,
-#     weight_initializer: String = "he_normal",
-#     bias_initializer: String = "zeros",
-#     weight_mean: Float32 = 0.0,
-#     weight_std: Float32 = 0.05,
-#     bias_mean: Float32 = 0.0,
-#     bias_std: Float32 = 0.05,
-#     alpha: Float32 = 0.2,
-# ](BaseLayer):
-#     var W: Tensor
-#     var bias: Tensor
+struct LeakyReLu[
+    in_neurons: Int,
+    out_neurons: Int,
+    use_bias: Bool = True,
+    weight_initializer: Initializer = NoneInitializer,
+    weight_constraint: Constraint = NoneConstraint,
+    bias_initializer: Initializer = NoneInitializer,
+    bias_constraint: Constraint = NoneConstraint,
+    alpha: Float32 = 0.2,
+]():
+    var W: Tensor[
+        TensorShape(in_neurons, out_neurons), weight_initializer, weight_constraint
+    ]
+    var bias: Tensor[TensorShape(out_neurons), bias_initializer, bias_constraint]
 
-#     fn __init__(
-#         inout self,
-#     ) raises:
-#         self.W = (
-#             Tensor(TensorShape(in_neurons, out_neurons))
-#             .initialize[weight_initializer, weight_mean, weight_std]()
-#             .requires_grad()
-#         )
+    fn __init__(
+        inout self,
+    ) raises:
+        self.W = Tensor[
+            TensorShape(in_neurons, out_neurons), weight_initializer, weight_constraint
+        ]().requires_grad()
 
-#         @parameter
-#         if self.use_bias:
-#             self.bias = (
-#                 Tensor(TensorShape(out_neurons))
-#                 .initialize[bias_initializer, bias_mean, bias_std]()
-#                 .requires_grad()
-#             )
-#         else:
-#             self.bias = Tensor(TensorShape(out_neurons)).initialize["zeros", 0.0]()
+        @parameter
+        if self.use_bias:
+            self.bias = Tensor[
+                TensorShape(out_neurons), bias_initializer, bias_constraint
+            ]().requires_grad()
+        else:
+            self.bias = Tensor[
+                TensorShape(out_neurons), bias_initializer, bias_constraint
+            ]()
 
-#
-#     fn forward(self, x: Tensor) raises -> Tensor[False, False]:
-#         var computed = x @ self.W
+    fn forward(
+        self, x: Tensor
+    ) raises -> Tensor[x.shape, NoneInitializer, NoneConstraint, False, False]:
+        var computed = x @ self.W
 
-#         @parameter
-#         if self.use_bias:
-#             computed = computed + self.bias
+        @parameter
+        if self.use_bias:
+            computed = computed + self.bias
 
-#         return (computed).compute_activation["lrelu", self.alpha]()
+        return computed.compute_activation[operator_id=lrelu_code, arg1=alpha]()

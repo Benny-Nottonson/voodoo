@@ -150,7 +150,7 @@ struct Tensor[
         return new_tensor
 
     fn dropout[
-        dropout_rate: Float32, noise_shape: DynamicVector[Int]
+        dropout_rate: Float32, noise_shape: TensorShape
     ](self) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
         var new_tensor = self.load_tensor_for_unary_op()
         new_tensor.node = new_tensor.graph.dropout(self.node, dropout_rate, noise_shape)
@@ -327,14 +327,9 @@ struct Tensor[
 
     fn flatten(
         self,
-    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
-        var new_tensor = self.load_tensor_for_unary_op()
-        var shape = Vector[Int]()
-        let dims = len(self.node.get_shape())
-        shape.push_back(self.node.get_shape()[0])
-        for i in range(1, dims):
-            shape[0] = shape[0] * self.node.get_shape()[i]
-        new_tensor.node = new_tensor.graph.reshape(self.node, shape)
+    ) raises -> Tensor[TensorShape(self.shape[0], self.shape.num_elements() // self.shape[0]), NoneInitializer, NoneConstraint, False, False]:
+        var new_tensor = self.load_tensor_for_unary_op[TensorShape(self.shape[0], self.shape.num_elements() // self.shape[0])]()
+        new_tensor.node = new_tensor.graph.reshape(self.node, TensorShape(self.shape[0], self.shape.num_elements() // self.shape[0]))
         return new_tensor
 
     fn transp(

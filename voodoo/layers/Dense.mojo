@@ -1,6 +1,5 @@
 from voodoo import Tensor, get_activation_code
 from tensor import TensorShape
-from .BaseLayer import BaseLayer
 from ..initializers import Initializer, GlorotUniform, NoneInitializer
 from ..constraints import Constraint, NoneConstraint
 from utils.variant import Variant
