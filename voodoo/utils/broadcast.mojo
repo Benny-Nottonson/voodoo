@@ -22,8 +22,8 @@ fn strides_b(depth: Int, a: Node, b: Node) -> Int:
     return b.get_strides()[depth - diff] if depth >= diff else b.get_strides()[0]
 
 
-fn get_broadcasted_shape_for_ew_op(parent1: Node, parent2: Node) -> DynamicVector[Int]:
-    var shape = DynamicVector[Int]()
+fn get_broadcasted_shape_for_ew_op(parent1: Node, parent2: Node) -> Vector[Int]:
+    var shape = Vector[Int]()
     let target = parent1 if parent1.get_num_dims() - parent2.get_num_dims() > 0 else parent2
     for i in range(target.get_num_dims()):
         shape.push_back(target.get_shape()[i])

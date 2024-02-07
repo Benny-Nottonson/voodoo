@@ -118,13 +118,13 @@ struct Graph:
         return ceil(log2(Float32(cap))).to_int()
 
     fn node[
-        checkpoint: Bool
-    ](
-        inout self,
-        shape: Vector[Int],
+        checkpoint: Bool,
         is_static: Bool,
         is_single: Bool,
         operator_id: Int,
+    ](
+        inout self,
+        shape: Vector[Int],
         other_params: Vector[Int],
         *parents: Node,
     ) raises -> Node:
@@ -166,45 +166,6 @@ struct Graph:
         node.set_is_single(is_single)
 
         self.get_free_data(node)
-
-        let node_id = node.get_id()
-        if node_id < len(self._nodes):
-            self._nodes[node_id] = node
-        else:
-            self._nodes.push_back(node)
-
-        return node
-
-    fn node[
-        checkpoint: Bool
-    ](
-        inout self,
-        shape: TensorShape,
-        is_static: Bool,
-        is_single: Bool,
-        operator_id: Int,
-        other_params: Vector[Int],
-        *parents: Node,
-    ) raises -> Node:
-        var _shape = Vector[Int]()
-        for i in range(shape.rank()):
-            _shape.push_back(shape[i])
-        var node = Node(self.get_free_node_id(), _shape, is_static, other_params.copy())
-        node.set_checkpoint(checkpoint)
-        node.set_is_single(is_single)
-        node.set_operator_id(operator_id)
-
-        for i in range(len(parents)):
-            node.push_back_parent(parents[i].get_id())
-            var parent = parents[i]
-            parent.push_back_child(node.get_id())
-            parent.set_dependencies(parents[i].get_dependencies() + 1)
-
-        self.get_free_data(node)
-
-        for i in range(len(parents)):
-            if parents[i].get_dependencies() == 0:
-                _ = self.forward_recursive(parents[i])
 
         let node_id = node.get_id()
         if node_id < len(self._nodes):
@@ -603,11 +564,8 @@ struct Graph:
             SGD[learning_rate].step(self._nodes)
 
     fn copy(inout self, parent1: Node) raises -> Node:
-        return self.node[False](
+        return self.node[False, True, False, copy_code](
             parent1.get_shape().copy(),
-            True,
-            False,
-            copy_code,
             Vector[Int](),
             parent1,
         )
@@ -625,7 +583,7 @@ struct Graph:
 
         let other_params = Vector[Int]()
 
-        return self.node[True](shape, False, False, mmul_code, other_params, a, b)
+        return self.node[True, False, False, mmul_code](shape, other_params, a, b)
 
     fn conv_1d(
         inout self,
@@ -649,7 +607,7 @@ struct Graph:
         other_params.push_back(padding)
         other_params.push_back(stride)
 
-        return self.node[True](shape, False, False, conv1d_code, other_params, a, b)
+        return self.node[True, False, False, conv1d_code](shape, other_params, a, b)
 
     fn conv_2d(
         inout self,
@@ -678,7 +636,7 @@ struct Graph:
         other_params.push_back(stride[0])
         other_params.push_back(stride[1])
 
-        return self.node[True](shape, False, False, conv2d_code, other_params, a, b)
+        return self.node[True, False, False, conv2d_code](shape, other_params, a, b)
 
     fn maxpool_1d(
         inout self,
@@ -698,7 +656,7 @@ struct Graph:
             (a.get_shape()[2] - kernel_size + 2 * padding) // stride + 1,
         )
 
-        return self.node[True](shape, False, False, maxpool1d_code, other_params, a)
+        return self.node[True, False, False, maxpool1d_code](shape, other_params, a)
 
     fn maxpool_2d(
         inout self,
@@ -720,48 +678,39 @@ struct Graph:
             (a.get_shape()[3] - kernel_size[1] + 2 * padding) // stride + 1,
         )
 
-        return self.node[True](shape, False, False, maxpool2d_code, other_params, a)
+        return self.node[True, False, False, maxpool2d_code](shape, other_params, a)
 
     fn dropout(
         inout self, a: Node, dropout_rate: Float32, noise_shape: TensorShape
     ) raises -> Node:
-        return self.node[False](
+        return self.node[False, False, False, dropout_code](
             a.get_shape().copy(),
-            False,
-            False,
-            dropout_code,
             Vector[Int](),
             a,
         )
 
     fn reshape(inout self, parent1: Node, shape: Vector[Int]) raises -> Node:
-        return self.node[False](
-            shape, False, False, reshape_code, Vector[Int](), parent1
+        return self.node[False, False, False, reshape_code](
+            shape, Vector[Int](), parent1
         )
 
     fn transp(inout self, parent1: Node) raises -> Node:
         let old_shape = parent1.get_shape().copy()
 
-        return self.node[False](
+        return self.node[False, False, False, transp_code](
             TensorShape(old_shape[len(old_shape) - 1], old_shape[len(old_shape) - 2]),
-            False,
-            False,
-            transp_code,
             Vector[Int](),
             parent1,
         )
 
     fn sum(inout self, parent1: Node) raises -> Node:
-        return self.node[False](
-            TensorShape(1), False, False, sum_code, Vector[Int](), parent1
+        return self.node[False, False, False, sum_code](
+            TensorShape(1), Vector[Int](), parent1
         )
 
     fn function_general[operator_id: Int](inout self, parent1: Node) raises -> Node:
-        return self.node[False](
+        return self.node[False, False, False, operator_id](
             parent1.get_shape().copy(),
-            False,
-            False,
-            operator_id,
             Vector[Int](),
             parent1,
         )
@@ -769,11 +718,8 @@ struct Graph:
     fn arithmetic_general[
         operator_id: Int
     ](inout self, a: Node, b: Node) raises -> Node:
-        return self.node[False](
+        return self.node[False, False, False, operator_id](
             get_broadcasted_shape_for_ew_op(a, b),
-            False,
-            False,
-            operator_id,
             Vector[Int](),
             a,
             b,
@@ -785,11 +731,8 @@ struct Graph:
     ](inout self, parent1: Node) raises -> Node:
         var other_params = Vector[Int]()
         other_params.push_back(round(arg1 * 1000000.0).to_int())
-        return self.node[False](
+        return self.node[False, False, False, operator_id](
             parent1.get_shape().copy(),
-            False,
-            False,
-            operator_id,
             other_params,
             parent1,
         )
@@ -797,11 +740,8 @@ struct Graph:
     fn loss_general[
         operator_id: Int
     ](inout self, parent1: Node, parent2: Node) raises -> Node:
-        return self.node[False](
+        return self.node[False, False, False, operator_id](
             TensorShape(1),
-            False,
-            False,
-            operator_id,
             Vector[Int](),
             parent1,
             parent2,
