@@ -42,7 +42,7 @@ fn main() raises:
 
     var avg_loss: Float32 = 0.0
     let every = 1000
-    let num_epochs = 2000000
+    let num_epochs = 200000
 
     let input = Tensor[data_shape, RandomUniform[0, 1]]()
     let true_vals = Tensor[data_shape, RandomUniform[0, 1]]()
