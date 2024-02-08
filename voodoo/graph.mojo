@@ -367,16 +367,7 @@ struct Graph:
 
     fn free(self):
         self._nodes.free()
-
-        for i in range(len(self._memory_pool)):
-            self._memory_pool[i].free()
-
         self._memory_pool.free()
-
-        @unroll
-        for i in range(MEMORY_POOL_SIZE):
-            self._memory_pool_manager[i].free()
-
         self._memory_pool_manager.free()
         self._free_node_ids.free()
         self._free_data_ids.free()

@@ -124,3 +124,4 @@ fn recursive_broadcast[
 
     a_shape_precomputed.free()
     b_shape_precomputed.free()
+    stack.free()

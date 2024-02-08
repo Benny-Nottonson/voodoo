@@ -1,3 +1,5 @@
+from tensor import TensorShape
+
 from voodoo.node import Node
 from voodoo.graph import Graph
 from voodoo.utils import Vector
@@ -11,8 +13,6 @@ from voodoo.operator_codes import (
 )
 from voodoo.constraints import Constraint, NoneConstraint
 from voodoo.initializers import Initializer, Zeroes, NoneInitializer
-
-from tensor import TensorShape
 
 
 struct Tensor[
