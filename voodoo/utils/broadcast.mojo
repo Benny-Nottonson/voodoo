@@ -1,4 +1,5 @@
 from math import max
+
 from voodoo import Node
 
 

@@ -1,7 +1,8 @@
 from algorithm import vectorize, tile
 from math import max
+
 from voodoo import Node
-from ..constants import NELTS, PREFETCH_READ, PREFETCH_WRITE
+from voodoo.constants import NELTS, PREFETCH_READ, PREFETCH_WRITE
 
 alias tile_sizes = VariadicList[Int](32, 16, 8, 4, 2, 1)
 

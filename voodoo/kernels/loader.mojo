@@ -1,14 +1,14 @@
-from .operations import (
+from voodoo.kernels.operations import (
     Copy,
     Reshape,
     Transpose,
     Sum,
     Dropout,
 )
-from .matmul import MMul
-from .maxpool import MaxPool1D, MaxPool2D
-from .conv import Conv1D, Conv2D
-from .activations import (
+from voodoo.kernels.matmul import MMul
+from voodoo.kernels.maxpool import MaxPool1D, MaxPool2D
+from voodoo.kernels.conv import Conv1D, Conv2D
+from voodoo.kernels.activations import (
     Relu,
     Sigmoid,
     Softplus,
@@ -25,7 +25,7 @@ from .activations import (
     Linear,
     Mish,
 )
-from .arithmetic import (
+from voodoo.kernels.arithmetic import (
     Sqrt,
     Abs,
     Exp2,
@@ -45,9 +45,9 @@ from .arithmetic import (
     Div,
     Pow,
 )
-from .losses import MSE, MAE, MAPE, MSLE
-from ..operator_codes import *
-from ..constants import F32_MAX, UNARY_OP, BINARY_OP, OP_TUPLE, NU, NB
+from voodoo.operator_codes import *
+from voodoo.kernels.losses import MSE, MAE, MAPE, MSLE
+from voodoo.constants import F32_MAX, UNARY_OP, BINARY_OP, OP_TUPLE, NU, NB
 
 
 fn k_add[

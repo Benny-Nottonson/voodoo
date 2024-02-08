@@ -1,6 +1,7 @@
-from .generics import GenericActivation
 from math import exp, log, abs, tanh, cosh, erf
-from ..constants import F32_MAX, NELTS
+
+from voodoo.constants import F32_MAX, NELTS
+from voodoo.kernels.generics import GenericActivation
 
 
 trait Activation:

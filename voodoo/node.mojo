@@ -1,6 +1,7 @@
 from math import sin, cos, sqrt, log, iota
 from random import rand, seed
-from .utils import Vector, warn
+
+from voodoo.utils import Vector, warn
 
 
 @register_passable("trivial")

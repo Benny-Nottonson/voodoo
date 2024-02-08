@@ -1,5 +1,5 @@
-from .array import Vector, reduce_vector_mul
-from .broadcast import (
+from voodoo.utils.array import Vector, reduce_vector_mul
+from voodoo.utils.broadcast import (
     shape_a,
     shape_b,
     strides_a,
@@ -7,4 +7,4 @@ from .broadcast import (
     get_broadcasted_shape_for_ew_op,
     recursive_broadcast,
 )
-from .console import warn, error, info, success, debug, clear
+from voodoo.utils.console import warn, error, info, success, debug, clear

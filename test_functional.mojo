@@ -1,3 +1,7 @@
+from time.time import now
+from tensor import TensorShape
+
+from voodoo.initializers import HeNormal, RandomUniform
 from voodoo import (
     Tensor,
     get_activation_code,
@@ -7,9 +11,6 @@ from voodoo.utils import (
     info,
     clear,
 )
-from time.time import now
-from tensor import TensorShape
-from voodoo.initializers import HeNormal, RandomUniform
 
 
 fn nanoseconds_to_seconds(t: Int) -> Float64:

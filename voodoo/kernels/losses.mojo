@@ -1,6 +1,7 @@
-from .generics import GenericLoss
 from math import log, abs
-from ..constants import EPSILON
+
+from voodoo.constants import EPSILON
+from voodoo.kernels.generics import GenericLoss
 
 
 trait Loss:

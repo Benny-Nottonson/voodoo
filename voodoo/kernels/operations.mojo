@@ -1,8 +1,8 @@
 from random import random_float64
 from algorithm import vectorize
+
 from voodoo import Node
-from ..constants import NELTS
-from algorithm import vectorize
+from voodoo.constants import NELTS
 
 
 trait Operation:

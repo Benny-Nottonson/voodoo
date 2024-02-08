@@ -1,17 +1,18 @@
-from .node import Node
-from .graph import Graph
-from .utils import Vector
-from .constants import MEMORY_POOL_SIZE
-from .operator_codes import (
+from voodoo.node import Node
+from voodoo.graph import Graph
+from voodoo.utils import Vector
+from voodoo.constants import MEMORY_POOL_SIZE
+from voodoo.operator_codes import (
     add_code,
     sub_code,
     mul_code,
     div_code,
     pow_code,
 )
+from voodoo.constraints import Constraint, NoneConstraint
+from voodoo.initializers import Initializer, Zeroes, NoneInitializer
+
 from tensor import TensorShape
-from .initializers import Initializer, Zeroes, NoneInitializer
-from .constraints import Constraint, NoneConstraint
 
 
 struct Tensor[

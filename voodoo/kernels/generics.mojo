@@ -1,4 +1,5 @@
 from algorithm import vectorize
+
 from voodoo.utils import (
     shape_a,
     shape_b,
@@ -6,7 +7,7 @@ from voodoo.utils import (
     strides_b,
     recursive_broadcast,
 )
-from ..constants import NELTS, PREFETCH_READ, PREFETCH_WRITE
+from voodoo.constants import NELTS, PREFETCH_READ, PREFETCH_WRITE
 
 
 trait Generic:

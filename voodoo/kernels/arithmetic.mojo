@@ -1,5 +1,6 @@
-from .generics import GenericArithmetic, GenericBinaryArithmetic
 from math import sqrt, exp2, exp, log2, sin, cos, tan, log, asin, acos, atan, sinh, cosh
+
+from voodoo.kernels.generics import GenericArithmetic, GenericBinaryArithmetic
 
 
 trait Aritmetic:

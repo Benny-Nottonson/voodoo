@@ -1,11 +1,13 @@
 from memory import memset_zero
 from math import log2, exp2, ceil, round
+from tensor import TensorShape
+
+from voodoo.node import Node
 from voodoo.kernels import load_kernels
-from .node import Node
-from .utils import Vector, get_broadcasted_shape_for_ew_op, warn
-from .kernels.optimizers import SGD
-from .constants import MEMORY_POOL_SIZE, OP_TUPLE, BINARY_OP, UNARY_OP
-from .operator_codes import (
+from voodoo.utils import Vector, get_broadcasted_shape_for_ew_op, warn
+from voodoo.kernels.optimizers import SGD
+from voodoo.constants import MEMORY_POOL_SIZE, OP_TUPLE, BINARY_OP, UNARY_OP
+from voodoo.operator_codes import (
     copy_code,
     mmul_code,
     conv1d_code,
@@ -17,7 +19,6 @@ from .operator_codes import (
     transp_code,
     sum_code,
 )
-from tensor import TensorShape
 
 
 @register_passable("trivial")

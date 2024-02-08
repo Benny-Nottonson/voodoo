@@ -5,9 +5,10 @@ from random import (
     randn_float64,
     randn,
 )
-from .constants import NELTS
-from .utils import reduce_vector_mul
 from tensor import TensorShape
+
+from voodoo.constants import NELTS
+from voodoo.utils import reduce_vector_mul
 
 
 trait Initializer(CollectionElement):

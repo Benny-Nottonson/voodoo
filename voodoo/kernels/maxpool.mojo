@@ -1,7 +1,8 @@
 from algorithm import vectorize
 from math import max
+
 from voodoo import Node
-from ..constants import PREFETCH_READ, PREFETCH_WRITE, F32_MAX, NELTS
+from voodoo.constants import PREFETCH_READ, PREFETCH_WRITE, F32_MAX, NELTS
 
 
 trait MaxPool:

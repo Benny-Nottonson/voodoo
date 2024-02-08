@@ -1,4 +1,4 @@
-from .generics import GenericOptimizer
+from voodoo.kernels.generics import GenericOptimizer
 
 
 trait Optimizer:

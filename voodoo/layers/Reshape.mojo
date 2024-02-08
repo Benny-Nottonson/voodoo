@@ -1,5 +1,6 @@
-from voodoo import Tensor, Vector
 from tensor import TensorShape
+
+from voodoo import Tensor, Vector
 from voodoo.initializers import NoneInitializer
 from voodoo.constraints import NoneConstraint
 

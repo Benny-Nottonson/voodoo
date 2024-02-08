@@ -1,8 +1,9 @@
 from algorithm import vectorize
 from math import max, min
+
 from voodoo import Node
 from voodoo.utils import recursive_broadcast
-from ..constants import PREFETCH_READ, PREFETCH_WRITE, F32_MAX, NELTS
+from voodoo.constants import PREFETCH_READ, PREFETCH_WRITE, F32_MAX, NELTS
 
 
 alias bw_b_tile_size = 2

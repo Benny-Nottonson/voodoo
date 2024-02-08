@@ -1,6 +1,6 @@
 from voodoo import Tensor
 from voodoo.utils import warn
-from .operator_codes import (
+from voodoo.operator_codes import (
     relu_code,
     sigmoid_code,
     softplus_code,
