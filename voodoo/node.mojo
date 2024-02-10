@@ -1,5 +1,6 @@
 from math import sin, cos, sqrt, log, iota
 from random import rand, seed
+from memory import memset
 
 from voodoo.utils import Vector, warn
 
@@ -31,6 +32,9 @@ struct Node:
         shape: Vector[Int],
         is_static: Bool = True,
         other_params: Vector[Int] = Vector[Int](),
+        checkpoint: Bool = False,
+        operator_id: Int = -1,
+        is_single: Bool = False,
     ) raises -> Self:
         let id_ptr = Pointer[Int].alloc(1)
         id_ptr.store(id)
@@ -74,10 +78,10 @@ struct Node:
             _is_static: is_static,
             _computed_ptr: computed_ptr,
             _grad_computed_ptr: grad_computed_ptr,
-            _operator_id: -1,
+            _operator_id: operator_id,
             _tmp_visited: False,
-            _checkpoint: False,
-            _is_single: False,
+            _checkpoint: checkpoint,
+            _is_single: is_single,
             _cap: cap,
             _num_dims: len(shape),
             _shape: shape,

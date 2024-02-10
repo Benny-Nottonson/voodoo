@@ -29,7 +29,9 @@ struct Tensor[
         inout self,
     ) raises:
         self.graph = Graph()
-        self.node = self.graph.node[False, shape, is_static, is_single, -1]()
+        self.node = self.graph.node[False, is_static, is_single, -1](
+            shape, Vector[Int]()
+        )
 
         @parameter
         if initializer.key() != "NoneInitializer":
