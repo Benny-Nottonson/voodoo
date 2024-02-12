@@ -1,6 +1,7 @@
 from math import sin, cos, sqrt, log, iota
 from random import rand, seed
 from memory import memset
+from algorithm import sum
 
 from voodoo.utils import Vector, warn
 
@@ -204,10 +205,7 @@ struct Node:
         return self._other_params
 
     fn is_zero(self) -> Bool:
-        for i in range(self._cap):
-            if self._data_ptr[0][i] != 0.0:
-                return False
-        return True
+        return sum[1, DType.float32, AddressSpace.GENERIC](self._data_ptr[0]) == 0.0
 
     fn fill(self, val: Float32):
         for i in range(self._cap):
