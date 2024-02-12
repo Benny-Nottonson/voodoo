@@ -48,14 +48,14 @@ struct MemoryPool(Sized):
 
 @register_passable("trivial")
 struct MemoryPoolManager:
-    var _memory_pool_manager: Pointer[Vector[Int]]
+    var _memory_pool_manager: StaticTuple[MEMORY_POOL_SIZE, Vector[Int]]
 
     fn __init__() -> Self:
-        let memory_pool_manager = Pointer[Vector[Int]].alloc(MEMORY_POOL_SIZE)
+        var memory_pool_manager = StaticTuple[MEMORY_POOL_SIZE, Vector[Int]]()
 
         @unroll
         for i in range(MEMORY_POOL_SIZE):
-            memory_pool_manager.store(i, Vector[Int]())
+            memory_pool_manager[i] = Vector[Int]()
 
         return MemoryPoolManager {_memory_pool_manager: memory_pool_manager}
 
@@ -72,7 +72,6 @@ struct MemoryPoolManager:
         @unroll
         for i in range(MEMORY_POOL_SIZE):
             self._memory_pool_manager[i].free()
-        self._memory_pool_manager.free()
 
 
 @register_passable("trivial")
