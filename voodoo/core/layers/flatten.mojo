@@ -1,8 +1,6 @@
 from tensor import TensorShape
 
-from voodoo import Tensor
-from voodoo.initializers import NoneInitializer
-from voodoo.constraints import NoneConstraint
+from voodoo.core import Tensor, NoneInitializer, NoneConstraint
 
 
 struct Flatten[]():

@@ -1,14 +1,12 @@
-from voodoo import Tensor, get_loss_code, Graph
-from voodoo.layers.Dense import Dense
-from voodoo.layers.Dropout import Dropout
-from voodoo.layers.LeakyReLu import LeakyReLu
+from time.time import now
+from tensor import TensorShape
+
+from voodoo.core import Tensor, HeNormal, RandomUniform, SGD
+from voodoo.core.layers import Dense, LeakyReLu
 from voodoo.utils import (
     info,
     clear,
 )
-from time.time import now
-from tensor import TensorShape
-from voodoo.initializers import HeNormal, RandomUniform
 
 
 fn nanoseconds_to_seconds(t: Int) -> Float64:
@@ -26,7 +24,6 @@ fn main() raises:
         weight_initializer = HeNormal[1],
         bias_initializer = HeNormal[32],
     ]()
-    let dropout_layer = Dropout[dropout_rate=0.05]()
     let leaky_relu = LeakyReLu[
         in_neurons=32,
         out_neurons=32,
@@ -54,7 +51,6 @@ fn main() raises:
     let true_vals = Tensor[data_shape, RandomUniform[0, 1]]()
 
     var x = input_layer.forward(input)
-    x = dropout_layer.forward(x)
     x = leaky_relu.forward(x)
     x = dense_layer.forward(x)
     x = output_layer.forward(x)
@@ -71,7 +67,7 @@ fn main() raises:
         var computed_loss = loss.forward_static()
         avg_loss += computed_loss[0]
         loss.backward()
-        loss.optimize["sgd", 0.01]()
+        loss.optimize[SGD[0.01]]()
 
         if epoch % every == 0:
             var bar = String("")

@@ -1,7 +1,7 @@
 from random import random_float64
 from algorithm import vectorize
 
-from voodoo import Node
+from voodoo.autograd import Node
 from voodoo.constants import NELTS
 
 

@@ -1,14 +1,14 @@
-from voodoo.kernels.operations import (
+from .operations import (
     Copy,
     Reshape,
     Transpose,
     Sum,
     Dropout,
 )
-from voodoo.kernels.matmul import MMul
-from voodoo.kernels.maxpool import MaxPool1D, MaxPool2D
-from voodoo.kernels.conv import Conv1D, Conv2D
-from voodoo.kernels.activations import (
+from .matmul import MMul
+from .maxpool import MaxPool1D, MaxPool2D
+from .conv import Conv1D, Conv2D
+from .activations import (
     Relu,
     Sigmoid,
     Softplus,
@@ -25,7 +25,7 @@ from voodoo.kernels.activations import (
     Linear,
     Mish,
 )
-from voodoo.kernels.arithmetic import (
+from .arithmetic import (
     Sqrt,
     Abs,
     Exp2,
@@ -45,9 +45,10 @@ from voodoo.kernels.arithmetic import (
     Div,
     Pow,
 )
-from voodoo.operator_codes import *
-from voodoo.kernels.losses import MSE, MAE, MAPE, MSLE
+from .losses import MSE, MAE, MAPE, MSLE
+
 from voodoo.constants import F32_MAX, UNARY_OP, BINARY_OP, OP_TUPLE, NU, NB
+from voodoo.utils.operator_codes import *
 
 
 @register_passable("trivial")

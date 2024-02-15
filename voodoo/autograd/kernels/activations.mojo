@@ -1,7 +1,7 @@
 from math import exp, log, abs, tanh, cosh, erf
 
 from voodoo.constants import F32_MAX, NELTS
-from voodoo.kernels.generics import GenericActivation
+from voodoo.autograd.kernels.generics import GenericActivation
 
 
 trait Activation:

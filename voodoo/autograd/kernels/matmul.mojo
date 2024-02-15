@@ -1,7 +1,7 @@
 from algorithm import vectorize
 from math import max, min
 
-from voodoo import Node
+from voodoo.autograd import Node
 from voodoo.utils import recursive_broadcast
 from voodoo.constants import PREFETCH_READ, PREFETCH_WRITE, F32_MAX, NELTS
 

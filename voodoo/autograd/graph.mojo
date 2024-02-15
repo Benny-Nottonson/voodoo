@@ -2,12 +2,13 @@ from memory import memset_zero, memset
 from math import log2, exp2, ceil, round
 from tensor import TensorShape
 
-from voodoo.node import Node
-from voodoo.kernels import KERNELS
-from voodoo.utils import Vector, get_broadcasted_shape_for_ew_op, warn
-from voodoo.kernels.optimizers import SGD
 from voodoo.constants import MEMORY_POOL_SIZE, OP_TUPLE, BINARY_OP, UNARY_OP
-from voodoo.operator_codes import (
+from voodoo.autograd.kernels import KERNELS
+from voodoo.core import Optimizer
+from voodoo.utils import (
+    Vector,
+    get_broadcasted_shape_for_ew_op,
+    warn,
     copy_code,
     mmul_code,
     conv1d_code,
@@ -513,12 +514,8 @@ struct Graph:
         for i in range(len(self._grad_nodes_order)):
             _ = self.backward_recursive(self._nodes[self._grad_nodes_order[i]])
 
-    fn optimizer_step[type: String, learning_rate: Float32](self) raises:
-        if type == "sgd":
-            SGD[learning_rate].step(self._nodes)
-        else:
-            warn("Invalid optimizer: " + type + " using sgd\n")
-            SGD[learning_rate].step(self._nodes)
+    fn optimizer_step[optimizer: Optimizer](self):
+        optimizer.step(self._nodes)
 
     fn copy(inout self, parent1: Node) raises -> Node:
         return self.node[False, True, False, copy_code](

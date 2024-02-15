@@ -1,28 +1,3 @@
-from voodoo import Tensor
-from voodoo.utils import warn
-from voodoo.operator_codes import (
-    relu_code,
-    sigmoid_code,
-    softplus_code,
-    softsign_code,
-    tanh_code,
-    selu_code,
-    elu_code,
-    exp_code,
-    lrelu_code,
-    relu6_code,
-    silu_code,
-    gelu_code,
-    h_sig_code,
-    linear_code,
-    mish_code,
-    mse_code,
-    mae_code,
-    mape_code,
-    msle_code,
-)
-
-
 fn get_activation_code[name: String]() -> Int:
     @parameter
     if name == "relu":
