@@ -6,6 +6,7 @@ from voodoo.utils import (
     strides_a,
     strides_b,
     recursive_broadcast,
+    Vector,
 )
 from voodoo.constants import NELTS, PREFETCH_READ, PREFETCH_WRITE
 

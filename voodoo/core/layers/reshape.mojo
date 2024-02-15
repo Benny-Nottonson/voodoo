@@ -1,8 +1,6 @@
 from tensor import TensorShape
 
-from voodoo import Tensor, Vector
-from voodoo.initializers import NoneInitializer
-from voodoo.constraints import NoneConstraint
+from voodoo.core import Tensor, NoneInitializer, NoneConstraint
 
 
 struct Reshape[new_shape: TensorShape]():

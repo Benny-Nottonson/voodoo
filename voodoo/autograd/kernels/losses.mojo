@@ -1,7 +1,7 @@
 from math import log, abs
 
 from voodoo.constants import EPSILON
-from voodoo.kernels.generics import GenericLoss
+from voodoo.autograd.kernels.generics import GenericLoss
 
 
 trait Loss:

@@ -1,20 +1,18 @@
 from tensor import TensorShape
 
-from voodoo import Tensor, get_activation_code
-from voodoo.operator_codes import lrelu_code
-from voodoo.constraints import Constraint, NoneConstraint
-from voodoo.initializers import Initializer, GlorotUniform, NoneInitializer
+from voodoo.core import Tensor, Initializer, Constraint, NoneInitializer, NoneConstraint
+from voodoo.utils import get_activation_code
 
 
-struct LeakyReLu[
+struct Dense[
     in_neurons: Int,
     out_neurons: Int,
+    activation: String = "none",
     use_bias: Bool = True,
     weight_initializer: Initializer = NoneInitializer,
     weight_constraint: Constraint = NoneConstraint,
     bias_initializer: Initializer = NoneInitializer,
     bias_constraint: Constraint = NoneConstraint,
-    alpha: Float32 = 0.2,
 ]():
     var W: Tensor[
         TensorShape(in_neurons, out_neurons), weight_initializer, weight_constraint
@@ -47,4 +45,8 @@ struct LeakyReLu[
         if self.use_bias:
             computed = computed + self.bias
 
-        return computed.compute_activation[operator_id=lrelu_code, arg1=alpha]()
+        @parameter
+        if self.activation != "none":
+            return computed.compute_activation[get_activation_code[activation]()]()
+
+        return computed

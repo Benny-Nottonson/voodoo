@@ -1,6 +1,6 @@
 from math import max
 
-from voodoo import Node
+from voodoo.autograd import Node
 
 
 fn shape_a(depth: Int, a: Node, b: Node) -> Int:

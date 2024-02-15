@@ -2,7 +2,7 @@ from algorithm import vectorize
 from math import sqrt, max, abs
 from tensor import TensorShape
 
-from voodoo.utils import reduce_vector_mul
+from voodoo.utils import Vector, reduce_vector_mul
 from voodoo.constants import NELTS, EPSILON
 
 

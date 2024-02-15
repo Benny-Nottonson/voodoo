@@ -1,18 +1,23 @@
 from tensor import TensorShape
 
-from voodoo.node import Node
-from voodoo.graph import Graph
-from voodoo.utils import Vector
-from voodoo.constants import MEMORY_POOL_SIZE
-from voodoo.operator_codes import (
+from voodoo.autograd import Node, Graph
+from voodoo.utils import (
+    Vector,
+    get_activation_code,
+    get_loss_code,
     add_code,
     sub_code,
     mul_code,
     div_code,
     pow_code,
 )
-from voodoo.constraints import Constraint, NoneConstraint
-from voodoo.initializers import Initializer, Zeroes, NoneInitializer
+from voodoo.core import (
+    Initializer,
+    NoneInitializer,
+    Constraint,
+    NoneConstraint,
+    Optimizer,
+)
 
 
 struct Tensor[
@@ -35,7 +40,7 @@ struct Tensor[
 
         @parameter
         if initializer.key() != "NoneInitializer":
-            initializer().initialize[shape](self.node.get_data())
+            initializer.initialize[shape](self.node.get_data())
 
             self.node.set_computed(True)
 
@@ -92,7 +97,7 @@ struct Tensor[
         self.node.print(accuracy)
 
     fn refresh(self) raises:
-        initializer().initialize[shape](self.node.get_data())
+        initializer.initialize[shape](self.node.get_data())
 
     fn fill(owned self, val: Float32) -> Self:
         self.node.fill(val)
@@ -136,8 +141,8 @@ struct Tensor[
             _ = self.forward()
         self.graph.backward(self.node)
 
-    fn optimize[type: String = "sgd", lr: Float32 = 0.001](self) raises:
-        self.graph.optimizer_step[type, lr]()
+    fn optimize[optimizer: Optimizer](self) raises:
+        self.graph.optimizer_step[optimizer]()
 
     fn __getitem__(self, idx: Int) raises -> Float32:
         return self.node.get_data()[idx]

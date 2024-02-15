@@ -1,12 +1,7 @@
 from time.time import now
 from tensor import TensorShape
 
-from voodoo.initializers import HeNormal, RandomUniform
-from voodoo import (
-    Tensor,
-    get_activation_code,
-    get_loss_code,
-)
+from voodoo.core import Tensor, HeNormal, RandomUniform, SGD
 from voodoo.utils import (
     info,
     clear,
@@ -53,7 +48,7 @@ fn main() raises:
         var computed_loss = loss.forward_static()
         avg_loss += computed_loss[0]
         loss.backward()
-        loss.optimize["sgd", 0.01]()
+        loss.optimize[SGD[0.01]]()
 
         if epoch % every == 0:
             var bar = String("")

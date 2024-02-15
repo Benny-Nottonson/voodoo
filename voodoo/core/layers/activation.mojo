@@ -1,6 +1,5 @@
-from voodoo import Tensor, get_activation_code
-from voodoo.initializers import NoneInitializer
-from voodoo.constraints import NoneConstraint
+from voodoo.core import Tensor, NoneInitializer, NoneConstraint
+from voodoo.utils import get_activation_code
 
 
 struct Activation[
