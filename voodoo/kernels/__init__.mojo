@@ -1,1 +1,1 @@
-from voodoo.kernels.loader import load_kernels
+from voodoo.kernels.loader import KERNELS

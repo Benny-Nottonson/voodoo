@@ -50,71 +50,197 @@ from voodoo.kernels.losses import MSE, MAE, MAPE, MSLE
 from voodoo.constants import F32_MAX, UNARY_OP, BINARY_OP, OP_TUPLE, NU, NB
 
 
-fn k_add[
-    code: Int,
-    u_fw: UNARY_OP,
-    u_bw: UNARY_OP,
-](kernel: Pointer[OP_TUPLE]):
-    kernel.store(code, OP_TUPLE(u_fw, NB))
-    kernel.store(code + 1, OP_TUPLE(u_bw, NB))
-
-
-fn k_add[
-    code: Int,
-    b_fw: BINARY_OP,
-    bN_Bw: BINARY_OP,
-](kernel: Pointer[OP_TUPLE]):
-    kernel.store(code, OP_TUPLE(NU, b_fw))
-    kernel.store(code + 1, OP_TUPLE(NU, bN_Bw))
-
-
-fn load_kernels() -> Pointer[OP_TUPLE]:
-    let kernels = Pointer[OP_TUPLE].alloc(100)
-    k_add[copy_code, Copy.fw, Copy.bw](kernels)
-    k_add[reshape_code, Reshape.fw, Reshape.bw](kernels)
-    k_add[transp_code, Transpose.fw, Transpose.bw](kernels)
-    k_add[sum_code, Sum.fw, Sum.bw](kernels)
-    k_add[dropout_code, Dropout.fw, Dropout.bw](kernels)
-    k_add[mmul_code, MMul.fw, MMul.bw](kernels)
-    k_add[sqrt_code, Sqrt.fw, Sqrt.bw](kernels)
-    k_add[abs_code, Abs.fw, Abs.bw](kernels)
-    k_add[exp2_code, Exp2.fw, Exp2.bw](kernels)
-    k_add[log2_code, Log2.fw, Log2.bw](kernels)
-    k_add[log_code, Log.fw, Log.bw](kernels)
-    k_add[sin_code, Sin.fw, Sin.bw](kernels)
-    k_add[cos_code, Cos.fw, Cos.bw](kernels)
-    k_add[tan_code, Tan.fw, Tan.bw](kernels)
-    k_add[asin_code, Asin.fw, Asin.bw](kernels)
-    k_add[acos_code, Acos.fw, Acos.bw](kernels)
-    k_add[atan_code, Atan.fw, Atan.bw](kernels)
-    k_add[sinh_code, Sinh.fw, Sinh.bw](kernels)
-    k_add[cosh_code, Cosh.fw, Cosh.bw](kernels)
-    k_add[add_code, Add.fw, Add.bw](kernels)
-    k_add[mul_code, Mul.fw, Mul.bw](kernels)
-    k_add[sub_code, Sub.fw, Sub.bw](kernels)
-    k_add[div_code, Div.fw, Div.bw](kernels)
-    k_add[pow_code, Pow.fw, Pow.bw](kernels)
-    k_add[mse_code, MSE.fw, MSE.bw](kernels)
-    k_add[mae_code, MAE.fw, MAE.bw](kernels)
-    k_add[mape_code, MAPE.fw, MAPE.bw](kernels)
-    k_add[msle_code, MSLE.fw, MSLE.bw](kernels)
-    k_add[relu_code, Relu[0.0, F32_MAX, 0.0].fw, Relu[0.0, F32_MAX, 0.0].bw](kernels)
-    k_add[sigmoid_code, Sigmoid.fw, Sigmoid.bw](kernels)
-    k_add[softplus_code, Softplus.fw, Softplus.bw](kernels)
-    k_add[softsign_code, Softsign.fw, Softsign.bw](kernels)
-    k_add[tanh_code, Tanh.fw, Tanh.bw](kernels)
-    k_add[selu_code, Selu.fw, Selu.bw](kernels)
-    k_add[elu_code, Elu[0.0].fw, Elu[0.0].bw](kernels)
-    k_add[exp_code, Exp.fw, Exp.bw](kernels)
-    k_add[lrelu_code, LeakyRelu[0.0].fw, LeakyRelu[0.0].bw](kernels)
-    k_add[relu6_code, Relu6.fw, Relu6.bw](kernels)
-    k_add[silu_code, Silu.fw, Silu.bw](kernels)
-    k_add[gelu_code, Gelu[0.0].fw, Gelu[0.0].bw](kernels)
-    k_add[h_sig_code, HardSigmoid.fw, HardSigmoid.bw](kernels)
-    k_add[linear_code, Linear.fw, Linear.bw](kernels)
-    k_add[mish_code, Mish.fw, Mish.bw](kernels)
-    k_add[conv1d_code, Conv1D.fw, Conv1D.bw](kernels)
-    k_add[conv2d_code, Conv2D.fw, Conv2D.bw](kernels)
-    k_add[maxpool1d_code, MaxPool1D.fw, MaxPool1D.bw](kernels)
-    k_add[maxpool2d_code, MaxPool2D.fw, MaxPool2D.bw](kernels)
-    return kernels
+@register_passable("trivial")
+struct KERNELS:
+    @staticmethod
+    fn get(code: Int) -> OP_TUPLE:
+        if code == copy_code:
+            return OP_TUPLE(Copy.fw, NB)
+        elif code == copy_code + 1:
+            return OP_TUPLE(Copy.bw, NB)
+        elif code == reshape_code:
+            return OP_TUPLE(Reshape.fw, NB)
+        elif code == reshape_code + 1:
+            return OP_TUPLE(Reshape.bw, NB)
+        elif code == transp_code:
+            return OP_TUPLE(Transpose.fw, NB)
+        elif code == transp_code + 1:
+            return OP_TUPLE(Transpose.bw, NB)
+        elif code == sum_code:
+            return OP_TUPLE(Sum.fw, NB)
+        elif code == sum_code + 1:
+            return OP_TUPLE(Sum.bw, NB)
+        elif code == dropout_code:
+            return OP_TUPLE(Dropout.fw, NB)
+        elif code == dropout_code + 1:
+            return OP_TUPLE(Dropout.bw, NB)
+        elif code == mmul_code:
+            return OP_TUPLE(NU, MMul.fw)
+        elif code == mmul_code + 1:
+            return OP_TUPLE(NU, MMul.bw)
+        elif code == sqrt_code:
+            return OP_TUPLE(Sqrt.fw, NB)
+        elif code == sqrt_code + 1:
+            return OP_TUPLE(Sqrt.bw, NB)
+        elif code == abs_code:
+            return OP_TUPLE(Abs.fw, NB)
+        elif code == abs_code + 1:
+            return OP_TUPLE(Abs.bw, NB)
+        elif code == exp2_code:
+            return OP_TUPLE(Exp2.fw, NB)
+        elif code == exp2_code + 1:
+            return OP_TUPLE(Exp2.bw, NB)
+        elif code == log2_code:
+            return OP_TUPLE(Log2.fw, NB)
+        elif code == log2_code + 1:
+            return OP_TUPLE(Log2.bw, NB)
+        elif code == log_code:
+            return OP_TUPLE(Log.fw, NB)
+        elif code == log_code + 1:
+            return OP_TUPLE(Log.bw, NB)
+        elif code == sin_code:
+            return OP_TUPLE(Sin.fw, NB)
+        elif code == sin_code + 1:
+            return OP_TUPLE(Sin.bw, NB)
+        elif code == cos_code:
+            return OP_TUPLE(Cos.fw, NB)
+        elif code == cos_code + 1:
+            return OP_TUPLE(Cos.bw, NB)
+        elif code == tan_code:
+            return OP_TUPLE(Tan.fw, NB)
+        elif code == tan_code + 1:
+            return OP_TUPLE(Tan.bw, NB)
+        elif code == asin_code:
+            return OP_TUPLE(Asin.fw, NB)
+        elif code == asin_code + 1:
+            return OP_TUPLE(Asin.bw, NB)
+        elif code == acos_code:
+            return OP_TUPLE(Acos.fw, NB)
+        elif code == acos_code + 1:
+            return OP_TUPLE(Acos.bw, NB)
+        elif code == atan_code:
+            return OP_TUPLE(Atan.fw, NB)
+        elif code == atan_code + 1:
+            return OP_TUPLE(Atan.bw, NB)
+        elif code == sinh_code:
+            return OP_TUPLE(Sinh.fw, NB)
+        elif code == sinh_code + 1:
+            return OP_TUPLE(Sinh.bw, NB)
+        elif code == cosh_code:
+            return OP_TUPLE(Cosh.fw, NB)
+        elif code == cosh_code + 1:
+            return OP_TUPLE(Cosh.bw, NB)
+        elif code == add_code:
+            return OP_TUPLE(NU, Add.fw)
+        elif code == add_code + 1:
+            return OP_TUPLE(NU, Add.bw)
+        elif code == mul_code:
+            return OP_TUPLE(NU, Mul.fw)
+        elif code == mul_code + 1:
+            return OP_TUPLE(NU, Mul.bw)
+        elif code == sub_code:
+            return OP_TUPLE(NU, Sub.fw)
+        elif code == sub_code + 1:
+            return OP_TUPLE(NU, Sub.bw)
+        elif code == div_code:
+            return OP_TUPLE(NU, Div.fw)
+        elif code == div_code + 1:
+            return OP_TUPLE(NU, Div.bw)
+        elif code == pow_code:
+            return OP_TUPLE(NU, Pow.fw)
+        elif code == pow_code + 1:
+            return OP_TUPLE(NU, Pow.bw)
+        elif code == mse_code:
+            return OP_TUPLE(NU, MSE.fw)
+        elif code == mse_code + 1:
+            return OP_TUPLE(NU, MSE.bw)
+        elif code == mae_code:
+            return OP_TUPLE(NU, MAE.fw)
+        elif code == mae_code + 1:
+            return OP_TUPLE(NU, MAE.bw)
+        elif code == mape_code:
+            return OP_TUPLE(NU, MAPE.fw)
+        elif code == mape_code + 1:
+            return OP_TUPLE(NU, MAPE.bw)
+        elif code == msle_code:
+            return OP_TUPLE(NU, MSLE.fw)
+        elif code == msle_code + 1:
+            return OP_TUPLE(NU, MSLE.bw)
+        elif code == relu_code:
+            return OP_TUPLE(Relu[0.0, F32_MAX, 0.0].fw, NB)
+        elif code == relu_code + 1:
+            return OP_TUPLE(Relu[0.0, F32_MAX, 0.0].bw, NB)
+        elif code == sigmoid_code:
+            return OP_TUPLE(Sigmoid.fw, NB)
+        elif code == sigmoid_code + 1:
+            return OP_TUPLE(Sigmoid.bw, NB)
+        elif code == softplus_code:
+            return OP_TUPLE(Softplus.fw, NB)
+        elif code == softplus_code + 1:
+            return OP_TUPLE(Softplus.bw, NB)
+        elif code == softsign_code:
+            return OP_TUPLE(Softsign.fw, NB)
+        elif code == softsign_code + 1:
+            return OP_TUPLE(Softsign.bw, NB)
+        elif code == tanh_code:
+            return OP_TUPLE(Tanh.fw, NB)
+        elif code == tanh_code + 1:
+            return OP_TUPLE(Tanh.bw, NB)
+        elif code == selu_code:
+            return OP_TUPLE(Selu.fw, NB)
+        elif code == selu_code + 1:
+            return OP_TUPLE(Selu.bw, NB)
+        elif code == elu_code:
+            return OP_TUPLE(Elu[0.0].fw, NB)
+        elif code == elu_code + 1:
+            return OP_TUPLE(Elu[0.0].bw, NB)
+        elif code == exp_code:
+            return OP_TUPLE(Exp.fw, NB)
+        elif code == exp_code + 1:
+            return OP_TUPLE(Exp.bw, NB)
+        elif code == lrelu_code:
+            return OP_TUPLE(LeakyRelu[0.0].fw, NB)
+        elif code == lrelu_code + 1:
+            return OP_TUPLE(LeakyRelu[0.0].bw, NB)
+        elif code == relu6_code:
+            return OP_TUPLE(Relu6.fw, NB)
+        elif code == relu6_code + 1:
+            return OP_TUPLE(Relu6.bw, NB)
+        elif code == silu_code:
+            return OP_TUPLE(Silu.fw, NB)
+        elif code == silu_code + 1:
+            return OP_TUPLE(Silu.bw, NB)
+        elif code == gelu_code:
+            return OP_TUPLE(Gelu[0.0].fw, NB)
+        elif code == gelu_code + 1:
+            return OP_TUPLE(Gelu[0.0].bw, NB)
+        elif code == h_sig_code:
+            return OP_TUPLE(HardSigmoid.fw, NB)
+        elif code == h_sig_code + 1:
+            return OP_TUPLE(HardSigmoid.bw, NB)
+        elif code == linear_code:
+            return OP_TUPLE(Linear.fw, NB)
+        elif code == linear_code + 1:
+            return OP_TUPLE(Linear.bw, NB)
+        elif code == mish_code:
+            return OP_TUPLE(Mish.fw, NB)
+        elif code == mish_code + 1:
+            return OP_TUPLE(Mish.bw, NB)
+        elif code == conv1d_code:
+            return OP_TUPLE(NU, Conv1D.fw)
+        elif code == conv1d_code + 1:
+            return OP_TUPLE(NU, Conv1D.bw)
+        elif code == conv2d_code:
+            return OP_TUPLE(NU, Conv2D.fw)
+        elif code == conv2d_code + 1:
+            return OP_TUPLE(NU, Conv2D.bw)
+        elif code == maxpool1d_code:
+            return OP_TUPLE(MaxPool1D.fw, NB)
+        elif code == maxpool1d_code + 1:
+            return OP_TUPLE(MaxPool1D.bw, NB)
+        elif code == maxpool2d_code:
+            return OP_TUPLE(MaxPool2D.fw, NB)
+        elif code == maxpool2d_code + 1:
+            return OP_TUPLE(MaxPool2D.bw, NB)
+        else:
+            return OP_TUPLE(NU, NB)

@@ -3,7 +3,7 @@ from math import log2, exp2, ceil, round
 from tensor import TensorShape
 
 from voodoo.node import Node
-from voodoo.kernels import load_kernels
+from voodoo.kernels import KERNELS
 from voodoo.utils import Vector, get_broadcasted_shape_for_ew_op, warn
 from voodoo.kernels.optimizers import SGD
 from voodoo.constants import MEMORY_POOL_SIZE, OP_TUPLE, BINARY_OP, UNARY_OP
@@ -82,7 +82,6 @@ struct Graph:
     var _free_node_ids: Vector[Int]
     var _free_data_ids: Vector[Int]
     var _last_node_id: Pointer[Int]
-    var _kernels: Pointer[OP_TUPLE]
     var _grad_nodes_order: Vector[Int]
 
     fn __init__() -> Self:
@@ -96,7 +95,6 @@ struct Graph:
             _free_node_ids: Vector[Int](),
             _free_data_ids: Vector[Int](),
             _last_node_id: last_node_id,
-            _kernels: load_kernels(),
             _grad_nodes_order: Vector[Int](),
         }
 
@@ -345,7 +343,6 @@ struct Graph:
         self._free_node_ids.free()
         self._free_data_ids.free()
         self._last_node_id.free()
-        self._kernels.free()
         self._grad_nodes_order.free()
 
     fn forward_recursive(inout self, node: Node) raises -> Node:
@@ -359,13 +356,13 @@ struct Graph:
         if num_parents == 1:
             let parent_node = self.forward_recursive(self._nodes[parents[0]])
             self.get_free_data(node)
-            self._kernels[operator_id].get[0, UNARY_OP]()(node, parent_node)
+            KERNELS.get(operator_id).get[0, UNARY_OP]()(node, parent_node)
             self.release_data(parent_node)
         else:
             let parent1 = self.forward_recursive(self._nodes[parents[0]])
             let parent2 = self.forward_recursive(self._nodes[parents[1]])
             self.get_free_data(node)
-            self._kernels[operator_id].get[1, BINARY_OP]()(node, parent1, parent2)
+            KERNELS.get(operator_id).get[1, BINARY_OP]()(node, parent1, parent2)
             self.release_data(parent1)
             self.release_data(parent2)
 
@@ -406,12 +403,12 @@ struct Graph:
         if num_parents == 1:
             let parent1 = self.forward_recursive_graph_slice(self._nodes[parents[0]])
             self.get_free_data[True](node)
-            self._kernels[operator_id].get[0, UNARY_OP]()(node, parent1)
+            KERNELS.get(operator_id).get[0, UNARY_OP]()(node, parent1)
         else:
             let parent1 = self.forward_recursive_graph_slice(self._nodes[parents[0]])
             let parent2 = self.forward_recursive_graph_slice(self._nodes[parents[1]])
             self.get_free_data[True](node)
-            self._kernels[operator_id].get[1, BINARY_OP]()(node, parent1, parent2)
+            KERNELS.get(operator_id).get[1, BINARY_OP]()(node, parent1, parent2)
 
         node.set_computed(True)
 
@@ -439,7 +436,7 @@ struct Graph:
 
                 parent1.set_grad_computed(True)
 
-                self._kernels[grad_operator_id].get[0, UNARY_OP]()(child, parent1)
+                KERNELS.get(grad_operator_id).get[0, UNARY_OP]()(child, parent1)
             else:
                 let parent1 = self._nodes[child_parents[0]]
                 let parent2 = self._nodes[child_parents[1]]
@@ -455,7 +452,7 @@ struct Graph:
                 parent1.set_grad_computed(True)
                 parent2.set_grad_computed(True)
 
-                self._kernels[grad_operator_id].get[1, BINARY_OP]()(
+                KERNELS.get(grad_operator_id).get[1, BINARY_OP]()(
                     child, parent1, parent2
                 )
 
