@@ -12,9 +12,6 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
     return Float64(t) / 1_000_000_000.0
 
 
-alias data_shape = TensorShape(32, 1)
-
-
 fn main() raises:
     let W1 = Tensor[TensorShape(1, 32), HeNormal[1]]()
     let W2 = Tensor[TensorShape(32, 32), HeNormal[32]]()
@@ -28,8 +25,8 @@ fn main() raises:
     let every = 1000
     let num_epochs = 200000
 
-    var input = Tensor[data_shape, RandomUniform[0, 1]]()
-    let true_vals = Tensor[data_shape, RandomUniform[0, 1]]()
+    var input = Tensor[TensorShape(32, 1), RandomUniform[0, 1]]()
+    let true_vals = Tensor[TensorShape(32, 1), RandomUniform[0, 1]]()
 
     var x = (input @ W1 + b1).compute_activation["relu"]()
     x = (x @ W2 + b2).compute_activation["relu"]()
@@ -42,7 +39,7 @@ fn main() raises:
 
     for epoch in range(1, num_epochs + 1):
         input.refresh()
-        for i in range(data_shape.num_elements()):
+        for i in range(input.shape.num_elements()):
             true_vals[i] = math.sin(15.0 * input[i])
 
         var computed_loss = loss.forward_static()
