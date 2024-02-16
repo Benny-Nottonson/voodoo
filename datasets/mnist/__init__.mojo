@@ -1,5 +1,3 @@
-from builtin.file import open
-from voodoo import Tensor, shape
 from voodoo.utils import info
 
 alias train_datapath = "./datasets/mnist/MNIST_train.csv"

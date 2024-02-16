@@ -1,6 +1,7 @@
-# from voodoo import Tensor
 # from tensor import TensorShape
-# from .BaseLayer import BaseLayer
+
+# from voodoo.core import Tensor, Initializer, Constraint, NoneInitializer, NoneConstraint
+# from voodoo.utils import get_activation_code
 
 
 # struct Conv1D[
@@ -9,33 +10,34 @@
 #     stride: Int,
 #     padding: Int,
 #     use_bias: Bool = False,
-#     weight_initializer: String = "he_normal",
-#     bias_initializer: String = "zeros",
-#     weight_mean: Float32 = 0.0,
-#     weight_std: Float32 = 0.05,
-#     bias_mean: Float32 = 0.0,
-#     bias_std: Float32 = 0.05,
-#     # TODO: add activation, regularizer, constraint, add 2d strides, add filters
-# ](BaseLayer):
-#     var W: Tensor
-#     var bias: Tensor
+#     weight_initializer: Initializer = NoneInitializer,
+#     weight_constraint: Constraint = NoneConstraint,
+#     bias_initializer: Initializer = NoneInitializer,
+#     bias_constraint: Constraint = NoneConstraint,
+# ]():
+#     var W: Tensor[
+#         TensorShape(in_channels, kernel_width), weight_initializer, weight_constraint
+#     ]
+#     var bias: Tensor[TensorShape(in_channels, 1, 1), bias_initializer, bias_constraint]
 
 #     fn __init__(
 #         inout self,
 #     ) raises:
-#         self.W = Tensor(TensorShape(in_channels, kernel_width)).initialize[
-#             weight_initializer, weight_mean, weight_std
-#         ]()
-#         self.W = self.W.requires_grad()
+#         self.W = Tensor[
+#             TensorShape(in_channels, kernel_width),
+#             weight_initializer,
+#             weight_constraint,
+#         ]().requires_grad()
 
 #         @parameter
 #         if self.use_bias:
-#             self.bias = Tensor(TensorShape(in_channels, 1, 1)).initialize[
-#                 bias_initializer, bias_mean, bias_std
-#             ]()
-#             self.bias = self.bias.requires_grad()
+#             self.bias = Tensor[
+#                 TensorShape(in_channels, 1, 1),
+#                 bias_initializer,
+#                 bias_constraint,
+#             ]().requires_grad()
 #         else:
-#             self.bias = Tensor(TensorShape(0))
+#             self.bias = Tensor[TensorShape(in_channels, 1, 1), bias_initializer, bias_constraint]()
 
 #     fn forward(self, x: Tensor) raises -> Tensor[False, False]:
 #         let res = x.conv_1d(self.W, self.padding, self.stride)
