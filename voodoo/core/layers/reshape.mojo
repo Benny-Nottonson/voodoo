@@ -10,4 +10,5 @@ struct Reshape[new_shape: TensorShape]():
     fn forward(
         self, x: Tensor
     ) raises -> Tensor[new_shape, NoneInitializer, NoneConstraint, False, False]:
-        return x.reshape[new_shape]()
+        let res = x.reshape[new_shape]()
+        return res

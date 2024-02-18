@@ -15,4 +15,5 @@ struct Activation[
     fn forward(
         self, x: Tensor
     ) raises -> Tensor[x.shape, NoneInitializer, NoneConstraint, False, False]:
-        return x.compute_activation[get_activation_code[activation]()]()
+        let res = x.compute_activation[get_activation_code[activation]()]()
+        return res

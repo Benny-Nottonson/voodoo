@@ -2,7 +2,7 @@ from time.time import now
 from tensor import TensorShape
 
 from voodoo.core import Tensor, HeUniform, HeUniform, RandomUniform, SGD, Zeros
-from voodoo.core.layers import Conv2D, MaxPool2D, Reshape, Dense
+from voodoo.core.layers import Conv2D, MaxPool2D, Flatten, Dense
 from voodoo.utils import (
     info,
     clear,
@@ -40,7 +40,7 @@ fn main() raises:
         kernel_height=2,
         stride=2,
     ]()
-    let reshape = Reshape[TensorShape(batches, 169)]()
+    let flatten = Flatten[]()
     let dense1 = Dense[
         in_neurons=169,
         out_neurons=100,
@@ -72,10 +72,12 @@ fn main() raises:
 
     let x0 = conv_layer_one.forward(input)
     let x1 = max_pool_one.forward(x0)
-    let x2 = reshape.forward(x1)
+    var x2 = flatten.forward(x1)
+    x2.print()
+    return
     let x3 = dense1.forward(x2)
     let x4 = dense2.forward(x3)
-    let loss = x4.compute_loss["mse"](true_vals)
+    var loss = x4.compute_loss["mse"](true_vals)
 
     let initial_start = now()
     var epoch_start = now()

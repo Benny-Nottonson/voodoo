@@ -14,4 +14,5 @@ struct Dropout[
     fn forward(
         self, x: Tensor
     ) raises -> Tensor[x.shape, NoneInitializer, NoneConstraint, False, False]:
-        return x.dropout[dropout_rate, noise_shape]()
+        let res = x.dropout[dropout_rate, noise_shape]()
+        return res
