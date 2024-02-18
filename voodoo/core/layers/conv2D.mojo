@@ -47,9 +47,10 @@ struct Conv2D[
         self, x: Tensor
     ) raises -> Tensor[
         TensorShape(
-            in_channels,
-            (x.shape[1] - kernel_width + 2 * padding) // stride + 1,
-            (x.shape[2] - kernel_height + 2 * padding) // stride + 1,
+            x.shape[0],
+            x.shape[1],
+            (x.shape[2] - kernel_width + 2 * self.padding) // self.stride + 1,
+            (x.shape[3] - kernel_height + 2 * self.padding) // self.stride + 1,
         ),
         NoneInitializer,
         NoneConstraint,
@@ -58,9 +59,10 @@ struct Conv2D[
     ]:
         let res = x.conv_2d[
             TensorShape(
-                in_channels,
-                (x.shape[1] - kernel_width + 2 * padding) // stride + 1,
-                (x.shape[2] - kernel_height + 2 * padding) // stride + 1,
+                x.shape[0],
+                x.shape[1],
+                (x.shape[2] - kernel_width + 2 * self.padding) // self.stride + 1,
+                (x.shape[3] - kernel_height + 2 * self.padding) // self.stride + 1,
             )
         ](self.W, self.padding, self.stride).compute_activation[self.activation]()
 

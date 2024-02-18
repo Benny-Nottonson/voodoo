@@ -59,7 +59,7 @@ struct Node:
 
         var cap = 1
         for i in range(len(shape)):
-            cap *= shape[i]
+            cap *= shape[i] if shape[i] > 0 else 1
 
         let strides = Vector[Int](len(shape))
         strides[len(shape) - 1] = 1

@@ -73,8 +73,6 @@ fn main() raises:
     let x0 = conv_layer_one.forward(input)
     let x1 = max_pool_one.forward(x0)
     var x2 = flatten.forward(x1)
-    x2.print()
-    return
     let x3 = dense1.forward(x2)
     let x4 = dense2.forward(x3)
     var loss = x4.compute_loss["mse"](true_vals)

@@ -19,9 +19,9 @@ struct MaxPool2D[
     ) raises -> Tensor[
         TensorShape(
             x.shape[0],
-            (x.shape[1] - kernel_width + 2 * padding) // stride + 1,
-            (x.shape[2] - kernel_height + 2 * padding) // stride + 1,
-            x.shape[3],
+            x.shape[1],
+            (x.shape[2] - kernel_width + 2 * padding) // stride + 1,
+            (x.shape[3] - kernel_height + 2 * padding) // stride + 1,
         ),
         NoneInitializer,
         NoneConstraint,
@@ -31,9 +31,9 @@ struct MaxPool2D[
         let res = x.maxpool_2d[
             TensorShape(
                 x.shape[0],
-                (x.shape[1] - kernel_width + 2 * padding) // stride + 1,
-                (x.shape[2] - kernel_height + 2 * padding) // stride + 1,
-                x.shape[3],
+                x.shape[1],
+                (x.shape[2] - kernel_width + 2 * padding) // stride + 1,
+                (x.shape[3] - kernel_height + 2 * padding) // stride + 1,
             )
         ](
             StaticIntTuple[2](kernel_width, kernel_height),

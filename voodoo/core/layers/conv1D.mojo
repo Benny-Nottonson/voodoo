@@ -46,7 +46,7 @@ struct Conv1D[
     ) raises -> Tensor[
         TensorShape(
             x.shape[0],
-            in_channels,
+            x.shape[1],
             (x.shape[2] - kernel_width + 2 * padding) // stride + 1,
         ),
         NoneInitializer,
@@ -57,7 +57,7 @@ struct Conv1D[
         let res = x.conv_1d[
             TensorShape(
                 x.shape[0],
-                in_channels,
+                x.shape[1],
                 (x.shape[2] - kernel_width + 2 * padding) // stride + 1,
             )
         ](self.W, self.padding, self.stride)
