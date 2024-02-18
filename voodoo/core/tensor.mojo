@@ -410,37 +410,45 @@ struct Tensor[
         ](self.node)
         return new_tensor
 
-    fn conv_1d(
-        self, other: Tensor, padding: Int, stride: Int
-    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
-        var new_tensor = self.load_tensor_for_binary_op(other)
+    fn conv_1d[
+        new_shape: TensorShape = shape
+    ](self, other: Tensor, padding: Int, stride: Int) raises -> Tensor[
+        new_shape, NoneInitializer, NoneConstraint, False, False
+    ]:
+        var new_tensor = self.load_tensor_for_binary_op[new_shape](other)
         new_tensor.node = new_tensor.graph.conv_1d(
             self.node, other.node, padding, stride
         )
         return new_tensor
 
-    fn conv_2d(
+    fn conv_2d[
+        new_shape: TensorShape = shape
+    ](
         self, other: Tensor, padding: StaticIntTuple[2], stride: StaticIntTuple[2]
-    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
-        var new_tensor = self.load_tensor_for_binary_op(other)
+    ) raises -> Tensor[new_shape, NoneInitializer, NoneConstraint, False, False]:
+        var new_tensor = self.load_tensor_for_binary_op[new_shape](other)
         new_tensor.node = new_tensor.graph.conv_2d(
             self.node, other.node, padding, stride
         )
         return new_tensor
 
-    fn maxpool_1d(
-        self, kernel_size: Int, stride: Int, padding: Int
-    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
-        var new_tensor = self.load_tensor_for_unary_op()
+    fn maxpool_1d[
+        new_shape: TensorShape = shape
+    ](self, kernel_size: Int, stride: Int, padding: Int) raises -> Tensor[
+        new_shape, NoneInitializer, NoneConstraint, False, False
+    ]:
+        var new_tensor = self.load_tensor_for_unary_op[new_shape]()
         new_tensor.node = new_tensor.graph.maxpool_1d(
             self.node, kernel_size, stride, padding
         )
         return new_tensor
 
-    fn maxpool_2d(
-        self, kernel_size: StaticIntTuple[2], stride: Int, padding: Int
-    ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, False]:
-        var new_tensor = self.load_tensor_for_unary_op()
+    fn maxpool_2d[
+        new_shape: TensorShape = shape
+    ](self, kernel_size: StaticIntTuple[2], stride: Int, padding: Int) raises -> Tensor[
+        new_shape, NoneInitializer, NoneConstraint, False, False
+    ]:
+        var new_tensor = self.load_tensor_for_unary_op[new_shape]()
         new_tensor.node = new_tensor.graph.maxpool_2d(
             self.node, kernel_size, stride, padding
         )

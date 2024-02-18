@@ -42,11 +42,11 @@ fn main() raises:
     let input = Tensor[TensorShape(32, 1), RandomUniform[0, 1]]()
     let true_vals = Tensor[TensorShape(32, 1), RandomUniform[0, 1]]()
 
-    var x = input_layer.forward(input)
-    x = dropout.forward(x)
-    x = leaky_relu.forward(x)
-    x = output_layer.forward(x)
-    var loss = x.compute_loss["mse"](true_vals)
+    let x0 = input_layer.forward(input)
+    let x1 = dropout.forward(x0)
+    let x2 = leaky_relu.forward(x1)
+    let x3 = output_layer.forward(x2)
+    var loss = x3.compute_loss["mse"](true_vals)
 
     let initial_start = now()
     var epoch_start = now()
