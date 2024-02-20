@@ -46,7 +46,7 @@ struct Tensor[
 
             @parameter
             if constraint.key() != "NoneConstraint":
-                constraint().constrain[shape](self.node.get_data())
+                constraint.constrain[shape](self.node.get_data())
 
     fn __copyinit__(inout self, other: Self):
         self.graph = other.graph
