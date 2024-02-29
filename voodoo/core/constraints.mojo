@@ -7,10 +7,8 @@ from voodoo.constants import NELTS, EPSILON
 
 
 trait Constraint(CollectionElement):
-    fn __init__(inout self):
-        ...
-
-    fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]) -> None:
+    @staticmethod
+    fn constrain[shape: Vector[Int]](data: DTypePointer[DType.float32]) -> None:
         ...
 
     @staticmethod
@@ -19,15 +17,13 @@ trait Constraint(CollectionElement):
 
 
 @register_passable("trivial")
-struct MaxNorm[max_value: Float32](CollectionElement, Constraint):
+struct MaxNorm[max_value: Float32](Constraint):
     """
     A constraint that enforces the maximum norm of the weights.
     """
 
-    fn __init__() -> Self:
-        return MaxNorm[max_value] {}
-
-    fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
+    @staticmethod
+    fn constrain[shape: Vector[Int]](data: DTypePointer[DType.float32]):
         var num_elements = reduce_vector_mul[shape]()
         var norms: Float32 = 0.0
 
@@ -51,17 +47,13 @@ struct MaxNorm[max_value: Float32](CollectionElement, Constraint):
 
 
 @register_passable("trivial")
-struct MinMaxNorm[min_value: Float32, max_value: Float32](
-    CollectionElement, Constraint
-):
+struct MinMaxNorm[min_value: Float32, max_value: Float32](Constraint):
     """
     A constraint that enforces the minimum and maximum norm of the weights.
     """
 
-    fn __init__() -> Self:
-        return MinMaxNorm[min_value, max_value] {}
-
-    fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
+    @staticmethod
+    fn constrain[shape: Vector[Int]](data: DTypePointer[DType.float32]):
         var num_elements = reduce_vector_mul[shape]()
         var norms: Float32 = 0.0
 
@@ -90,15 +82,13 @@ struct MinMaxNorm[min_value: Float32, max_value: Float32](
 
 
 @register_passable("trivial")
-struct NonNeg[](CollectionElement, Constraint):
+struct NonNeg[](Constraint):
     """
     A constraint that enforces non-negative weights.
     """
 
-    fn __init__() -> Self:
-        return NonNeg[] {}
-
-    fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
+    @staticmethod
+    fn constrain[shape: Vector[Int]](data: DTypePointer[DType.float32]):
         var num_elements = reduce_vector_mul[shape]()
 
         @parameter
@@ -113,15 +103,13 @@ struct NonNeg[](CollectionElement, Constraint):
 
 
 @register_passable("trivial")
-struct RadialConstraint[](CollectionElement, Constraint):
+struct RadialConstraint[](Constraint):
     """
     A constraint that enforces the radial constraint on the weights.
     """
 
-    fn __init__() -> Self:
-        return RadialConstraint[] {}
-
-    fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
+    @staticmethod
+    fn constrain[shape: Vector[Int]](data: DTypePointer[DType.float32]):
         var num_elements = reduce_vector_mul[shape]()
         var center = shape[0] // 2
 
@@ -142,15 +130,13 @@ struct RadialConstraint[](CollectionElement, Constraint):
 
 
 @register_passable("trivial")
-struct UnitNorm[](CollectionElement, Constraint):
+struct UnitNorm[](Constraint):
     """
     A constraint that enforces the unit norm of the weights.
     """
 
-    fn __init__() -> Self:
-        return UnitNorm[] {}
-
-    fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
+    @staticmethod
+    fn constrain[shape: Vector[Int]](data: DTypePointer[DType.float32]):
         var num_elements = reduce_vector_mul[shape]()
 
         @parameter
@@ -166,15 +152,13 @@ struct UnitNorm[](CollectionElement, Constraint):
 
 
 @register_passable("trivial")
-struct NoneConstraint[](CollectionElement, Constraint):
+struct NoneConstraint[](Constraint):
     """
     An constraint that does nothing.
     """
 
-    fn __init__() -> Self:
-        return NoneConstraint[] {}
-
-    fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
+    @staticmethod
+    fn constrain[shape: Vector[Int]](data: DTypePointer[DType.float32]):
         ...
 
     @staticmethod
