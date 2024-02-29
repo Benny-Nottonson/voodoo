@@ -57,7 +57,7 @@ struct Conv2D[
         False,
         False,
     ]:
-        let res = x.conv_2d[
+        var res = x.conv_2d[
             TensorShape(
                 x.shape[0],
                 x.shape[1],

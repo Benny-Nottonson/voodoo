@@ -18,5 +18,5 @@ struct Flatten[]():
         False,
         False,
     ]:
-        let res = x.flatten()
+        var res = x.flatten()
         return res

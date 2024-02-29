@@ -10,9 +10,9 @@ struct Vector[type: AnyRegType](Sized):
     var _cap: Int
 
     fn __init__(len: Int = 0) -> Self:
-        let _cap = max(len, 8)
-        let _data = Pointer[type].alloc(_cap)
-        let _len = Pointer[Int].alloc(1)
+        var _cap = max(len, 8)
+        var _data = Pointer[type].alloc(_cap)
+        var _len = Pointer[Int].alloc(1)
 
         memset_zero(_data, _cap)
         _len.store(len)
@@ -20,9 +20,9 @@ struct Vector[type: AnyRegType](Sized):
         return Vector[type] {_data: _data, _len: _len, _cap: _cap}
 
     fn __init__(shape: TensorShape) -> Self:
-        let len = shape.rank()
-        let _data = Pointer[type].alloc(len)
-        let _len = Pointer[Int].alloc(1)
+        var len = shape.rank()
+        var _data = Pointer[type].alloc(len)
+        var _len = Pointer[Int].alloc(1)
 
         for i in range(len):
             _data.store(i, shape[i])
@@ -41,8 +41,8 @@ struct Vector[type: AnyRegType](Sized):
         self._data.store(idx, value)
 
     fn push_back(inout self, elem: type):
-        let len = self._len.load()
-        let curr_cap = self._cap
+        var len = self._len.load()
+        var curr_cap = self._cap
 
         if len == curr_cap:
             self._resize[True](max(1, curr_cap << 1))
@@ -51,11 +51,11 @@ struct Vector[type: AnyRegType](Sized):
         self._len.store(len + 1)
 
     fn pop_back(inout self) -> type:
-        let new_len = self._len.load() - 1
-        let curr_cap = self._cap
+        var new_len = self._len.load() - 1
+        var curr_cap = self._cap
 
         self._len.store(new_len)
-        let tmp = self._data.load(new_len)
+        var tmp = self._data.load(new_len)
 
         if new_len <= (curr_cap >> 2) and curr_cap > 32:
             self._resize[False](curr_cap >> 1)
@@ -73,15 +73,15 @@ struct Vector[type: AnyRegType](Sized):
         memset_zero(self._data, self._cap)
 
     fn copy(self) -> Self:
-        let len = self._len.load()
-        let new_vector = Vector[type](len)
+        var len = self._len.load()
+        var new_vector = Vector[type](len)
 
         memcpy(new_vector._data, self._data, len)
 
         return new_vector
 
     fn _resize[up: Bool](inout self, new_cap: Int):
-        let new_data = Pointer[type].alloc(new_cap)
+        var new_data = Pointer[type].alloc(new_cap)
 
         @parameter
         if up:

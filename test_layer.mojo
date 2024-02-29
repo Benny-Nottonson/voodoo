@@ -14,21 +14,21 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
 
 
 fn main() raises:
-    let input_layer = Dense[
+    var input_layer = Dense[
         in_neurons=1,
         out_neurons=32,
         activation="relu",
         weight_initializer = HeNormal[1],
         bias_initializer = HeNormal[32],
     ]()
-    let dropout = Dropout[dropout_rate=0.01,]()
-    let leaky_relu = LeakyReLu[
+    var dropout = Dropout[dropout_rate=0.01,]()
+    var leaky_relu = LeakyReLu[
         in_neurons=32,
         out_neurons=32,
         weight_initializer = HeNormal[32],
         bias_initializer = HeNormal[32],
     ]()
-    let output_layer = Dense[
+    var output_layer = Dense[
         in_neurons=32,
         out_neurons=1,
         weight_initializer = HeNormal[32],
@@ -36,21 +36,21 @@ fn main() raises:
     ]()
 
     var avg_loss: Float32 = 0.0
-    let every = 1000
-    let num_epochs = 2000000
+    var every = 1000
+    var num_epochs = 2000000
 
-    let input = Tensor[TensorShape(32, 1), RandomUniform[0, 1]]()
-    let true_vals = Tensor[TensorShape(32, 1), RandomUniform[0, 1]]()
+    var input = Tensor[TensorShape(32, 1), RandomUniform[0, 1]]()
+    var true_vals = Tensor[TensorShape(32, 1), RandomUniform[0, 1]]()
 
-    let x0 = input_layer.forward(input)
-    let x1 = dropout.forward(x0)
-    let x2 = leaky_relu.forward(x1)
-    let x3 = output_layer.forward(x2)
+    var x0 = input_layer.forward(input)
+    var x1 = dropout.forward(x0)
+    var x2 = leaky_relu.forward(x1)
+    var x3 = output_layer.forward(x2)
     var loss = x3.compute_loss["mse"](true_vals)
 
-    let initial_start = now()
+    var initial_start = now()
     var epoch_start = now()
-    let bar_accuracy = 20
+    var bar_accuracy = 20
     for epoch in range(1, num_epochs + 1):
         input.refresh()
         for i in range(input.shape.num_elements()):

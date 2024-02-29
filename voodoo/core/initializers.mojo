@@ -34,7 +34,7 @@ struct Constant[value: Float64](Initializer):
         fn vec[NELTS: Int](x: Int):
             data.simd_store[NELTS](x, value.to_int())
 
-        vectorize[NELTS, vec](reduce_vector_mul[shape]())
+        vectorize[vec, NELTS](reduce_vector_mul[shape]())
 
     @staticmethod
     fn key() -> String:
@@ -55,7 +55,7 @@ struct Zeros[](Initializer):
         fn vec[NELTS: Int](x: Int):
             data.simd_store[NELTS](x, 0.0)
 
-        vectorize[NELTS, vec](reduce_vector_mul[shape]())
+        vectorize[vec, NELTS](reduce_vector_mul[shape]())
 
     @staticmethod
     fn key() -> String:
@@ -76,7 +76,7 @@ struct Ones[](Initializer):
         fn vec[NELTS: Int](x: Int):
             data.simd_store[NELTS](x, 1.0)
 
-        vectorize[NELTS, vec](reduce_vector_mul[shape]())
+        vectorize[vec, NELTS](reduce_vector_mul[shape]())
 
     @staticmethod
     fn key() -> String:
@@ -117,7 +117,7 @@ struct GlorotUniform[input_units: Float64, output_units: Float64](
     @staticmethod
     fn initialize[shape: Vector[Int]](data: DTypePointer[DType.float32]):
         seed()
-        let limit = (6.0 / (input_units + output_units)) ** 0.5
+        var limit = (6.0 / (input_units + output_units)) ** 0.5
 
         @parameter
         fn vec[NELTS: Int](x: Int):
@@ -125,7 +125,7 @@ struct GlorotUniform[input_units: Float64, output_units: Float64](
                 x, random_float64(-limit, limit).cast[DType.float32]()
             )
 
-        vectorize[NELTS, vec](reduce_vector_mul[shape]())
+        vectorize[vec, NELTS](reduce_vector_mul[shape]())
 
     @staticmethod
     fn key() -> String:
@@ -157,7 +157,7 @@ struct HeUniform[input_units: Float64](Initializer):
     @staticmethod
     fn initialize[shape: Vector[Int]](data: DTypePointer[DType.float32]):
         seed()
-        let limit = (6.0 / input_units) ** 0.5
+        var limit = (6.0 / input_units) ** 0.5
 
         @parameter
         fn vec[NELTS: Int](x: Int):
@@ -165,7 +165,7 @@ struct HeUniform[input_units: Float64](Initializer):
                 x, random_float64(-limit, limit).cast[DType.float32]()
             )
 
-        vectorize[NELTS, vec](reduce_vector_mul[shape]())
+        vectorize[vec, NELTS](reduce_vector_mul[shape]())
 
     @staticmethod
     fn key() -> String:
@@ -181,16 +181,16 @@ struct Identity[](Initializer):
     @staticmethod
     fn initialize[shape: Vector[Int]](data: DTypePointer[DType.float32]):
         seed()
-        let n = shape[0]
-        let m = shape[1]
+        var n = shape[0]
+        var m = shape[1]
 
         @parameter
         fn vec[NELTS: Int](x: Int):
-            let i = x / m
-            let j = x % m
+            var i = x / m
+            var j = x % m
             data.simd_store[NELTS](x, 1.0 if i == j else 0.0)
 
-        vectorize[NELTS, vec](n * m)
+        vectorize[vec, NELTS](n * m)
 
     @staticmethod
     fn key() -> String:
@@ -222,7 +222,7 @@ struct LecunUniform[input_units: Float64](Initializer):
     @staticmethod
     fn initialize[shape: Vector[Int]](data: DTypePointer[DType.float32]):
         seed()
-        let limit = (3.0 / input_units) ** 0.5
+        var limit = (3.0 / input_units) ** 0.5
 
         @parameter
         fn vec[NELTS: Int](x: Int):
@@ -230,7 +230,7 @@ struct LecunUniform[input_units: Float64](Initializer):
                 x, random_float64(-limit, limit).cast[DType.float32]()
             )
 
-        vectorize[NELTS, vec](reduce_vector_mul[shape]())
+        vectorize[vec, NELTS](reduce_vector_mul[shape]())
 
     @staticmethod
     fn key() -> String:
@@ -267,7 +267,7 @@ struct RandomUniform[low: Float64, high: Float64](Initializer):
         fn vec[NELTS: Int](x: Int):
             data.simd_store[NELTS](x, random_float64(low, high).cast[DType.float32]())
 
-        vectorize[NELTS, vec](reduce_vector_mul[shape]())
+        vectorize[vec, NELTS](reduce_vector_mul[shape]())
 
     @staticmethod
     fn key() -> String:
@@ -283,8 +283,8 @@ struct TruncatedNormal[mean: Float64, std: Float64](Initializer):
     @staticmethod
     fn initialize[shape: Vector[Int]](data: DTypePointer[DType.float32]):
         seed()
-        let low = mean - 2.0 * std
-        let high = mean + 2.0 * std
+        var low = mean - 2.0 * std
+        var high = mean + 2.0 * std
 
         @parameter
         fn vec[NELTS: Int](x: Int):
@@ -293,7 +293,7 @@ struct TruncatedNormal[mean: Float64, std: Float64](Initializer):
                 value = randn_float64(mean, std)
             data.simd_store[NELTS](x, value.cast[DType.float32]())
 
-        vectorize[NELTS, vec](reduce_vector_mul[shape]())
+        vectorize[vec, NELTS](reduce_vector_mul[shape]())
 
     @staticmethod
     fn key() -> String:

@@ -86,7 +86,7 @@ struct Graph:
     var _grad_nodes_order: Vector[Int]
 
     fn __init__() -> Self:
-        let last_node_id = Pointer[Int].alloc(1)
+        var last_node_id = Pointer[Int].alloc(1)
         last_node_id.store(-1)
 
         return Graph {
@@ -149,7 +149,7 @@ struct Graph:
             if parents[i].get_dependencies() == 0:
                 _ = self.forward_recursive(parents[i])
 
-        let node_id = node.get_id()
+        var node_id = node.get_id()
         if node_id < len(self._nodes):
             self._nodes[node_id] = node
         else:
@@ -162,12 +162,12 @@ struct Graph:
             return
 
         var idx = -1
-        let node_parents = node.get_parents()
-        let node_cap = node.get_cap()
-        let node_is_static = node.get_is_static()
-        let node_checkpoint = node.get_checkpoint()
-        let node_is_single = node.get_is_single()
-        let node_ceiled_cap = self.load_ceiled_cap(node_cap)
+        var node_parents = node.get_parents()
+        var node_cap = node.get_cap()
+        var node_is_static = node.get_is_static()
+        var node_checkpoint = node.get_checkpoint()
+        var node_is_single = node.get_is_single()
+        var node_ceiled_cap = self.load_ceiled_cap(node_cap)
 
         if (
             not unique
@@ -176,7 +176,7 @@ struct Graph:
             and not node_is_single
         ):
             for i in range(len(node_parents)):
-                let parent = self._nodes[node_parents[i]]
+                var parent = self._nodes[node_parents[i]]
                 if (
                     self.load_ceiled_cap(parent.get_cap()) == node_ceiled_cap
                     and parent.get_dependencies() == 1
@@ -193,23 +193,23 @@ struct Graph:
             if i == idx:
                 continue
             else:
-                let parent = self._nodes[node_parents[i]]
+                var parent = self._nodes[node_parents[i]]
                 parent.set_dependencies(parent.get_dependencies() - 1)
 
         if idx == -1:
             var mem_pool = self._memory_pool_manager[self.get_index(node_cap)]
             if len(mem_pool) > 0:
-                let data_id = mem_pool.pop_back()
+                var data_id = mem_pool.pop_back()
                 node.set_data_id(data_id)
-                let ceiled_cap = self.load_ceiled_cap(node_cap)
+                var ceiled_cap = self.load_ceiled_cap(node_cap)
 
                 node.set_data(self._memory_pool[node.get_data_id()])
                 memset_zero(node.get_data(), ceiled_cap)
             else:
-                let data_id = self.get_free_data_id()
+                var data_id = self.get_free_data_id()
                 node.set_data_id(data_id)
-                let ceiled_cap = self.load_ceiled_cap(node_cap + 1)
-                let new_data_ptr = DTypePointer[DType.float32].alloc(ceiled_cap)
+                var ceiled_cap = self.load_ceiled_cap(node_cap + 1)
+                var new_data_ptr = DTypePointer[DType.float32].alloc(ceiled_cap)
                 if data_id == len(self._memory_pool):
                     self._memory_pool.push_back(new_data_ptr)
                 else:
@@ -222,20 +222,20 @@ struct Graph:
         if node.get_grad_id() != -1:
             return
 
-        let index = self.get_index(node.get_cap())
+        var index = self.get_index(node.get_cap())
         var mem_pool = self._memory_pool_manager[index]
         if len(mem_pool) > 0:
-            let grad_id = mem_pool.pop_back()
+            var grad_id = mem_pool.pop_back()
             node.set_grad_id(grad_id)
-            let ceiled_cap = self.load_ceiled_cap(node.get_cap())
+            var ceiled_cap = self.load_ceiled_cap(node.get_cap())
 
             node.set_grad(self._memory_pool[node.get_grad_id()])
             memset_zero(node.get_grad(), ceiled_cap)
         else:
-            let grad_id = self.get_free_data_id()
+            var grad_id = self.get_free_data_id()
             node.set_grad_id(grad_id)
-            let ceiled_cap = self.load_ceiled_cap(node.get_cap())
-            let new_grad_ptr = DTypePointer[DType.float32].alloc(ceiled_cap)
+            var ceiled_cap = self.load_ceiled_cap(node.get_cap())
+            var new_grad_ptr = DTypePointer[DType.float32].alloc(ceiled_cap)
             if grad_id == len(self._memory_pool):
                 self._memory_pool.push_back(new_grad_ptr)
             else:
@@ -255,8 +255,8 @@ struct Graph:
 
         @parameter
         if forced:
-            let index = self.get_index(node.get_cap())
-            let data_id = node.get_data_id()
+            var index = self.get_index(node.get_cap())
+            var data_id = node.get_data_id()
             var mem_pool = self._memory_pool_manager[index]
             mem_pool.push_back(data_id)
             node.set_data_id(-1)
@@ -265,8 +265,8 @@ struct Graph:
             return
 
         if node.get_dependencies() == 0:
-            let index = self.get_index(node.get_cap())
-            let data_id = node.get_data_id()
+            var index = self.get_index(node.get_cap())
+            var data_id = node.get_data_id()
             var mem_pool = self._memory_pool_manager[index]
             mem_pool.push_back(data_id)
             node.set_data_id(-1)
@@ -276,15 +276,15 @@ struct Graph:
     fn release_grad_forced(self, node: Node) raises:
         if node.get_is_static() or node.get_grad_id() == -1:
             return
-        let index = self.get_index(node.get_cap())
-        let grad_id = node.get_grad_id()
+        var index = self.get_index(node.get_cap())
+        var grad_id = node.get_grad_id()
         var mem_pool = self._memory_pool_manager[index]
         mem_pool.push_back(grad_id)
         node.set_grad_id(-1)
         node.set_grad_computed(False)
 
     fn clear_cache(inout self, reset_static_nodes: Bool = False) raises:
-        let dt_null = DTypePointer[DType.float32].get_null()
+        var dt_null = DTypePointer[DType.float32].get_null()
 
         if self._last_node_id.load() != -1:
             self.release_data[True](self._nodes[self._last_node_id.load()])
@@ -304,12 +304,12 @@ struct Graph:
                 if self._memory_pool[i] == self._memory_pool[j]:
                     self._memory_pool[i] = dt_null
 
-        let deletable_data = Vector[Bool](len(self._memory_pool))
+        var deletable_data = Vector[Bool](len(self._memory_pool))
         memset(deletable_data._data, True, len(deletable_data))
 
         for i in range(len(self._nodes)):
-            let node = self._nodes[i]
-            let data_id = node.get_data_id()
+            var node = self._nodes[i]
+            var data_id = node.get_data_id()
 
             if node.get_is_static() and data_id != -1:
                 deletable_data[data_id] = False
@@ -350,18 +350,18 @@ struct Graph:
         if node.get_computed():
             return node
 
-        let operator_id = node.get_operator_id()
-        let parents = node.get_parents()
-        let num_parents = len(parents)
+        var operator_id = node.get_operator_id()
+        var parents = node.get_parents()
+        var num_parents = len(parents)
 
         if num_parents == 1:
-            let parent_node = self.forward_recursive(self._nodes[parents[0]])
+            var parent_node = self.forward_recursive(self._nodes[parents[0]])
             self.get_free_data(node)
             KERNELS.get(operator_id).get[0, UNARY_OP]()(node, parent_node)
             self.release_data(parent_node)
         else:
-            let parent1 = self.forward_recursive(self._nodes[parents[0]])
-            let parent2 = self.forward_recursive(self._nodes[parents[1]])
+            var parent1 = self.forward_recursive(self._nodes[parents[0]])
+            var parent2 = self.forward_recursive(self._nodes[parents[1]])
             self.get_free_data(node)
             KERNELS.get(operator_id).get[1, BINARY_OP]()(node, parent1, parent2)
             self.release_data(parent1)
@@ -379,7 +379,7 @@ struct Graph:
         self.release_data[True](node)
 
         for i in range(len(self._nodes)):
-            let node = self._nodes[i]
+            var node = self._nodes[i]
             if node.get_is_single():
                 continue
 
@@ -397,17 +397,17 @@ struct Graph:
         if node.get_computed():
             return node
 
-        let operator_id = node.get_operator_id()
-        let parents = node.get_parents()
-        let num_parents = len(parents)
+        var operator_id = node.get_operator_id()
+        var parents = node.get_parents()
+        var num_parents = len(parents)
 
         if num_parents == 1:
-            let parent1 = self.forward_recursive_graph_slice(self._nodes[parents[0]])
+            var parent1 = self.forward_recursive_graph_slice(self._nodes[parents[0]])
             self.get_free_data[True](node)
             KERNELS.get(operator_id).get[0, UNARY_OP]()(node, parent1)
         else:
-            let parent1 = self.forward_recursive_graph_slice(self._nodes[parents[0]])
-            let parent2 = self.forward_recursive_graph_slice(self._nodes[parents[1]])
+            var parent1 = self.forward_recursive_graph_slice(self._nodes[parents[0]])
+            var parent2 = self.forward_recursive_graph_slice(self._nodes[parents[1]])
             self.get_free_data[True](node)
             KERNELS.get(operator_id).get[1, BINARY_OP]()(node, parent1, parent2)
 
@@ -419,17 +419,17 @@ struct Graph:
         if node.get_grad_computed():
             return node
 
-        let children = node.get_children()
+        var children = node.get_children()
 
         for i in range(len(children)):
-            let child = self._nodes[children[i]]
-            let grad_operator_id = child.get_grad_operator_id()
-            let child_parents = child.get_parents()
+            var child = self._nodes[children[i]]
+            var grad_operator_id = child.get_grad_operator_id()
+            var child_parents = child.get_parents()
 
             _ = self.backward_recursive(child)
 
             if len(child_parents) == 1:
-                let parent1 = self._nodes[child_parents[0]]
+                var parent1 = self._nodes[child_parents[0]]
                 _ = self.forward_recursive_graph_slice(parent1)
 
                 if parent1.get_grad_id() == -1:
@@ -439,8 +439,8 @@ struct Graph:
 
                 KERNELS.get(grad_operator_id).get[0, UNARY_OP]()(child, parent1)
             else:
-                let parent1 = self._nodes[child_parents[0]]
-                let parent2 = self._nodes[child_parents[1]]
+                var parent1 = self._nodes[child_parents[0]]
+                var parent2 = self._nodes[child_parents[1]]
 
                 _ = self.forward_recursive_graph_slice(parent1)
                 _ = self.forward_recursive_graph_slice(parent2)
@@ -472,10 +472,10 @@ struct Graph:
         backward.push_back(node.get_id())
         var it = 0
         while it < len(backward):
-            let currId = backward[it]
-            let curr = self._nodes[currId]
+            var currId = backward[it]
+            var curr = self._nodes[currId]
             for i in range(len(curr.get_parents())):
-                let parId = curr.get_parents()[i]
+                var parId = curr.get_parents()[i]
                 if not self._nodes[parId].get_tmp_visited():
                     backward.push_back(parId)
             if curr.get_is_static() or curr.get_checkpoint():
@@ -484,13 +484,13 @@ struct Graph:
             it += 1
 
     fn backward(inout self, node: Node) raises:
-        let new_last_node_id = node.get_id()
+        var new_last_node_id = node.get_id()
 
         self.find_grad_nodes_order(node)
         self._last_node_id.store(new_last_node_id)
 
         for i in range(len(self._nodes)):
-            let node = self._nodes[i]
+            var node = self._nodes[i]
             node.set_grad_computed(False)
 
             if node.get_is_single() or node.get_id() == new_last_node_id:
@@ -526,8 +526,8 @@ struct Graph:
 
     fn mmul(inout self, a: Node, b: Node) raises -> Node:
         var shape = get_broadcasted_shape_for_ew_op(a, b)
-        let a_dims = a.get_num_dims()
-        let b_dims = b.get_num_dims()
+        var a_dims = a.get_num_dims()
+        var b_dims = b.get_num_dims()
         shape[len(shape) - 2] = a.get_shape().copy()[a_dims - 2]
         shape[len(shape) - 1] = b.get_shape().copy()[b_dims - 1]
         if a.get_shape()[a_dims - 1] != b.get_shape()[b_dims - 2]:
@@ -535,7 +535,7 @@ struct Graph:
                 a.get_shape()[a_dims - 1]
             ) + " " + str(b.get_shape()[b_dims - 2])
 
-        let other_params = Vector[Int]()
+        var other_params = Vector[Int]()
 
         return self.node[True, False, False, mmul_code](shape, other_params, a, b)
 
@@ -546,12 +546,12 @@ struct Graph:
         padding: Int,
         stride: Int,
     ) raises -> Node:
-        let batch_size = a.get_shape()[0]
-        let channels = a.get_shape()[1]
-        let input_width = a.get_shape()[2]
-        let kernel_width = b.get_shape()[1]
+        var batch_size = a.get_shape()[0]
+        var channels = a.get_shape()[1]
+        var input_width = a.get_shape()[2]
+        var kernel_width = b.get_shape()[1]
 
-        let shape = TensorShape(
+        var shape = TensorShape(
             batch_size,
             channels,
             (input_width - kernel_width + 2 * padding) // stride + 1,
@@ -570,14 +570,14 @@ struct Graph:
         padding: StaticIntTuple[2],
         stride: StaticIntTuple[2],
     ) raises -> Node:
-        let batch_size = a.get_shape()[0]
-        let channels = a.get_shape()[1]
-        let input_width = a.get_shape()[2]
-        let input_height = a.get_shape()[3]
-        let kernel_width = b.get_shape()[1]
-        let kernel_height = b.get_shape()[2]
+        var batch_size = a.get_shape()[0]
+        var channels = a.get_shape()[1]
+        var input_width = a.get_shape()[2]
+        var input_height = a.get_shape()[3]
+        var kernel_width = b.get_shape()[1]
+        var kernel_height = b.get_shape()[2]
 
-        let shape = TensorShape(
+        var shape = TensorShape(
             batch_size,
             channels,
             (input_width - kernel_width + 2 * padding[0]) // stride[0] + 1,
@@ -604,7 +604,7 @@ struct Graph:
         other_params.push_back(stride)
         other_params.push_back(padding)
 
-        let shape = TensorShape(
+        var shape = TensorShape(
             a.get_shape()[0],
             a.get_shape()[1],
             (a.get_shape()[2] - kernel_size + 2 * padding) // stride + 1,
@@ -625,7 +625,7 @@ struct Graph:
         other_params.push_back(stride)
         other_params.push_back(padding)
 
-        let shape = TensorShape(
+        var shape = TensorShape(
             a.get_shape()[0],
             a.get_shape()[1],
             (a.get_shape()[2] - kernel_size[0] + 2 * padding) // stride + 1,
@@ -649,7 +649,7 @@ struct Graph:
         )
 
     fn transp(inout self, parent1: Node) raises -> Node:
-        let old_shape = parent1.get_shape().copy()
+        var old_shape = parent1.get_shape().copy()
 
         return self.node[False, False, False, transp_code](
             TensorShape(old_shape[len(old_shape) - 1], old_shape[len(old_shape) - 2]),
@@ -706,11 +706,11 @@ struct Graph:
         other_graph: Graph,
         remove_other: Bool = False,
     ) raises:
-        let num_nodes = len(self._nodes)
-        let memory_pool_len = len(self._memory_pool)
+        var num_nodes = len(self._nodes)
+        var memory_pool_len = len(self._memory_pool)
 
         for i in range(len(other_graph._nodes)):
-            let node = other_graph._nodes[i]
+            var node = other_graph._nodes[i]
             node.set_id(node.get_id() + num_nodes)
             for j in range(len(node.get_children())):
                 node.get_children()[j] = node.get_children()[j] + num_nodes
@@ -724,17 +724,17 @@ struct Graph:
 
         @unroll
         for i in range(MEMORY_POOL_SIZE):
-            let mem_pool_len = len(other_graph._memory_pool_manager[i])
+            var mem_pool_len = len(other_graph._memory_pool_manager[i])
             for j in range(mem_pool_len):
                 self._memory_pool_manager[i].push_back(
                     other_graph._memory_pool_manager[i][j] + memory_pool_len
                 )
 
-        let free_node_ids_len = len(self._free_node_ids)
+        var free_node_ids_len = len(self._free_node_ids)
         for i in range(free_node_ids_len):
             self._free_node_ids.push_back(other_graph._free_node_ids[i] + num_nodes)
 
-        let free_data_ids_len = len(self._free_data_ids)
+        var free_data_ids_len = len(self._free_data_ids)
         for i in range(free_data_ids_len):
             self._free_data_ids.push_back(
                 other_graph._free_data_ids[i] + memory_pool_len

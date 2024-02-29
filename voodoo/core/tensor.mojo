@@ -57,10 +57,10 @@ struct Tensor[
     ](self, other: Tensor) raises -> Tensor[
         new_shape, NoneInitializer, NoneConstraint, False, False
     ]:
-        let self_static_or_single = self.node.get_is_static() or self.node.get_is_single()
-        let other_static_or_single = other.node.get_is_static() or other.node.get_is_single()
-        let first_greater = len(self.graph._nodes) < len(other.graph._nodes)
-        let remove_other = not (self_static_or_single or other_static_or_single)
+        var self_static_or_single = self.node.get_is_static() or self.node.get_is_single()
+        var other_static_or_single = other.node.get_is_static() or other.node.get_is_single()
+        var first_greater = len(self.graph._nodes) < len(other.graph._nodes)
+        var remove_other = not (self_static_or_single or other_static_or_single)
 
         var new_tensor = Tensor[
             new_shape, NoneInitializer, NoneConstraint, False, False
@@ -265,7 +265,7 @@ struct Tensor[
     fn _prep_scalar_tensor(
         self, number: Float32
     ) raises -> Tensor[shape, NoneInitializer, NoneConstraint, False, True]:
-        let new_tensor = Tensor[
+        var new_tensor = Tensor[
             shape, NoneInitializer, NoneConstraint, False, True
         ]().fill(number)
         new_tensor.node.set_computed(True)

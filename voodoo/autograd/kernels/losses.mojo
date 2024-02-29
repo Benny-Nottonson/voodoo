@@ -101,8 +101,8 @@ fn msle_error[
     DType.float32, NELTS
 ]:
     # f(x, y) = (log(x + 1) - log(y + 1))^2
-    let y_pred_clipped = (y_pred > 0.0).select[DType.float32](y_pred, 0.0)
-    let y_true_clipped = (y_true > 0.0).select[DType.float32](y_true, 0.0)
+    var y_pred_clipped = (y_pred > 0.0).select[DType.float32](y_pred, 0.0)
+    var y_true_clipped = (y_true > 0.0).select[DType.float32](y_true, 0.0)
     return (log(y_pred_clipped + Float32(1.0)) - log(y_true_clipped + Float32(1.0))) * (
         log(y_pred_clipped + Float32(1.0)) - log(y_true_clipped + Float32(1.0))
     )
@@ -117,8 +117,8 @@ fn msle_grad[
     N: Int,
 ) -> SIMD[DType.float32, NELTS]:
     # f'(x, y) with respect to y = -2(log(x + 1) - log(y + 1)) / (y + 1)
-    let y_pred_clipped = (y_pred > 0.0).select[DType.float32](y_pred, 0.0)
-    let y_true_clipped = (y_true > 0.0).select[DType.float32](y_true, 0.0)
+    var y_pred_clipped = (y_pred > 0.0).select[DType.float32](y_pred, 0.0)
+    var y_true_clipped = (y_true > 0.0).select[DType.float32](y_true, 0.0)
     return (
         -Float32(2.0)
         * (log(y_pred_clipped + Float32(1.0)) - log(y_true_clipped + Float32(1.0)))

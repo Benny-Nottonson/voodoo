@@ -26,7 +26,7 @@ struct MaxPool1D[
         False,
         False,
     ]:
-        let res = x.maxpool_1d[
+        var res = x.maxpool_1d[
             TensorShape(
                 x.shape[0],
                 (x.shape[1] - kernel_width + 2 * padding) // stride + 1,

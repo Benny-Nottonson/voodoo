@@ -28,7 +28,7 @@ struct MaxPool2D[
         False,
         False,
     ]:
-        let res = x.maxpool_2d[
+        var res = x.maxpool_2d[
             TensorShape(
                 x.shape[0],
                 x.shape[1],

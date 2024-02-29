@@ -26,20 +26,20 @@ struct MMul:
     fn kernel_mmul_fw(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let a_num_dims = a.get_num_dims()
-        let b_num_dims = b.get_num_dims()
+        var a_num_dims = a.get_num_dims()
+        var b_num_dims = b.get_num_dims()
 
-        let M = a.get_shape()[a_num_dims - 2]
-        let K = b.get_shape()[b_num_dims - 2]
-        let N = c.get_shape()[c.get_num_dims() - 1]
+        var M = a.get_shape()[a_num_dims - 2]
+        var K = b.get_shape()[b_num_dims - 2]
+        var N = c.get_shape()[c.get_num_dims() - 1]
 
-        let offset_a = a_index * M * a.get_shape()[a_num_dims - 1]
-        let offset_b = b_index * K * b.get_shape()[b_num_dims - 1]
-        let offset_c = c_index * N * N
+        var offset_a = a_index * M * a.get_shape()[a_num_dims - 1]
+        var offset_b = b_index * K * b.get_shape()[b_num_dims - 1]
+        var offset_c = c_index * N * N
 
-        let a_data = a.get_data()
-        let b_data = b.get_data()
-        let c_data = c.get_data()
+        var a_data = a.get_data()
+        var b_data = b.get_data()
+        var c_data = c.get_data()
 
         DTypePointer.prefetch[PREFETCH_READ](a_data)
         DTypePointer.prefetch[PREFETCH_READ](b_data)
@@ -47,12 +47,12 @@ struct MMul:
         DTypePointer.prefetch[PREFETCH_WRITE](c_data)
 
         for m in range(0, M):
-            let start_offset_a = offset_a + m * K
-            let start_offset_c = offset_c + m * N
+            var start_offset_a = offset_a + m * K
+            var start_offset_c = offset_c + m * N
             for kb in range(0, K, NELTS):
                 for k in range(kb, min(kb + NELTS, K)):
-                    let start_offset_b = offset_b + k * N
-                    let a_scalar = a_data.load(start_offset_a + k)
+                    var start_offset_b = offset_b + k * N
+                    var a_scalar = a_data.load(start_offset_a + k)
 
                     @parameter
                     fn dot_fw[NELTS: Int](n: Int):
@@ -64,26 +64,26 @@ struct MMul:
                             ),
                         )
 
-                    vectorize[NELTS, dot_fw](N)
+                    vectorize[dot_fw, NELTS](N)
 
     @staticmethod
     fn kernel_mmul_bw_a(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let a_num_dims = a.get_num_dims()
-        let b_num_dims = b.get_num_dims()
+        var a_num_dims = a.get_num_dims()
+        var b_num_dims = b.get_num_dims()
 
-        let M = a.get_shape()[a_num_dims - 2]
-        let K = b.get_shape()[b_num_dims - 2]
-        let N = c.get_shape()[c.get_num_dims() - 1]
+        var M = a.get_shape()[a_num_dims - 2]
+        var K = b.get_shape()[b_num_dims - 2]
+        var N = c.get_shape()[c.get_num_dims() - 1]
 
-        let offset_a = a_index * M * a.get_shape()[a_num_dims - 1]
-        let offset_b = b_index * K * b.get_shape()[b_num_dims - 1]
-        let offset_c = c_index * N * N
+        var offset_a = a_index * M * a.get_shape()[a_num_dims - 1]
+        var offset_b = b_index * K * b.get_shape()[b_num_dims - 1]
+        var offset_c = c_index * N * N
 
-        let a_grad = a.get_grad()
-        let b_data = b.get_data()
-        let c_grad = c.get_grad()
+        var a_grad = a.get_grad()
+        var b_data = b.get_data()
+        var c_grad = c.get_grad()
 
         DTypePointer.prefetch[PREFETCH_READ](a_grad)
         DTypePointer.prefetch[PREFETCH_WRITE](a_grad)
@@ -91,12 +91,12 @@ struct MMul:
         DTypePointer.prefetch[PREFETCH_READ](c_grad)
 
         for m in range(0, M):
-            let start_offset_a = offset_a + m * K
-            let start_offset_c = offset_c + m * N
+            var start_offset_a = offset_a + m * K
+            var start_offset_c = offset_c + m * N
             for nb in range(0, N, NELTS):
                 for n in range(nb, min(nb + NELTS, N)):
-                    let start_offset_b = offset_b + n * N
-                    let c_grad_scalar = c_grad.load(start_offset_c + n)
+                    var start_offset_b = offset_b + n * N
+                    var c_grad_scalar = c_grad.load(start_offset_c + n)
 
                     @parameter
                     fn dot_bw[NELTS: Int](n: Int):
@@ -108,26 +108,26 @@ struct MMul:
                             ),
                         )
 
-                    vectorize[NELTS, dot_bw](K)
+                    vectorize[dot_bw, NELTS](K)
 
     @staticmethod
     fn kernel_mmul_bw_b(
         c: Node, a: Node, b: Node, a_index: Int, b_index: Int, c_index: Int, depth: Int
     ) -> None:
-        let a_num_dims = a.get_num_dims()
-        let b_num_dims = b.get_num_dims()
+        var a_num_dims = a.get_num_dims()
+        var b_num_dims = b.get_num_dims()
 
-        let M = a.get_shape()[a_num_dims - 2]
-        let K = b.get_shape()[b_num_dims - 2]
-        let N = c.get_shape()[c.get_num_dims() - 1]
+        var M = a.get_shape()[a_num_dims - 2]
+        var K = b.get_shape()[b_num_dims - 2]
+        var N = c.get_shape()[c.get_num_dims() - 1]
 
-        let offset_a = a_index * M * a.get_shape()[a_num_dims - 1]
-        let offset_b = b_index * K * b.get_shape()[b_num_dims - 1]
-        let offset_c = c_index * N * N
+        var offset_a = a_index * M * a.get_shape()[a_num_dims - 1]
+        var offset_b = b_index * K * b.get_shape()[b_num_dims - 1]
+        var offset_c = c_index * N * N
 
-        let a_data = a.get_data()
-        let b_grad = b.get_grad()
-        let c_grad = c.get_grad()
+        var a_data = a.get_data()
+        var b_grad = b.get_grad()
+        var c_grad = c.get_grad()
 
         DTypePointer.prefetch[PREFETCH_READ](a_data)
         DTypePointer.prefetch[PREFETCH_READ](b_grad)
@@ -135,12 +135,12 @@ struct MMul:
         DTypePointer.prefetch[PREFETCH_READ](c_grad)
 
         for k in range(0, K):
-            let start_offset_a = offset_a + k
-            let start_offset_b = offset_b + k * N
+            var start_offset_a = offset_a + k
+            var start_offset_b = offset_b + k * N
 
             for m in range(M):
-                let start_offset_c = offset_c + m * N
-                let a_scalar = a_data.load(start_offset_a + m * K)
+                var start_offset_c = offset_c + m * N
+                var a_scalar = a_data.load(start_offset_a + m * K)
 
                 @parameter
                 fn dot_bw_b[NELTS: Int](n: Int):
@@ -151,4 +151,4 @@ struct MMul:
                         ),
                     )
 
-                vectorize[NELTS, dot_bw_b](N)
+                vectorize[dot_bw_b, NELTS](N)

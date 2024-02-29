@@ -37,31 +37,31 @@ struct Node:
         operator_id: Int = -1,
         is_single: Bool = False,
     ) raises -> Self:
-        let id_ptr = Pointer[Int].alloc(1)
+        var id_ptr = Pointer[Int].alloc(1)
         id_ptr.store(id)
-        let data_id_ptr = Pointer[Int].alloc(1)
+        var data_id_ptr = Pointer[Int].alloc(1)
         data_id_ptr.store(-1)
-        let grad_id_ptr = Pointer[Int].alloc(1)
+        var grad_id_ptr = Pointer[Int].alloc(1)
         grad_id_ptr.store(-1)
-        let data_ptr = Pointer[DTypePointer[DType.float32]].alloc(2)
-        let data = DTypePointer[DType.float32].get_null()
-        let grad = DTypePointer[DType.float32].get_null()
+        var data_ptr = Pointer[DTypePointer[DType.float32]].alloc(2)
+        var data = DTypePointer[DType.float32].get_null()
+        var grad = DTypePointer[DType.float32].get_null()
         data_ptr.store(0, data)
         data_ptr.store(1, grad)
-        let parents = Vector[Int]()
-        let children = Vector[Int]()
-        let dependencies_ptr = Pointer[Int].alloc(1)
+        var parents = Vector[Int]()
+        var children = Vector[Int]()
+        var dependencies_ptr = Pointer[Int].alloc(1)
         dependencies_ptr.store(0)
-        let computed_ptr = Pointer[Bool].alloc(1)
+        var computed_ptr = Pointer[Bool].alloc(1)
         computed_ptr.store(is_static)
-        let grad_computed_ptr = Pointer[Bool].alloc(1)
+        var grad_computed_ptr = Pointer[Bool].alloc(1)
         grad_computed_ptr.store(False)
 
         var cap = 1
         for i in range(len(shape)):
             cap *= shape[i] if shape[i] > 0 else 1
 
-        let strides = Vector[Int](len(shape))
+        var strides = Vector[Int](len(shape))
         strides[len(shape) - 1] = 1
         for i in range(len(shape) - 1):
             strides[len(shape) - i - 2] = (
@@ -238,9 +238,9 @@ struct Node:
         self._other_params.free()
 
     fn print(self, accuracy: Int = 6) raises:
-        let row: Int = self._shape[self._num_dims - 2]
-        let cols: Int = self._shape[self._num_dims - 1]
-        let col_strides: Int = (self._strides[0] * self._shape[0]) // cols
+        var row: Int = self._shape[self._num_dims - 2]
+        var cols: Int = self._shape[self._num_dims - 1]
+        var col_strides: Int = (self._strides[0] * self._shape[0]) // cols
         print(" ")
         var times = 1
         if self._grad_computed_ptr.load() and self._grad_id_ptr.load() != -1:
@@ -271,7 +271,7 @@ struct Node:
                             print_no_newline("... , ")
                         continue
                     else:
-                        let idx = cols * i + j
+                        var idx = cols * i + j
                         print_no_newline(
                             String(self._data_ptr[0][idx])[:accuracy] if self._data_ptr[
                                 0

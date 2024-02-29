@@ -13,29 +13,29 @@ fn nanoseconds_to_seconds(t: Int) -> Float64:
 
 
 fn main() raises:
-    let W1 = Tensor[TensorShape(1, 32), HeNormal[1]]()
-    let W2 = Tensor[TensorShape(32, 32), HeNormal[32]]()
-    let W3 = Tensor[TensorShape(32, 1), HeNormal[32]]()
+    var W1 = Tensor[TensorShape(1, 32), HeNormal[1]]()
+    var W2 = Tensor[TensorShape(32, 32), HeNormal[32]]()
+    var W3 = Tensor[TensorShape(32, 1), HeNormal[32]]()
 
-    let b1 = Tensor[TensorShape(32), HeNormal[32]]()
-    let b2 = Tensor[TensorShape(32), HeNormal[32]]()
-    let b3 = Tensor[TensorShape(1), HeNormal[1]]()
+    var b1 = Tensor[TensorShape(32), HeNormal[32]]()
+    var b2 = Tensor[TensorShape(32), HeNormal[32]]()
+    var b3 = Tensor[TensorShape(1), HeNormal[1]]()
 
     var avg_loss: Float32 = 0.0
-    let every = 1000
-    let num_epochs = 200000
+    var every = 1000
+    var num_epochs = 200000
 
     var input = Tensor[TensorShape(32, 1), RandomUniform[0, 1]]()
-    let true_vals = Tensor[TensorShape(32, 1), RandomUniform[0, 1]]()
+    var true_vals = Tensor[TensorShape(32, 1), RandomUniform[0, 1]]()
 
     var x = (input @ W1 + b1).compute_activation["relu"]()
     x = (x @ W2 + b2).compute_activation["relu"]()
     x = x @ W3 + b3
     var loss = x.compute_loss["mse"](true_vals)
 
-    let initial_start = now()
+    var initial_start = now()
     var epoch_start = now()
-    let bar_accuracy = 20
+    var bar_accuracy = 20
 
     for epoch in range(1, num_epochs + 1):
         input.refresh()

@@ -16,20 +16,20 @@ trait Conv:
 struct Conv1D(Conv):
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
-        let params = c.get_other_params()
+        var params = c.get_other_params()
 
-        let padding_x = params[0]
-        let stride_x = params[1]
+        var padding_x = params[0]
+        var stride_x = params[1]
 
-        let batches = a.get_shape()[0]
-        let channels = a.get_shape()[1]
-        let input_width = a.get_shape()[2]
+        var batches = a.get_shape()[0]
+        var channels = a.get_shape()[1]
+        var input_width = a.get_shape()[2]
 
-        let kernel_width = b.get_shape()[1]
+        var kernel_width = b.get_shape()[1]
 
-        let output_width = c.get_shape()[2]
+        var output_width = c.get_shape()[2]
 
-        let im2col = im2col2D(
+        var im2col = im2col2D(
             a.get_data(),
             a.get_shape(),
             b.get_shape(),
@@ -42,17 +42,17 @@ struct Conv1D(Conv):
             for output_x in range(output_width):
                 for kernel_x in range(kernel_width):
                     for channel in range(channels):
-                        let kernel_value = b.get_data().load(
+                        var kernel_value = b.get_data().load(
                             channel * kernel_width + kernel_x
                         )
 
-                        let output_value = c.get_data().load(
+                        var output_value = c.get_data().load(
                             batch * output_width * channels
                             + output_x * channels
                             + channel
                         )
 
-                        let im2col_value = im2col.load(
+                        var im2col_value = im2col.load(
                             batch * output_width * kernel_width * channels
                             + output_x * kernel_width * channels
                             + kernel_x * channels
@@ -70,20 +70,20 @@ struct Conv1D(Conv):
 
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
-        let params = c.get_other_params()
+        var params = c.get_other_params()
 
-        let padding_x = params[0]
-        let stride_x = params[1]
+        var padding_x = params[0]
+        var stride_x = params[1]
 
-        let batches = a.get_shape()[0]
-        let channels = a.get_shape()[1]
-        let input_width = a.get_shape()[2]
+        var batches = a.get_shape()[0]
+        var channels = a.get_shape()[1]
+        var input_width = a.get_shape()[2]
 
-        let kernel_width = b.get_shape()[1]
+        var kernel_width = b.get_shape()[1]
 
-        let output_width = c.get_shape()[2]
+        var output_width = c.get_shape()[2]
 
-        let im2col = im2col2D(
+        var im2col = im2col2D(
             a.get_data(),
             a.get_shape(),
             b.get_shape(),
@@ -96,17 +96,17 @@ struct Conv1D(Conv):
             for output_x in range(output_width):
                 for kernel_x in range(kernel_width):
                     for channel in range(channels):
-                        let kernel_value = b.get_data().load(
+                        var kernel_value = b.get_data().load(
                             channel * kernel_width + kernel_x
                         )
 
-                        let output_value = c.get_data().load(
+                        var output_value = c.get_data().load(
                             batch * output_width * channels
                             + output_x * channels
                             + channel
                         )
 
-                        let im2col_value = im2col.load(
+                        var im2col_value = im2col.load(
                             batch * output_width * kernel_width * channels
                             + output_x * kernel_width * channels
                             + kernel_x * channels
@@ -144,25 +144,25 @@ struct Conv1D(Conv):
 struct Conv2D(Conv):
     @staticmethod
     fn fw(c: Node, a: Node, b: Node):
-        let params = c.get_other_params()
+        var params = c.get_other_params()
 
-        let padding_x = params[0]
-        let padding_y = params[1]
-        let stride_x = params[2]
-        let stride_y = params[3]
+        var padding_x = params[0]
+        var padding_y = params[1]
+        var stride_x = params[2]
+        var stride_y = params[3]
 
-        let batches = a.get_shape()[0]
-        let channels = a.get_shape()[1]
-        let input_width = a.get_shape()[2]
-        let input_height = a.get_shape()[3]
+        var batches = a.get_shape()[0]
+        var channels = a.get_shape()[1]
+        var input_width = a.get_shape()[2]
+        var input_height = a.get_shape()[3]
 
-        let kernel_width = b.get_shape()[1]
-        let kernel_height = b.get_shape()[2]
+        var kernel_width = b.get_shape()[1]
+        var kernel_height = b.get_shape()[2]
 
-        let output_width = c.get_shape()[2]
-        let output_height = c.get_shape()[3]
+        var output_width = c.get_shape()[2]
+        var output_height = c.get_shape()[3]
 
-        let im2col = im2col3D(
+        var im2col = im2col3D(
             a.get_data(),
             a.get_shape(),
             b.get_shape(),
@@ -173,9 +173,9 @@ struct Conv2D(Conv):
             stride_y,
         )
 
-        let a_data = a.get_data()
-        let b_data = b.get_data()
-        let c_data = c.get_data()
+        var a_data = a.get_data()
+        var b_data = b.get_data()
+        var c_data = c.get_data()
 
         DTypePointer[DType.float32].prefetch[PREFETCH_READ](a_data)
         DTypePointer[DType.float32].prefetch[PREFETCH_READ](b_data)
@@ -190,20 +190,20 @@ struct Conv2D(Conv):
                         @parameter
                         fn fw_vec[NELTS: Int](kernel_x: Int):
                             for channel in range(channels):
-                                let kernel_value = b_data.simd_load[NELTS](
+                                var kernel_value = b_data.simd_load[NELTS](
                                     channel * kernel_width * kernel_height
                                     + kernel_y * kernel_width
                                     + kernel_x
                                 )
 
-                                let output_value = c_data.simd_load[NELTS](
+                                var output_value = c_data.simd_load[NELTS](
                                     batch * output_width * output_height * channels
                                     + output_y * output_width * channels
                                     + output_x * channels
                                     + channel
                                 )
 
-                                let im2col_value = im2col.simd_load[NELTS](
+                                var im2col_value = im2col.simd_load[NELTS](
                                     batch
                                     * output_width
                                     * output_height
@@ -229,31 +229,31 @@ struct Conv2D(Conv):
                                     output_value + kernel_value * im2col_value,
                                 )
 
-                        vectorize[NELTS, fw_vec](kernel_width)
+                        vectorize[fw_vec, NELTS](kernel_width)
 
         im2col.free()
 
     @staticmethod
     fn bw(c: Node, a: Node, b: Node):
-        let params = c.get_other_params()
+        var params = c.get_other_params()
 
-        let padding_x = params[0]
-        let padding_y = params[1]
-        let stride_x = params[2]
-        let stride_y = params[3]
+        var padding_x = params[0]
+        var padding_y = params[1]
+        var stride_x = params[2]
+        var stride_y = params[3]
 
-        let batches = a.get_shape()[0]
-        let channels = a.get_shape()[1]
-        let input_width = a.get_shape()[2]
-        let input_height = a.get_shape()[3]
+        var batches = a.get_shape()[0]
+        var channels = a.get_shape()[1]
+        var input_width = a.get_shape()[2]
+        var input_height = a.get_shape()[3]
 
-        let kernel_width = b.get_shape()[1]
-        let kernel_height = b.get_shape()[2]
+        var kernel_width = b.get_shape()[1]
+        var kernel_height = b.get_shape()[2]
 
-        let output_width = c.get_shape()[2]
-        let output_height = c.get_shape()[3]
+        var output_width = c.get_shape()[2]
+        var output_height = c.get_shape()[3]
 
-        let im2col = im2col3D(
+        var im2col = im2col3D(
             a.get_data(),
             a.get_shape(),
             b.get_shape(),
@@ -264,11 +264,11 @@ struct Conv2D(Conv):
             stride_y,
         )
 
-        let b_data = b.get_data()
-        let c_data = c.get_data()
-        let a_grad = a.get_grad()
-        let b_grad = b.get_grad()
-        let c_grad = c.get_grad()
+        var b_data = b.get_data()
+        var c_data = c.get_data()
+        var a_grad = a.get_grad()
+        var b_grad = b.get_grad()
+        var c_grad = c.get_grad()
 
         DTypePointer[DType.float32].prefetch[PREFETCH_READ](b_data)
         DTypePointer[DType.float32].prefetch[PREFETCH_READ](c_data)
@@ -287,20 +287,20 @@ struct Conv2D(Conv):
                         @parameter
                         fn bw_vec[NELTS: Int](kernel_x: Int):
                             for channel in range(channels):
-                                let kernel_value = b_data.simd_load[NELTS](
+                                var kernel_value = b_data.simd_load[NELTS](
                                     channel * kernel_width * kernel_height
                                     + kernel_y * kernel_width
                                     + kernel_x
                                 )
 
-                                let output_value = c_data.simd_load[NELTS](
+                                var output_value = c_data.simd_load[NELTS](
                                     batch * output_width * output_height * channels
                                     + output_y * output_width * channels
                                     + output_x * channels
                                     + channel
                                 )
 
-                                let im2col_value = im2col.simd_load[NELTS](
+                                var im2col_value = im2col.simd_load[NELTS](
                                     batch
                                     * output_width
                                     * output_height
@@ -367,15 +367,15 @@ fn im2col2D(
     padding: Int,
     stride: Int,
 ) -> DTypePointer[DType.float32]:
-    let batches = input_shape[0]
-    let channels = input_shape[1]
-    let input_width = input_shape[2]
+    var batches = input_shape[0]
+    var channels = input_shape[1]
+    var input_width = input_shape[2]
 
-    let kernel_width = kernel_shape[1]
+    var kernel_width = kernel_shape[1]
 
-    let output_width = output_shape[2]
+    var output_width = output_shape[2]
 
-    let im2col = DTypePointer[DType.float32].alloc(
+    var im2col = DTypePointer[DType.float32].alloc(
         batches * output_width * kernel_width * channels
     )
 
@@ -389,7 +389,7 @@ fn im2col2D(
             fn workgroup_function[NELTS: Int](output_x: Int):
                 @parameter
                 fn fw_vec[NELTS: Int](kernel_x: Int):
-                    let input_x = output_x * stride + kernel_x - padding
+                    var input_x = output_x * stride + kernel_x - padding
 
                     if input_x < 0 or input_x >= input_width:
                         im2col.simd_store[NELTS](
@@ -412,7 +412,7 @@ fn im2col2D(
                             ),
                         )
 
-                vectorize[NELTS, fw_vec](kernel_width)
+                vectorize[fw_vec, NELTS](kernel_width)
 
             tile[workgroup_function, tile_sizes](0, output_width)
 
@@ -429,18 +429,18 @@ fn im2col3D(
     stride_x: Int,
     stride_y: Int,
 ) -> DTypePointer[DType.float32]:
-    let batches = input_shape[0]
-    let channels = input_shape[1]
-    let input_width = input_shape[2]
-    let input_height = input_shape[3]
+    var batches = input_shape[0]
+    var channels = input_shape[1]
+    var input_width = input_shape[2]
+    var input_height = input_shape[3]
 
-    let kernel_width = kernel_shape[1]
-    let kernel_height = kernel_shape[2]
+    var kernel_width = kernel_shape[1]
+    var kernel_height = kernel_shape[2]
 
-    let output_width = output_shape[2]
-    let output_height = output_shape[3]
+    var output_width = output_shape[2]
+    var output_height = output_shape[3]
 
-    let im2col = DTypePointer[DType.float32].alloc(
+    var im2col = DTypePointer[DType.float32].alloc(
         batches * output_width * output_height * kernel_width * kernel_height * channels
     )
 
@@ -453,10 +453,10 @@ fn im2col3D(
             @parameter
             fn workgroup_function[NELTS: Int](output_y: Int):
                 for output_x in range(output_width):
-                    let base_index = batch * output_width * output_height * kernel_width * kernel_height * channels + output_y * output_width * kernel_width * kernel_height * channels + output_x * kernel_width * kernel_height * channels + channel
+                    var base_index = batch * output_width * output_height * kernel_width * kernel_height * channels + output_y * output_width * kernel_width * kernel_height * channels + output_x * kernel_width * kernel_height * channels + channel
                     for kernel_y in range(kernel_height):
-                        let input_y = output_y * stride_y + kernel_y - padding_y
-                        let y_index = base_index + kernel_y * kernel_width * channels
+                        var input_y = output_y * stride_y + kernel_y - padding_y
+                        var y_index = base_index + kernel_y * kernel_width * channels
                         if input_y < 0 or input_y >= input_height:
 
                             @parameter
@@ -465,24 +465,24 @@ fn im2col3D(
                                     y_index + kernel_x * channels, 0.0
                                 )
 
-                            vectorize[NELTS, fw_vec_zero](kernel_width)
+                            vectorize[fw_vec_zero, NELTS](kernel_width)
                         else:
 
                             @parameter
                             fn fw_vec_one[NELTS: Int](kernel_x: Int):
-                                let input_x = output_x * stride_x + kernel_x - padding_x
+                                var input_x = output_x * stride_x + kernel_x - padding_x
                                 if input_x < 0 or input_x >= input_width:
                                     im2col.simd_store[NELTS](
                                         y_index + kernel_x * channels, 0.0
                                     )
                                 else:
-                                    let input_index = batch * input_width * input_height * channels + input_y * input_width * channels + input_x * channels
+                                    var input_index = batch * input_width * input_height * channels + input_y * input_width * channels + input_x * channels
                                     im2col.simd_store[NELTS](
                                         y_index + kernel_x * channels,
                                         input.simd_load[NELTS](input_index),
                                     )
 
-                            vectorize[NELTS, fw_vec_one](kernel_width)
+                            vectorize[fw_vec_one, NELTS](kernel_width)
 
             tile[workgroup_function, tile_sizes](0, output_height)
 

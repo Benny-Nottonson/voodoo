@@ -139,7 +139,7 @@ fn sigmoid_bw_vec[
 ](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     # f'(x) = e^x / (1 + e^x)^2
     # Best is 6 instructions (exp, div, fma, exp, mul, add)
-    let e_x = (exp(x))
+    var e_x = (exp(x))
     return e_x / (1.0 + e_x) ** 2
 
 
@@ -156,7 +156,7 @@ fn softplus_bw_vec[
 ](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     # f'(x) = e^x / (1 + e^x)
     # Best is 3 instructions (exp, add, div)
-    let e_x = (exp(x))
+    var e_x = (exp(x))
     return e_x / (1.0 + e_x)
 
 
@@ -258,7 +258,7 @@ fn silu_bw_vec[
 ](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     # f'(x) = (e^x * x + e^x + e^2x) / (e^x + 1)^2
     # Best is 8 instructions (exp, fma, add, exp, mul, div, add, pow)
-    let e_x = exp(x)
+    var e_x = exp(x)
     return (e_x.fma(x, e_x) + exp(2.0 * x)) / (e_x + 1.0) ** 2
 
 
@@ -271,7 +271,7 @@ fn gelu_fw_vec[
     # f(x) when approximate == 0.0 = 0.5 * x * (1 + erf(x / sqrt(2)))
     # f(x) when approximate != 0.0 = 0.5 * x * (1 + tanh(sqrt(2 / pi) * (x + 0.044715 * x^3)))
     # Best is 6 instructions (mul, tanh, fma, mul, pow, fma), 4 if approximate == 0
-    let x_05 = x * 0.5
+    var x_05 = x * 0.5
 
     @parameter
     if approximate == 0.0:
@@ -294,7 +294,7 @@ fn gelu_bw_vec[
             0.3989422804014327 * exp(-0.5 * x**2),
             erf(0.7071067811865475 * x).fma(0.5, 0.5),
         )
-    let tanh_x = tanh(x.fma(0.7978845608028654, 0.03567740813 * x**3))
+    var tanh_x = tanh(x.fma(0.7978845608028654, 0.03567740813 * x**3))
     return tanh_x.fma(tanh_x, 1.0).fma(
         0.5, 0.7978845608028654 * x * (1.0 - tanh_x**2)
     )
@@ -363,5 +363,5 @@ fn mish_bw_vec[
 ](x: SIMD[DType.float32, NELTS]) -> SIMD[DType.float32, NELTS]:
     # f'(x) = tanh(log(exp(x) + 1)) + (x * exp(x) * (1 / cosh(ln(exp(x) + 1)) ^ 2)) / (exp(x) + 1)
     # Best is 14 instructions (exp, tanh, log, add, add, mul, mul, div, cosh, log, add, pow, div, add)
-    let e_x = exp(x)
+    var e_x = exp(x)
     return tanh(log(e_x + 1)) + (x * e_x * (1 / cosh(log(e_x + 1)) ** 2)) / (e_x + 1)

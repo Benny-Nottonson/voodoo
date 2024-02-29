@@ -28,22 +28,22 @@ struct MaxNorm[max_value: Float32](CollectionElement, Constraint):
         return MaxNorm[max_value] {}
 
     fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
-        let num_elements = reduce_vector_mul[shape]()
+        var num_elements = reduce_vector_mul[shape]()
         var norms: Float32 = 0.0
 
         @parameter
         fn vec_norm[NELTS: Int](x: Int):
             norms += (data.simd_load[NELTS](x) ** 2).reduce_add()
 
-        vectorize[NELTS, vec_norm](num_elements)
+        vectorize[vec_norm, NELTS](num_elements)
         norms = sqrt(norms)
-        let scale = max_value / (norms + EPSILON)
+        var scale = max_value / (norms + EPSILON)
 
         @parameter
         fn vec[NELTS: Int](x: Int):
             data.simd_store[NELTS](x, data.simd_load[NELTS](x) * scale)
 
-        vectorize[NELTS, vec](num_elements)
+        vectorize[vec, NELTS](num_elements)
 
     @staticmethod
     fn key() -> String:
@@ -62,27 +62,27 @@ struct MinMaxNorm[min_value: Float32, max_value: Float32](
         return MinMaxNorm[min_value, max_value] {}
 
     fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
-        let num_elements = reduce_vector_mul[shape]()
+        var num_elements = reduce_vector_mul[shape]()
         var norms: Float32 = 0.0
 
         @parameter
         fn vec_norm[NELTS: Int](x: Int):
             norms += (data.simd_load[NELTS](x) ** 2).reduce_add()
 
-        vectorize[NELTS, vec_norm](num_elements)
+        vectorize[vec_norm, NELTS](num_elements)
         norms = sqrt(norms)
-        let scaleMax = max_value / (norms + EPSILON)
-        let scaleMin = min_value / (norms + EPSILON)
+        var scaleMax = max_value / (norms + EPSILON)
+        var scaleMin = min_value / (norms + EPSILON)
 
         @parameter
         fn vec[NELTS: Int](x: Int):
-            let d = data.simd_load[NELTS](x)
-            let norm = d * (
+            var d = data.simd_load[NELTS](x)
+            var norm = d * (
                 scaleMax if d > max_value else scaleMin if d < min_value else 1.0
             )
             data.simd_store[NELTS](x, norm)
 
-        vectorize[NELTS, vec](num_elements)
+        vectorize[vec, NELTS](num_elements)
 
     @staticmethod
     fn key() -> String:
@@ -99,13 +99,13 @@ struct NonNeg[](CollectionElement, Constraint):
         return NonNeg[] {}
 
     fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
-        let num_elements = reduce_vector_mul[shape]()
+        var num_elements = reduce_vector_mul[shape]()
 
         @parameter
         fn vec[NELTS: Int](x: Int):
             data.simd_store[NELTS](x, abs(data.simd_load[NELTS](x)))
 
-        vectorize[NELTS, vec](num_elements)
+        vectorize[vec, NELTS](num_elements)
 
     @staticmethod
     fn key() -> String:
@@ -122,19 +122,19 @@ struct RadialConstraint[](CollectionElement, Constraint):
         return RadialConstraint[] {}
 
     fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
-        let num_elements = reduce_vector_mul[shape]()
-        let center = shape[0] // 2
+        var num_elements = reduce_vector_mul[shape]()
+        var center = shape[0] // 2
 
         @parameter
         fn vec[NELTS: Int](x: Int):
-            let i = x // shape[1]
-            let j = x % shape[1]
-            let d = sqrt((i - center) ** 2 + (j - center) ** 2)
+            var i = x // shape[1]
+            var j = x % shape[1]
+            var d = sqrt((i - center) ** 2 + (j - center) ** 2)
             data.simd_store[NELTS](
                 x, data.simd_load[NELTS](x) * (1.0 if d <= center else 0.0)
             )
 
-        vectorize[NELTS, vec](num_elements)
+        vectorize[vec, NELTS](num_elements)
 
     @staticmethod
     fn key() -> String:
@@ -151,14 +151,14 @@ struct UnitNorm[](CollectionElement, Constraint):
         return UnitNorm[] {}
 
     fn constrain[shape: Vector[Int]](self, data: DTypePointer[DType.float32]):
-        let num_elements = reduce_vector_mul[shape]()
+        var num_elements = reduce_vector_mul[shape]()
 
         @parameter
         fn vec[NELTS: Int](x: Int):
-            let norm = sqrt((data.simd_load[NELTS](x) ** 2).reduce_add())
+            var norm = sqrt((data.simd_load[NELTS](x) ** 2).reduce_add())
             data.simd_store[NELTS](x, data.simd_load[NELTS](x) / (norm + EPSILON))
 
-        vectorize[NELTS, vec](num_elements)
+        vectorize[vec, NELTS](num_elements)
 
     @staticmethod
     fn key() -> String:

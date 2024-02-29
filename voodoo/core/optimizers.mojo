@@ -20,9 +20,9 @@ struct SGD[learning_rate: Float32](Optimizer):
     @staticmethod
     fn step(x: Vector[Node]):
         for i in range(len(x)):
-            let node = x[i]
-            let node_data = node.get_data()
-            let node_grad = node.get_grad()
+            var node = x[i]
+            var node_data = node.get_data()
+            var node_grad = node.get_grad()
             if node.get_is_static() and node.get_grad_id() != 0:
                 DTypePointer.prefetch[PREFETCH_READ](node_data)
                 DTypePointer.prefetch[PREFETCH_READ](node.get_grad())
@@ -36,7 +36,7 @@ struct SGD[learning_rate: Float32](Optimizer):
                         - (node_grad.simd_load[NELTS](i) * learning_rate),
                     )
 
-                vectorize[NELTS, vectorized_update](node.get_cap())
+                vectorize[vectorized_update, NELTS](node.get_cap())
 
     @staticmethod
     fn key() -> String:
