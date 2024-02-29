@@ -113,7 +113,6 @@ struct Tensor[
 
     fn requires_grad(owned self) raises -> Self:
         self.node.set_is_static(True)
-        self.node.set_is_static(True)
         return self ^
 
     fn static(owned self) raises -> Self:

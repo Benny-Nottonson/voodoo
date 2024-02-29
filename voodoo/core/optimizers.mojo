@@ -25,7 +25,7 @@ struct SGD[learning_rate: Float32](Optimizer):
             var node_grad = node.get_grad()
             if node.get_is_static() and node.get_grad_id() != 0:
                 DTypePointer.prefetch[PREFETCH_READ](node_data)
-                DTypePointer.prefetch[PREFETCH_READ](node.get_grad())
+                DTypePointer.prefetch[PREFETCH_READ](node_grad)
                 DTypePointer.prefetch[PREFETCH_WRITE](node_data)
 
                 @parameter
