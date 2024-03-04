@@ -43,4 +43,10 @@ struct MNist:
                 self.test_images[i][j - 1] = atol(line[j])
 
         info("MNIST dataset loaded.\n")
-        print("There are ", train_size, " training samples and ", test_size, " test samples.\n")
+        print(
+            "There are ",
+            train_size,
+            " training samples and ",
+            test_size,
+            " test samples.\n",
+        )

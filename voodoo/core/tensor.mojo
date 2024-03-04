@@ -1,4 +1,5 @@
 from tensor import TensorShape
+from collections import Optional
 
 from voodoo.autograd import Node, Graph
 from voodoo.utils import (
