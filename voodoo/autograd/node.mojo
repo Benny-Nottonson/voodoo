@@ -204,6 +204,9 @@ struct Node:
     fn get_other_params(self) -> Vector[Int]:
         return self._other_params
 
+    fn is_zero(self) -> Bool:
+        return sum(Buffer[DType.float32](self._data_ptr[0], self._cap)) == 0.0
+
     fn fill(self, val: Float32):
         for i in range(self._cap):
             self._data_ptr[0].store(i, val)

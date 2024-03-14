@@ -11,10 +11,6 @@ trait Constraint(CollectionElement):
     fn constrain[shape: Vector[Int]](data: DTypePointer[DType.float32]) -> None:
         ...
 
-    @staticmethod
-    fn key() -> String:
-        ...
-
 
 @register_passable("trivial")
 struct MaxNorm[max_value: Float32](Constraint):
@@ -40,10 +36,6 @@ struct MaxNorm[max_value: Float32](Constraint):
             data.simd_store[NELTS](x, data.simd_load[NELTS](x) * scale)
 
         vectorize[vec, NELTS](num_elements)
-
-    @staticmethod
-    fn key() -> String:
-        return "MaxNorm"
 
 
 @register_passable("trivial")
@@ -76,10 +68,6 @@ struct MinMaxNorm[min_value: Float32, max_value: Float32](Constraint):
 
         vectorize[vec, NELTS](num_elements)
 
-    @staticmethod
-    fn key() -> String:
-        return "MinMaxNorm"
-
 
 @register_passable("trivial")
 struct NonNeg[](Constraint):
@@ -96,10 +84,6 @@ struct NonNeg[](Constraint):
             data.simd_store[NELTS](x, abs(data.simd_load[NELTS](x)))
 
         vectorize[vec, NELTS](num_elements)
-
-    @staticmethod
-    fn key() -> String:
-        return "NonNeg"
 
 
 @register_passable("trivial")
@@ -124,10 +108,6 @@ struct RadialConstraint[](Constraint):
 
         vectorize[vec, NELTS](num_elements)
 
-    @staticmethod
-    fn key() -> String:
-        return "RadialConstraint"
-
 
 @register_passable("trivial")
 struct UnitNorm[](Constraint):
@@ -146,10 +126,6 @@ struct UnitNorm[](Constraint):
 
         vectorize[vec, NELTS](num_elements)
 
-    @staticmethod
-    fn key() -> String:
-        return "UnitNorm"
-
 
 @register_passable("trivial")
 struct NoneConstraint[](Constraint):
@@ -160,7 +136,3 @@ struct NoneConstraint[](Constraint):
     @staticmethod
     fn constrain[shape: Vector[Int]](data: DTypePointer[DType.float32]):
         ...
-
-    @staticmethod
-    fn key() -> String:
-        return "NoneConstraint"

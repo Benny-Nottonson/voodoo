@@ -38,16 +38,7 @@ struct Tensor[
         self.node = self.graph.node[False, is_static, is_single, -1](
             shape, Vector[Int]()
         )
-
-        @parameter
-        if initializer.key() != "NoneInitializer":
-            initializer.initialize[shape](self.node.get_data())
-
-            self.node.set_computed(True)
-
-            @parameter
-            if constraint.key() != "NoneConstraint":
-                constraint.constrain[shape](self.node.get_data())
+        self.refresh()
 
     fn __copyinit__(inout self, other: Self):
         self.graph = other.graph
@@ -99,6 +90,7 @@ struct Tensor[
 
     fn refresh(self) raises:
         initializer.initialize[shape](self.node.get_data())
+        constraint.constrain[shape](self.node.get_data())
 
     fn fill(owned self, val: Float32) -> Self:
         self.node.fill(val)

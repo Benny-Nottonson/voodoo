@@ -15,10 +15,6 @@ trait Initializer(CollectionElement):
     fn initialize[shape: Vector[Int]](data: DTypePointer[DType.float32]):
         ...
 
-    @staticmethod
-    fn key() -> String:
-        ...
-
 
 @register_passable("trivial")
 struct Constant[value: Float64](Initializer):
@@ -35,10 +31,6 @@ struct Constant[value: Float64](Initializer):
             data.simd_store[NELTS](x, value.to_int())
 
         vectorize[vec, NELTS](reduce_vector_mul[shape]())
-
-    @staticmethod
-    fn key() -> String:
-        return "Constant"
 
 
 @register_passable("trivial")
@@ -57,10 +49,6 @@ struct Zeros[](Initializer):
 
         vectorize[vec, NELTS](reduce_vector_mul[shape]())
 
-    @staticmethod
-    fn key() -> String:
-        return "Zeroes"
-
 
 @register_passable("trivial")
 struct Ones[](Initializer):
@@ -77,10 +65,6 @@ struct Ones[](Initializer):
             data.simd_store[NELTS](x, 1.0)
 
         vectorize[vec, NELTS](reduce_vector_mul[shape]())
-
-    @staticmethod
-    fn key() -> String:
-        return "Ones"
 
 
 @register_passable("trivial")
@@ -100,10 +84,6 @@ struct GlorotNormal[input_units: Float64, output_units: Float64](
             0.0,
             (2.0 / (input_units + output_units)) ** 0.5,
         )
-
-    @staticmethod
-    fn key() -> String:
-        return "GlorotNormal"
 
 
 @register_passable("trivial")
@@ -127,10 +107,6 @@ struct GlorotUniform[input_units: Float64, output_units: Float64](
 
         vectorize[vec, NELTS](reduce_vector_mul[shape]())
 
-    @staticmethod
-    fn key() -> String:
-        return "GlorotUniform"
-
 
 @register_passable("trivial")
 struct HeNormal[input_units: Float64](Initializer):
@@ -142,10 +118,6 @@ struct HeNormal[input_units: Float64](Initializer):
     fn initialize[shape: Vector[Int]](data: DTypePointer[DType.float32]):
         seed()
         randn(data, reduce_vector_mul[shape](), 0.0, (2.0 / input_units) ** 0.5)
-
-    @staticmethod
-    fn key() -> String:
-        return "HeNormal"
 
 
 @register_passable("trivial")
@@ -166,10 +138,6 @@ struct HeUniform[input_units: Float64](Initializer):
             )
 
         vectorize[vec, NELTS](reduce_vector_mul[shape]())
-
-    @staticmethod
-    fn key() -> String:
-        return "HeUniform"
 
 
 @register_passable("trivial")
@@ -192,10 +160,6 @@ struct Identity[](Initializer):
 
         vectorize[vec, NELTS](n * m)
 
-    @staticmethod
-    fn key() -> String:
-        return "Identity"
-
 
 @register_passable("trivial")
 struct LecunNormal[input_units: Float64](Initializer):
@@ -207,10 +171,6 @@ struct LecunNormal[input_units: Float64](Initializer):
     fn initialize[shape: Vector[Int]](data: DTypePointer[DType.float32]):
         seed()
         randn(data, reduce_vector_mul[shape](), 0.0, (1.0 / input_units) ** 0.5)
-
-    @staticmethod
-    fn key() -> String:
-        return "LecunNormal"
 
 
 @register_passable("trivial")
@@ -232,10 +192,6 @@ struct LecunUniform[input_units: Float64](Initializer):
 
         vectorize[vec, NELTS](reduce_vector_mul[shape]())
 
-    @staticmethod
-    fn key() -> String:
-        return "LecunUniform"
-
 
 @register_passable("trivial")
 struct RandomNormal[mean: Float64, std: Float64](Initializer):
@@ -247,10 +203,6 @@ struct RandomNormal[mean: Float64, std: Float64](Initializer):
     fn initialize[shape: Vector[Int]](data: DTypePointer[DType.float32]):
         seed()
         randn(data, reduce_vector_mul[shape](), mean, std)
-
-    @staticmethod
-    fn key() -> String:
-        return "RandomNormal"
 
 
 @register_passable("trivial")
@@ -268,10 +220,6 @@ struct RandomUniform[low: Float64, high: Float64](Initializer):
             data.simd_store[NELTS](x, random_float64(low, high).cast[DType.float32]())
 
         vectorize[vec, NELTS](reduce_vector_mul[shape]())
-
-    @staticmethod
-    fn key() -> String:
-        return "RandomUniform"
 
 
 @register_passable("trivial")
@@ -295,10 +243,6 @@ struct TruncatedNormal[mean: Float64, std: Float64](Initializer):
 
         vectorize[vec, NELTS](reduce_vector_mul[shape]())
 
-    @staticmethod
-    fn key() -> String:
-        return "TruncatedNormal"
-
 
 @register_passable("trivial")
 struct NoneInitializer[](Initializer):
@@ -309,7 +253,3 @@ struct NoneInitializer[](Initializer):
     @staticmethod
     fn initialize[shape: Vector[Int]](data: DTypePointer[DType.float32]):
         ...
-
-    @staticmethod
-    fn key() -> String:
-        return "NoneInitializer"
