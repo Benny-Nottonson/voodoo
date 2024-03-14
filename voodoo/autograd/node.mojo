@@ -204,9 +204,6 @@ struct Node:
     fn get_other_params(self) -> Vector[Int]:
         return self._other_params
 
-    fn is_zero(self) -> Bool:
-        return sum[1, DType.float32, AddressSpace.GENERIC](self._data_ptr[0]) == 0.0
-
     fn fill(self, val: Float32):
         for i in range(self._cap):
             self._data_ptr[0].store(i, val)
