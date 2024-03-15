@@ -14,7 +14,7 @@
   </p>
 </p>
 
-![Contributors](https://img.shields.io/github/contributors/Benny-Nottonson/voodoo?color=dark-green) ![Issues](https://img.shields.io/github/issues/Benny-Nottonson/voodoo) ![License](https://img.shields.io/github/license/Benny-Nottonson/voodoo) 
+![Contributors](https://img.shields.io/github/contributors/Benny-Nottonson/voodoo?color=dark-green) ![Issues](https://img.shields.io/github/issues/Benny-Nottonson/voodoo)
 
 ## Table Of Contents
 
